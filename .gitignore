@@ -1,0 +1,5 @@
+# Environment variables file
+.env
+
+# VSCode workspace settings
+.vscode/
