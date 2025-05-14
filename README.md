@@ -1,4 +1,4 @@
-# ☕ CoffeeHub – Coffee Shop Management System
+# ☕ DieKoffieBlik – Coffee Shop Management System
 
 A full-stack coffee shop management platform built for the **COS 301 Capstone Project** at the **University of Pretoria**. This system streamlines operations for small coffee shops, enhances the customer experience, and provides actionable business insights.
 
@@ -6,7 +6,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## 📄 Project Overview
 
-**CoffeeHub** addresses common challenges faced by small coffee shop owners: manual inventory tracking, fragmented tools, inconsistent customer loyalty tracking, and inefficient staff scheduling. Our platform delivers an all-in-one solution, accessible via web and mobile.
+**DieKoffieBlik** addresses common challenges faced by small coffee shop owners: manual inventory tracking, fragmented tools, inconsistent customer loyalty tracking, and inefficient staff scheduling. Our platform delivers an all-in-one solution, accessible via web and mobile.
 
 ---
 
