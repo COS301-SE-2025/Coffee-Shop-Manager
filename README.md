@@ -66,6 +66,6 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## ⚖️ License
 
-![License](https://img.shields.io/github/license/COS301-SE-2025/Coffee-Shop-Manager)
+[![License](https://img.shields.io/github/license/COS301-SE-2025/Coffee-Shop-Manager)](./LICENSE)
 
 ---
