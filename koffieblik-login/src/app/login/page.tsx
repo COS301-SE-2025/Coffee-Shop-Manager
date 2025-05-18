@@ -28,7 +28,7 @@ export default function LoginPage() {
           </div>
           
           <h2 className="text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
-          <p className="text-center mb-6 text-amber-800 dark:text-amber-300 font-medium">Management Portal</p>
+          <p className="text-center mb-6 text-amber-800 dark:text-amber-300 font-medium">Portal</p>
           
           <form className="space-y-5">
             <div className="relative">
