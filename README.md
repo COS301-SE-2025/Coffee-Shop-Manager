@@ -73,6 +73,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 ## 🌿 Branching Strategy
 
 We use the **GitFlow** model:
+
 - `main` is always deployable.
 - `dev`: Latest integrated features.
 - Feature branches are named `feature/feature-name`.
