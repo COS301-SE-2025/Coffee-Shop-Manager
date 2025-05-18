@@ -69,3 +69,25 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 [![License](https://img.shields.io/github/license/COS301-SE-2025/Coffee-Shop-Manager)](./LICENSE)
 
 ---
+
+## 🌿 Branching Strategy
+
+We use the **GitFlow** model:
+- `main` is always deployable.
+- `dev`: Latest integrated features.
+- Feature branches are named `feature/feature-name`.
+- Bug fixes use `fix/issue-name`.
+- Merges require pull requests and CI checks.
+
+---
+
+## ✅ Project Health
+
+[![Build Status](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/actions)
+[![Code Coverage](https://codecov.io/gh/COS301-SE-2025/Coffee-Shop-Manager/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/Coffee-Shop-Manager)
+[![Dependencies](https://img.shields.io/librariesio/github/COS301-SE-2025/Coffee-Shop-Manager)](https://libraries.io/github/COS301-SE-2025/Coffee-Shop-Manager)
+[![Issues](https://img.shields.io/github/issues/COS301-SE-2025/Coffee-Shop-Manager)](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/issues)
+[![Uptime Robot](https://img.shields.io/uptimerobot/status/m788736784-df20c89143ef291dfb34f759)](https://stats.uptimerobot.com/YOUR_ID)
+![GitHub last commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Coffee-Shop-Manager)
+
+---
