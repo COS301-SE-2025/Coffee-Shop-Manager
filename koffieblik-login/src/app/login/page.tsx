@@ -3,7 +3,9 @@
 import HydrationFix from '../hydrationFix';
 import { Comfortaa } from 'next/font/google';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
+import { validatePassword } from '@/lib/validators/passwordValidator';
+import { validateEmail } from '@/lib/validators/emailValidator';
 
 const comfortaa = Comfortaa({
   subsets: ['latin'],
@@ -14,6 +16,51 @@ const comfortaa = Comfortaa({
 export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  
+  // Form validation states
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Handle form submission
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    
+    // Reset previous submission state
+    setFormSubmitted(true);
+    
+    // Validate inputs
+    const emailValidationResult = validateEmail(email);
+    setEmailError(emailValidationResult ?? '');
+    const isEmailValid = !emailValidationResult;
+
+    const passwordValidationResult = validatePassword(password);
+    setPasswordError(passwordValidationResult ?? '');
+    const isPasswordValid = !passwordValidationResult;
+    
+    if (isEmailValid && isPasswordValid) {
+      setIsLoading(true);
+      
+      try {
+        // Here you would typically connect to your authentication API
+        // For demonstration purposes, we'll simulate a network request
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Handle successful login (redirect or set auth state)
+        console.log('Login successful', { email, password: '********', rememberMe });
+        // Redirect or update auth state here
+        
+      } catch (error) {
+        console.error('Login failed', error);
+        // Handle login failure
+      } finally {
+        setIsLoading(false);
+      }
+    }
+  };
 
   return (
     <HydrationFix>
@@ -36,7 +83,7 @@ export default function LoginPage() {
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
           <p className="text-center mb-6 text-amber-800 dark:text-amber-300 font-medium">Welcome back</p>
           
-          <form className="space-y-5 relative">
+          <form className="space-y-5 relative" onSubmit={handleSubmit} noValidate>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
                 Email
@@ -45,8 +92,28 @@ export default function LoginPage() {
                 id="email"
                 type="email"
                 placeholder="you@example.com"
-                className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                value={email}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmail(value);
+                  if (formSubmitted) {
+                    const error = validateEmail(value);
+                    setEmailError(error ?? '');
+                  }
+                }}
+                onBlur={() => {
+                  const error = validateEmail(email);
+                  setEmailError(error ?? '');
+                }}
+                className={`w-full px-4 py-2.5 border ${emailError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                aria-invalid={emailError ? "true" : "false"}
+                aria-describedby={emailError ? "email-error" : undefined}
               />
+              {emailError && (
+                <p id="email-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             <div>
@@ -63,12 +130,28 @@ export default function LoginPage() {
                   id="password"
                   type={passwordVisible ? "text" : "password"}
                   placeholder="••••••••"
-                  className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                  value={password}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPassword(e.target.value);
+                    if (formSubmitted) {
+                      const error = validatePassword(value);
+                      setPasswordError(error ?? '');
+                    }
+                  }}
+                  onBlur={() => {
+                    const error = validatePassword(password);
+                    setPasswordError(error ?? '');
+                  }}
+                  className={`w-full px-4 py-2.5 border ${passwordError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                  aria-invalid={passwordError ? "true" : "false"}
+                  aria-describedby={passwordError ? "password-error" : undefined}
                 />
                 <button 
                   type="button"
                   className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
                   onClick={() => setPasswordVisible(!passwordVisible)}
+                  aria-label={passwordVisible ? "Hide password" : "Show password"}
                 >
                   {passwordVisible ? (
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
@@ -81,6 +164,11 @@ export default function LoginPage() {
                   )}
                 </button>
               </div>
+              {passwordError && (
+                <p id="password-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {passwordError}
+                </p>
+              )}
             </div>
 
             {/* Remember me checkbox */}
@@ -100,12 +188,25 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md hover:shadow-lg flex items-center justify-center mt-6"
+              disabled={isLoading}
+              className={`w-full bg-amber-700 hover:bg-amber-800 text-white py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md hover:shadow-lg flex items-center justify-center mt-6 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
-                <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
-              </svg>
-              <span>Sign In</span>
+              {isLoading ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Signing In...</span>
+                </>
+              ) : (
+                <>
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
+                    <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
+                  </svg>
+                  <span>Sign In</span>
+                </>
+              )}
             </button>
 
             <div className="text-sm text-center text-gray-600 dark:text-amber-300/70 mt-6">

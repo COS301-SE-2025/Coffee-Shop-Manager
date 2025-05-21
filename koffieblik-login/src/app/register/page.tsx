@@ -4,6 +4,8 @@ import HydrationFix from '../hydrationFix';
 import { Comfortaa } from 'next/font/google';
 import Link from 'next/link';
 import { useState } from 'react';
+import { validatePassword } from '@/lib/validators/passwordValidator';
+import { validateEmail } from '@/lib/validators/emailValidator';
 
 const comfortaa = Comfortaa({
   subsets: ['latin'],
