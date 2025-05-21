@@ -1,6 +1,3 @@
-
-
-
 export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-amber-100 p-8">
@@ -45,9 +42,9 @@ export default function DashboardPage() {
             </select>
 
             {/* Optional: Custom range inputs (visible when 'Custom Range' is selected) */}
-            <input type="date" className="p-2 border rounded text-sm text-brown-800" />
-            <span className="text-brown-700 text-sm self-center">to</span>
-            <input type="date" className="p-2 border rounded text-sm text-brown-800" />
+            <input type="date" className="p-2 border rounded text-sm text-amber-900" />
+            <span className="text-amber-900 text-sm self-center">to</span>
+            <input type="date" className="p-2 border rounded text-sm text-amber-900" />
           </div>
         </div>
         <table className="w-full text-left text-sm text-amber-600 bg-white rounded-xl overflow-hidden">
