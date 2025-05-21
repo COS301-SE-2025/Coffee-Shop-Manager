@@ -13,7 +13,7 @@ export const metadata = {
   description: 'Register to DieKoffieBlik coffee shop management system',
 }
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <HydrationFix>
       <main className={`h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 p-4 ${comfortaa.className}`}>
