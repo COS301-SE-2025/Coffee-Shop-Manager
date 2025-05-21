@@ -1,3 +1,6 @@
+
+
+
 export default function DashboardPage() {
   return (
     <main className="min-h-screen bg-amber-100 p-8">
@@ -27,8 +30,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Recent Orders */}
-      <section className="bg-white rounded-2xl shadow p-6">
-        <h2 className="text-xl font-bold mb-4 text-amber-900">Recent Orders</h2>
+      {/* <section className="bg-white rounded-2xl shadow p-6"> */}
+      {/* <h2 className="text-xl font-bold mb-4 text-amber-900">Recent Orders</h2> */}
+      <section className="bg-white rounded-2xl shadow p-6 mb-8">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
+          <h2 className="text-xl font-bold mb-4 text-amber-900">Recent Orders</h2>
+
+          <div className="flex gap-2 flex-wrap">
+            <select className="p-2 border rounded text-sm text-amber-900">
+              <option>Today</option>
+              <option>This Week</option>
+              <option>This Month</option>
+              <option>Custom Range</option>
+            </select>
+
+            {/* Optional: Custom range inputs (visible when 'Custom Range' is selected) */}
+            <input type="date" className="p-2 border rounded text-sm text-brown-800" />
+            <span className="text-brown-700 text-sm self-center">to</span>
+            <input type="date" className="p-2 border rounded text-sm text-brown-800" />
+          </div>
+        </div>
         <table className="w-full text-left text-sm text-amber-600 bg-white rounded-xl overflow-hidden">
           <thead>
             <tr className="text-amber-900 border-b">
@@ -57,6 +78,8 @@ export default function DashboardPage() {
           </tbody>
         </table>
       </section>
+
+
     </main>
   );
 }
