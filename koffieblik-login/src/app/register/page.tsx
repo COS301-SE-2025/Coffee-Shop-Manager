@@ -3,7 +3,7 @@
 import HydrationFix from '../hydrationFix';
 import { Comfortaa } from 'next/font/google';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { validatePassword } from '@/lib/validators/passwordValidator';
 import { validateEmail } from '@/lib/validators/emailValidator';
 
@@ -16,6 +16,55 @@ const comfortaa = Comfortaa({
 export default function RegisterPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+
+  // Form validation states
+    const [email, setEmail] = useState('');
+    const [email2, setEmail2] = useState('');
+    const [password, setPassword] = useState('');
+    const [password2, setPassword2] = useState('');
+    const [emailError, setEmailError] = useState('');
+    const [emailError2, setEmailError2] = useState('');
+    const [passwordError, setPasswordError] = useState('');
+    const [passwordError2, setPasswordError2] = useState('');
+    const [formSubmitted, setFormSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+
+    // Handle form submission
+      const handleSubmit = async (e: FormEvent) => {
+        e.preventDefault();
+        
+        // Reset previous submission state
+        setFormSubmitted(true);
+        
+        // Validate inputs
+        const emailValidationResult = validateEmail(email);
+        setEmailError(emailValidationResult ?? '');
+        const isEmailValid = !emailValidationResult;
+    
+        const passwordValidationResult = validatePassword(password);
+        setPasswordError(passwordValidationResult ?? '');
+        const isPasswordValid = !passwordValidationResult;
+        
+        if (isEmailValid && isPasswordValid) {
+          setIsLoading(true);
+          
+          try {
+            // Here you would typically connect to your authentication API
+            // For demonstration purposes, we'll simulate a network request
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            
+            // Handle successful register (redirect or set auth state)
+            console.log('Registering is successful', { email, password: '********' });
+            // Redirect or update auth state here
+            
+          } catch (error) {
+            console.error('Registering failed', error);
+            // Handle register failure
+          } finally {
+            setIsLoading(false);
+          }
+        }
+      };
 
   return (
     <HydrationFix>
@@ -55,13 +104,31 @@ export default function RegisterPage() {
               </label>
               <input
                 id="email-primary"
-                name="email-primary"
-                type="email"
+                type="email-primary"
                 placeholder="you@example.com"
-                required
-                className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                value={email}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmail(value);
+                  if (formSubmitted) {
+                    const error = validateEmail(value);
+                    setEmailError(error ?? '');
+                  }
+                }}
+                onBlur={() => {
+                  const error = validateEmail(email);
+                  setEmailError(error ?? '');
+                }}
+                className={`w-full px-4 py-2.5 border ${emailError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                aria-invalid={emailError ? "true" : "false"}
+                aria-describedby={emailError ? "email-error" : undefined}
               />
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">We'll send a verification link to this address</p>
+              {emailError && (
+                <p id="email-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {emailError}
+                </p>
+              )}
             </div>
 
             <div>
@@ -70,12 +137,30 @@ export default function RegisterPage() {
               </label>
               <input
                 id="email-confirm"
-                name="email-confirm"
                 type="email"
                 placeholder="you@example.com"
-                required
-                className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                value={email2}
+                onChange={(e) => {
+                  const value = e.target.value;
+                  setEmail2(value);
+                  if (formSubmitted) {
+                    const error = validateEmail(value);
+                    setEmailError2(error ?? '');
+                  }
+                }}
+                onBlur={() => {
+                  const error = validateEmail(email2);
+                  setEmailError2(error ?? '');
+                }}
+                className={`w-full px-4 py-2.5 border ${emailError2 ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                aria-invalid={emailError2 ? "true" : "false"}
+                aria-describedby={emailError2 ? "email-error" : undefined}
               />
+              {emailError2 && (
+                <p id="email-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+                  {emailError2}
+                </p>
+              )}
             </div>
 
             {/* Password section */}
@@ -85,13 +170,31 @@ export default function RegisterPage() {
               </label>
               <div className="relative">
                 <input
-                  id="password-primary"
-                  name="password-primary"
+                  id="password"
                   type={passwordVisible ? "text" : "password"}
                   placeholder="••••••••"
-                  required
-                  className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                  value={password}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPassword(e.target.value);
+                    if (formSubmitted) {
+                      const error = validatePassword(value);
+                      setPasswordError(error ?? '');
+                    }
+                  }}
+                  onBlur={() => {
+                    const error = validatePassword(password);
+                    setPasswordError(error ?? '');
+                  }}
+                  className={`w-full px-4 py-2.5 border ${passwordError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                  aria-invalid={passwordError ? "true" : "false"}
+                  aria-describedby={passwordError ? "password-error" : undefined}
                 />
+                {passwordError && (
+                  <p id="password-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+                    {passwordError}
+                  </p>
+                )}
                 <button 
                   type="button"
                   className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
@@ -124,12 +227,30 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   id="password-confirm"
-                  name="password-confirm"
-                  type={confirmPasswordVisible ? "text" : "password"}
+                  type={passwordVisible ? "text" : "password"}
                   placeholder="••••••••"
-                  required
-                  className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
+                  value={password2}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    setPassword2(e.target.value);
+                    if (formSubmitted) {
+                      const error = validatePassword(value);
+                      setPasswordError2(error ?? '');
+                    }
+                  }}
+                  onBlur={() => {
+                    const error = validatePassword(password2);
+                    setPasswordError2(error ?? '');
+                  }}
+                  className={`w-full px-4 py-2.5 border ${passwordError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                  aria-invalid={passwordError2 ? "true" : "false"}
+                  aria-describedby={passwordError2 ? "password-error" : undefined}
                 />
+                {passwordError2 && (
+                  <p id="password-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+                    {passwordError2}
+                  </p>
+                )}
                 <button 
                   type="button"
                   className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
