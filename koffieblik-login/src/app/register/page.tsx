@@ -29,6 +29,21 @@ export default function RegisterPage() {
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    const isFormValid = () => {
+      return (
+        email !== '' &&
+        email2 !== '' &&
+        password !== '' &&
+        password2 !== '' &&
+        email === email2 &&
+        password === password2 &&
+        !emailError &&
+        !emailError2 &&
+        !passwordError &&
+        !passwordError2
+      );
+    };
+
     // Handle form submission
       const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
@@ -40,10 +55,20 @@ export default function RegisterPage() {
         const emailValidationResult = validateEmail(email);
         setEmailError(emailValidationResult ?? '');
         const isEmailValid = !emailValidationResult;
+
+        if (email !== email2) {
+          setEmailError2("Emails do not match");
+          return;
+        }
     
         const passwordValidationResult = validatePassword(password);
         setPasswordError(passwordValidationResult ?? '');
         const isPasswordValid = !passwordValidationResult;
+
+        if (password !== password2) {
+          setPasswordError2("Passwords do not match");
+          return;
+        }
         
         if (isEmailValid && isPasswordValid) {
           setIsLoading(true);
@@ -104,7 +129,7 @@ export default function RegisterPage() {
               </label>
               <input
                 id="email-primary"
-                type="email-primary"
+                type="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => {
@@ -211,13 +236,7 @@ export default function RegisterPage() {
                   )}
                 </button>
               </div>
-              <div className="mt-1 flex space-x-1">
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-              </div>
-              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Must be at least 8 characters</p>
+              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Must be at least 8 characters, contain an uppercase and a special character</p>
             </div>
 
             <div>
@@ -227,7 +246,7 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   id="password-confirm"
-                  type={passwordVisible ? "text" : "password"}
+                  type={confirmPasswordVisible ? "text" : "password"}
                   placeholder="••••••••"
                   value={password2}
                   onChange={(e) => {
@@ -271,12 +290,20 @@ export default function RegisterPage() {
 
             <button
               type="submit"
-              className="w-full bg-amber-700 hover:bg-amber-800 text-white py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md hover:shadow-lg flex items-center justify-center mt-6"
+              disabled={!isFormValid() || isLoading}
+              className={`w-full py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md flex items-center justify-center mt-6 
+                ${!isFormValid() || isLoading
+                  ? 'bg-amber-400 cursor-not-allowed opacity-50'
+                  : 'bg-amber-700 hover:bg-amber-800 hover:shadow-lg'
+                }
+                text-white`}
             >
-              <span>Create Account</span>
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-2">
-                <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
-              </svg>
+              <span>{isLoading ? 'Creating Account...' : 'Create Account'}</span>
+              {!isLoading && (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-2">
+                  <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+                </svg>
+              )}
             </button>
 
             <div className="text-sm text-center text-gray-600 dark:text-amber-300/70 mt-6">
