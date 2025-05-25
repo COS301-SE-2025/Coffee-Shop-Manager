@@ -41,7 +41,34 @@ export default function InventoryPage() {
   return (
     <main className="container mx-auto p-4">
       <h1 className="text-3xl font-bold mb-4">Inventory</h1>
-      {}
+
+      <div className="overflow-x-auto bg-white rounded-lg shadow">
+
+         <table className="min-w-full divide-y divide-gray-200 table-auto">
+
+          <thead className="bg-gray-50">
+
+            <tr>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Item</th>
+              <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Category</th>
+              <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Quantity</th>
+              <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Price</th>
+              <th className="px-4 py-2 text-center text-sm font-medium text-gray-500 ">Actions</th>
+            </tr>
+
+
+
+          </thead>
+
+         </table>
+
+      </div>
+      {
+
+
+
+
+      }
       <p>Place inventory items here.</p>
     </main>
   )
