@@ -46,6 +46,26 @@ export default function AddItemPage() {
             </div>
 
 
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="space-y-2">
+                <label htmlFor="quantity" className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  
+                  min="0"
+                  className="w-full px-4 py-3 text-gray-500 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500"
+                  placeholder="0"
+                  required
+                />
+              </div>
+
+              </div>
+
+
       </form>
 
       <p className="mt-4">
