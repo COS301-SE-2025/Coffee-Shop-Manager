@@ -1,6 +1,14 @@
 // src/app/inventory/page.tsx
 import React from 'react'
 
+interface InventoryItem {
+  id: number
+  name: string
+  category: string
+  quantity: number
+  unitPrice: number
+}
+
 export default function InventoryPage() {
   return (
     <main className="container mx-auto p-4">
