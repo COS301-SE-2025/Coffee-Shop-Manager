@@ -7,24 +7,24 @@ export default function AddItemPage() {
     <main className="container mx-auto p-4">
       <h1 className="text-2xl font-bold mb-4">Add New Inventory Item</h1>
 
-      {/* <form className="space-y-4">
-        <div>
-          <label htmlFor="name" className="block font-medium">Name</label>
-          <input id="name" name="name" type="text"
-                 className="w-full border rounded px-2 py-1" />
-        </div>
+      <form  className="p-8 space-y-6">
 
-        <div>
-          <label htmlFor="quantity" className="block font-medium">Quantity</label>
-          <input id="quantity" name="quantity" type="number"
-                 className="w-full border rounded px-2 py-1" />
-        </div>
+        <div className="space-y-2">
+              <label htmlFor="name" className="block text-sm font-semibold text-slate-700 ">
+                Item Name
+              </label>
+              <input
+                type="text"
+                id="name"
+                name="name"
+                className="w-full px-4 py-3 border-2 border-slate-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-blue-100 focus:border-blue-500  "
+                placeholder="Enter item name.."
+                required
+              />
+            </div>
 
-        <button type="submit"
-                className="bg-blue-600 text-white px-4 py-2 rounded">
-          Create Item
-        </button>
-      </form> */}
+
+      </form>
 
       <p className="mt-4">
         <Link href="/inventory" className="text-blue-500 hover:underline">
