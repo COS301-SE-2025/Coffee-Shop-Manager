@@ -24,6 +24,28 @@ export default function AddItemPage() {
             </div>
 
 
+            <div className="space-y-2">
+              <label htmlFor="category" className="block text-sm font-semibold text-slate-700 uppercase tracking-wide">
+                Category
+              </label>
+              <select
+                id="category"
+                name="category"
+
+                className="w-full px-4 py-3 text-gray-500 border-2 border-slate-200 rounded-xl focus:ring-4 focus:ring-blue-100 focus:border-blue-500 "
+                required
+              >
+                <option value="">Select a category</option>
+                <option value="Coffee"> Coffee</option>
+                <option value="Tea"> Tea</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Mixes"> Mixes</option>
+                <option value="condiments"> condiments</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+
+
       </form>
 
       <p className="mt-4">
