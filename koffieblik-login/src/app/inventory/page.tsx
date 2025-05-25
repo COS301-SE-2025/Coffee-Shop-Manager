@@ -1,3 +1,5 @@
+'use client'
+
 // src/app/inventory/page.tsx
 import React from 'react'
 
@@ -75,14 +77,14 @@ export default function InventoryPage() {
                   <button className="px-2 py-1  bg-blue-500 hover:bg-blue-600 text-white rounded mr-2">
                     Edit
                   </button>
-                  <button className="px-2 py-1  bg-red-500 hover:bg-red-600 text-white rounded">
+                  <button className="px-2 py-1  bg-red-500 hover:bg-red-600 text-white rounded" onClick={ () => handleDelete(item.id, item.name )} >
                     Delete
                   </button>
                 </td>
               </tr>
             ))}
 
-            
+
           </tbody>
 
 
@@ -101,4 +103,14 @@ export default function InventoryPage() {
       
     </main>
   )
+}
+
+//function to delete inventory item
+const handleDelete = (id: number, name: string) => {
+
+  if (confirm(`Are you sure you want to delete ${name}?`)) {
+
+  }
+
+
 }
