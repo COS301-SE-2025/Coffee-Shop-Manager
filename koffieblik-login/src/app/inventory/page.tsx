@@ -50,15 +50,42 @@ export default function InventoryPage() {
 
             <tr>
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Item</th>
+
               <th className="px-4 py-2 text-left text-sm font-medium text-gray-500 ">Category</th>
+
               <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Quantity</th>
+
               <th className="px-4 py-2 text-right text-sm font-medium text-gray-500 ">Price</th>
+
               <th className="px-4 py-2 text-center text-sm font-medium text-gray-500 ">Actions</th>
             </tr>
+      </thead>
+
+      
+        <tbody className="divide-y divide-gray-100">
+            {inventoryData.map(item => (
+              <tr key={item.id} className="hover:bg-gray-50">
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700">{item.name}</td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-500">{item.category}</td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">{item.quantity}</td>
+                <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-700 text-right">
+                  R {item.price.toFixed(2)}
+                </td>
+                <td className="px-4 py-3 whitespace-nowrap text-center text-sm">
+                  <button className="px-2 py-1 text-sm bg-blue-500 hover:bg-blue-600 text-white rounded mr-2">
+                    Edit
+                  </button>
+                  <button className="px-2 py-1 text-sm bg-red-500 hover:bg-red-600 text-white rounded">
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
 
 
 
-          </thead>
+      
 
          </table>
 
@@ -69,7 +96,7 @@ export default function InventoryPage() {
 
 
       }
-      <p>Place inventory items here.</p>
+      
     </main>
   )
 }
