@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { Alert } from "react-native";
 import LoginScreen from '../screens/LoginScreen';
+import { router } from 'expo-router';
 
 export default function Page() {
   const handleLogin = (email: string, password: string, rememberMe: boolean) => {
@@ -17,9 +18,9 @@ export default function Page() {
     Alert.alert('Forgot Password', 'Password reset functionality would go here');
   };
 
-  const handleCreateAccount = () => {
-    console.log('Create account pressed');
-    Alert.alert('Create Account', 'Registration screen would open here');
+  const handleRegister = () => {
+    console.log('Register attempt');
+    router.push('/registerRoute');
   };
 
   return (
@@ -28,7 +29,7 @@ export default function Page() {
       <LoginScreen
         onLogin={handleLogin}
         onForgotPassword={handleForgotPassword}
-        onCreateAccount={handleCreateAccount}
+        onCreateAccount={handleRegister}
       />
     </>
   );
