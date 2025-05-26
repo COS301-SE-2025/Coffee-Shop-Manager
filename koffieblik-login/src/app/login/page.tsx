@@ -16,7 +16,7 @@ const comfortaa = Comfortaa({
 export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  
+
   // Form validation states
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -28,10 +28,10 @@ export default function LoginPage() {
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     // Reset previous submission state
     setFormSubmitted(true);
-    
+
     // Validate inputs
     const emailValidationResult = validateEmail(email);
     setEmailError(emailValidationResult ?? '');
@@ -40,19 +40,31 @@ export default function LoginPage() {
     const passwordValidationResult = validatePassword(password);
     setPasswordError(passwordValidationResult ?? '');
     const isPasswordValid = !passwordValidationResult;
-    
+
     if (isEmailValid && isPasswordValid) {
       setIsLoading(true);
-      
+
       try {
-        // Here you would typically connect to your authentication API
-        // For demonstration purposes, we'll simulate a network request
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        // Handle successful login (redirect or set auth state)
-        console.log('Login successful', { email, password: '********', rememberMe });
-        // Redirect or update auth state here
-        
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log('Login success:', result.user);
+          // You can redirect here or store the user in context/state
+          // e.g., router.push('/dashboard') or setUser(result.user)
+        } else {
+          console.error('Login failed:', result.message);
+          // You could show an error message to the user here
+        }
+
+
       } catch (error) {
         console.error('Login failed', error);
         // Handle login failure
@@ -66,11 +78,11 @@ export default function LoginPage() {
     <HydrationFix>
       <main className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-12 px-4 ${comfortaa.className}`}>
         <div className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#1a1310] rounded-xl shadow-lg border border-amber-200 dark:border-amber-900 relative overflow-hidden">
-          
+
           {/* Background decoration - coffee bean pattern */}
           <div className="absolute -right-16 -top-16 w-32 h-32 bg-amber-100 dark:bg-amber-900/20 rounded-full opacity-30"></div>
           <div className="absolute -left-16 -bottom-16 w-32 h-32 bg-amber-100 dark:bg-amber-900/20 rounded-full opacity-30"></div>
-          
+
           {/* Coffee cup icon */}
           <div className="flex justify-center mb-4 relative">
             <div className="w-16 h-16 rounded-full bg-amber-700 flex items-center justify-center shadow-md">
@@ -79,10 +91,10 @@ export default function LoginPage() {
               </svg>
             </div>
           </div>
-          
+
           <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
           <p className="text-center mb-6 text-amber-800 dark:text-amber-300 font-medium">Welcome back</p>
-          
+
           <form className="space-y-5 relative" onSubmit={handleSubmit} noValidate>
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
@@ -147,7 +159,7 @@ export default function LoginPage() {
                   aria-invalid={passwordError ? "true" : "false"}
                   aria-describedby={passwordError ? "password-error" : undefined}
                 />
-                <button 
+                <button
                   type="button"
                   className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
                   onClick={() => setPasswordVisible(!passwordVisible)}
