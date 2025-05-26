@@ -16,6 +16,8 @@ const comfortaa = Comfortaa({
 export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [loginError, setLoginError] = useState('');
+
 
   // Form validation states
   const [email, setEmail] = useState('');
@@ -57,16 +59,16 @@ export default function LoginPage() {
 
         if (result.success) {
           console.log('Login success:', result.user);
-          // You can redirect here or store the user in context/state
-          // e.g., router.push('/dashboard') or setUser(result.user)
+          setLoginError(''); 
         } else {
           console.error('Login failed:', result.message);
-          // You could show an error message to the user here
+          setLoginError(result.message || 'Login failed. Please try again.');
         }
 
 
       } catch (error) {
         console.error('Login failed', error);
+        setLoginError('Something went wrong. Please try again later.');
         // Handle login failure
       } finally {
         setIsLoading(false);
@@ -197,6 +199,11 @@ export default function LoginPage() {
                 Remember me
               </label>
             </div>
+{loginError && (
+  <div className="text-sm text-red-600 dark:text-red-400 mt-2 font-medium text-center">
+    {loginError}
+  </div>
+)}
 
             <button
               type="submit"
