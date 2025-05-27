@@ -1,1 +1,16 @@
+# Node dependencies
+node_modules/
+.next/
+dist/
+
+# Environment variables
 .env
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+
+# Testing
+coverage/
