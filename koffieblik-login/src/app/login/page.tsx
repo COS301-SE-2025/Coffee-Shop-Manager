@@ -56,14 +56,15 @@ export default function LoginPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({action: 'login', email, password }),
+          body: JSON.stringify({ action: 'login', email, password }),
         });
 
         const result = await response.json();
 
         if (result.success) {
           console.log('Login success:', result.user);
-          setLoginError(''); 
+          setLoginError('');
+          localStorage.setItem('isLoggedIn', 'true');
           router.push('/dashboard');
         } else {
           console.error('Login failed:', result.message);
@@ -204,11 +205,11 @@ export default function LoginPage() {
                 Remember me
               </label>
             </div>
-{loginError && (
-  <div className="text-sm text-red-600 dark:text-red-400 mt-2 font-medium text-center">
-    {loginError}
-  </div>
-)}
+            {loginError && (
+              <div className="text-sm text-red-600 dark:text-red-400 mt-2 font-medium text-center">
+                {loginError}
+              </div>
+            )}
 
             <button
               type="submit"
