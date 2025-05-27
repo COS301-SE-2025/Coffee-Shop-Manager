@@ -60,7 +60,6 @@ export default function AddItemPage() {
             Back to Inventory
           </Link>
           <h1 className="text-4xl font-bold text-brown-800">Add New Item</h1>
-          <p className="text-brown-600 mt-2">Add a new item to your coffee shop inventory</p>
         </div>
 
         {/* Success Message */}
@@ -93,6 +92,31 @@ export default function AddItemPage() {
                 placeholder="Enter item name..."
                 required
               />
+            </div>
+
+            
+            <div className="space-y-2">
+              <label htmlFor="category" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                Category
+              </label>
+              <select
+                id="category"
+                name="category"
+                value={formData.category}
+                onChange={handleInputChange}
+                className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500"
+                required
+              >
+                <option value="">Select a category</option>
+                <option value="Coffee">Coffee</option>
+                <option value="Tea">Tea</option>
+                <option value="Dairy">Dairy</option>
+                <option value="Dairy Alternative">Dairy Alternative</option>
+                <option value="Syrups">Syrups</option>
+                <option value="Mixes">Mixes</option>
+                <option value="Condiments">Condiments</option>
+                <option value="Other">Other</option>
+              </select>
             </div>
 
             
