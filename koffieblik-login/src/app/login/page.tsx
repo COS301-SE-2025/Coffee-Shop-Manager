@@ -78,6 +78,7 @@ export default function LoginPage() {
           console.log('Login success:', loginResult.user);
           setLoginError('');
           localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('email',email);
 
           const usernameResponse = await fetch('/api/API', {
             method: 'POST',

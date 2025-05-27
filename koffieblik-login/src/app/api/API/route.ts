@@ -34,6 +34,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (action === 'change_username') {
+      if (!username||!email) {
+        console.warn('[VALIDATION FAILED] Missing registration fields');
+        return NextResponse.json({ success: false, message: 'Email required for username retreival' }, { status: 400 });
+      }
+    }
+
 
     const client = new Client({
       host: process.env.DB_HOST,
@@ -79,7 +86,33 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    
+    if (action === 'change_Username') {
+      if (!email || !username) {
+        await client.end();
+        console.warn('[USERNAME CHANGE FAILED] Missing email or new username');
+        return NextResponse.json({ success: false, message: 'Email and new username are required' }, { status: 400 });
+      }
+
+      console.log('[USERNAME CHANGE ATTEMPT] Email:', email, 'New Username:', username);
+
+      const result = await client.query(
+        'UPDATE users SET username = $1 WHERE email = $2 RETURNING *',
+        [username, email]
+      );
+
+      await client.end();
+
+      if (result.rows.length === 1) {
+        console.log('[USERNAME CHANGE SUCCESS]', result.rows[0]);
+        return NextResponse.json({ success: true, user: result.rows[0] }, { status: 200 });
+      } else {
+        console.warn('[USERNAME CHANGE FAILED] No user with that email');
+        return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+      }
+    }
+
+
+
 
     if (action === 'register') {
       console.log('[REGISTER ATTEMPT]', email);

@@ -28,17 +28,27 @@ export default function DashboardPage() {
     const [filter, setFilter] = useState('Today');
     const [apiMessage, setApiMessage] = useState('Click Me!');
     const router = useRouter();
+    const [username, setUsername] = useState('Guest');
+
 
     useEffect(() => {
+        const storedUsername = localStorage.getItem('username');
         const isLoggedIn = localStorage.getItem('isLoggedIn');
+
         if (!isLoggedIn) {
             router.push('/login'); // Redirect to login if not authenticated
         }
+
+        if (storedUsername) {
+            setUsername(storedUsername);
+        }
     }, [router]);
+
 
     const handleLogout = () => {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
+        localStorage.removeItem('email');
         router.push('/login');
     };
 
@@ -92,7 +102,6 @@ export default function DashboardPage() {
             default: return 'text-amber-900';
         }
     };
-    const username = localStorage.getItem('username') || 'Guest';
 
     const tabs = ['Dashboard', 'Inventory', 'Reports', 'logout', username];
 
@@ -242,6 +251,63 @@ export default function DashboardPage() {
                         <p className="text-lg">📊 Reports dashboard coming soon.</p>
                     </div>
                 )}
+
+                {selectedTab === username && (
+                    <div className="text-amber-900 max-w-md mx-auto bg-white p-6 rounded-xl shadow-md">
+                        <h2 className="text-xl font-bold mb-4">Change Username</h2>
+                        <form
+                            onSubmit={async (e) => {
+                                e.preventDefault();
+                                const newUsername = (e.target as any).newUsername.value;
+
+                                const email = localStorage.getItem('email'); // Ensure email is saved on login
+                                if (!email) {
+                                    alert("Missing email. Please log out and log in again.");
+                                    return;
+                                }
+
+                                try {
+                                    const response = await fetch('/api/API', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({
+                                            action: 'change_Username',
+                                            email: localStorage.getItem('email'),
+                                            username: newUsername,
+                                        }),
+                                    });
+
+                                    const result = await response.json();
+                                    if (result.success) {
+                                        alert('Username updated successfully!');
+                                        localStorage.setItem('username', result.user.username);
+                                        location.reload(); // Reload to reflect new username
+                                    } else {
+                                        alert(result.message || 'Failed to update username.');
+                                    }
+                                } catch (error) {
+                                    console.error(error);
+                                    alert('Something went wrong.');
+                                }
+                            }}
+                        >
+                            <label className="block mb-2 font-medium">New Username:</label>
+                            <input
+                                type="text"
+                                name="newUsername"
+                                required
+                                className="w-full p-2 border border-amber-300 rounded mb-4"
+                            />
+                            <button
+                                type="submit"
+                                className="px-4 py-2 bg-amber-600 text-white font-semibold rounded hover:bg-amber-700 transition"
+                            >
+                                Update Username
+                            </button>
+                        </form>
+                    </div>
+                )}
+
 
 
 
