@@ -119,7 +119,28 @@ export default function AddItemPage() {
               </select>
             </div>
 
-            
+            {/* Quantity and Price Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Quantity */}
+              <div className="space-y-2">
+                <label htmlFor="quantity" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                  Quantity
+                </label>
+                <input
+                  type="number"
+                  id="quantity"
+                  name="quantity"
+                  value={formData.quantity}
+                  onChange={handleInputChange}
+                  min="0"
+                  className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
+                  placeholder="0"
+                  required
+                />
+              </div>
+
+             
+            </div>
 
             {/* Form Actions */}
             <div className="flex flex-col sm:flex-row gap-4 pt-6">
