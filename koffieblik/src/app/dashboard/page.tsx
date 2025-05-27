@@ -224,11 +224,11 @@ export default function DashboardPage() {
                     </>
                 )}
 
-                {selectedTab === 'Inventory' && (
-                    <div className="text-amber-900">
-                        <p className="text-lg">📦 Inventory management will go here.</p>
-                    </div>
-                )}
+                {selectedTab === 'Inventory' && (() => {
+                    // Navigate to /inventory/page.tsx (Next.js route: /inventory)
+                    router.push('/inventory');
+                    return null;
+                })()}
 
                 {selectedTab === 'Reports' && (
                     <div className="text-amber-900">
