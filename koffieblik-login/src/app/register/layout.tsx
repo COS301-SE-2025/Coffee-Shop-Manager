@@ -4,6 +4,9 @@
 export const metadata = {
   title: 'Register - DieKoffieBlik',
   description: 'Create an account for DieKoffieBlik coffee shop management system',
+  icons: {
+    icon: '/favicon.ico',
+  }
 }
 
 export default function RegisterLayout({

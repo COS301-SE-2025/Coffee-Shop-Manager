@@ -1,4 +1,5 @@
 "use client";
+import { useRouter } from 'next/navigation';
 
 import HydrationFix from '../hydrationFix';
 import { Comfortaa } from 'next/font/google';
@@ -17,6 +18,8 @@ export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
+  const router = useRouter();
+
 
   // Form validation states
   const [email, setEmail] = useState('');
@@ -99,7 +102,7 @@ export default function RegisterPage() {
     const today = new Date();
     const birthDate = new Date(dob);
     const age = today.getFullYear() - birthDate.getFullYear();
-    
+
     if (age < 13) {
       return 'You must be at least 13 years old to register';
     }
@@ -126,11 +129,11 @@ export default function RegisterPage() {
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    
+
     if (currentStep === 1) {
       // Validate step 1
       setFormSubmitted(true);
-      
+
       const emailValidationResult = validateEmail(email);
       setEmailError(emailValidationResult ?? '');
       const isEmailValid = !emailValidationResult;
@@ -148,7 +151,7 @@ export default function RegisterPage() {
         setPasswordError2("Passwords do not match");
         return;
       }
-      
+
       if (isEmailValid && isPasswordValid) {
         handleNextStep();
       }
@@ -174,25 +177,59 @@ export default function RegisterPage() {
       }
 
       setIsLoading(true);
-      
+
       try {
+        const response = await fetch('/api/API', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            action: 'register',
+            username: firstName, // or combine firstName + lastName if desired
+            email,
+            password,
+            lastName,
+            phoneNo: phoneNumber,
+            dateOfBirth,
+          }),
+        });
+
+        try {
         await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        console.log('Registration successful', { 
-          email, 
-          firstName, 
-          lastName, 
-          phoneNumber, 
+
+        console.log('Registration successful', {
+          email,
+          firstName,
+          lastName,
+          phoneNumber,
           dateOfBirth,
           agreedToMarketing,
-          password: '********' 
+          password: password
         });
-        
+
       } catch (error) {
         console.error('Registration failed', error);
       } finally {
         setIsLoading(false);
       }
+
+        const result = await response.json();
+
+        if (result.success) {
+          console.log('[REGISTER SUCCESS]', result.user);
+          router.push('/login');
+        } else {
+          console.warn('[REGISTER FAILED]', result.message);
+        }
+      } catch (error) {
+        console.error('[REGISTER ERROR]', error);
+      } finally {
+        setIsLoading(false);
+      }
+
+
+      
     }
   };
 
@@ -298,7 +335,7 @@ export default function RegisterPage() {
             aria-invalid={passwordError ? "true" : "false"}
             aria-describedby={passwordError ? "password-error" : undefined}
           />
-          <button 
+          <button
             type="button"
             className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
             onClick={() => setPasswordVisible(!passwordVisible)}
@@ -346,7 +383,7 @@ export default function RegisterPage() {
             aria-invalid={passwordError2 ? "true" : "false"}
             aria-describedby={passwordError2 ? "password-confirm-error" : undefined}
           />
-          <button 
+          <button
             type="button"
             className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
             onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
@@ -485,15 +522,29 @@ export default function RegisterPage() {
             <p><span className="font-medium">Date of Birth:</span> {dateOfBirth}</p>
           </div>
         </div>
+
+        {/* ✅ Insert checkbox here */}
+        <div className="mt-4">
+          <label className="flex items-center space-x-2 text-sm text-amber-900 dark:text-amber-100">
+            <input
+              type="checkbox"
+              checked={agreedToTerms}
+              onChange={(e) => setAgreedToTerms(e.target.checked)}
+              className="accent-amber-600"
+            />
+            <span>I agree to the terms and conditions</span>
+          </label>
+        </div>
       </div>
     </>
   );
+
 
   return (
     <HydrationFix>
       <main className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-8 px-4 ${comfortaa.className}`}>
         <div className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#1a1310] rounded-xl shadow-lg border border-amber-200 dark:border-amber-900 relative">
-          
+
           {/* Logo & Header section */}
           <div className="mb-6">
             <div className="flex justify-center mb-4">
@@ -506,12 +557,12 @@ export default function RegisterPage() {
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
             <p className="text-center text-amber-800 dark:text-amber-300 font-medium text-sm mb-2">{getStepTitle()}</p>
           </div>
-          
+
           <form className="space-y-5" onSubmit={handleSubmit}>
             {/* Progress indicator */}
             <div className="mb-6">
               <div className="w-full bg-amber-100 dark:bg-amber-900/30 h-1 rounded-full">
-                <div 
+                <div
                   className="bg-amber-600 h-1 rounded-full transition-all duration-300"
                   style={{ width: `${(currentStep / 3) * 100}%` }}
                 ></div>
@@ -542,7 +593,7 @@ export default function RegisterPage() {
                   Back
                 </button>
               )}
-              
+
               <button
                 type="submit"
                 disabled={
@@ -560,7 +611,7 @@ export default function RegisterPage() {
                   text-white`}
               >
                 <span>
-                  {currentStep === 3 
+                  {currentStep === 3
                     ? (isLoading ? 'Creating Account...' : 'Create Account')
                     : 'Next'
                   }
