@@ -26,7 +26,7 @@ interface Metric {
 export default function DashboardPage() {
     const [selectedTab, setSelectedTab] = useState('Dashboard');
     const [filter, setFilter] = useState('Today');
-    const [apiMessage, setApiMessage] = useState('Click Me!');
+    // const [apiMessage, setApiMessage] = useState('Click Me!');
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
 
@@ -118,7 +118,7 @@ export default function DashboardPage() {
                             : 'bg-amber-200 text-amber-900 hover:bg-amber-300'
                             }`}
                         onClick={() => {
-                            if (tab === 'logout') {
+                            if (tab === 'Logout') {
                                 handleLogout();
                             } else {
                                 setSelectedTab(tab);
@@ -137,23 +137,7 @@ export default function DashboardPage() {
 
                 {selectedTab === 'Dashboard' && (
                     <>
-                        <div className="mb-6">
-                            <button
-                                onClick={async () => {
-                                    try {
-                                        const res = await fetch('/api/orders');
-                                        const data = await res.json();
-                                        setApiMessage(data.message);
-                                    } catch (error) {
-                                        console.error('Error:', error);
-                                        setApiMessage('Failed to fetch');
-                                    }
-                                }}
-                                className="px-4 py-2 bg-amber-600 text-white font-semibold rounded-lg hover:bg-amber-700 transition"
-                            >
-                                {apiMessage}
-                            </button>
-                        </div>
+                       
 
                         {/* Metrics Section */}
                         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
