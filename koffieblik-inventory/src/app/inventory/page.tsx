@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useState } from 'react'
 
 interface InventoryItem {
   id: number
@@ -10,7 +10,7 @@ interface InventoryItem {
   price: number
 }
 
-const inventoryData: InventoryItem[] = [
+const initialData: InventoryItem[] = [
   { id: 1, name: 'Coffee beans', category: 'Coffee', quantity: 12, price: 15.0 },
   { id: 2, name: 'Decaf Espresso Beans', category: 'Coffee', quantity: 10, price: 15.0 },
   { id: 3, name: 'Full Cream Milk', category: 'Dairy', quantity: 8, price: 5.0 },
@@ -24,6 +24,16 @@ const inventoryData: InventoryItem[] = [
 ]
 
 export default function InventoryPage() {
+  // turn into state for delete
+  const [items, setItems] = useState<InventoryItem[]>(initialData)
+
+  //
+  const handleDelete = (id: number, name: string) => {
+    if (confirm(`Are you sure you want to delete ${name}?`)) {
+      setItems(prev => prev.filter(item => item.id !== id))
+    }
+  }
+
   return (
     <main className="min-h-screen bg-brown-50 p-6">
       <h1 className="text-4xl font-bold text-brown-800 mb-6">Inventory</h1>
@@ -41,12 +51,14 @@ export default function InventoryPage() {
           </thead>
 
           <tbody className="divide-y divide-brown-100">
-            {inventoryData.map(item => (
+            {items.map(item => (
               <tr key={item.id} className="hover:bg-amber-50">
                 <td className="px-4 py-2 text-brown-700">{item.name}</td>
                 <td className="px-4 py-2 text-brown-700">{item.category}</td>
                 <td className="px-4 py-2 text-right text-brown-700">{item.quantity}</td>
-                <td className="px-4 py-2 text-right text-brown-700">R {item.price.toFixed(2)}</td>
+                <td className="px-4 py-2 text-right text-brown-700">
+                  R {item.price.toFixed(2)}
+                </td>
                 <td className="px-4 py-2 text-center">
                   <button className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded mr-2">
                     Edit
@@ -65,10 +77,4 @@ export default function InventoryPage() {
       </div>
     </main>
   )
-}
-
-const handleDelete = (id: number, name: string) => {
-  if (confirm(`Are you sure you want to delete ${name}?`)) {
-    // delete logic
-  }
 }
