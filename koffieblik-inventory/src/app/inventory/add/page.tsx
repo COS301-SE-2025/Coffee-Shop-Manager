@@ -2,12 +2,51 @@
 import React from 'react'
 import Link from 'next/link'
 
+
+interface FormData {
+  name: string
+  category: string
+  quantity: number
+  price: number
+}
+
 export default function AddItemPage() {
+
+  
+
+
+
+
+
+
+
   return (
-    <main className="container mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">Add New Inventory Item</h1>
+    <main className="min-h-screen bg-brown-50 p-6">
+      <div className="max-w-2xl mx-auto">
+
+        <div className="mb-8">
+          <Link 
+            href="/inventory" 
+            className="inline-flex items-center text-brown-600 hover:text-brown-800 mb-4 transition-colors"
+          >
+            <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Back to Inventory
+          </Link>
+          <h1 className="text-4xl font-bold text-brown-800">Add New Item</h1>
+          
+        </div> 
+
+
+
+      </div>
 
       <form  className="p-8 space-y-6">
+
+
+
+        
 
         <div className="space-y-2">
               <label htmlFor="name" className="block text-sm font-semibold text-slate-700 ">
@@ -68,11 +107,7 @@ export default function AddItemPage() {
 
       </form>
 
-      <p className="mt-4">
-        <Link href="/inventory" className="text-blue-500 hover:underline">
-          ← back to inventory list
-        </Link>
-      </p>
+      
     </main>
   )
 }
