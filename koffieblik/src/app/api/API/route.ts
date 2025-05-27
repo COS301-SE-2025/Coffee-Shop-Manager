@@ -2,7 +2,39 @@ import { NextRequest, NextResponse } from 'next/server';
 import { Client } from 'pg';
 
 export async function POST(req: NextRequest) {
+  let client;
   try {
+    if (!process.env.DB_PASSWORD) {
+      console.error('[DB CONFIG ERROR] Password not found in environment variables');
+      return NextResponse.json({ 
+        success: false, 
+        message: 'Database configuration error' 
+      }, { status: 500 });
+    }
+
+    const config = {
+      host: process.env.DB_HOST || 'localhost',
+      port: Number(process.env.DB_PORT) || 5432,
+      user: 'postgres',
+      password: String(process.env.DB_PASSWORD),
+      database: process.env.DB_NAME || 'koffieblik',
+      ssl: false
+    };
+
+    // Debug config (safely)
+    console.log('[DB CONFIG]', {
+      host: config.host,
+      port: config.port,
+      user: config.user,
+      database: config.database,
+      hasPassword: Boolean(config.password),
+      passwordLength: config.password?.length
+    });
+
+    client = new Client(config);
+    await client.connect();
+    console.log('[DB CONNECTED]');
+
     const body = await req.json(); // ✅ Read request body
     console.log('[RECEIVED BODY]', body);
 
@@ -41,18 +73,6 @@ export async function POST(req: NextRequest) {
       }
     }
 
-
-    const client = new Client({
-      host: process.env.DB_HOST,
-      port: Number(process.env.DB_PORT),
-      user: process.env.DB_USER,
-      password: process.env.DB_PASSWORD,
-      database: process.env.DB_NAME,
-    });
-
-    console.log('[DB CONNECTING]');
-    await client.connect();
-    console.log('[DB CONNECTED]');
 
     if (action === 'login') {
       console.log('[LOGIN ATTEMPT]', email);
