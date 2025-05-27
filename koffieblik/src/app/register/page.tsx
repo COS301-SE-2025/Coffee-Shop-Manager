@@ -45,7 +45,7 @@ export default function RegisterPage() {
 
   // Step 3 - Confirmation states
   const [agreedToTerms, setAgreedToTerms] = useState(false);
-  const [agreedToMarketing, setAgreedToMarketing] = useState(false);
+  // const [agreedToMarketing, setAgreedToMarketing] = useState(false);
 
   const isStep1Valid = () => {
     return (
@@ -204,7 +204,7 @@ export default function RegisterPage() {
           lastName,
           phoneNumber,
           dateOfBirth,
-          agreedToMarketing,
+          // agreedToMarketing,
           password: password
         });
 
@@ -270,7 +270,7 @@ export default function RegisterPage() {
           aria-invalid={emailError ? "true" : "false"}
           aria-describedby={emailError ? "email-error" : undefined}
         />
-        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">We'll send a verification link to this address</p>
+        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">We&apos;ll send a verification link to this address</p>
         {emailError && (
           <p id="email-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
             {emailError}

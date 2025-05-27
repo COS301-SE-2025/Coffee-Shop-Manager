@@ -1,21 +1,19 @@
 'use client';
-
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getTabs } from '@/constants/tabs';
 
 type OrderStatus = 'Completed' | 'Pending' | 'Cancelled';
 
 interface Order {
     id: string;
     customer: string;
-    items: string[]; // Changed from item: string
+    items: string[];
     total: string;
     status: OrderStatus;
     date: string;
 }
-
-
 
 interface Metric {
     label: string;
@@ -26,24 +24,44 @@ interface Metric {
 export default function DashboardPage() {
     const [selectedTab, setSelectedTab] = useState('Dashboard');
     const [filter, setFilter] = useState('Today');
-    // const [apiMessage, setApiMessage] = useState('Click Me!');
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
-
 
     useEffect(() => {
         const storedUsername = localStorage.getItem('username');
         const isLoggedIn = localStorage.getItem('isLoggedIn');
-
         if (!isLoggedIn) {
-            router.push('/login'); // Redirect to login if not authenticated
+            router.push('/login'); 
         }
-
         if (storedUsername) {
             setUsername(storedUsername);
         }
     }, [router]);
 
+    // Route to inventory
+    useEffect(() => {
+        if (selectedTab === 'Inventory') {
+            router.push('/inventory');
+        }
+    }, [selectedTab, router]);
+    
+    useEffect(() => {
+        if (selectedTab === 'pos') {
+            router.push('/pos');
+        }
+    }, [selectedTab, router]);
+    
+    useEffect(() => {
+        if (selectedTab === 'manage') {
+            router.push('/manage');
+        }
+    }, [selectedTab, router]);
+    
+    useEffect(() => {
+        if (selectedTab === 'Reports') {
+            router.push('/reports');
+        }
+    }, [selectedTab, router]);
 
     const handleLogout = () => {
         localStorage.removeItem('isLoggedIn');
@@ -52,8 +70,7 @@ export default function DashboardPage() {
         router.push('/login');
     };
 
-
-    const dateInputStyle = 'p-2 border rounded text-sm text-amber-900';
+    const dateInputStyle = 'p-3 border border-amber-300 rounded-lg text-sm text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200';
 
     const metrics: Metric[] = [
         { label: 'Total Sales Today', value: 'R1,540', color: 'text-amber-600' },
@@ -89,115 +106,169 @@ export default function DashboardPage() {
             status: 'Completed',
             date: '2025-05-26'
         },
-
     ];
-
-
 
     const getStatusStyle = (status: OrderStatus) => {
         switch (status) {
-            case 'Completed': return 'text-green-700';
-            case 'Pending': return 'text-yellow-600';
-            case 'Cancelled': return 'text-red-600';
-            default: return 'text-amber-900';
+            case 'Completed': return 'text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium';
+            case 'Pending': return 'text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium';
+            case 'Cancelled': return 'text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium';
+            default: return 'text-amber-900 bg-amber-100 px-2 py-1 rounded-full text-xs font-medium';
         }
     };
 
-    const tabs = ['Dashboard', 'Inventory', 'Reports', 'Logout', username];
+    const getTabIcon = (tab: string) => {
+        switch (tab) {
+            case 'Dashboard': return '📊';
+            case 'Inventory': return '📦';
+            case 'Reports': return '📈';
+            case 'pos': return '🛒';
+            case 'manage': return '⚙️';
+            case 'Logout': return '🚪';
+            default: return '👤';
+        }
+    };
 
+    const tabs = username ? getTabs(username) : [];
+   
     return (
-        <main className="min-h-screen bg-amber-100">
-            {/* Tab Ribbon */}
-            <nav className="sticky top-0 z-50 bg-white border-b border-amber-200 px-8 py-4 flex gap-4">
-
-                {tabs.map((tab) => (
-                    <button
-                        key={tab}
-                        className={`text-sm font-semibold px-4 py-2 rounded-full transition ${selectedTab === tab
-                            ? 'bg-amber-600 text-white'
-                            : 'bg-amber-200 text-amber-900 hover:bg-amber-300'
-                            }`}
-                        onClick={() => {
-                            if (tab === 'Logout') {
-                                handleLogout();
-                            } else {
-                                setSelectedTab(tab);
-                            }
-                        }}
-
-                    >
-                        {tab}
-                    </button>
-                ))}
+        <main className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+            {/* Enhanced Tab Navigation */}
+            <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
+                <div className="px-6 py-4">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+                                <span className="text-white font-bold text-lg">☕</span>
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-bold text-amber-900">Coffee Shop Dashboard</h1>
+                                <p className="text-sm text-amber-600">Welcome back, {username}</p>
+                            </div>
+                        </div>
+                        <div className="text-right">
+                            <p className="text-sm text-amber-700 font-medium">
+                                {new Date().toLocaleDateString('en-ZA', { 
+                                    weekday: 'long', 
+                                    year: 'numeric', 
+                                    month: 'long', 
+                                    day: 'numeric' 
+                                })}
+                            </p>
+                            <p className="text-xs text-amber-600">
+                                {new Date().toLocaleTimeString('en-ZA', { 
+                                    hour: '2-digit', 
+                                    minute: '2-digit' 
+                                })}
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap gap-2">
+                        {tabs.map((tab) => {
+                            const isActive = selectedTab === tab;
+                            const isLogout = tab === 'Logout';
+                            
+                            return (
+                                <button
+                                    key={tab}
+                                    className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${
+                                        isActive
+                                            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
+                                            : isLogout
+                                            ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                                            : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
+                                    }`}
+                                    onClick={() => {
+                                        if (tab === 'Logout') {
+                                            handleLogout();
+                                        } else {
+                                            setSelectedTab(tab);
+                                        }
+                                    }}
+                                >
+                                    <span className="text-lg">{getTabIcon(tab)}</span>
+                                    <span className="capitalize">
+                                        {tab === 'pos' ? 'POS' : tab === 'manage' ? 'Manage' : tab}
+                                    </span>
+                                    {isActive && (
+                                        <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
+                                    )}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
             </nav>
 
             {/* Page Content */}
             <div className="p-8">
-                <h1 className="text-3xl font-bold mb-8 text-amber-900">☕ {selectedTab}</h1>
-
                 {selectedTab === 'Dashboard' && (
                     <>
-                       
-
                         {/* Metrics Section */}
                         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                             {metrics.map((metric, index) => (
-                                <div key={index} className="bg-white p-6 rounded-2xl shadow-md hover:shadow-lg transition">
-                                    <h2 className="text-sm text-amber-900 mb-1">{metric.label}</h2>
-                                    <p className={`text-2xl font-semibold ${metric.color}`}>{metric.value}</p>
+                                <div key={index} className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-white/50">
+                                    <h2 className="text-sm text-amber-700 mb-2 font-medium">{metric.label}</h2>
+                                    <p className={`text-3xl font-bold ${metric.color}`}>{metric.value}</p>
+                                    <div className="mt-3 h-1 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full"></div>
                                 </div>
                             ))}
                         </section>
 
                         {/* Orders Section */}
-                        <section className="bg-white rounded-2xl shadow p-6">
-                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-                                <h2 className="text-xl font-bold text-amber-900">Recent Orders</h2>
-
-                                <div className="flex flex-wrap gap-2">
-                                    <select
-                                        className={dateInputStyle}
-                                        value={filter}
-                                        onChange={(e) => setFilter(e.target.value)}
-                                    >
-                                        <option>Today</option>
-                                        <option>This Week</option>
-                                        <option>This Month</option>
-                                        <option>Custom Range</option>
-                                    </select>
-
-                                    {filter === 'Custom Range' && (
-                                        <>
-                                            <input type="date" className={dateInputStyle} />
-                                            <span className={dateInputStyle}>to</span>
-                                            <input type="date" className={dateInputStyle} />
-                                        </>
-                                    )}
+                        <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
+                            <div className="p-6 border-b border-amber-100">
+                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg flex items-center justify-center">
+                                            <span className="text-white text-sm">📋</span>
+                                        </div>
+                                        <h2 className="text-xl font-bold text-amber-900">Recent Orders</h2>
+                                    </div>
+                                    <div className="flex flex-wrap gap-3">
+                                        <select
+                                            className={dateInputStyle}
+                                            value={filter}
+                                            onChange={(e) => setFilter(e.target.value)}
+                                        >
+                                            <option>Today</option>
+                                            <option>This Week</option>
+                                            <option>This Month</option>
+                                            <option>Custom Range</option>
+                                        </select>
+                                        {filter === 'Custom Range' && (
+                                            <>
+                                                <input type="date" className={dateInputStyle} />
+                                                <span className="flex items-center text-amber-700 font-medium">to</span>
+                                                <input type="date" className={dateInputStyle} />
+                                            </>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-
+                            
                             <div className="overflow-x-auto">
-                                <table className="min-w-full text-sm text-amber-800">
-                                    <thead className="bg-amber-200 text-amber-900">
+                                <table className="min-w-full text-sm">
+                                    <thead className="bg-gradient-to-r from-amber-100 to-orange-100">
                                         <tr>
-                                            <th className="text-left px-4 py-2">Order #</th>
-                                            <th className="text-left px-4 py-2">Customer</th>
-                                            <th className="text-left px-4 py-2">Item</th>
-                                            <th className="text-left px-4 py-2">Total</th>
-                                            <th className="text-left px-4 py-2">Status</th>
-                                            <th className="text-left px-4 py-2">Date</th>
+                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Order #</th>
+                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Customer</th>
+                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Items</th>
+                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Total</th>
+                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Status</th>
+                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Date</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
-                                        {orders.map((order) => (
-                                            <tr key={order.id} className="hover:bg-amber-50 border-b transition">
-                                                <td className="px-4 py-2">{order.id}</td>
-                                                <td className="px-4 py-2">{order.customer}</td>
-                                                <td className="px-4 py-2">
+                                    <tbody className="divide-y divide-amber-100">
+                                        {orders.map((order, index) => (
+                                            <tr key={order.id} className="hover:bg-amber-50/50 transition-colors duration-150">
+                                                <td className="px-6 py-4 font-medium text-amber-900">{order.id}</td>
+                                                <td className="px-6 py-4 text-amber-800">{order.customer}</td>
+                                                <td className="px-6 py-4 text-amber-700">
                                                     {order.items.map((item, index) => {
                                                         const isLast = index === order.items.length - 1;
                                                         const isLineBreak = (index + 1) % 4 === 0;
-
                                                         return (
                                                             <span key={index}>
                                                                 {item}
@@ -207,14 +278,11 @@ export default function DashboardPage() {
                                                         );
                                                     })}
                                                 </td>
-
-
-
-                                                <td className="px-4 py-2">{order.total}</td>
-                                                <td className="px-4 py-2 font-medium">
+                                                <td className="px-6 py-4 font-semibold text-amber-900">{order.total}</td>
+                                                <td className="px-6 py-4">
                                                     <span className={getStatusStyle(order.status)}>{order.status}</span>
                                                 </td>
-                                                <td className="px-4 py-2">{order.date}</td>
+                                                <td className="px-6 py-4 text-amber-700">{order.date}</td>
                                             </tr>
                                         ))}
                                     </tbody>
@@ -223,78 +291,71 @@ export default function DashboardPage() {
                         </section>
                     </>
                 )}
-
-                {selectedTab === 'Inventory' && (() => {
-                    // Navigate to /inventory/page.tsx (Next.js route: /inventory)
-                    router.push('/inventory');
-                    return null;
-                })()}
-
-                {selectedTab === 'Reports' && (
-                    <div className="text-amber-900">
-                        <p className="text-lg">📊 Reports dashboard coming soon.</p>
-                    </div>
-                )}
-
+                
                 {selectedTab === username && (
-                    <div className="text-amber-900 max-w-md mx-auto bg-white p-6 rounded-xl shadow-md">
-                        <h2 className="text-xl font-bold mb-4">Change Username</h2>
-                        <form
-                            onSubmit={async (e) => {
-                                e.preventDefault();
-                                const newUsername = (e.target as any).newUsername.value;
-
-                                const email = localStorage.getItem('email'); // Ensure email is saved on login
-                                if (!email) {
-                                    alert("Missing email. Please log out and log in again.");
-                                    return;
-                                }
-
-                                try {
-                                    const response = await fetch('/api/API', {
-                                        method: 'POST',
-                                        headers: { 'Content-Type': 'application/json' },
-                                        body: JSON.stringify({
-                                            action: 'change_Username',
-                                            email: localStorage.getItem('email'),
-                                            username: newUsername,
-                                        }),
-                                    });
-
-                                    const result = await response.json();
-                                    if (result.success) {
-                                        alert('Username updated successfully!');
-                                        localStorage.setItem('username', result.user.username);
-                                        location.reload(); // Reload to reflect new username
-                                    } else {
-                                        alert(result.message || 'Failed to update username.');
+                    <div className="max-w-md mx-auto">
+                        <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-white/50">
+                            <div className="flex items-center gap-3 mb-6">
+                                <div className="w-10 h-10 bg-gradient-to-r from-amber-400 to-orange-400 rounded-xl flex items-center justify-center">
+                                    <span className="text-white text-lg">👤</span>
+                                </div>
+                                <h2 className="text-2xl font-bold text-amber-900">Update Profile</h2>
+                            </div>
+                            
+                            <form
+                                onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
+                                    e.preventDefault();
+                                    const formData = new FormData(e.currentTarget);
+                                    const newUsername = formData.get('newUsername') as string;
+                                    const email = localStorage.getItem('email');
+                                    
+                                    if (!email) {
+                                        alert("Missing email. Please log out and log in again.");
+                                        return;
                                     }
-                                } catch (error) {
-                                    console.error(error);
-                                    alert('Something went wrong.');
-                                }
-                            }}
-                        >
-                            <label className="block mb-2 font-medium">New Username:</label>
-                            <input
-                                type="text"
-                                name="newUsername"
-                                required
-                                className="w-full p-2 border border-amber-300 rounded mb-4"
-                            />
-                            <button
-                                type="submit"
-                                className="px-4 py-2 bg-amber-600 text-white font-semibold rounded hover:bg-amber-700 transition"
+                                    
+                                    try {
+                                        const response = await fetch('/api/API', {
+                                            method: 'POST',
+                                            headers: { 'Content-Type': 'application/json' },
+                                            body: JSON.stringify({
+                                                action: 'change_Username',
+                                                email: localStorage.getItem('email'),
+                                                username: newUsername,
+                                            }),
+                                        });
+                                        const result = await response.json();
+                                        if (result.success) {
+                                            alert('Username updated successfully!');
+                                            localStorage.setItem('username', result.user.username);
+                                            location.reload();
+                                        } else {
+                                            alert(result.message || 'Failed to update username.');
+                                        }
+                                    } catch (error) {
+                                        console.error(error);
+                                        alert('Something went wrong.');
+                                    }
+                                }}
                             >
-                                Update Username
-                            </button>
-                        </form>
+                                <label className="block mb-3 font-semibold text-amber-900">New Username:</label>
+                                <input
+                                    type="text"
+                                    name="newUsername"
+                                    required
+                                    className="w-full p-4 border border-amber-300 rounded-xl mb-6 focus:outline-none focus:ring-3 focus:ring-amber-300 focus:border-transparent transition-all duration-200"
+                                    placeholder="Enter your new username"
+                                />
+                                <button
+                                    type="submit"
+                                    className="w-full px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:from-amber-600 hover:to-orange-600 transform hover:scale-105 transition-all duration-200 shadow-lg"
+                                >
+                                    Update Username
+                                </button>
+                            </form>
+                        </div>
                     </div>
                 )}
-
-
-
-
             </div>
         </main>
     );
