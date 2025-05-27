@@ -6,6 +6,8 @@ import Link from 'next/link';
 import { useState, FormEvent } from 'react';
 import { validatePassword } from '@/lib/validators/passwordValidator';
 import { validateEmail } from '@/lib/validators/emailValidator';
+import { useRouter } from 'next/navigation';
+
 
 const comfortaa = Comfortaa({
   subsets: ['latin'],
@@ -17,6 +19,8 @@ export default function LoginPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
   const [loginError, setLoginError] = useState('');
+  const router = useRouter();
+
 
 
   // Form validation states
@@ -60,6 +64,7 @@ export default function LoginPage() {
         if (result.success) {
           console.log('Login success:', result.user);
           setLoginError(''); 
+          router.push('/dashboard');
         } else {
           console.error('Login failed:', result.message);
           setLoginError(result.message || 'Login failed. Please try again.');
