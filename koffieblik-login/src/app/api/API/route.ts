@@ -8,10 +8,32 @@ export async function POST(req: NextRequest) {
 
     const { action, username, email, password } = body;
 
-    if (!username || !action || !email || !password) {
-      console.warn('[VALIDATION FAILED] Missing fields');
-      return NextResponse.json({ success: false, message: 'Missing fields' }, { status: 400 });
+    if (!action) {
+      console.warn('[VALIDATION FAILED] Missing action');
+      return NextResponse.json({ success: false, message: 'Missing action' }, { status: 400 });
     }
+
+    if (action === 'login') {
+      if (!email || !password) {
+        console.warn('[VALIDATION FAILED] Missing login fields');
+        return NextResponse.json({ success: false, message: 'Email and password required for login' }, { status: 400 });
+      }
+    }
+
+    if (action === 'register') {
+      if (!username || !email || !password) {
+        console.warn('[VALIDATION FAILED] Missing registration fields');
+        return NextResponse.json({ success: false, message: 'Username, email, and password required for registration' }, { status: 400 });
+      }
+    }
+
+    if (action === 'username') {
+      if (!email) {
+        console.warn('[VALIDATION FAILED] Missing registration fields');
+        return NextResponse.json({ success: false, message: 'Email required for username retreival' }, { status: 400 });
+      }
+    }
+
 
     const client = new Client({
       host: process.env.DB_HOST,
@@ -56,6 +78,8 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
       }
     }
+
+    
 
     if (action === 'register') {
       console.log('[REGISTER ATTEMPT]', email);
