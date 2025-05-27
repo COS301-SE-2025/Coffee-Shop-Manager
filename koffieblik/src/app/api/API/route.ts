@@ -135,6 +135,67 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ success: true, user: result.rows[0] }, { status: 201 });
     }
 
+// ORDER
+
+      if (action === 'submit_order') {
+    const { userId, items } = body;
+
+    if (!userId || !Array.isArray(items) || items.length === 0) {
+      await client.end();
+      return NextResponse.json({ success: false, message: 'Invalid order data' }, { status: 400 });
+    }
+
+    const insertQuery = `
+      INSERT INTO orders (user_id, product_id, price, quantity, order_date)
+      VALUES ($1, $2, $3, $4, NOW())
+      RETURNING *`;
+
+    const insertedOrders = [];
+
+    for (const item of items) {
+      const { name: product_id, price, quantity } = item;
+      const result = await client.query(insertQuery, [userId, product_id, price, quantity]);
+      insertedOrders.push(result.rows[0]);
+    }
+
+    await client.end();
+    console.log('[ORDER SUBMITTED]', insertedOrders);
+    return NextResponse.json({ success: true, orders: insertedOrders }, { status: 201 });
+  }
+
+
+  // Get all orders
+if (action === 'get_orders') {
+  const result = await client.query('SELECT * FROM orders ORDER BY order_date DESC');
+  await client.end();
+  return NextResponse.json({ success: true, orders: result.rows }, { status: 200 });
+}
+
+// Mark as done
+if (action === 'mark_done') {
+  const { orderId } = body;
+
+  if (!orderId) {
+    await client.end();
+    return NextResponse.json({ success: false, message: 'Missing orderId' }, { status: 400 });
+  }
+
+  const result = await client.query(
+    'UPDATE orders SET status = $1 WHERE id = $2 RETURNING *',
+    ['done', orderId]
+  );
+
+  await client.end();
+
+  if (result.rows.length === 1) {
+    return NextResponse.json({ success: true, order: result.rows[0] }, { status: 200 });
+  } else {
+    return NextResponse.json({ success: false, message: 'Order not found' }, { status: 404 });
+  }
+}
+
+
+
     await client.end();
     console.warn('[INVALID ACTION]', action);
     return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
