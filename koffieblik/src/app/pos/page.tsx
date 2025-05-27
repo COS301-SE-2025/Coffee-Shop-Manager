@@ -1,7 +1,7 @@
-// Updated POS Page (with mock order submission and user ID input)
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface MenuItem {
   name: string;
@@ -30,6 +30,7 @@ export default function POSPage() {
   const [customerName, setCustomerName] = useState('');
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
+  const router = useRouter();
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -56,18 +57,24 @@ export default function POSPage() {
     }
 
     const mockOrder = {
-      user_id: userId,
-      customer: customerName,
-      items: cart,
-      total,
-      date: new Date().toLocaleString(),
-    };
+  user_id: userId,
+  customer: customerName,
+  items: cart,
+  total,
+  date: new Date().toLocaleString(),
+  status: 'pending', // ✅ Add this
+};
 
-    console.log('Mock order submitted:', mockOrder);
-    setMessage(`Order placed for ${customerName} (ID: ${userId})! Total: R${total}`);
+
+    const existingOrders = JSON.parse(localStorage.getItem('mockOrders') || '[]');
+    localStorage.setItem('mockOrders', JSON.stringify([...existingOrders, mockOrder]));
+
     setCart([]);
     setCustomerName('');
     setUserId('');
+    setMessage('');
+
+    
   };
 
   return (

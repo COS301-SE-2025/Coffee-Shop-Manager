@@ -103,7 +103,7 @@ export default function DashboardPage() {
         }
     };
 
-   const tabs = ['Dashboard', 'POS', 'Inventory', 'Reports', 'Logout', username];
+   const tabs = ['Dashboard', 'POS', 'Inventory', 'Reports', 'Logout','manage',username];
 
 
     return (
@@ -232,10 +232,22 @@ export default function DashboardPage() {
                 })()}
 
                 {selectedTab === 'POS' && (() => {
-                    // Navigate to /inventory/page.tsx (Next.js route: /inventory)
+                    
                     router.push('/pos');
                     return null;
                 })()}
+
+                {selectedTab === 'manage' && (() => {
+                    
+                    router.push('/manage');
+                    return null;
+                })()}
+
+                {selectedTab === 'Reports' && (
+                    <div className="text-amber-900">
+                        <p className="text-lg">📊 Reports dashboard coming soon.</p>
+                    </div>
+                )}
 
                 {selectedTab === 'Reports' && (
                     <div className="text-amber-900">
