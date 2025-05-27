@@ -268,7 +268,7 @@ export default function LoginPage() {
             </button>
 
             <div className="text-sm text-center text-gray-600 dark:text-amber-300/70 mt-6">
-              Don't have an account?{" "}
+              Don&apos;t have an account?{" "}
               <Link href="/register" className="font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 transition-colors">
                 Create one now
               </Link>

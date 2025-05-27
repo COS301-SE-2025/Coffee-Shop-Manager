@@ -256,9 +256,10 @@ export default function DashboardPage() {
                     <div className="text-amber-900 max-w-md mx-auto bg-white p-6 rounded-xl shadow-md">
                         <h2 className="text-xl font-bold mb-4">Change Username</h2>
                         <form
-                            onSubmit={async (e) => {
+                            onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
                                 e.preventDefault();
-                                const newUsername = (e.target as any).newUsername.value;
+                                const formData = new FormData(e.currentTarget);
+                                const newUsername = formData.get('newUsername') as string;
 
                                 const email = localStorage.getItem('email'); // Ensure email is saved on login
                                 if (!email) {
