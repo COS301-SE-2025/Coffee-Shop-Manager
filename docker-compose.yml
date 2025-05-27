@@ -1,6 +1,7 @@
-version: "3.8"
+# version: "3.8"
 
 services:
+# DATABASE
   db:
     build: ./db
     container_name: coffee_shop_db
@@ -10,10 +11,27 @@ services:
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: coffee_shop_db
     ports:
-      - "6000:5432"
+      - "5432:5432"
     volumes:
-      - ./:/app
-      - ./db/schema/init.sql:/docker-entrypoint-initdb.d/init.sql
-      - ./db/schema:/docker-entrypoint-initdb.d/db/schema
+      - ./db/dumps/koffieblik.sql:/docker-entrypoint-initdb.d/koffieblik.sql
 
+  # FRONTEND
+  frontend:
+    build:
+      context: ./koffieblik
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./koffieblik:/app
+      - /app/node_modules
     working_dir: /app
+    environment:
+      - NODE_ENV=development
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=coffee_shop_db
+    depends_on:
+      - db
+    command: npm run dev
