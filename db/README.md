@@ -61,3 +61,16 @@ To start interacting with your database:
     psql -d <db_name>
 
 ---
+
+## 6. Enable PostgreSQL to Run at Startup
+
+PostgreSQL is typically configured to start automatically on boot. To ensure this:
+
+Enable the PostgreSQL service:
+
+    sudo systemctl enable postgresql
+
+You can also manually start or check the status with:
+
+    sudo systemctl start postgresql
+    sudo systemctl status postgresql
