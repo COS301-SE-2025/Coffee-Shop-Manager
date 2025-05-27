@@ -38,6 +38,7 @@ export default function DashboardPage() {
 
     const handleLogout = () => {
         localStorage.removeItem('isLoggedIn');
+        localStorage.removeItem('username');
         router.push('/login');
     };
 
@@ -91,8 +92,9 @@ export default function DashboardPage() {
             default: return 'text-amber-900';
         }
     };
+    const username = localStorage.getItem('username') || 'Guest';
 
-    const tabs = ['Dashboard', 'Inventory', 'Reports', 'logout'];
+    const tabs = ['Dashboard', 'Inventory', 'Reports', 'logout', username];
 
     return (
         <main className="min-h-screen bg-amber-100">

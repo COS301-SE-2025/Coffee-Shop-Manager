@@ -6,6 +6,9 @@ import Link from 'next/link';
 import { useState } from 'react';
 import { validatePassword } from '@/lib/validators/passwordValidator';
 import { validateEmail } from '@/lib/validators/emailValidator';
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+
 
 const comfortaa = Comfortaa({
   subsets: ['latin'],
@@ -17,11 +20,66 @@ export default function RegisterPage() {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
+  const router = useRouter();
+
+  const [email, setEmail] = useState('');
+  const [confirmEmail, setConfirmEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [formError, setFormError] = useState('');
+
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    console.log({ email, confirmEmail, password, confirmPassword });
+
+    e.preventDefault();
+
+    setFormError('');
+
+    const emailValidation = validateEmail(email);
+    const passwordValidation = validatePassword(password);
+
+    if (emailValidation) return setEmailError(emailValidation);
+    if (email !== confirmEmail) return setEmailError("Emails do not match.");
+    if (passwordValidation) return setPasswordError(passwordValidation);
+    if (password !== confirmPassword) return setPasswordError("Passwords do not match.");
+
+    try {
+      const username = email.split('@')[0];
+      const res = await fetch('/api/API', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        
+        body: JSON.stringify({ action: 'register', username,email, password }),
+      });
+
+      const result = await res.json();
+
+      if (result.success) {
+        router.push('/login');
+      } else {
+        setFormError(result.message || 'Registration failed');
+      }
+    } catch (err) {
+      setFormError('Something went wrong. Please try again.');
+    }
+  };
+
+
   return (
     <HydrationFix>
       <main className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-8 px-4 ${comfortaa.className}`}>
         <div className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#1a1310] rounded-xl shadow-lg border border-amber-200 dark:border-amber-900 relative">
-          
+
           {/* Logo & Header section */}
           <div className="mb-6">
             <div className="flex justify-center mb-4">
@@ -34,8 +92,9 @@ export default function RegisterPage() {
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
             <p className="text-center text-amber-800 dark:text-amber-300 font-medium text-sm mb-2">Create your account</p>
           </div>
-          
-          <form className="space-y-5">
+
+          <form className="space-y-5" onSubmit={handleSubmit}>
+
             {/* Progress indicator */}
             <div className="mb-6">
               <div className="w-full bg-amber-100 dark:bg-amber-900/30 h-1 rounded-full">
@@ -55,10 +114,13 @@ export default function RegisterPage() {
               </label>
               <input
                 id="email-primary"
-                name="email-primary"
+                name="email"
                 type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="you@example.com"
                 required
+
                 className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
               />
               <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">We'll send a verification link to this address</p>
@@ -73,6 +135,8 @@ export default function RegisterPage() {
                 name="email-confirm"
                 type="email"
                 placeholder="you@example.com"
+                value={confirmEmail}
+                onChange={(e) => setConfirmEmail(e.target.value)}
                 required
                 className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
               />
@@ -86,13 +150,15 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   id="password-primary"
-                  name="password-primary"
+                  name="password"
                   type={passwordVisible ? "text" : "password"}
                   placeholder="••••••••"
                   required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
                 />
-                <button 
+                <button
                   type="button"
                   className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
                   onClick={() => setPasswordVisible(!passwordVisible)}
@@ -124,13 +190,15 @@ export default function RegisterPage() {
               <div className="relative">
                 <input
                   id="password-confirm"
-                  name="password-confirm"
+                  name="confirm-password"
                   type={confirmPasswordVisible ? "text" : "password"}
                   placeholder="••••••••"
                   required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
                 />
-                <button 
+                <button
                   type="button"
                   className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
                   onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}

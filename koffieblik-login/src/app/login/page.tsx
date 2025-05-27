@@ -7,6 +7,7 @@ import { useState, FormEvent } from 'react';
 import { validatePassword } from '@/lib/validators/passwordValidator';
 import { validateEmail } from '@/lib/validators/emailValidator';
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 
 const comfortaa = Comfortaa({
@@ -21,6 +22,15 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState('');
   const router = useRouter();
 
+  useEffect(() => {
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+    if (isLoggedIn) {
+      router.push('/dashboard');
+    }
+  }, [router]);
+
+
+
 
 
   // Form validation states
@@ -30,6 +40,8 @@ export default function LoginPage() {
   const [passwordError, setPasswordError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+
 
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
@@ -51,12 +63,13 @@ export default function LoginPage() {
       setIsLoading(true);
 
       try {
+        const username = email.split('@')[0];
         const response = await fetch('/api/API', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ action: 'login', email, password }),
+          body: JSON.stringify({ action: 'login', username,email, password }),
         });
 
         const result = await response.json();
@@ -65,6 +78,7 @@ export default function LoginPage() {
           console.log('Login success:', result.user);
           setLoginError('');
           localStorage.setItem('isLoggedIn', 'true');
+          localStorage.setItem('username', username);
           router.push('/dashboard');
         } else {
           console.error('Login failed:', result.message);

@@ -3,9 +3,13 @@ import { Client } from 'pg';
 
 export async function POST(req: NextRequest) {
   try {
-    const { action, email, password } = await req.json();
+    const body = await req.json(); // ✅ Read request body
+    console.log('[RECEIVED BODY]', body);
 
-    if (!action || !email || !password) {
+    const { action, username, email, password } = body;
+
+    if (!username || !action || !email || !password) {
+      console.warn('[VALIDATION FAILED] Missing fields');
       return NextResponse.json({ success: false, message: 'Missing fields' }, { status: 400 });
     }
 
@@ -17,42 +21,48 @@ export async function POST(req: NextRequest) {
       database: process.env.DB_NAME,
     });
 
+    console.log('[DB CONNECTING]');
     await client.connect();
+    console.log('[DB CONNECTED]');
 
-    if (action === "login") {
+    if (action === 'login') {
+      console.log('[LOGIN ATTEMPT]', email);
       const query = 'SELECT * FROM users WHERE email = $1 AND password = $2';
       const result = await client.query(query, [email, password]);
-
       await client.end();
 
       if (result.rows.length === 1) {
-        const user = result.rows[0];
-        return NextResponse.json({ success: true, user }, { status: 200 });
+        console.log('[LOGIN SUCCESS]', result.rows[0]);
+        return NextResponse.json({ success: true, user: result.rows[0] }, { status: 200 });
       } else {
+        console.warn('[LOGIN FAILED] Invalid credentials');
         return NextResponse.json({ success: false, message: 'Invalid credentials' }, { status: 401 });
       }
-    } 
-    
-    else if (action === "register") {
-      const checkUser = await client.query('SELECT * FROM users WHERE email = $1', [email]);
-      if (checkUser.rows.length > 0) {
+    }
+
+    if (action === 'register') {
+      console.log('[REGISTER ATTEMPT]', email);
+
+      const existing = await client.query('SELECT * FROM users WHERE email = $1', [email]);
+      if (existing.rows.length > 0) {
         await client.end();
+        console.warn('[REGISTER FAILED] User already exists');
         return NextResponse.json({ success: false, message: 'User already exists' }, { status: 409 });
       }
 
-      const insertQuery = 'INSERT INTO users (email, password) VALUES ($1, $2) RETURNING *';
-      const insertResult = await client.query(insertQuery, [email, password]);
-      const newUser = insertResult.rows[0];
+      const result = await client.query(
+        'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
+        [username, email, password]
+      );
 
       await client.end();
-
-      return NextResponse.json({ success: true, user: newUser }, { status: 201 });
-    } 
-    
-    else {
-      await client.end();
-      return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
+      console.log('[REGISTER SUCCESS]', result.rows[0]);
+      return NextResponse.json({ success: true, user: result.rows[0] }, { status: 201 });
     }
+
+    await client.end();
+    console.warn('[INVALID ACTION]', action);
+    return NextResponse.json({ success: false, message: 'Invalid action' }, { status: 400 });
 
   } catch (err) {
     console.error('[AUTH_API_ERROR]', err);
