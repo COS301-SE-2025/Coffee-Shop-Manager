@@ -6,7 +6,7 @@ export async function POST(req: NextRequest) {
     const body = await req.json(); // ✅ Read request body
     console.log('[RECEIVED BODY]', body);
 
-    const { action, username, email, password } = body;
+    const { action, username, email, password,lastName,phoneNo,dateOfBirth} = body;
 
     if (!action) {
       console.warn('[VALIDATION FAILED] Missing action');
@@ -120,13 +120,14 @@ export async function POST(req: NextRequest) {
       const existing = await client.query('SELECT * FROM users WHERE email = $1', [email]);
       if (existing.rows.length > 0) {
         await client.end();
-        console.warn('[REGISTER FAILED] User already exists');
         return NextResponse.json({ success: false, message: 'User already exists' }, { status: 409 });
       }
 
       const result = await client.query(
-        'INSERT INTO users (username, email, password) VALUES ($1, $2, $3) RETURNING *',
-        [username, email, password]
+        `INSERT INTO users (username, email, password, last_name, phone_number, date_of_birth)
+         VALUES ($1, $2, $3, $4, $5, $6)
+         RETURNING *`,
+        [username, email, password, lastName, phoneNo, dateOfBirth]
       );
 
       await client.end();
