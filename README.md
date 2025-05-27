@@ -12,8 +12,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## 🚀 Demo & Docs
 
-- 📑 [Requirements Specification (SRS)](coming soon)
-- 🎨 [Design Specification](coming soon)
+- 📑 [Requirements Specification (SRS)](docs/SRS-Coffee_Shop_Manager.pdf)
 - 📋 [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/119/views/1)
 
 ---
@@ -73,6 +72,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 ## 🌿 Branching Strategy
 
 We use the **GitFlow** model:
+
 - `main` is always deployable.
 - `dev`: Latest integrated features.
 - Feature branches are named `feature/feature-name`.
