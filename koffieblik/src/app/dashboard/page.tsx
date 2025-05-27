@@ -37,13 +37,28 @@ export default function DashboardPage() {
         const isLoggedIn = localStorage.getItem('isLoggedIn');
 
         if (!isLoggedIn) {
-            router.push('/login'); // Redirect to login if not authenticated
+            router.push('/login'); 
         }
 
         if (storedUsername) {
             setUsername(storedUsername);
         }
     }, [router]);
+
+
+//route to inventory
+     useEffect(() => {
+        if (selectedTab === 'Inventory') {
+            router.push('/inventory');
+        }
+    }, [selectedTab, router]);
+
+    useEffect(() => {
+  if (selectedTab === 'Reports') {
+    router.push('/reports');
+  }
+}, [selectedTab, router]);
+
 
 
     const handleLogout = () => {
@@ -104,10 +119,13 @@ export default function DashboardPage() {
         }
     };
 
-   
+
 
 
     const tabs = username ? getTabs(username) : [];
+
+   
+
 
 
 
@@ -230,17 +248,9 @@ export default function DashboardPage() {
                     </>
                 )}
 
-                {selectedTab === 'Inventory' && (() => {
-                    // Navigate to /inventory/page.tsx (Next.js route: /inventory)
-                    router.push('/inventory');
-                    return null;
-                })()}
 
-                {selectedTab === 'Reports' && (
-                    <div className="text-amber-900">
-                        <p className="text-lg">📊 Reports dashboard coming soon.</p>
-                    </div>
-                )}
+
+                
 
                 {selectedTab === username && (
                     <div className="text-amber-900 max-w-md mx-auto bg-white p-6 rounded-xl shadow-md">
