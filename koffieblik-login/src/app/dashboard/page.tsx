@@ -103,7 +103,7 @@ export default function DashboardPage() {
         }
     };
 
-    const tabs = ['Dashboard', 'Inventory', 'Reports', 'logout', username];
+    const tabs = ['Dashboard', 'Inventory', 'Reports', 'Logout', username];
 
     return (
         <main className="min-h-screen bg-amber-100">
