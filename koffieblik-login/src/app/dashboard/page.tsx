@@ -35,9 +35,9 @@ export default function DashboardPage() {
         const storedUsername = localStorage.getItem('username');
         const isLoggedIn = localStorage.getItem('isLoggedIn');
 
-        if (!isLoggedIn) {
-            router.push('/login'); // Redirect to login if not authenticated
-        }
+        // if (!isLoggedIn) {
+        //     router.push('/login'); // Redirect to login if not authenticated
+        // }
 
         if (storedUsername) {
             setUsername(storedUsername);
