@@ -1,6 +1,12 @@
 'use client'
 
 import React, { useState, ChangeEvent } from 'react'
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { getTabs } from '@/constants/tabs';
+
+
+
 
 interface InventoryItem {
   id: number
@@ -31,6 +37,31 @@ const initialData: InventoryItem[] = [
 ]
 
 export default function InventoryPage() {
+  const router = useRouter();
+  const [username, setUsername] = useState('Guest');
+  const [selectedTab, setSelectedTab] = useState('Inventory');
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    const isLoggedIn = localStorage.getItem('isLoggedIn');
+
+    if (!isLoggedIn) {
+      router.push('/login');
+    }
+
+    if (storedUsername) {
+      setUsername(storedUsername);
+    }
+  }, [router]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('isLoggedIn');
+    localStorage.removeItem('username');
+    localStorage.removeItem('email');
+    router.push('/login');
+  };
+
+  const tabs = getTabs(username);
   const [items, setItems] = useState<InventoryItem[]>(initialData)
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<InventoryItem>({ id: 0, name: '', category: '', quantity: 0, price: 0 })
@@ -38,6 +69,8 @@ export default function InventoryPage() {
   const [addForm, setAddForm] = useState<FormData>({ name: '', category: '', quantity: 0, price: 0 })
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
+
+
 
   // Delete
   const handleDelete = (id: number, name: string) => {
@@ -67,8 +100,8 @@ export default function InventoryPage() {
       field === 'quantity'
         ? parseInt(e.target.value, 10) || 0
         : field === 'price'
-        ? parseFloat(e.target.value) || 0
-        : e.target.value
+          ? parseFloat(e.target.value) || 0
+          : e.target.value
     setEditForm(prev => ({ ...prev, [field]: value }))
   }
 
@@ -90,16 +123,16 @@ export default function InventoryPage() {
     }
 
     setIsSubmitting(true)
-    
+
     // Simulate API call
     await new Promise(resolve => setTimeout(resolve, 1000))
-    
+
     const newId = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1
     setItems(prev => [...prev, { id: newId, ...addForm }])
-    
+
     setShowSuccess(true)
     setIsSubmitting(false)
-    
+
     // Reset form after success
     setTimeout(() => {
       setAddForm({ name: '', category: '', quantity: 0, price: 0 })
@@ -110,6 +143,30 @@ export default function InventoryPage() {
 
   return (
     <main className="min-h-screen bg-brown-50 p-6">
+      <nav className="sticky top-0 z-50 bg-white border-b border-amber-200 px-8 py-4 flex gap-4 mb-6">
+        {tabs.map((tab) => (
+          <button
+            key={tab}
+            className={`text-sm font-semibold px-4 py-2 rounded-full transition ${selectedTab === tab
+                ? 'bg-amber-600 text-white'
+                : 'bg-amber-200 text-amber-900 hover:bg-amber-300'
+              }`}
+            onClick={() => {
+              setSelectedTab(tab);
+              if (tab === 'Logout') {
+                handleLogout();
+              } else if (tab === username) {
+                alert('Go to profile from Dashboard.');
+              } else {
+                router.push(`/${tab.toLowerCase()}`);
+              }
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </nav>
+
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold text-brown-800">
           {isAdding ? 'Add New Item' : 'Inventory'}
@@ -241,7 +298,7 @@ export default function InventoryPage() {
                     'Add Item'
                   )}
                 </button>
-                
+
                 <button
                   onClick={() => {
                     setIsAdding(false)

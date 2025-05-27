@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
+import { getTabs } from '@/constants/tabs';
 
 type OrderStatus = 'Completed' | 'Pending' | 'Cancelled';
 
@@ -103,7 +104,12 @@ export default function DashboardPage() {
         }
     };
 
-    const tabs = ['Dashboard', 'Inventory', 'Reports', 'Logout', username];
+   
+
+
+    const tabs = username ? getTabs(username) : [];
+
+
 
     return (
         <main className="min-h-screen bg-amber-100">
@@ -137,7 +143,7 @@ export default function DashboardPage() {
 
                 {selectedTab === 'Dashboard' && (
                     <>
-                       
+
 
                         {/* Metrics Section */}
                         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
