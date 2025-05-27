@@ -103,7 +103,8 @@ export default function DashboardPage() {
         }
     };
 
-    const tabs = ['Dashboard', 'Inventory', 'Reports', 'Logout', username];
+   const tabs = ['Dashboard', 'POS', 'Inventory', 'Reports', 'Logout', username];
+
 
     return (
         <main className="min-h-screen bg-amber-100">
@@ -227,6 +228,12 @@ export default function DashboardPage() {
                 {selectedTab === 'Inventory' && (() => {
                     // Navigate to /inventory/page.tsx (Next.js route: /inventory)
                     router.push('/inventory');
+                    return null;
+                })()}
+
+                {selectedTab === 'POS' && (() => {
+                    // Navigate to /inventory/page.tsx (Next.js route: /inventory)
+                    router.push('/pos');
                     return null;
                 })()}
 
