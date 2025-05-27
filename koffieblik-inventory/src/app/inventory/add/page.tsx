@@ -139,24 +139,26 @@ export default function AddItemPage() {
                 />
               </div>
 
-             {/* */ }
-              <div className="space-y-2">
-                <label htmlFor="price" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
-                  Price (R)
-                </label>
-                <input
-                  type="number"
-                  id="price"
-                  name="price"
-                  value={formData.price}
-                  onChange={handleInputChange}
-                  min="0"
-                  step="0.01"
-                  className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
-                  placeholder="0.00"
-                  required
-                />
-              </div>
+             {/* Price */}
+          <div className="space-y-2">
+          <label htmlFor="price" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+              Price (R)
+          </label>
+        <input
+          type="number"
+          id="price"
+          name="price"
+          value={formData.price === 0 ? '' : formData.price}
+          onChange={handleInputChange}
+          min="0"
+          step="0.01"
+          className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
+          placeholder="0.00"
+          required
+          />
+      </div>
+
+
             </div>
 
             {/* Form Actions */}
@@ -195,7 +197,7 @@ export default function AddItemPage() {
             <h3 className="text-lg font-semibold text-brown-800 mb-4">Preview</h3>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
               <div>
-                <span className="block text-brown-600 font-medium">Name:</span>
+                <span className="block text-brown-600 font-medium">Item Name:</span>
                 <span className="text-brown-800">{formData.name || '-'}</span>
               </div>
               <div>
