@@ -1,18 +1,18 @@
-name: CI for Koffieblik Login (Local Demo)
+name: CI for Koffieblik
 
 on:
   push:
     branches: [main]
     paths:
-      - 'app/**'
-      - '.github/workflows/nextjs-ci.yml'
+      - 'koffieblik/**'
+      - '.github/workflows/koffieblik_ci.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./app
+        working-directory: ./koffieblik
 
     steps:
       - name: Checkout code
