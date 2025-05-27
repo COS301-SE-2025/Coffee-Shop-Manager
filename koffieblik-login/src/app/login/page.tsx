@@ -41,7 +41,14 @@ export default function LoginPage() {
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-
+  const isFormValid = () => {
+    return (
+      email !== '' &&
+      password !== '' &&
+      !emailError &&
+      !passwordError
+    );
+  };
 
   // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
@@ -244,24 +251,19 @@ export default function LoginPage() {
 
             <button
               type="submit"
-              disabled={isLoading}
-              className={`w-full bg-amber-700 hover:bg-amber-800 text-white py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md hover:shadow-lg flex items-center justify-center mt-6 ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}
+              disabled={!isFormValid() || isLoading}
+              className={`w-full py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md flex items-center justify-center mt-6 
+                ${!isFormValid() || isLoading
+                  ? 'bg-amber-400 cursor-not-allowed opacity-50'
+                  : 'bg-amber-700 hover:bg-amber-800 hover:shadow-lg'
+                }
+                text-white`}
             >
-              {isLoading ? (
-                <>
-                  <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                  <span>Signing In...</span>
-                </>
-              ) : (
-                <>
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
-                    <path d="M11 7L9.6 8.4l2.6 2.6H2v2h10.2l-2.6 2.6L11 17l5-5-5-5zm9 12h-8v2h8c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2h-8v2h8v14z" />
-                  </svg>
-                  <span>Sign In</span>
-                </>
+              <span>{isLoading ? 'Logging into Account...' : 'Login to Account'}</span>
+              {!isLoading && (
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-2">
+                  <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+                </svg>
               )}
             </button>
 

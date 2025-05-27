@@ -3,7 +3,7 @@
 import HydrationFix from '../hydrationFix';
 import { Comfortaa } from 'next/font/google';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, FormEvent } from 'react';
 import { validatePassword } from '@/lib/validators/passwordValidator';
 import { validateEmail } from '@/lib/validators/emailValidator';
 import { useRouter } from 'next/navigation';
@@ -17,6 +17,7 @@ const comfortaa = Comfortaa({
 })
 
 export default function RegisterPage() {
+  const [currentStep, setCurrentStep] = useState(1);
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
 
@@ -74,7 +75,6 @@ export default function RegisterPage() {
     }
   };
 
-
   return (
     <HydrationFix>
       <main className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-8 px-4 ${comfortaa.className}`}>
@@ -90,7 +90,7 @@ export default function RegisterPage() {
               </div>
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
-            <p className="text-center text-amber-800 dark:text-amber-300 font-medium text-sm mb-2">Create your account</p>
+            <p className="text-center text-amber-800 dark:text-amber-300 font-medium text-sm mb-2">{getStepTitle()}</p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -98,12 +98,15 @@ export default function RegisterPage() {
             {/* Progress indicator */}
             <div className="mb-6">
               <div className="w-full bg-amber-100 dark:bg-amber-900/30 h-1 rounded-full">
-                <div className="bg-amber-600 h-1 rounded-full w-1/3"></div>
+                <div 
+                  className="bg-amber-600 h-1 rounded-full transition-all duration-300"
+                  style={{ width: `${(currentStep / 3) * 100}%` }}
+                ></div>
               </div>
               <div className="flex justify-between text-xs mt-1 text-amber-700 dark:text-amber-400">
-                <span>Account</span>
-                <span className="opacity-50">Details</span>
-                <span className="opacity-50">Confirm</span>
+                <span className={currentStep >= 1 ? 'font-medium' : 'opacity-50'}>Account</span>
+                <span className={currentStep >= 2 ? 'font-medium' : 'opacity-50'}>Details</span>
+                <span className={currentStep >= 3 ? 'font-medium' : 'opacity-50'}>Confirm</span>
               </div>
             </div>
 
@@ -158,29 +161,47 @@ export default function RegisterPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   className="w-full px-4 py-2.5 border border-amber-200 dark:border-amber-900 rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-600"
                 />
+                
                 <button
                   type="button"
-                  className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
-                  onClick={() => setPasswordVisible(!passwordVisible)}
+                  onClick={handlePrevStep}
+                  className="flex-1 py-3 px-4 rounded-lg border border-amber-300 dark:border-amber-700 bg-transparent text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-50 dark:hover:bg-amber-900/20 transition duration-200 flex items-center justify-center"
                 >
-                  {passwordVisible ? (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                      <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
-                    </svg>
-                  ) : (
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
-                      <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
-                    </svg>
-                  )}
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
+                    <path d="M12 20l1.41-1.41L7.83 13H20v-2H7.83l5.58-5.59L12 4l-8 8z" />
+                  </svg>
+                  Back
                 </button>
-              </div>
-              <div className="mt-1 flex space-x-1">
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-                <div className="h-1 flex-1 rounded-full bg-amber-200"></div>
-              </div>
-              <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Must be at least 8 characters</p>
+              )}
+              
+              <button
+                type="submit"
+                disabled={
+                  (currentStep === 1 && !isStep1Valid()) ||
+                  (currentStep === 2 && !isStep2Valid()) ||
+                  (currentStep === 3 && (!isStep3Valid() || isLoading))
+                }
+                className={`${currentStep > 1 ? 'flex-1' : 'w-full'} py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md flex items-center justify-center 
+                  ${(currentStep === 1 && !isStep1Valid()) ||
+                    (currentStep === 2 && !isStep2Valid()) ||
+                    (currentStep === 3 && (!isStep3Valid() || isLoading))
+                    ? 'bg-amber-400 cursor-not-allowed opacity-50'
+                    : 'bg-amber-700 hover:bg-amber-800 hover:shadow-lg'
+                  }
+                  text-white`}
+              >
+                <span>
+                  {currentStep === 3 
+                    ? (isLoading ? 'Creating Account...' : 'Create Account')
+                    : 'Next'
+                  }
+                </span>
+                {!isLoading && (
+                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-2">
+                    <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
+                  </svg>
+                )}
+              </button>
             </div>
 
             <div>
