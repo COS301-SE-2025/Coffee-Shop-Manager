@@ -54,6 +54,18 @@ export default function DashboardPage() {
     }, [selectedTab, router]);
 
     useEffect(() => {
+        if (selectedTab === 'pos') {
+            router.push('/pos');
+        }
+    }, [selectedTab, router]);
+
+    useEffect(() => {
+        if (selectedTab === 'manage') {
+            router.push('/manage');
+        }
+    }, [selectedTab, router]);
+
+    useEffect(() => {
   if (selectedTab === 'Reports') {
     router.push('/reports');
   }
