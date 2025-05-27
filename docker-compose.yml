@@ -1,0 +1,19 @@
+version: "3.8"
+
+services:
+  db:
+    build: ./db
+    container_name: coffee_shop_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: coffee_shop_db
+    ports:
+      - "6000:5432"
+    volumes:
+      - ./:/app
+      - ./db/schema/init.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./db/schema:/docker-entrypoint-initdb.d/db/schema
+
+    working_dir: /app
