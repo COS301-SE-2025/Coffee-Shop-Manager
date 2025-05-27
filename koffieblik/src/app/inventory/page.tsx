@@ -1,20 +1,20 @@
 'use client'
 
-import React, { useState, ChangeEvent } from 'react'
+import React, { useState, useEffect, ChangeEvent } from 'react'
 
 interface InventoryItem {
-  id: number
-  name: string
-  category: string
-  quantity: number
-  price: number
+  id: number;
+  name: string;
+  category: string;
+  quantity: number;
+  price: number;
 }
 
 interface FormData {
-  name: string
-  category: string
-  quantity: number
-  price: number
+  name: string;
+  category: string;
+  quantity: number;
+  price: number;
 }
 
 const initialData: InventoryItem[] = [
@@ -31,7 +31,18 @@ const initialData: InventoryItem[] = [
 ]
 
 export default function InventoryPage() {
-  const [items, setItems] = useState<InventoryItem[]>(initialData)
+  // Load items from localStorage or fall back to initialData
+  const [items, setItems] = useState<InventoryItem[]>(() => {
+    if (typeof window === 'undefined') return initialData
+    const saved = window.localStorage.getItem('inventory-items')
+    return saved ? JSON.parse(saved) as InventoryItem[] : initialData
+  })
+
+  // Persist to localStorage on every change
+  useEffect(() => {
+    window.localStorage.setItem('inventory-items', JSON.stringify(items))
+  }, [items])
+
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editForm, setEditForm] = useState<InventoryItem>({ id: 0, name: '', category: '', quantity: 0, price: 0 })
   const [isAdding, setIsAdding] = useState(false)
@@ -39,20 +50,22 @@ export default function InventoryPage() {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [showSuccess, setShowSuccess] = useState(false)
 
-  // Delete
+  // DELETE
   const handleDelete = (id: number, name: string) => {
     if (confirm(`Are you sure you want to delete ${name}?`)) {
       setItems(prev => prev.filter(item => item.id !== id))
     }
   }
 
-  // Edit
+  // EDIT
   const startEdit = (item: InventoryItem) => {
     setEditingId(item.id)
     setEditForm({ ...item })
   }
 
-  const cancelEdit = () => setEditingId(null)
+  const cancelEdit = () => {
+    setEditingId(null)
+  }
 
   const saveEdit = () => {
     setItems(prev => prev.map(item => item.id === editingId ? { ...editForm } : item))
@@ -72,7 +85,7 @@ export default function InventoryPage() {
     setEditForm(prev => ({ ...prev, [field]: value }))
   }
 
-  // Add
+  // ADD
   const handleAddChange = (
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>
   ) => {
@@ -80,7 +93,7 @@ export default function InventoryPage() {
     const parsed = name === 'quantity' || name === 'price'
       ? parseFloat(value) || 0
       : value
-    setAddForm(prev => ({ ...prev, [name]: parsed }))
+    setAddForm(prev => ({ ...prev, [name]: parsed as any }))
   }
 
   const handleAddSubmit = async () => {
@@ -90,22 +103,18 @@ export default function InventoryPage() {
     }
 
     setIsSubmitting(true)
-    
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000))
-    
+    await new Promise(resolve => setTimeout(resolve, 500))
+
     const newId = items.length ? Math.max(...items.map(i => i.id)) + 1 : 1
     setItems(prev => [...prev, { id: newId, ...addForm }])
-    
     setShowSuccess(true)
     setIsSubmitting(false)
-    
-    // Reset form after success
+
     setTimeout(() => {
       setAddForm({ name: '', category: '', quantity: 0, price: 0 })
       setShowSuccess(false)
       setIsAdding(false)
-    }, 2000)
+    }, 1500)
   }
 
   return (
@@ -129,8 +138,7 @@ export default function InventoryPage() {
       </div>
 
       {isAdding ? (
-        <div className="max-w-2xl mx-auto">
-          {/* Success Message */}
+        <div className="max-w-xl mx-auto">
           {showSuccess && (
             <div className="mb-6 p-4 bg-green-100 border border-green-300 rounded-xl">
               <div className="flex items-center">
@@ -142,163 +150,108 @@ export default function InventoryPage() {
             </div>
           )}
 
-          {/* Form */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
-            <div className="space-y-6">
-              {/* Item Name */}
-              <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
-                  Item Name
-                </label>
+          <div className="bg-white rounded-xl shadow-lg p-8 space-y-6">
+            <div>
+              <label htmlFor="name" className="block mb-1 font-semibold text-brown-800">Item Name</label>
+              <input
+                id="name"
+                name="name"
+                type="text"
+                value={addForm.name}
+                onChange={handleAddChange}
+                className="w-full p-3 border rounded"
+                placeholder="Enter item name"
+              />
+            </div>
+
+            <div>
+              <label htmlFor="category" className="block mb-1 font-semibold text-brown-800">Category</label>
+              <select
+                id="category"
+                name="category"
+                value={addForm.category}
+                onChange={handleAddChange}
+                className="w-full p-3 border rounded"
+              >
+                <option value="">Select category</option>
+                <option>Coffee</option>
+                <option>Tea</option>
+                <option>Dairy</option>
+                <option>Dairy Alternative</option>
+                <option>Syrups</option>
+                <option>Mixes</option>
+                <option>Condiments</option>
+                <option>Other</option>
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="quantity" className="block mb-1 font-semibold text-brown-800">Quantity</label>
                 <input
-                  type="text"
-                  id="name"
-                  name="name"
-                  value={addForm.name}
+                  id="quantity"
+                  name="quantity"
+                  type="number"
+                  min={0}
+                  value={addForm.quantity || ''}
                   onChange={handleAddChange}
-                  className="w-full px-4 py-3 border-2 border-brown-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 text-brown-700 placeholder-brown-400"
-                  placeholder="Enter item name..."
+                  className="w-full p-3 border rounded"
+                  placeholder="0"
                 />
               </div>
 
-              {/* Category */}
-              <div className="space-y-2">
-                <label htmlFor="category" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
-                  Category
-                </label>
-                <select
-                  id="category"
-                  name="category"
-                  value={addForm.category}
+              <div>
+                <label htmlFor="price" className="block mb-1 font-semibold text-brown-800">Price (R)</label>
+                <input
+                  id="price"
+                  name="price"
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  value={addForm.price || ''}
                   onChange={handleAddChange}
-                  className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500"
-                >
-                  <option value="">Select a category</option>
-                  <option value="Coffee">Coffee</option>
-                  <option value="Tea">Tea</option>
-                  <option value="Dairy">Dairy</option>
-                  <option value="Dairy Alternative">Dairy Alternative</option>
-                  <option value="Syrups">Syrups</option>
-                  <option value="Mixes">Mixes</option>
-                  <option value="Condiments">Condiments</option>
-                  <option value="Other">Other</option>
-                </select>
+                  className="w-full p-3 border rounded"
+                  placeholder="0.00"
+                />
               </div>
+            </div>
 
-              {/* Quantity and Price */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Quantity */}
-                <div className="space-y-2">
-                  <label htmlFor="quantity" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
-                    Quantity
-                  </label>
-                  <input
-                    type="number"
-                    id="quantity"
-                    name="quantity"
-                    value={addForm.quantity === 0 ? '' : addForm.quantity}
-                    onChange={handleAddChange}
-                    min="0"
-                    className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
-                    placeholder="0"
-                  />
-                </div>
+            <div className="flex gap-4">
+              <button
+                onClick={handleAddSubmit}
+                disabled={isSubmitting}
+                className="flex-1 py-3 bg-amber-500 hover:bg-amber-600 text-white rounded"
+              >
+                {isSubmitting ? 'Adding...' : 'Add Item'}
+              </button>
 
-                {/* Price */}
-                <div className="space-y-2">
-                  <label htmlFor="price" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
-                    Price (R)
-                  </label>
-                  <input
-                    type="number"
-                    id="price"
-                    name="price"
-                    value={addForm.price === 0 ? '' : addForm.price}
-                    onChange={handleAddChange}
-                    min="0"
-                    step="0.01"
-                    className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-
-              {/* Form Actions */}
-              <div className="flex flex-col sm:flex-row gap-4 pt-6">
-                <button
-                  onClick={handleAddSubmit}
-                  disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-semibold rounded-xl transition-colors duration-200 flex items-center justify-center"
-                >
-                  {isSubmitting ? (
-                    <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      </svg>
-                      Adding Item...
-                    </>
-                  ) : (
-                    'Add Item'
-                  )}
-                </button>
-                
-                <button
-                  onClick={() => {
-                    setIsAdding(false)
-                    setAddForm({ name: '', category: '', quantity: 0, price: 0 })
-                    setShowSuccess(false)
-                  }}
-                  className="flex-1 px-6 py-3 bg-brown-200 hover:bg-brown-300 text-brown-800 font-semibold rounded-xl transition-colors duration-200 text-center flex items-center justify-center"
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                onClick={() => setIsAdding(false)}
+                className="flex-1 py-3 bg-gray-200 hover:bg-gray-300 rounded"
+              >
+                Cancel
+              </button>
             </div>
           </div>
-
-          {/* Form Preview */}
-          {(addForm.name || addForm.category || addForm.quantity > 0 || addForm.price > 0) && (
-            <div className="mt-8 bg-amber-50 border border-amber-200 rounded-xl p-6">
-              <h3 className="text-lg font-semibold text-brown-800 mb-4">Preview</h3>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                <div>
-                  <span className="block text-brown-600 font-medium">Item Name:</span>
-                  <span className="text-brown-800">{addForm.name || '-'}</span>
-                </div>
-                <div>
-                  <span className="block text-brown-600 font-medium">Category:</span>
-                  <span className="text-brown-800">{addForm.category || '-'}</span>
-                </div>
-                <div>
-                  <span className="block text-brown-600 font-medium">Quantity:</span>
-                  <span className="text-brown-800">{addForm.quantity}</span>
-                </div>
-                <div>
-                  <span className="block text-brown-600 font-medium">Price:</span>
-                  <span className="text-brown-800">R {addForm.price.toFixed(2)}</span>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
-          <table className="min-w-full divide-y divide-brown-100">
+        <div className="overflow-x-auto bg-white rounded-xl shadow">
+          <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-amber-100">
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-brown-800">Item</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-brown-800">Category</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-brown-800">Quantity</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-brown-800">Price</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-brown-800">Actions</th>
+                <th className="px-4 py-2 text-left font-medium text-brown-800">Item</th>
+                <th className="px-4 py-2 text-left font-medium text-brown-800">Category</th>
+                <th className="px-4 py-2 text-right font-medium text-brown-800">Quantity</th>
+                <th className="px-4 py-2 text-right font-medium text-brown-800">Price</th>
+                <th className="px-4 py-2 text-center font-medium text-brown-800">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-brown-100">
+            <tbody className="divide-y divide-gray-100">
               {items.map(item => {
                 const isEditing = item.id === editingId
                 return (
                   <tr key={item.id} className="hover:bg-amber-50">
-                    <td className="px-4 py-2 text-brown-700">
+                    <td className="px-4 py-2">
                       {isEditing ? (
                         <input
                           type="text"
@@ -306,9 +259,11 @@ export default function InventoryPage() {
                           onChange={e => handleEditChange(e, 'name')}
                           className="w-full border rounded p-1"
                         />
-                      ) : item.name}
+                      ) : (
+                        item.name
+                      )}
                     </td>
-                    <td className="px-4 py-2 text-brown-700">
+                    <td className="px-4 py-2">
                       {isEditing ? (
                         <input
                           type="text"
@@ -316,51 +271,53 @@ export default function InventoryPage() {
                           onChange={e => handleEditChange(e, 'category')}
                           className="w-full border rounded p-1"
                         />
-                      ) : item.category}
+                      ) : (
+                        item.category
+                      )}
                     </td>
-                    <td className="px-4 py-2 text-right text-brown-700">
+                    <td className="px-4 py-2 text-right">
                       {isEditing ? (
                         <input
                           type="number"
                           value={editForm.quantity}
                           onChange={e => handleEditChange(e, 'quantity')}
-                          className="w-20 border rounded p-1 text-right"
+                          className="w-16 border rounded p-1 text-right"
                         />
-                      ) : item.quantity}
+                      ) : (
+                        item.quantity
+                      )}
                     </td>
-                    <td className="px-4 py-2 text-right text-brown-700">
+                    <td className="px-4 py-2 text-right">
                       {isEditing ? (
                         <input
                           type="number"
                           step="0.01"
                           value={editForm.price}
                           onChange={e => handleEditChange(e, 'price')}
-                          className="w-24 border rounded p-1 text-right"
+                          className="w-20 border rounded p-1 text-right"
                         />
-                      ) : `R ${item.price.toFixed(2)}`}
+                      ) : (
+                        `R ${item.price.toFixed(2)}`
+                      )}
                     </td>
                     <td className="px-4 py-2 text-center space-x-2">
                       {isEditing ? (
                         <>
-                          <button
-                            onClick={saveEdit}
-                            className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded transition-colors"
-                          >Save</button>
-                          <button
-                            onClick={cancelEdit}
-                            className="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded transition-colors"
-                          >Cancel</button>
+                          <button onClick={saveEdit} className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white rounded">
+                            Save
+                          </button>
+                          <button onClick={cancelEdit} className="px-3 py-1 bg-gray-300 hover:bg-gray-400 text-gray-800 rounded">
+                            Cancel
+                          </button>
                         </>
                       ) : (
                         <>
-                          <button
-                            onClick={() => startEdit(item)}
-                            className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition-colors"
-                          >Edit</button>
-                          <button
-                            onClick={() => handleDelete(item.id, item.name)}
-                            className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
-                          >Delete</button>
+                          <button onClick={() => startEdit(item)} className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded">
+                            Edit
+                          </button>
+                          <button onClick={() => handleDelete(item.id, item.name)} className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded">
+                            Delete
+                          </button>
                         </>
                       )}
                     </td>
