@@ -69,21 +69,37 @@ export default function LoginPage() {
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ action: 'login', username,email, password }),
+          body: JSON.stringify({ action: 'login', username, email, password }),
         });
 
-        const result = await response.json();
+        const loginResult = await response.json();
 
-        if (result.success) {
-          console.log('Login success:', result.user);
+        if (loginResult.success) {
+          console.log('Login success:', loginResult.user);
           setLoginError('');
           localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('username', username);
+
+          const usernameResponse = await fetch('/api/API', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'username', username, email, password }),
+          });
+          const usernameResult = await usernameResponse.json();
+
+          if (usernameResult.success && usernameResult.username) {
+            localStorage.setItem('username', usernameResult.username);
+          } else {
+            console.warn('Username not found, fallback to "User"');
+            localStorage.setItem('username', 'User');
+          }
+
           router.push('/dashboard');
         } else {
-          console.error('Login failed:', result.message);
-          setLoginError(result.message || 'Login failed. Please try again.');
+          console.error('Login failed:', loginResult.message);
+          setLoginError(loginResult.message || 'Login failed. Please try again.');
         }
+
+
 
 
       } catch (error) {

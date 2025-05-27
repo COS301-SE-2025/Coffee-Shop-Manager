@@ -40,6 +40,23 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    if (action === 'username') {
+      console.log('[USERNAME RETRIEVAL] Request received for email:', email);
+
+      const query = 'SELECT username FROM users WHERE email = $1';
+      const result = await client.query(query, [email]);
+
+      await client.end();
+
+      if (result.rows.length === 1) {
+        console.log('[USERNAME RETRIEVED]', result.rows[0].username);
+        return NextResponse.json({ success: true, username: result.rows[0].username }, { status: 200 });
+      } else {
+        console.warn('[USERNAME FAILED] No user with that email');
+        return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+      }
+    }
+
     if (action === 'register') {
       console.log('[REGISTER ATTEMPT]', email);
 
