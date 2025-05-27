@@ -4,6 +4,9 @@
 export const metadata = {
   title: 'Login - DieKoffieBlik',
   description: 'Log into an existing account for DieKoffieBlik coffee shop management system',
+  icons: {
+    icon: '/favicon.ico',
+  }
 }
 
 export default function LoginLayout({
