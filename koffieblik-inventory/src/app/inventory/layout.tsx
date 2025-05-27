@@ -2,6 +2,14 @@
 import React from 'react'
 import Link from 'next/link'
 
+export const metadata = {
+  title: 'Inventory - DieKoffieBlik',
+  description: 'Manage the inventory system of a coffee shop',
+  icons: {
+    icon: '/favicon.ico'
+  }
+}
+
 export default function InventoryLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="min-h-screen flex bg-brown-50 text-amber-800">
