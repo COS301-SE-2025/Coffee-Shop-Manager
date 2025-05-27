@@ -139,7 +139,24 @@ export default function AddItemPage() {
                 />
               </div>
 
-             
+             {/* */ }
+              <div className="space-y-2">
+                <label htmlFor="price" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                  Price (R)
+                </label>
+                <input
+                  type="number"
+                  id="price"
+                  name="price"
+                  value={formData.price}
+                  onChange={handleInputChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
+                  placeholder="0.00"
+                  required
+                />
+              </div>
             </div>
 
             {/* Form Actions */}
