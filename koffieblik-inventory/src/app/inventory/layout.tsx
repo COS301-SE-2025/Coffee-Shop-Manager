@@ -17,12 +17,12 @@ export default function InventoryLayout({ children }: { children: React.ReactNod
             </Link>
           </li>
           <li>
-            <Link 
+            {/* <Link 
               href="/inventory/add" 
               className="block px-4 py-2 rounded-lg hover:bg-amber-200 hover:text-brown-900 transition"
             >
               Add Item
-            </Link>
+            </Link> */}
           </li>
         </ul>
       </nav>
