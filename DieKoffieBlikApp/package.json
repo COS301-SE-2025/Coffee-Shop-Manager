@@ -3,29 +3,30 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
-    "start-high-mem": "NODE_OPTIONS='--max-old-space-size=8192' expo start",
-    "android": "expo start --android",
-    "android-high-mem": "NODE_OPTIONS='--max-old-space-size=8192' expo start --android",
+    "linuxAndroid": "expo start",
+    "linux-high-mem": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start",
+    "windowsAndroid": "expo start --android",
+    "windows-high-mem": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
     "reset-cache": "expo start --clear"
   },
   "dependencies": {
+    "@expo/vector-icons": "^14.0.4",
     "expo": "~53.0.0",
     "expo-linear-gradient": "~14.1.4",
+    "expo-router": "~5.0.7",
     "expo-status-bar": "~2.2.3",
     "react": "19.0.0",
-    "react-native": "0.79.2",
     "react-dom": "19.0.0",
-    "react-native-web": "^0.20.0",
-    "@expo/vector-icons": "^14.0.4",
-    "expo-router": "~5.0.7"
+    "react-native": "0.79.2",
+    "react-native-web": "^0.20.0"
   },
   "devDependencies": {
     "@babel/core": "^7.25.0",
     "@types/react": "~19.0.10",
     "@types/react-native": "^0.72.8",
+    "cross-env": "^7.0.3",
     "typescript": "~5.8.3"
   },
   "private": true

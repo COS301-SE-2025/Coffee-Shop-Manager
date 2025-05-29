@@ -13,12 +13,8 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 
-// You'll need to import or define these validators
-// import { validatePassword } from '@/lib/validators/passwordValidator';
-// import { validateEmail } from '@/lib/validators/emailValidator';
-
-// Mock validators for this example
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   if (!emailRegex.test(email)) {
@@ -70,6 +66,8 @@ export default function RegisterScreen() {
   // Step 3 - Confirmation states
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToMarketing, setAgreedToMarketing] = useState(false);
+
+  const router = useRouter();
 
   const isStep1Valid = () => {
     return (
@@ -546,10 +544,8 @@ export default function RegisterScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity style={styles.loginLink}>
-              <Text style={styles.loginLinkText}>
-                Already have an account? <Text style={styles.loginLinkBold}>Login</Text>
-              </Text>
+            <TouchableOpacity onPress={() => router.push('/login')}>
+              <Text>Login</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>

@@ -14,6 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { useRouter } from 'expo-router';
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
@@ -50,6 +51,7 @@ export default function LoginScreen({
   const [passwordError, setPasswordError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
 
   const isFormValid = () => {
     return (
@@ -255,7 +257,7 @@ export default function LoginScreen({
               {/* Create account link */}
               <View style={styles.signupContainer}>
                 <Text style={styles.signupText}>Don't have an account? </Text>
-                <TouchableOpacity onPress={onCreateAccount}>
+                <TouchableOpacity onPress={() => router.push('/register')}>
                   <Text style={styles.signupLink}>Create one now</Text>
                 </TouchableOpacity>
               </View>
