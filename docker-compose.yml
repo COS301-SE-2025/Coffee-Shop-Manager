@@ -1,21 +1,9 @@
-# version: "3.8"
+# Usage
+#   Start:                      docker compose -f docker-compose.yml -f supabase/docker-compose.yml up -d
+#         -> Reset database:    sudo rm -rf supabase/volumes/db/data
+#   Stop:                       docker compose -f docker-compose.yml -f supabase/docker-compose.yml down -d
 
 services:
-# DATABASE
-  db:
-    build: ./db
-    container_name: coffee_shop_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: coffee_shop_db
-    ports:
-      - "5432:5432"
-    volumes:
-      - ./db/dumps/koffieblik.sql:/docker-entrypoint-initdb.d/koffieblik.sql
-
-  # FRONTEND
   frontend:
     build:
       context: ./koffieblik
