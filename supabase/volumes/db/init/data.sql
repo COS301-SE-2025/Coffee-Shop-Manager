@@ -19,6 +19,19 @@ CREATE TABLE IF NOT EXISTS users (
     --# CONSTRAINT users_auth_user_id_fkey FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
+-- ENABLE ROW LEVEL SECURITY
+CREATE POLICY "Users can view their own profile"
+ON public.user
+FOR select
+USING (auth.uid() = id);
+
+CREATE POLICY "Users can insert their own profile"
+ON public.user
+FOR insert
+WITH CHECK (auth.uid() = id);
+
+ALTER TABLE public.user ENABLE row level security;
+
 -- REFERENCE PLACEHOLDER USER IF USER GETS DELETED
 CREATE OR REPLACE FUNCTION reassign_orders_to_placeholder()
 RETURNS TRIGGER AS $$
@@ -262,6 +275,6 @@ CREATE TABLE IF NOT EXISTS product_stock (
 
 
 -- SEEDING --
-INSERT INTO users (auth_user_id, display_name, role, created_at, updated_at, last_login, is_active)
-VALUES ('00000000-0000-0000-0000-000000000000', 'Deleted User', 'user', NOW(), NOW(), NOW(), FALSE)
-ON CONFLICT (auth_user_id) DO NOTHING;
+-- INSERT INTO users (auth_user_id, display_name, role, created_at, updated_at, last_login, is_active)
+-- VALUES ('00000000-0000-0000-0000-000000000000', 'Deleted User', 'user', NOW(), NOW(), NOW(), FALSE)
+-- ON CONFLICT (auth_user_id) DO NOTHING;
