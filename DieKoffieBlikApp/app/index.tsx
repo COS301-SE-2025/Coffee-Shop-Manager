@@ -1,11 +1,11 @@
 import { StatusBar } from 'expo-status-bar';
-import LoginScreen from './login';
+import LandingScreen from './landing';
 
 export default function Index() {
   return (
     <>
       <StatusBar style="dark" />
-      <LoginScreen />
+      <LandingScreen />
     </>
   );
 }
