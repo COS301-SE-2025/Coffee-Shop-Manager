@@ -55,6 +55,75 @@ export default function Home() {
         </div>
       </section>
 
+      {}
+      <section className="py-20 px-6 bg-white/50 backdrop-blur-sm">
+        <div className="max-w-6xl mx-auto">
+          
+          {/* For Customers */}
+          <div className="text-center mb-16">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">For Coffee Lovers</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
+              
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">Browse Menu</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Explore menu items with detailed descriptions
+                </p>
+              </div>
+
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">Quick Ordering</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Place orders ahead of time and skip the queue
+                </p>
+              </div>
+
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">Order Tracking</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Get real-time updates on your order status
+                </p>
+              </div>
+            </div>
+          </div>
+
+          
+        </div>
+      </section>
+
+      
+
+      {/* Footer */}
+      <footer className="py-8 px-6 bg-amber-900 text-amber-100">
+        <div className="max-w-6xl mx-auto text-center">
+          <div className="flex items-center justify-center gap-3 mb-4">
+            <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+             <Image src="/icon.svg" alt="KoffieBlik Logo" width={24} height={24} className="text-white" />
+            </div>
+            <span className="text-xl font-bold">KoffieBlik</span>
+          </div>
+          
+        </div>
+      </footer>
+
       
       
     </div>
