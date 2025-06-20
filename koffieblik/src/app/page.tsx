@@ -2,40 +2,32 @@ import Image from "next/image";
 import Link from "next/link";
 
 export default function Home() {
-
-  const HeadingColors="text-3xl font-bold tracking-tight text-brown-800";
   return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] bg-[#fdf6f0] text-[#4b2e2e]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-center text-center">
-        <Image
-          src="/icon.svg"
-          alt="KoffieBlik Logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <h1 className={HeadingColors}>Welcome to KoffieBlik</h1>
-        <p className="text-lg max-w-md">
-          Your cozy coffee shop. Start your journey with us by logging in or registering below.
-        </p>
-
-        <div className="flex gap-4 mt-4 flex-col sm:flex-row">
-          <Link href="/login" passHref>
-            <button className="rounded-full bg-[#4b2e2e] text-white hover:bg-[#6b3e3e] transition-colors px-6 py-3 text-base font-medium">
+    <div className="min-h-screen bg-gradient-to-br from-amber-50 via-orange-50 to-yellow-50">
+     
+      <header className="flex justify-between items-center p-6 lg:px-12 lg:py-8">
+        <div className="flex items-center gap-3">
+         <div className="w-10 h-10 rounded-lg flex items-center justify-center">
+            <Image src="/icon.svg" alt="KoffieBlik Logo" width={24} height={24} className="text-white" />
+          </div>
+          <span className="text-2xl font-bold text-amber-800">KoffieBlik</span>
+        </div>
+        <div className="flex gap-4">
+          <Link href="/login">
+            <button className="px-6 py-2 text-amber-700 hover:text-amber-800 font-medium transition-colors">
               Login
             </button>
           </Link>
-          <Link href="/register" passHref>
-            <button className="rounded-full border border-[#4b2e2e] text-[#4b2e2e] hover:bg-[#f2eae2] transition-colors px-6 py-3 text-base font-medium">
-              Register
+          <Link href="/register">
+            <button className="px-6 py-2 bg-amber-600 text-white rounded-lg hover:bg-amber-700 transition-colors font-medium shadow-lg">
+              Get Started
             </button>
           </Link>
         </div>
-      </main>
+      </header>
 
-      <footer className="row-start-3 text-sm text-[#6e4e4e]">
-        KoffieBlik. Brewed with love ☕
-      </footer>
+      
+      
     </div>
   );
 }
