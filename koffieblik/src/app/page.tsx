@@ -26,6 +26,35 @@ export default function Home() {
         </div>
       </header>
 
+      <section className="text-center px-6 py-16 lg:py-24">
+        <div className="max-w-4xl mx-auto">
+          <h1 className="text-5xl lg:text-7xl font-bold text-amber-900 mb-6 leading-tight">
+            Your Complete Coffee Shop
+            <span className="block text-amber-700">Experience</span>
+          </h1>
+          <p className="text-xl lg:text-2xl text-amber-700 mb-12 max-w-3xl mx-auto leading-relaxed">
+            Order your favourite coffee with ease, or manage your coffee shop operations 
+            seamlessly.
+          </p>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+            <Link href="/pos">
+              <button className="px-8 py-4 bg-amber-600 text-white rounded-full text-lg font-semibold hover:bg-amber-700 transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1">
+                Order Coffee ☕
+              </button>
+            </Link>
+            <Link href="/dashboard">
+              <button className="px-8 py-4 border-2 border-amber-600 text-amber-700 rounded-full text-lg font-semibold hover:bg-amber-50 transition-all duration-300">
+                For Coffee Shops
+              </button>
+            </Link>
+          </div>
+
+          {}
+          
+        </div>
+      </section>
+
       
       
     </div>
