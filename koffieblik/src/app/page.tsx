@@ -105,7 +105,51 @@ export default function Home() {
             </div>
           </div>
 
-          
+          {/*  Coffee Shops */}
+          <div className="text-center">
+            <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">For Coffee Shop Teams</h2>
+            <p className="text-xl text-gray-600 max-w-2xl mx-auto mb-12">
+              
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">Order Management</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Baristas can view, update, and complete orders in real-time
+                </p>
+              </div>
+
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">Staff Coordination</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Managers can schedule staff, track performance, and coordinate shifts
+                </p>
+              </div>
+
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mx-auto mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
+                  <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z"/>
+                  </svg>
+                </div>
+                <h3 className="text-xl font-bold text-gray-800 mb-3">Business Analytics</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Track sales, inventory, and performance with detailed insights
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
