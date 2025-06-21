@@ -8,62 +8,56 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { action, email, password, username } = body;
+    const { action, ...params } = body;
 
-    if (action === 'login') {
-      if (!email || !password) {
-        return NextResponse.json({ success: false, message: 'Email and password required' }, { status: 400 });
-      }
-
-      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-
-      if (error || !data.user) {
-        return NextResponse.json({ success: false, message: error?.message || 'Login failed' }, { status: 401 });
-      }
-
-      const { data: userProfile, error: profileError } = await supabase
-        .from('users')
-        .select('*')
-        .eq('auth_user_id', data.user.id)
-        .single();
-
-      if (profileError) {
-        console.warn('No user profile found', profileError);
-      }
-
-      return NextResponse.json({
-        success: true,
-        user: data.user,
-        profile: userProfile || null,
-      });
+    switch (action) {
+      case 'login':
+        return await login(params);
+      // case 'register':
+      //   return await register(params);
+      // case 'username':
+      //   return await username(params);
+      // case 'change_Username':
+      //   return await changeUsername(body);
+      default:
+        return NextResponse.json({ success: false, message: 'Unknown action' }, { status: 400 });
     }
-
-    if (action === 'username') {
-      if (!email) {
-        return NextResponse.json({ success: false, message: 'Email required' }, { status: 400 });
-      }
-
-      const { data: user } = await supabase
-        .from('users')
-        .select('username')
-        .eq('email', email)
-        .single();
-
-      return NextResponse.json({
-        success: !!user,
-        username: user?.username || null,
-      });
-    }
-
-    return NextResponse.json({ success: false, message: 'Unknown action' }, { status: 400 });
-
   } catch (err) {
-    console.error('Login API error', err);
+    console.error('API error', err);
     return NextResponse.json({ success: false, message: 'Internal Server Error' }, { status: 500 });
   }
 }
 
+async function login({ email, password }: { email?: string; password?: string }) {
+  if (!email || !password) {
+    return NextResponse.json({ success: false, message: 'Email and password required' }, { status: 400 });
+  }
 
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+  if (error || !data.user) {
+    return NextResponse.json({ success: false, message: error?.message || 'Login failed' }, { status: 401 });
+  }
+
+  const { data: userProfile, error: profileError } = await supabase
+    .from('users')
+    .select('*')
+    .eq('auth_user_id', data.user.id)
+    .single();
+
+  if (profileError) {
+    console.warn('No user profile found', profileError);
+  }
+
+  return NextResponse.json({
+    success: true,
+    user: data.user,
+    profile: userProfile || null,
+  });
+}
+
+// Ignore below, it is being used to update/implement the above
+/////////////////////////////////////////////////////////////
 
 // import { NextRequest, NextResponse } from 'next/server';
 // import { Client } from 'pg';

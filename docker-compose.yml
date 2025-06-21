@@ -1,6 +1,6 @@
 # Usage
 #   Start:                      docker compose -f docker-compose.yml -f supabase/docker-compose.yml up -d
-#         -> Reset database:    sudo rm -rf supabase/volumes/db/data
+#         -> Reset database:    rm -rf supabase/volumes/db/data
 #   Stop:                       docker compose -f docker-compose.yml -f supabase/docker-compose.yml down -d
 
 name: Coffee_Shop_Manager
