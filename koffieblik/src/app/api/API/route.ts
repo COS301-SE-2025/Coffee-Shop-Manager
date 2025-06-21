@@ -13,8 +13,8 @@ export async function POST(req: NextRequest) {
     switch (action) {
       case 'login':
         return await login(params);
-      // case 'register':
-      //   return await register(params);
+      case 'register':
+        return await register(params);
       // case 'username':
       //   return await username(params);
       // case 'change_Username':
@@ -55,6 +55,47 @@ async function login({ email, password }: { email?: string; password?: string })
     profile: userProfile || null,
   });
 }
+
+async function register(params: {
+  username?: string;
+  email?: string;
+  password?: string;
+  lastName?: string;
+  phoneNo?: string;
+  dateOfBirth?: string;
+}) {
+  const { username, email, password, lastName, phoneNo, dateOfBirth } = params;
+  if (!username || !email || !password) {
+    console.warn('[VALIDATION FAILED] Missing registration fields');
+    return NextResponse.json({ success: false, message: 'Username, email, and password required for registration' }, { status: 400 });
+  }
+
+  console.log('[REGISTER ATTEMPT]', email);
+
+  const { data: authData, error: authError } = await supabase.auth.signUp({
+    email,
+    password,
+    options: {
+      data: {
+        role: 'user',
+        display_name: username,
+      }
+    }
+  });
+
+  if (authError) {
+    if (authError.message.includes('already registered')) {
+      console.warn('[REGISTER FAILED] User already exists');
+      return NextResponse.json({ success: false, message: 'User already exists' }, { status: 409 });
+    }
+    console.error('[AUTH SIGNUP FAILED]', authError.message);
+    return NextResponse.json({ success: false, message: authError.message }, { status: 500 });
+  }
+
+  console.log('[REGISTER SUCCESS]', authData.user);
+  return NextResponse.json({ success: true, user: authData.user }, { status: 201 });
+}
+
 
 // Ignore below, it is being used to update/implement the above
 /////////////////////////////////////////////////////////////
