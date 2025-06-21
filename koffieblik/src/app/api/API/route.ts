@@ -15,10 +15,10 @@ export async function POST(req: NextRequest) {
         return await login(params);
       case 'register':
         return await register(params);
-      // case 'username':
-      //   return await username(params);
-      // case 'change_Username':
-      //   return await changeUsername(body);
+      case 'username':
+        return await username(params);
+      case 'change_Username':
+        return await changeUsername(body);
       default:
         return NextResponse.json({ success: false, message: 'Unknown action' }, { status: 400 });
     }
@@ -94,6 +94,68 @@ async function register(params: {
 
   console.log('[REGISTER SUCCESS]', authData.user);
   return NextResponse.json({ success: true, user: authData.user }, { status: 201 });
+}
+
+async function username({ email }: { email?: string }) {
+  if (!email) {
+    console.warn('[VALIDATION FAILED] Missing email for username retrieval');
+    return NextResponse.json({ success: false, message: 'Email required for username retrieval' }, { status: 400 });
+  }
+
+  console.log('[USERNAME RETRIEVAL] Request received for email:', email);
+
+  const { data: user, error } = await supabase
+    .from('users')
+    .select('username')
+    .eq('email', email)
+    .single();
+
+  if (error) {
+    console.warn('[USERNAME FAILED]', error.message);
+    return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+  }
+
+  console.log('[USERNAME RETRIEVED]', user.username);
+  return NextResponse.json({ success: true, username: user.username }, { status: 200 });
+}
+
+async function changeUsername({ email, username }: { email?: string; username?: string }) {
+  if (!email || !username) {
+    console.warn('[VALIDATION FAILED] Missing email or new username');
+    return NextResponse.json({ success: false, message: 'Email and new username are required' }, { status: 400 });
+  }
+
+  console.log('[USERNAME CHANGE ATTEMPT] Email:', email, 'New Username:', username);
+
+  const { data: userList, error: fetchError } = await supabase.auth.admin.listUsers({ email } as any);
+
+  if (fetchError || !userList || userList.users.length === 0) {
+    console.warn('[USERNAME CHANGE FAILED] User not found');
+    return NextResponse.json({ success: false, message: 'User not found' }, { status: 404 });
+  }
+
+  const user = userList.users[0];
+
+  // Step 2: Update metadata (e.g. display_name)
+  const { data, error: updateError } = await supabase.auth.admin.updateUserById(user.id, {
+    user_metadata: {
+      display_name: username,
+    },
+  });
+
+  if (updateError) {
+    console.error('[USERNAME UPDATE FAILED]', updateError.message);
+    return NextResponse.json({ success: false, message: 'Failed to update username' }, { status: 500 });
+  }
+
+  console.log('[USERNAME CHANGE SUCCESS]', data.user?.user_metadata);
+  return NextResponse.json({
+    success: true,
+    user: {
+      ...data.user,
+      username: data.user.user_metadata?.display_name ?? null,
+    }
+  }, { status: 200 });
 }
 
 
