@@ -21,16 +21,16 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- ENABLE ROW LEVEL SECURITY
 CREATE POLICY "Users can view their own profile"
-ON public.user
+ON public.users
 FOR select
-USING (auth.uid() = id);
+USING (auth.uid() = auth_user_id);
 
 CREATE POLICY "Users can insert their own profile"
-ON public.user
+ON public.users
 FOR insert
-WITH CHECK (auth.uid() = id);
+WITH CHECK (auth.uid() = auth_user_id);
 
-ALTER TABLE public.user ENABLE row level security;
+ALTER TABLE public.users ENABLE row level security;
 
 -- REFERENCE PLACEHOLDER USER IF USER GETS DELETED
 CREATE OR REPLACE FUNCTION reassign_orders_to_placeholder()
