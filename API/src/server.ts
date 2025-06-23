@@ -2,7 +2,7 @@ import app from './app';
 
 const DEFAULT_PORT = 5000;
 
-const port = process.env.PORT ?? DEFAULT_PORT;
+const port = process.env.API_PORT ?? DEFAULT_PORT;
 
 if (!process.env.PORT) {
   console.log(`PORT not found in .env, defaulting to ${DEFAULT_PORT}`);
