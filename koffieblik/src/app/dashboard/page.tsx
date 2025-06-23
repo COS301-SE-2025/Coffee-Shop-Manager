@@ -27,16 +27,16 @@ export default function DashboardPage() {
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
 
-    useEffect(() => {
-        const storedUsername = localStorage.getItem('username');
-        const isLoggedIn = localStorage.getItem('isLoggedIn');
-        if (!isLoggedIn) {
-            router.push('/login'); 
-        }
-        if (storedUsername) {
-            setUsername(storedUsername);
-        }
-    }, [router]);
+    // useEffect(() => {
+    //     const storedUsername = localStorage.getItem('username');
+    //     const isLoggedIn = localStorage.getItem('isLoggedIn');
+    //     if (!isLoggedIn) {
+    //         router.push('/login'); 
+    //     }
+    //     if (storedUsername) {
+    //         setUsername(storedUsername);
+    //     }
+    // }, [router]);
 
     // Route to inventory
     useEffect(() => {
@@ -134,7 +134,7 @@ export default function DashboardPage() {
     return (
         <main className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
             {/* Enhanced Tab Navigation */}
-            <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
+            {/* <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
                 <div className="px-6 py-4">
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
@@ -199,7 +199,7 @@ export default function DashboardPage() {
                         })}
                     </div>
                 </div>
-            </nav>
+            </nav> */}
 
             {/* Page Content */}
             <div className="p-8">
