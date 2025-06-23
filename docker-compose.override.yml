@@ -527,6 +527,18 @@ services:
         "-c",
         "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
       ]
+      
+  seed-user:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./API:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - auth
+    command: npx ts-node scripts/seed.ts
 
 volumes:
   db-config:
