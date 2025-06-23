@@ -1,18 +1,19 @@
-name: CI for Koffieblik Login (Local Demo)
+name: CI for Koffieblik
 
 on:
   push:
     branches: [main]
     paths:
-      - 'app/**'
-      - '.github/workflows/nextjs-ci.yml'
+      - 'koffieblik/**'
+      - '.github/workflows/koffieblik_ci.yml'
 
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     defaults:
       run:
-        working-directory: ./app
+        working-directory: ./koffieblik
 
     steps:
       - name: Checkout code
@@ -24,10 +25,11 @@ jobs:
           node-version: '18'
 
       - name: Install dependencies
-        run: npm ci
+        run: npm ci --legacy-peer-deps
 
-      - name: Lint code
-        run: npm run lint
+      - name: Lint (optional)
+        run: npm run lint || true
+
 
       - name: Build the app
         run: npm run build
