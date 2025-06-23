@@ -9,6 +9,7 @@ dist/
 # Allow example .env files
 !**/.env.example
 
+.env 
 # Logs
 *.log
 
