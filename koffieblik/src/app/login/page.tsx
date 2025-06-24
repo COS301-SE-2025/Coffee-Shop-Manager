@@ -22,12 +22,7 @@ export default function LoginPage() {
   const [loginError, setLoginError] = useState('');
   const router = useRouter();
 
-  useEffect(() => {
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
-    if (isLoggedIn) {
-      router.push('/dashboard');
-    }
-  }, [router]);
+
 
 
 
@@ -50,14 +45,10 @@ export default function LoginPage() {
     );
   };
 
-  // Handle form submission
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-
-    // Reset previous submission state
     setFormSubmitted(true);
 
-    // Validate inputs
     const emailValidationResult = validateEmail(email);
     setEmailError(emailValidationResult ?? '');
     const isEmailValid = !emailValidationResult;
@@ -70,55 +61,43 @@ export default function LoginPage() {
       setIsLoading(true);
 
       try {
-        const username = email.split('@')[0];
-        const response = await fetch('/api/API', {
+        const response = await fetch('http://localhost:5000/login', {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ action: 'login', username, email, password }),
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password }),
         });
 
-        const loginResult = await response.json();
+        const result = await response.json();
 
-        if (loginResult.success) {
-          console.log('Login success:', loginResult.user);
-          setLoginError('');
-          localStorage.setItem('isLoggedIn', 'true');
-          localStorage.setItem('email',email);
+        if (result.success && result.session && result.user?.user_metadata?.display_name) {
+          const token = result.session.access_token;
+          const username = result.user.user_metadata.display_name;
 
-          const usernameResponse = await fetch('/api/API', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ action: 'username',email }),
+          // Set cookies (expires in 1 hour)
+          document.cookie = `token=${token}; path=/; max-age=3600`;
+          document.cookie = `username=${username}; path=/; max-age=3600`;
+
+          // ✅ Log each cookie individually
+          console.log('✅ Cookies set:');
+          document.cookie.split(';').forEach((cookie) => {
+            console.log('🍪', cookie.trim());
           });
-          const usernameResult = await usernameResponse.json();
 
-          if (usernameResult.success && usernameResult.username) {
-            localStorage.setItem('username', usernameResult.username);
-          } else {
-            console.warn('Username not found, fallback to "User"');
-            localStorage.setItem('username', 'User');
-          }
 
+          setLoginError('');
           router.push('/dashboard');
         } else {
-          console.error('Login failed:', loginResult.message);
-          setLoginError(loginResult.message || 'Login failed. Please try again.');
+          setLoginError(result.message || 'Invalid login response.');
         }
-
-
-
-
-      } catch (error) {
-        console.error('Login failed', error);
-        setLoginError('Something went wrong. Please try again later.');
-        // Handle login failure
+      } catch (err) {
+        console.error('Login error:', err);
+        setLoginError('Could not connect to the server.');
       } finally {
         setIsLoading(false);
       }
     }
   };
+
 
   return (
     <HydrationFix>
