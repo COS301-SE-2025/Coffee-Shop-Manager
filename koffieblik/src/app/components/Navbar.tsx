@@ -14,6 +14,24 @@ export default function Navbar() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
+  useEffect(() => {
+    fetch('http://localhost:5000/check-token', {
+      credentials: 'include', // <-- This sends cookies like 'token'
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then(data => {
+        if (!data.valid) {
+          router.push('/login');
+        }
+      })
+      .catch(() => {
+        router.push('/login');
+      });
+  }, []);
+
   // ✅ Set date and time on client only
   useEffect(() => {
     const now = new Date();
