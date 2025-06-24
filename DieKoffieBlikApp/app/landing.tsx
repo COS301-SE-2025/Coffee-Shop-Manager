@@ -59,7 +59,7 @@ export default function LandingScreen() {
           {/* Guest Access */}
           <TouchableOpacity
             style={styles.guestButton}
-            onPress={() => router.push('/order')}
+            onPress={() => router.push('/home')}
           >
             <Text style={styles.guestButtonText}>Continue as Guest</Text>
           </TouchableOpacity>
