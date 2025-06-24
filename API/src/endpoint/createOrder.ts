@@ -7,19 +7,24 @@ interface ProductInput {
   quantity: number;
 }
 
-export async function createOrderHandler(req: Request, res: Response) {
+export async function createOrderHandler(req: Request, res: Response): Promise<void> {
   try {
     const userId = (req as any).user?.id;
-    if (!userId) return res.status(401).json({ error: 'Unauthorized' });
+    if (!userId) {
+      res.status(401).json({ error: 'Unauthorized' });
+      return;
+    }
 
     const { products } = req.body;
     if (!products || !Array.isArray(products) || products.length === 0) {
-      return res.status(400).json({ error: 'Products list is required' });
+      res.status(400).json({ error: 'Products list is required' });
+      return;
     }
 
     for (const p of products) {
       if (!p.product_id && !p.name) {
-        return res.status(400).json({ error: 'Each product must have at least a product_id or a name' });
+        res.status(400).json({ error: 'Each product must have at least a product_id or a name' });
+        return;
       }
     }
 
@@ -35,8 +40,10 @@ export async function createOrderHandler(req: Request, res: Response) {
       ].filter(Boolean).join(','));
 
     if (fetchError) throw fetchError;
+
     if (!allProducts || allProducts.length < products.length) {
-      return res.status(400).json({ error: 'One or more products were not found' });
+      res.status(400).json({ error: 'One or more products were not found' });
+      return;
     }
 
     const productMap = new Map(allProducts.map(p => [p.id, p]));
@@ -54,7 +61,8 @@ export async function createOrderHandler(req: Request, res: Response) {
       }
 
       if (!matchedProduct) {
-        return res.status(400).json({ error: `Product not found: ${p.name || p.product_id}` });
+        res.status(400).json({ error: `Product not found: ${p.name || p.product_id}` });
+        return;
       }
 
       orderProducts.push({
@@ -85,13 +93,15 @@ export async function createOrderHandler(req: Request, res: Response) {
 
     if (insertError) throw insertError;
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       order_id: orderId,
       message: 'Order created successfully',
     });
+    return;
   } catch (error: any) {
     console.error('Create order error:', error);
-    return res.status(500).json({ error: error.message || 'Internal server error' });
+    res.status(500).json({ error: error.message || 'Internal server error' });
+    return;
   }
 }

@@ -1,36 +1,40 @@
 import { Request, Response } from 'express';
 import { supabase } from '../supabase/client';
 
-export async function signupHandler(req: Request, res: Response) {
+export async function signupHandler(req: Request, res: Response): Promise<void> {
   try {
     const { email, password, username } = req.body;
 
     if (!email || !password || !username) {
-      return res.status(400).json({ success: false, message: 'Email, password and username are required' });
+      res.status(400).json({ success: false, message: 'Email, password and username are required' });
+      return;
     }
 
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-      data: {
-        role: 'user',
-        display_name: username,
+        data: {
+          role: 'user',
+          display_name: username,
+        }
       }
-    }
     });
 
     if (error) {
-      return res.status(400).json({ success: false, message: error.message });
+      res.status(400).json({ success: false, message: error.message });
+      return;
     }
 
-    return res.status(201).json({
+    res.status(201).json({
       success: true,
       message: 'User registered successfully.',
       user: data.user,
     });
+    return;
   } catch (err) {
     console.error('Signup error:', err);
-    return res.status(500).json({ success: false, message: 'Internal server error' });
+    res.status(500).json({ success: false, message: 'Internal server error' });
+    return;
   }
 }
