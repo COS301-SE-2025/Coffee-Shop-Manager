@@ -63,6 +63,13 @@ export default function DashboardPage() {
         }
     }, [selectedTab, router]);
 
+    useEffect(() => {
+        if (selectedTab === 'Help') {
+            router.push('/help');
+            
+        }
+    }, [selectedTab, router]);
+
     const handleLogout = () => {
         localStorage.removeItem('isLoggedIn');
         localStorage.removeItem('username');
@@ -124,6 +131,7 @@ export default function DashboardPage() {
             case 'Reports': return '📈';
             case 'pos': return '🛒';
             case 'manage': return '⚙️';
+            case 'Help': return '❓'; 
             case 'Logout': return '🚪';
             default: return '👤';
         }
