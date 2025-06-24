@@ -64,17 +64,29 @@ export default function Navbar() {
     if (target && pathname !== target) router.push(target);
   }, [selectedTab, router, pathname]);
 
-  const handleLogout = () => {
-    // Clear local storage
-    // localStorage.clear();
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('http://localhost:5000/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
 
-    // Clear cookies (by setting them to expire immediately)
-    document.cookie = 'token=; path=/; max-age=0';
-    document.cookie = 'username=; path=/; max-age=0';
+      if (!res.ok) throw new Error(`Server responded with status ${res.status}`);
 
-    // Redirect to login page
-    router.push('/login');
+      const result = await res.json();
+
+      if (result.success) {
+        console.log('✅ Cookies cleared successfully.');
+        router.push('/login');
+      } else {
+        console.warn('⚠️ Logout failed:', result.message);
+      }
+    } catch (err) {
+      console.error('Logout error:', err);
+    }
   };
+
+
 
 
   const getTabIcon = (tab: string) => {
@@ -130,10 +142,10 @@ export default function Navbar() {
               <button
                 key={tab}
                 className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${isActive
-                    ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
-                    : isLogout
-                      ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
-                      : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
+                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
+                  : isLogout
+                    ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                    : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
                   }`}
                 onClick={() => {
                   if (tab === 'Logout') handleLogout();

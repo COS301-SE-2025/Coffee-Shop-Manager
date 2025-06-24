@@ -65,28 +65,25 @@ export default function LoginPage() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
+          credentials: 'include'
         });
 
         const result = await response.json();
+        console.log('🧪 Full login response:', result);
 
-        if (result.success && result.session && result.user?.user_metadata?.display_name) {
-          const token = result.session.access_token;
+
+        if (result.success && result.user?.user_metadata?.display_name) {
           const username = result.user.user_metadata.display_name;
+          const token = result.session?.access_token ?? 'N/A'; // ✅ Safely fallback
 
-          // Set cookies (expires in 1 hour)
-          document.cookie = `token=${token}; path=/; max-age=3600`;
-          document.cookie = `username=${username}; path=/; max-age=3600`;
-
-          const cookies = document.cookie.split(';').map(c => c.trim());
-          const usernameCookie = cookies.find(c => c.startsWith('username='));
-          const usernameValue = usernameCookie?.split('=')[1] || 'Not found';
-          console.log('👤 Username:', usernameValue);
-
-
+          console.log('👤 Welcome:', username);
+          console.log('🔐 Token:', token); // Debug only
 
           setLoginError('');
           router.push('/dashboard');
-        } else {
+        }
+
+        else {
           setLoginError(result.message || 'Invalid login response.');
         }
       } catch (err) {

@@ -4,7 +4,12 @@ import routes from './routes';
 
 const app = express();
 
-app.use(cors());
+// ✅ CORS config to allow frontend access with cookies
+app.use(cors({
+  origin: 'http://localhost:3000', // Your frontend domain
+  credentials: true                // Allow cookies to be sent
+}));
+
 app.use(express.json());
 
 app.use(routes);
