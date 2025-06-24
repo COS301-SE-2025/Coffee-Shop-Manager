@@ -77,11 +77,11 @@ export default function LoginPage() {
           document.cookie = `token=${token}; path=/; max-age=3600`;
           document.cookie = `username=${username}; path=/; max-age=3600`;
 
-          // ✅ Log each cookie individually
-          console.log('✅ Cookies set:');
-          document.cookie.split(';').forEach((cookie) => {
-            console.log('🍪', cookie.trim());
-          });
+          const cookies = document.cookie.split(';').map(c => c.trim());
+          const usernameCookie = cookies.find(c => c.startsWith('username='));
+          const usernameValue = usernameCookie?.split('=')[1] || 'Not found';
+          console.log('👤 Username:', usernameValue);
+
 
 
           setLoginError('');

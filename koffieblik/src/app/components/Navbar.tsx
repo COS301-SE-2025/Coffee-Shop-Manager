@@ -65,9 +65,17 @@ export default function Navbar() {
   }, [selectedTab, router, pathname]);
 
   const handleLogout = () => {
-    localStorage.clear();
+    // Clear local storage
+    // localStorage.clear();
+
+    // Clear cookies (by setting them to expire immediately)
+    document.cookie = 'token=; path=/; max-age=0';
+    document.cookie = 'username=; path=/; max-age=0';
+
+    // Redirect to login page
     router.push('/login');
   };
+
 
   const getTabIcon = (tab: string) => {
     switch (tab) {
@@ -121,13 +129,12 @@ export default function Navbar() {
             return (
               <button
                 key={tab}
-                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${
-                  isActive
+                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${isActive
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
                     : isLogout
                       ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
                       : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
-                }`}
+                  }`}
                 onClick={() => {
                   if (tab === 'Logout') handleLogout();
                   else setSelectedTab(tab);
