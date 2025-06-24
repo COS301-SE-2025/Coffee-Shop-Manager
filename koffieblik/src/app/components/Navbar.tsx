@@ -11,6 +11,28 @@ export default function Navbar() {
   const [username, setUsername] = useState('Guest');
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
 
+  const [date, setDate] = useState('');
+  const [time, setTime] = useState('');
+
+  // ✅ Set date and time on client only
+  useEffect(() => {
+    const now = new Date();
+    setDate(
+      now.toLocaleDateString('en-ZA', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+    );
+    setTime(
+      now.toLocaleTimeString('en-ZA', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
+    );
+  }, []);
+
   // Detect current tab from pathname on mount
   useEffect(() => {
     const routeMap: Record<string, string> = {
@@ -63,12 +85,10 @@ export default function Navbar() {
   // Load and modify tabs
   let tabs = username ? getTabs(username) : [];
 
-  // ✅ Add Dashboard to the beginning if not already present
   if (!tabs.includes('Dashboard')) {
     tabs.unshift('Dashboard');
   }
 
-  // ✅ Optionally inject Help after manage
   if (!tabs.includes('Help') && tabs.includes('manage')) {
     const manageIndex = tabs.indexOf('manage');
     tabs.splice(manageIndex + 1, 0, 'Help');
@@ -88,20 +108,8 @@ export default function Navbar() {
             </div>
           </div>
           <div className="text-right">
-            <p className="text-sm text-amber-700 font-medium">
-              {new Date().toLocaleDateString('en-ZA', {
-                weekday: 'long',
-                year: 'numeric',
-                month: 'long',
-                day: 'numeric'
-              })}
-            </p>
-            <p className="text-xs text-amber-600">
-              {new Date().toLocaleTimeString('en-ZA', {
-                hour: '2-digit',
-                minute: '2-digit'
-              })}
-            </p>
+            <p className="text-sm text-amber-700 font-medium">{date}</p>
+            <p className="text-xs text-amber-600">{time}</p>
           </div>
         </div>
 
