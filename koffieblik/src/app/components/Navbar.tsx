@@ -1,33 +1,46 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { getTabs } from '@/constants/tabs';
 
 export default function Navbar() {
-  const [selectedTab, setSelectedTab] = useState('Dashboard');
-  const [username, setUsername] = useState('Guest');
   const router = useRouter();
+  const pathname = usePathname();
 
-  
-  // useEffect(() => {
-  //   const storedUsername = localStorage.getItem('username');
-  //   const isLoggedIn = localStorage.getItem('isLoggedIn');
-  //   if (!isLoggedIn) router.push('/login');
-  //   if (storedUsername) setUsername(storedUsername);
-  // }, [router]);
+  const [username, setUsername] = useState('Guest');
+  const [selectedTab, setSelectedTab] = useState<string | null>(null);
 
+  // Detect current tab from pathname on mount
   useEffect(() => {
+    const routeMap: Record<string, string> = {
+      '/dashboard': 'Dashboard',
+      '/inventory': 'Inventory',
+      '/pos': 'pos',
+      '/manage': 'manage',
+      '/reports': 'Reports',
+      '/help': 'Help'
+    };
+    const current = routeMap[pathname] || null;
+    setSelectedTab(current);
+  }, [pathname]);
+
+  // Navigate on tab change
+  useEffect(() => {
+    if (!selectedTab) return;
+
     const routes = {
+      Dashboard: '/dashboard',
       Inventory: '/inventory',
       pos: '/pos',
       manage: '/manage',
       Reports: '/reports',
       Help: '/help'
     };
+
     const target = routes[selectedTab as keyof typeof routes];
-    if (target) router.push(target);
-  }, [selectedTab, router]);
+    if (target && pathname !== target) router.push(target);
+  }, [selectedTab, router, pathname]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -47,12 +60,19 @@ export default function Navbar() {
     }
   };
 
+  // Load and modify tabs
   let tabs = username ? getTabs(username) : [];
- if (!tabs.includes('Help') && tabs.includes('manage')) {
-  const manageIndex = tabs.indexOf('manage');
-  tabs.splice(manageIndex + 1, 0, 'Help'); // Insert Help after Manage
-}
 
+  // ✅ Add Dashboard to the beginning if not already present
+  if (!tabs.includes('Dashboard')) {
+    tabs.unshift('Dashboard');
+  }
+
+  // ✅ Optionally inject Help after manage
+  if (!tabs.includes('Help') && tabs.includes('manage')) {
+    const manageIndex = tabs.indexOf('manage');
+    tabs.splice(manageIndex + 1, 0, 'Help');
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
@@ -97,8 +117,8 @@ export default function Navbar() {
                   isActive
                     ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
                     : isLogout
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
-                    : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
+                      : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
                 }`}
                 onClick={() => {
                   if (tab === 'Logout') handleLogout();
