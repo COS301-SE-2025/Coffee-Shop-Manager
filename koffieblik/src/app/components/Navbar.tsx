@@ -48,10 +48,11 @@ export default function Navbar() {
   };
 
   let tabs = username ? getTabs(username) : [];
-  if (tabs.includes('Logout') && !tabs.includes('Help')) {
-    const logoutIndex = tabs.indexOf('Logout');
-    tabs.splice(logoutIndex, 0, 'Help'); // Insert Help before Logout
-  }
+ if (!tabs.includes('Help') && tabs.includes('manage')) {
+  const manageIndex = tabs.indexOf('manage');
+  tabs.splice(manageIndex + 1, 0, 'Help'); // Insert Help after Manage
+}
+
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
