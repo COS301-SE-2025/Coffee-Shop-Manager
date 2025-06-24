@@ -9,6 +9,7 @@ export default function Navbar() {
   const [username, setUsername] = useState('Guest');
   const router = useRouter();
 
+  
   // useEffect(() => {
   //   const storedUsername = localStorage.getItem('username');
   //   const isLoggedIn = localStorage.getItem('isLoggedIn');
@@ -21,7 +22,8 @@ export default function Navbar() {
       Inventory: '/inventory',
       pos: '/pos',
       manage: '/manage',
-      Reports: '/reports'
+      Reports: '/reports',
+      Help: '/help'
     };
     const target = routes[selectedTab as keyof typeof routes];
     if (target) router.push(target);
@@ -39,12 +41,17 @@ export default function Navbar() {
       case 'Reports': return '📈';
       case 'pos': return '🛒';
       case 'manage': return '⚙️';
+      case 'Help': return '❓';
       case 'Logout': return '🚪';
       default: return '👤';
     }
   };
 
-  const tabs = username ? getTabs(username) : [];
+  let tabs = username ? getTabs(username) : [];
+  if (tabs.includes('Logout') && !tabs.includes('Help')) {
+    const logoutIndex = tabs.indexOf('Logout');
+    tabs.splice(logoutIndex, 0, 'Help'); // Insert Help before Logout
+  }
 
   return (
     <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
@@ -61,10 +68,18 @@ export default function Navbar() {
           </div>
           <div className="text-right">
             <p className="text-sm text-amber-700 font-medium">
-              {new Date().toLocaleDateString('en-ZA', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date().toLocaleDateString('en-ZA', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
             </p>
             <p className="text-xs text-amber-600">
-              {new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' })}
+              {new Date().toLocaleTimeString('en-ZA', {
+                hour: '2-digit',
+                minute: '2-digit'
+              })}
             </p>
           </div>
         </div>
