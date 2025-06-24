@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getTabs } from '@/constants/tabs';
 
+
 type OrderStatus = 'Completed' | 'Pending' | 'Cancelled';
 
 interface Order {
@@ -26,17 +27,25 @@ export default function DashboardPage() {
     const [filter, setFilter] = useState('Today');
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
+    
+    useEffect(() => {
+        fetch('http://localhost:5000/check-token', {
+            credentials: 'include', // <-- This sends cookies like 'token'
+        })
+            .then(res => {
+                if (!res.ok) throw new Error('Unauthorized');
+                return res.json();
+            })
+            .then(data => {
+                if (!data.valid) {
+                    router.push('/login');
+                }
+            })
+            .catch(() => {
+                router.push('/login');
+            });
+    }, []);
 
-    // useEffect(() => {
-    //     const storedUsername = localStorage.getItem('username');
-    //     const isLoggedIn = localStorage.getItem('isLoggedIn');
-    //     if (!isLoggedIn) {
-    //         router.push('/login'); 
-    //     }
-    //     if (storedUsername) {
-    //         setUsername(storedUsername);
-    //     }
-    // }, [router]);
 
     // Route to inventory
     useEffect(() => {
@@ -44,19 +53,19 @@ export default function DashboardPage() {
             router.push('/inventory');
         }
     }, [selectedTab, router]);
-    
+
     useEffect(() => {
         if (selectedTab === 'pos') {
             router.push('/pos');
         }
     }, [selectedTab, router]);
-    
+
     useEffect(() => {
         if (selectedTab === 'manage') {
             router.push('/manage');
         }
     }, [selectedTab, router]);
-    
+
     useEffect(() => {
         if (selectedTab === 'Reports') {
             router.push('/reports');
@@ -66,7 +75,7 @@ export default function DashboardPage() {
     useEffect(() => {
         if (selectedTab === 'Help') {
             router.push('/help');
-            
+
         }
     }, [selectedTab, router]);
 
@@ -131,14 +140,14 @@ export default function DashboardPage() {
             case 'Reports': return '📈';
             case 'pos': return '🛒';
             case 'manage': return '⚙️';
-            case 'Help': return '❓'; 
+            case 'Help': return '❓';
             case 'Logout': return '🚪';
             default: return '👤';
         }
     };
 
     const tabs = username ? getTabs(username) : [];
-   
+
     return (
         <main className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
             {/* Enhanced Tab Navigation */}
@@ -255,7 +264,7 @@ export default function DashboardPage() {
                                     </div>
                                 </div>
                             </div>
-                            
+
                             <div className="overflow-x-auto">
                                 <table className="min-w-full text-sm">
                                     <thead className="bg-gradient-to-r from-amber-100 to-orange-100">
@@ -299,7 +308,7 @@ export default function DashboardPage() {
                         </section>
                     </>
                 )}
-                
+
                 {selectedTab === username && (
                     <div className="max-w-md mx-auto">
                         <div className="bg-white/90 backdrop-blur-sm p-8 rounded-2xl shadow-xl border border-white/50">
@@ -309,19 +318,19 @@ export default function DashboardPage() {
                                 </div>
                                 <h2 className="text-2xl font-bold text-amber-900">Update Profile</h2>
                             </div>
-                            
+
                             <form
                                 onSubmit={async (e: React.FormEvent<HTMLFormElement>) => {
                                     e.preventDefault();
                                     const formData = new FormData(e.currentTarget);
                                     const newUsername = formData.get('newUsername') as string;
                                     const email = localStorage.getItem('email');
-                                    
+
                                     if (!email) {
                                         alert("Missing email. Please log out and log in again.");
                                         return;
                                     }
-                                    
+
                                     try {
                                         const response = await fetch('/api/API', {
                                             method: 'POST',

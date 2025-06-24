@@ -24,15 +24,19 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
     const username = data.user.email ?? 'unknown';
     const maxAge = 60 * 60; // 1 hour
 
+    const isProd = process.env.NODE_ENV === 'production';
+
     res.setHeader('Set-Cookie', [
-      `token=${token}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`,
-      `username=${encodeURIComponent(username)}; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=${maxAge}`
+      `token=${token}; Path=/; HttpOnly; ${isProd ? 'Secure;' : ''} SameSite=${isProd ? 'Strict' : 'Lax'}; Max-Age=${maxAge}`,
+      `username=${encodeURIComponent(username)}; Path=/; HttpOnly; ${isProd ? 'Secure;' : ''} SameSite=${isProd ? 'Strict' : 'Lax'}; Max-Age=${maxAge}`
     ]);
+
+
 
     res.status(200).json({
       success: true,
       user: data.user,
-      session:data.session,
+      session: data.session,
     });
   } catch (err) {
     console.error('Login error:', err);

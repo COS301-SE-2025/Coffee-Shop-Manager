@@ -6,6 +6,7 @@ import { loginHandler } from './endpoint/login';
 import { signupHandler } from './endpoint/signup';
 import { createOrderHandler } from './endpoint/createOrder';
 import { logoutHandler } from './endpoint/logout';
+import { checkTokenHandler } from './endpoint/check-token'; 
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.post('/login', loginHandler);
 router.post('/signup', signupHandler);
 router.post('/create_order', authMiddleware, createOrderHandler);
 router.post('/logout', logoutHandler);
+router.get('/check-token', checkTokenHandler); 
 
 export default router;
