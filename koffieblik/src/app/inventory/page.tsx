@@ -41,18 +41,18 @@ export default function InventoryPage() {
   const [username, setUsername] = useState('Guest');
   const [selectedTab, setSelectedTab] = useState('Inventory');
 
-  useEffect(() => {
-    const storedUsername = localStorage.getItem('username');
-    const isLoggedIn = localStorage.getItem('isLoggedIn');
+  // useEffect(() => {
+  //   const storedUsername = localStorage.getItem('username');
+  //   const isLoggedIn = localStorage.getItem('isLoggedIn');
 
-    if (!isLoggedIn) {
-      router.push('/login');
-    }
+  //   if (!isLoggedIn) {
+  //     router.push('/login');
+  //   }
 
-    if (storedUsername) {
-      setUsername(storedUsername);
-    }
-  }, [router]);
+  //   if (storedUsername) {
+  //     setUsername(storedUsername);
+  //   }
+  // }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('isLoggedIn');
@@ -143,7 +143,7 @@ export default function InventoryPage() {
 
   return (
     <main className="min-h-screen bg-brown-50 p-6">
-      <nav className="sticky top-0 z-50 bg-white border-b border-amber-200 px-8 py-4 flex gap-4 mb-6">
+      {/* <nav className="sticky top-0 z-50 bg-white border-b border-amber-200 px-8 py-4 flex gap-4 mb-6">
         {tabs.map((tab) => (
           <button
             key={tab}
@@ -165,7 +165,7 @@ export default function InventoryPage() {
             {tab}
           </button>
         ))}
-      </nav>
+      </nav> */}
 
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-4xl font-bold text-brown-800">
