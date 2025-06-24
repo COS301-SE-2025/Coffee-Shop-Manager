@@ -1,11 +1,22 @@
+import Navbar from '@/app/components/Navbar';
 
-import React from 'react';
+export const metadata = {
+  title: 'Dashboard - DieKoffieBlik',
+  description: 'Dashboard overview for managing DieKoffieBlik coffee shop',
+  icons: {
+    icon: '/favicon.ico',
+  }
+};
 
-export default function HelpLayout({ children }: { children: React.ReactNode }) {
+export default function HELPLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   return (
-    <section className="p-6 bg-orange-50 min-h-screen">
-      <h2 className="text-2xl font-bold text-amber-900 mb-4">Help </h2>
-      <div>{children}</div>
-    </section>
+    <div className="min-h-screen bg-amber-50">
+      <Navbar />
+      {children}
+    </div>
   );
 }
