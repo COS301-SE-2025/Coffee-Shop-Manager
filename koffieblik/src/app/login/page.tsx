@@ -98,8 +98,19 @@ export default function LoginPage() {
 
   return (
     <HydrationFix>
-      <main className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-12 px-4 ${comfortaa.className}`}>
-        <div className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#1a1310] rounded-xl shadow-lg border border-amber-200 dark:border-amber-900 relative overflow-hidden">
+      <main
+        className={`min-h-screen flex items-center justify-center py-12 px-4 ${comfortaa.className}`}
+        style={{ backgroundColor: 'var(--primary-4)', color: 'var(--primary-2)' }}
+      >
+
+        <div
+          className="w-full max-w-md p-6 md:p-8 rounded-xl shadow-lg border relative overflow-hidden"
+          style={{
+            backgroundColor: 'var(--primary-2)',
+            borderColor: 'var(--primary-3)' // Optional: Dark brown border
+          }}
+        >
+
 
           {/* Background decoration - coffee bean pattern */}
           <div className="absolute -right-16 -top-16 w-32 h-32 bg-amber-100 dark:bg-amber-900/20 rounded-full opacity-30"></div>
@@ -114,14 +125,31 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
-          <p className="text-center mb-6 text-amber-800 dark:text-amber-300 font-medium">Welcome back</p>
+          <h2
+            className="text-2xl md:text-3xl font-bold text-center mb-1"
+            style={{ color: 'var(--primary-3)' }}
+          >
+            DieKoffieBlik
+          </h2>
+
+          <p
+            className="text-center mb-6 font-medium"
+            style={{ color: 'var(--primary-3)' }}
+          >
+            Welcome back
+          </p>
+
 
           <form className="space-y-5 relative" onSubmit={handleSubmit} noValidate>
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+              <label
+                htmlFor="email"
+                className="block text-sm font-medium mb-1.5"
+                style={{ color: 'var(--primary-3)' }}
+              >
                 Email
               </label>
+
               <input
                 id="email"
                 type="email"
@@ -139,10 +167,16 @@ export default function LoginPage() {
                   const error = validateEmail(email);
                   setEmailError(error ?? '');
                 }}
-                className={`w-full px-4 py-2.5 border ${emailError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
-                aria-invalid={emailError ? "true" : "false"}
-                aria-describedby={emailError ? "email-error" : undefined}
+                className={`w-full px-4 py-2.5 border ${emailError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                style={{
+                  backgroundColor: 'var(--primary-4)',
+                  color: 'var(--primary-3)'
+                }}
+                aria-invalid={emailError ? 'true' : 'false'}
+                aria-describedby={emailError ? 'email-error' : undefined}
               />
+
+
               {emailError && (
                 <p id="email-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
                   {emailError}
@@ -152,10 +186,18 @@ export default function LoginPage() {
 
             <div>
               <div className="flex justify-between mb-1.5">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 dark:text-amber-100">
+                <label
+                  htmlFor="password"
+                  className="block text-sm font-medium"
+                  style={{ color: 'var(--primary-3)' }}
+                >
                   Password
                 </label>
-                <a href="#" className="text-xs text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 transition-colors">
+                <a
+                  href="#"
+                  className="text-xs transition-colors"
+                  style={{ color: 'var(--primary-3)' }}
+                >
                   Forgot password?
                 </a>
               </div>
@@ -177,13 +219,18 @@ export default function LoginPage() {
                     const error = validatePassword(password);
                     setPasswordError(error ?? '');
                   }}
-                  className={`w-full px-4 py-2.5 border ${passwordError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                  className={`w-full px-4 py-2.5 border ${passwordError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+                  style={{
+                    backgroundColor: 'var(--primary-4)',
+                    color: 'var(--primary-3)'
+                  }}
                   aria-invalid={passwordError ? "true" : "false"}
                   aria-describedby={passwordError ? "password-error" : undefined}
                 />
                 <button
                   type="button"
-                  className="absolute right-3 top-2.5 text-amber-700 dark:text-amber-400"
+                  className="absolute right-3 top-2.5"
+                  style={{ color: 'var(--primary-3)' }}
                   onClick={() => setPasswordVisible(!passwordVisible)}
                   aria-label={passwordVisible ? "Hide password" : "Show password"}
                 >
@@ -197,6 +244,7 @@ export default function LoginPage() {
                     </svg>
                   )}
                 </button>
+
               </div>
               {passwordError && (
                 <p id="password-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
@@ -215,9 +263,14 @@ export default function LoginPage() {
                 onChange={() => setRememberMe(!rememberMe)}
                 className="h-4 w-4 rounded border-amber-300 text-amber-700 focus:ring-amber-500"
               />
-              <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700 dark:text-amber-300">
+              <label
+                htmlFor="remember-me"
+                className="ml-2 block text-sm"
+                style={{ color: 'var(--primary-3)' }}
+              >
                 Remember me
               </label>
+
             </div>
             {loginError && (
               <div className="text-sm text-red-600 dark:text-red-400 mt-2 font-medium text-center">
@@ -228,27 +281,42 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={!isFormValid() || isLoading}
-              className={`w-full py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md flex items-center justify-center mt-6 
-                ${!isFormValid() || isLoading
-                  ? 'bg-amber-400 cursor-not-allowed opacity-50'
-                  : 'bg-amber-700 hover:bg-amber-800 hover:shadow-lg'
-                }
-                text-white`}
+              className="btn w-full mt-6"
+              style={{
+                opacity: !isFormValid() || isLoading ? 0.5 : 1,
+                cursor: !isFormValid() || isLoading ? 'not-allowed' : 'pointer'
+              }}
             >
               <span>{isLoading ? 'Logging into Account...' : 'Login to Account'}</span>
               {!isLoading && (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-5 h-5 ml-2"
+                  style={{ color: 'var(--primary-2)' }}
+                >
                   <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
                 </svg>
               )}
             </button>
 
-            <div className="text-sm text-center text-gray-600 dark:text-amber-300/70 mt-6">
+
+
+            <div
+              className="text-sm text-center mt-6"
+              style={{ color: 'var(--primary-3)' }}
+            >
               Don&apos;t have an account?{" "}
-              <Link href="/register" className="font-medium text-amber-700 dark:text-amber-300 hover:text-amber-800 dark:hover:text-amber-200 transition-colors">
+              <Link
+                href="/register"
+                className="font-medium transition-colors"
+                style={{ color: 'var(--primary-3)' }}
+              >
                 Create one now
               </Link>
             </div>
+
           </form>
         </div>
       </main>
