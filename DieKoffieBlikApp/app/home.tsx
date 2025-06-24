@@ -236,7 +236,7 @@ export default function HomeScreen() {
               ]}
             >
               <Ionicons name="cafe" size={60} color="#78350f" />
-              </Animated.View>
+               </Animated.View>
             </View>
           </View>
         
@@ -368,22 +368,7 @@ export default function HomeScreen() {
     </Animated.View>
   );
 
-  const StatsSection = () => (
-    <View style={styles.statsSection}>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>50+</Text>
-        <Text style={styles.statLabel}>Coffee Varieties</Text>
-      </View>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>4.8★</Text>
-        <Text style={styles.statLabel}>Customer Rating</Text>
-      </View>
-      <View style={styles.statCard}>
-        <Text style={styles.statNumber}>10K+</Text>
-        <Text style={styles.statLabel}>Happy Customers</Text>
-      </View>
-    </View>
-  );
+
 
   return (
     <SafeAreaView style={styles.container}>
@@ -409,7 +394,7 @@ export default function HomeScreen() {
         <QuickActions />
         <FeaturedItems />
         <CoffeeFactCard />
-        <StatsSection />
+        
         
         {/* Footer */}
         <View style={styles.footer}>
