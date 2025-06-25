@@ -5,16 +5,25 @@ import { useRouter } from 'next/navigation';
 import { getTabs } from '@/constants/tabs';
 
 
-type OrderStatus = 'Completed' | 'Pending' | 'Cancelled';
+type OrderStatus = 'Completed' | 'Pending' | 'Cancelled' | 'created';
+
 
 interface Order {
     id: string;
-    customer: string;
-    items: string[];
-    total: string;
-    status: OrderStatus;
-    date: string;
+    status: string;
+    total_price: number;
+    created_at: string;
+    order_products: {
+        quantity: number;
+        price: number;
+        products: {
+            name: string;
+            price: number;
+            description: string;
+        };
+    }[];
 }
+
 
 interface Metric {
     label: string;
@@ -27,8 +36,36 @@ export default function DashboardPage() {
     const [filter, setFilter] = useState('Today');
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
+    const [orders, setOrders] = useState<Order[]>([]);
 
-   
+
+
+    useEffect(() => {
+        async function fetchOrders() {
+            try {
+                const response = await fetch('http://localhost:5000/get_orders', {
+                    method: 'GET',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    console.log('✅ Orders fetched:', data.orders);
+                    setOrders(data.orders); // ✅ use real orders
+                } else {
+                    console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
+                }
+            } catch (error) {
+                console.error('❌ Network or server error:', error);
+            }
+        }
+
+        fetchOrders();
+    }, []);
 
 
 
@@ -84,41 +121,41 @@ export default function DashboardPage() {
 
 
 
-    const orders: Order[] = [
-        { id: '#1001', customer: 'Thando M.', items: ['Latte x2'], total: 'R70', status: 'Completed', date: '2025-05-26' },
-        { id: '#1002', customer: 'Nomsa L.', items: ['Espresso'], total: 'R25', status: 'Pending', date: '2025-05-26' },
-        { id: '#1003', customer: 'Sipho D.', items: ['Cappuccino x2'], total: 'R80', status: 'Completed', date: '2025-05-25' },
-        { id: '#1004', customer: 'Lerato B.', items: ['Flat White'], total: 'R35', status: 'Cancelled', date: '2025-05-25' },
-        { id: '#1005', customer: 'Kabelo T.', items: ['Mocha'], total: 'R40', status: 'Pending', date: '2025-05-24' },
-        { id: '#1006', customer: 'Zanele K.', items: ['Americano x2'], total: 'R50', status: 'Completed', date: '2025-05-24' },
-        { id: '#1007', customer: 'Nandi R.', items: ['Chai Latte', 'Brownie'], total: 'R60', status: 'Completed', date: '2025-05-24' },
-        { id: '#1008', customer: 'Tshepo N.', items: ['Cortado'], total: 'R28', status: 'Cancelled', date: '2025-05-23' },
-        { id: '#1009', customer: 'Ayanda S.', items: ['Latte', 'Muffin'], total: 'R55', status: 'Completed', date: '2025-05-23' },
-        { id: '#1010', customer: 'Boitumelo J.', items: ['Iced Coffee', 'Croissant'], total: 'R65', status: 'Pending', date: '2025-05-22' },
-        { id: '#1011', customer: 'Dineo M.', items: ['Macchiato'], total: 'R29', status: 'Completed', date: '2025-05-22' },
-        { id: '#1012', customer: 'Sizwe H.', items: ['Cappuccino x3'], total: 'R120', status: 'Pending', date: '2025-05-21' },
-        { id: '#1013', customer: 'Naledi F.', items: ['Mocha', 'Croissant'], total: 'R60', status: 'Completed', date: '2025-05-21' },
-        { id: '#1014', customer: 'Bongani P.', items: ['Flat White x2'], total: 'R70', status: 'Cancelled', date: '2025-05-20' },
-        { id: '#1015', customer: 'Lelethu D.', items: ['Espresso x2'], total: 'R50', status: 'Completed', date: '2025-05-20' },
-        {
-            id: '#1000',
-            customer: 'Big John',
-            items: [
-                'Latte', 'Espresso', 'Cappuccino', 'Flat White', 'Mocha',
-                'Americano', 'Chai Latte', 'Macchiato', 'Iced Coffee', 'Croissant'
-            ],
-            total: 'R320',
-            status: 'Completed',
-            date: '2025-05-26'
-        },
-    ];
+    // const orders: Order[] = [
+    //     { id: '#1001', customer: 'Thando M.', items: ['Latte x2'], total: 'R70', status: 'Completed', date: '2025-05-26' },
+    //     { id: '#1002', customer: 'Nomsa L.', items: ['Espresso'], total: 'R25', status: 'Pending', date: '2025-05-26' },
+    //     { id: '#1003', customer: 'Sipho D.', items: ['Cappuccino x2'], total: 'R80', status: 'Completed', date: '2025-05-25' },
+    //     { id: '#1004', customer: 'Lerato B.', items: ['Flat White'], total: 'R35', status: 'Cancelled', date: '2025-05-25' },
+    //     { id: '#1005', customer: 'Kabelo T.', items: ['Mocha'], total: 'R40', status: 'Pending', date: '2025-05-24' },
+    //     { id: '#1006', customer: 'Zanele K.', items: ['Americano x2'], total: 'R50', status: 'Completed', date: '2025-05-24' },
+    //     { id: '#1007', customer: 'Nandi R.', items: ['Chai Latte', 'Brownie'], total: 'R60', status: 'Completed', date: '2025-05-24' },
+    //     { id: '#1008', customer: 'Tshepo N.', items: ['Cortado'], total: 'R28', status: 'Cancelled', date: '2025-05-23' },
+    //     { id: '#1009', customer: 'Ayanda S.', items: ['Latte', 'Muffin'], total: 'R55', status: 'Completed', date: '2025-05-23' },
+    //     { id: '#1010', customer: 'Boitumelo J.', items: ['Iced Coffee', 'Croissant'], total: 'R65', status: 'Pending', date: '2025-05-22' },
+    //     { id: '#1011', customer: 'Dineo M.', items: ['Macchiato'], total: 'R29', status: 'Completed', date: '2025-05-22' },
+    //     { id: '#1012', customer: 'Sizwe H.', items: ['Cappuccino x3'], total: 'R120', status: 'Pending', date: '2025-05-21' },
+    //     { id: '#1013', customer: 'Naledi F.', items: ['Mocha', 'Croissant'], total: 'R60', status: 'Completed', date: '2025-05-21' },
+    //     { id: '#1014', customer: 'Bongani P.', items: ['Flat White x2'], total: 'R70', status: 'Cancelled', date: '2025-05-20' },
+    //     { id: '#1015', customer: 'Lelethu D.', items: ['Espresso x2'], total: 'R50', status: 'Completed', date: '2025-05-20' },
+    //     {
+    //         id: '#1000',
+    //         customer: 'Big John',
+    //         items: [
+    //             'Latte', 'Espresso', 'Cappuccino', 'Flat White', 'Mocha',
+    //             'Americano', 'Chai Latte', 'Macchiato', 'Iced Coffee', 'Croissant'
+    //         ],
+    //         total: 'R320',
+    //         status: 'Completed',
+    //         date: '2025-05-26'
+    //     },
+    // ];
 
-    const getStatusStyle = (status: OrderStatus) => {
+    const getStatusStyle = (status: string) => {
         switch (status) {
             case 'Completed': return 'text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Pending': return 'text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Cancelled': return 'text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium';
-            default: return 'text-amber-900 bg-amber-100 px-2 py-1 rounded-full text-xs font-medium';
+            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium'; // fallback for 'created', etc.
         }
     };
 
@@ -248,7 +285,7 @@ export default function DashboardPage() {
                                     <thead style={{ backgroundColor: 'var(--primary-3)' }}>
                                         <tr>
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Order #</th>
-                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Customer</th>
+                                            {/* <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Customer</th> */}
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Items</th>
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Total</th>
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Status</th>
@@ -256,39 +293,26 @@ export default function DashboardPage() {
                                         </tr>
                                     </thead>
 
-                                    <tbody
-                                        className="divide-y"
-                                        style={{ borderColor: 'var(--primary-3)' }}
-                                    >
-
-                                        {orders.map((order, index) => (
-                                            <tr key={order.id} className="tr-hover">
+                                    <tbody className="divide-y text-[var(--primary-3)]" style={{ borderColor: 'var(--primary-3)' }}>
+                                        {orders.map((order) => (
+                                            <tr key={order.id}>
                                                 <td className="px-6 py-4 font-medium">{order.id}</td>
-                                                <td className="px-6 py-4">{order.customer}</td>
+                                                {/* <td className="px-6 py-4">Customer</td> */}
                                                 <td className="px-6 py-4">
-                                                    {order.items.map((item, index) => {
-                                                        const isLast = index === order.items.length - 1;
-                                                        const isLineBreak = (index + 1) % 4 === 0;
-                                                        return (
-                                                            <span key={index}>
-                                                                {item}
-                                                                {!isLast && !isLineBreak && ', '}
-                                                                {isLineBreak && !isLast && <br />}
-                                                            </span>
-                                                        );
-                                                    })}
+                                                    {order.order_products.map(p => `${p.products.name} x${p.quantity}`).join(', ')}
                                                 </td>
-                                                <td className="px-6 py-4 font-semibold">{order.total}</td>
+                                                <td className="px-6 py-4 font-semibold">R{order.total_price}</td>
                                                 <td className="px-6 py-4">
                                                     <span className={getStatusStyle(order.status)}>{order.status}</span>
                                                 </td>
-                                                <td className="px-6 py-4">{order.date}</td>
+                                                <td className="px-6 py-4">
+                                                    {new Date(order.created_at).toLocaleDateString('en-ZA')}
+                                                </td>
                                             </tr>
-
-
                                         ))}
                                     </tbody>
                                 </table>
+
                             </div>
                         </section>
                     </>
