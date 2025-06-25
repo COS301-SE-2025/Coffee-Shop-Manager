@@ -220,13 +220,7 @@ export default function SignUpPage() {
                                 >
                                     Password
                                 </label>
-                                <a
-                                    href="#"
-                                    className="text-xs transition-colors"
-                                    style={{ color: 'var(--primary-3)' }}
-                                >
-                                    Forgot password?
-                                </a>
+                                
                             </div>
                             <div className="relative">
                                 <input
