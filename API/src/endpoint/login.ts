@@ -22,15 +22,11 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
     const maxAge = 60 * 60; // 1 hour
     const isProd = process.env.NODE_ENV === 'production';
 
-    // First: Clear existing token cookie
     res.setHeader('Set-Cookie', [
       `token=; Path=/; HttpOnly; Max-Age=0; ${isProd ? 'Secure;' : ''} SameSite=${isProd ? 'Strict' : 'Lax'}`,
+      `token=${token}; Path=/; HttpOnly; Max-Age=${maxAge}; ${isProd ? 'Secure;' : ''} SameSite=${isProd ? 'Strict' : 'Lax'}`,
     ]);
 
-    // Set only the token cookie
-    res.setHeader('Set-Cookie', [
-      `token=${token}; Path=/; HttpOnly; ${isProd ? 'Secure;' : ''} SameSite=${isProd ? 'Strict' : 'Lax'}; Max-Age=${maxAge}`,
-    ]);
 
 
     res.status(200).json({

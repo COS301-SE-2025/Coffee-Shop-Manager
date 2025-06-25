@@ -311,7 +311,7 @@ export default function LoginPage() {
             >
               Don&apos;t have an account?{" "}
               <Link
-                href="/register"
+                href="/signup"
                 className="font-medium transition-colors"
                 style={{ color: 'var(--primary-3)' }}
               >
