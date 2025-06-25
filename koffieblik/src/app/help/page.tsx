@@ -72,9 +72,9 @@ export default function HelpPage() {
           Can't find what you're looking for? Contact our support team.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="px-8 py-3 bg-amber-800 text-white rounded-xl font-semibold hover:bg-amber-900 transition-colors duration-200 hover:scale-105 transform">
-            Email Support
-          </button>
+          <button className="px-8 py-3 text-white rounded-xl font-semibold transition-colors duration-200 hover:scale-105 transform" style={{backgroundColor: 'var(--primary-3)'}}>
+  Email Support
+</button>
           <button className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200 hover:scale-105 transform">
            Call support
           </button>
