@@ -65,3 +65,13 @@ body {
   box-shadow: none;
 }
 
+
+.tr-hover {
+  color: var(--primary-3);
+  transition: background-color 0.2s ease;
+}
+
+.tr-hover:hover {
+  background-color: var(--primary-4);
+}
+

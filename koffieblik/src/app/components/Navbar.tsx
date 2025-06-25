@@ -198,8 +198,8 @@ export default function Navbar() {
                 style={
                   isActive
                     ? {
-                      backgroundColor: 'var(--primary-3)', // dark brown
-                      color: 'var(--primary-2)',          // white
+                      backgroundColor: 'var(--primary-3)',
+                      color: 'var(--primary-2)',
                       borderColor: 'var(--primary-3)',
                     }
                     : isLogout
@@ -209,8 +209,8 @@ export default function Navbar() {
                         borderColor: '#fecaca',
                       }
                       : {
-                        backgroundColor: 'var(--primary-4)', // creamy latte
-                        color: 'var(--primary-3)',          // black
+                        backgroundColor: 'var(--primary-4)',
+                        color: 'var(--primary-3)',
                         borderColor: 'var(--primary-1)',
                       }
                 }

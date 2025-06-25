@@ -28,7 +28,7 @@ export default function DashboardPage() {
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
 
-    
+
 
 
     // Route to inventory
@@ -70,14 +70,23 @@ export default function DashboardPage() {
         router.push('/login');
     };
 
-    const dateInputStyle = 'p-3 border border-amber-300 rounded-lg text-sm text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent transition-all duration-200';
+    const dateInputStyle =
+        'p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200';
+
+    type Metric = {
+        label: string;
+        value: string;
+        color?: string;
+    };
 
     const metrics: Metric[] = [
-        { label: 'Total Sales Today', value: 'R1,540', color: 'text-amber-600' },
-        { label: 'Orders Completed', value: '42', color: 'text-amber-600' },
-        { label: 'Top-Selling Item', value: 'Cappuccino', color: 'text-amber-600' },
-        { label: 'Stock Alerts', value: 'Milk Low', color: 'text-red-600' },
+        { label: 'Total Sales Today', value: 'R1,540', color: 'var(--primary-3)' },
+        { label: 'Orders Completed', value: '42', color: 'var(--primary-3)' },
+        { label: 'Top-Selling Item', value: 'Cappuccino', color: 'var(--primary-3)' },
+        { label: 'Stock Alerts', value: 'Milk Low', color: '#dc2626' }, // red-600
     ];
+
+
 
     const orders: Order[] = [
         { id: '#1001', customer: 'Thando M.', items: ['Latte x2'], total: 'R70', status: 'Completed', date: '2025-05-26' },
@@ -133,7 +142,11 @@ export default function DashboardPage() {
     const tabs = username ? getTabs(username) : [];
 
     return (
-        <main className="min-h-screen bg-gradient-to-br from-amber-50 to-orange-100">
+        <main
+            className="min-h-screen"
+            style={{ backgroundColor: 'var(--primary-4)' }}
+        >
+
             {/* Enhanced Tab Navigation */}
             {/* <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
                 <div className="px-6 py-4">
@@ -210,26 +223,65 @@ export default function DashboardPage() {
                         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                             {metrics.map((metric, index) => (
                                 <div key={index} className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-white/50">
-                                    <h2 className="text-sm text-amber-700 mb-2 font-medium">{metric.label}</h2>
-                                    <p className={`text-3xl font-bold ${metric.color}`}>{metric.value}</p>
-                                    <div className="mt-3 h-1 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full"></div>
+                                    <h2
+                                        className="text-sm mb-2 font-medium"
+                                        style={{ color: 'var(--primary-1)' }}
+                                    >
+                                        {metric.label}
+                                    </h2>
+
+                                    <p className="text-3xl font-bold" style={{ color: metric.color }}>
+                                        {metric.value}
+                                    </p>
+
+                                    <div
+                                        className="mt-3 h-1 rounded-full"
+                                        style={{ backgroundColor: 'var(--primary-4)' }}
+                                    ></div>
+
                                 </div>
                             ))}
                         </section>
 
                         {/* Orders Section */}
-                        <section className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
-                            <div className="p-6 border-b border-amber-100">
+                        <section
+                            className="backdrop-blur-sm rounded-2xl shadow-xl"
+                            style={{
+                                backgroundColor: 'var(--primary-2)',
+                                border: '1px solid var(--primary-3)',
+                            }}
+                        >
+
+                            <div
+                                className="p-6 border-b"
+                                style={{ borderColor: 'var(--primary-3)' }}
+                            >
+
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="w-8 h-8 bg-gradient-to-r from-amber-400 to-orange-400 rounded-lg flex items-center justify-center">
-                                            <span className="text-white text-sm">📋</span>
+                                        <div
+                                            className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                            style={{ backgroundColor: 'var(--primary-3)' }}
+                                        >
+                                            <span className="text-sm" style={{ color: 'var(--primary-3)' }}>📋</span>
                                         </div>
-                                        <h2 className="text-xl font-bold text-amber-900">Recent Orders</h2>
+
+                                        <h2
+                                            className="text-xl font-bold"
+                                            style={{ color: 'var(--primary-3)' }}
+                                        >
+                                            Recent Orders
+                                        </h2>
+
                                     </div>
                                     <div className="flex flex-wrap gap-3">
                                         <select
                                             className={dateInputStyle}
+                                            style={{
+                                                borderColor: 'var(--primary-3)',
+                                                color: 'var(--primary-3)',
+                                                boxShadow: '0 0 0 0 transparent',
+                                            }}
                                             value={filter}
                                             onChange={(e) => setFilter(e.target.value)}
                                         >
@@ -240,33 +292,52 @@ export default function DashboardPage() {
                                         </select>
                                         {filter === 'Custom Range' && (
                                             <>
-                                                <input type="date" className={dateInputStyle} />
-                                                <span className="flex items-center text-amber-700 font-medium">to</span>
-                                                <input type="date" className={dateInputStyle} />
+                                                <input type="date" className={dateInputStyle} style={{
+                                                    borderColor: 'var(--primary-3)',
+                                                    color: 'var(--primary-3)',
+                                                    boxShadow: '0 0 0 0 transparent',
+                                                }} />
+                                                <span
+                                                    className="flex items-center font-medium"
+                                                    style={{ color: 'var(--primary-3)' }}
+                                                >
+                                                    to
+                                                </span>
+                                                <input type="date" className={dateInputStyle} style={{
+                                                    borderColor: 'var(--primary-3)',
+                                                    color: 'var(--primary-3)',
+                                                    boxShadow: '0 0 0 0 transparent',
+                                                }} />
                                             </>
                                         )}
+
                                     </div>
                                 </div>
                             </div>
 
                             <div className="overflow-x-auto">
                                 <table className="min-w-full text-sm">
-                                    <thead className="bg-gradient-to-r from-amber-100 to-orange-100">
+                                    <thead style={{ backgroundColor: 'var(--primary-3)' }}>
                                         <tr>
-                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Order #</th>
-                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Customer</th>
-                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Items</th>
-                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Total</th>
-                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Status</th>
-                                            <th className="text-left px-6 py-4 font-semibold text-amber-900">Date</th>
+                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Order #</th>
+                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Customer</th>
+                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Items</th>
+                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Total</th>
+                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Status</th>
+                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Date</th>
                                         </tr>
                                     </thead>
-                                    <tbody className="divide-y divide-amber-100">
+
+                                    <tbody
+                                        className="divide-y"
+                                        style={{ borderColor: 'var(--primary-3)' }}
+                                    >
+
                                         {orders.map((order, index) => (
-                                            <tr key={order.id} className="hover:bg-amber-50/50 transition-colors duration-150">
-                                                <td className="px-6 py-4 font-medium text-amber-900">{order.id}</td>
-                                                <td className="px-6 py-4 text-amber-800">{order.customer}</td>
-                                                <td className="px-6 py-4 text-amber-700">
+                                            <tr key={order.id} className="tr-hover">
+                                                <td className="px-6 py-4 font-medium">{order.id}</td>
+                                                <td className="px-6 py-4">{order.customer}</td>
+                                                <td className="px-6 py-4">
                                                     {order.items.map((item, index) => {
                                                         const isLast = index === order.items.length - 1;
                                                         const isLineBreak = (index + 1) % 4 === 0;
@@ -279,12 +350,14 @@ export default function DashboardPage() {
                                                         );
                                                     })}
                                                 </td>
-                                                <td className="px-6 py-4 font-semibold text-amber-900">{order.total}</td>
+                                                <td className="px-6 py-4 font-semibold">{order.total}</td>
                                                 <td className="px-6 py-4">
                                                     <span className={getStatusStyle(order.status)}>{order.status}</span>
                                                 </td>
-                                                <td className="px-6 py-4 text-amber-700">{order.date}</td>
+                                                <td className="px-6 py-4">{order.date}</td>
                                             </tr>
+
+
                                         ))}
                                     </tbody>
                                 </table>
