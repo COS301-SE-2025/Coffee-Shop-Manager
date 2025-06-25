@@ -133,22 +133,56 @@ export default function Navbar() {
   }
 
   return (
-    <nav className="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-amber-200 shadow-lg">
+    <nav
+      className="sticky top-0 z-50 backdrop-blur-sm border-b shadow-lg"
+      style={{
+        backgroundColor: 'var(--primary-4)',
+        borderColor: 'var(--primary-3)',
+      }}
+    >
+
+
       <div className="px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center">
+            <div
+              className="w-10 h-10 rounded-xl flex items-center justify-center"
+              style={{ backgroundColor: 'var(--primary-2)' }}
+            >
               <span className="text-white font-bold text-lg">☕</span>
             </div>
+
             <div>
-              <h1 className="text-xl font-bold text-amber-900">Coffee Shop Dashboard</h1>
-              <p className="text-sm text-amber-600">Welcome back, {username}</p>
+              <h1
+                className="text-xl font-bold"
+                style={{ color: 'var(--primary-1)' }}
+              >
+                Coffee Shop Dashboard
+              </h1>
+              <p
+                className="text-sm"
+                style={{ color: 'var(--primary-3)' }}
+              >
+                Welcome back, {username}
+              </p>
             </div>
+
           </div>
           <div className="text-right">
-            <p className="text-sm text-amber-700 font-medium">{date}</p>
-            <p className="text-xs text-amber-600">{time}</p>
+            <p
+              className="text-sm font-medium"
+              style={{ color: 'var(--primary-1)' }}
+            >
+              {date}
+            </p>
+            <p
+              className="text-xs"
+              style={{ color: 'var(--primary-1)' }}
+            >
+              {time}
+            </p>
           </div>
+
         </div>
 
         <div className="flex flex-wrap gap-2">
@@ -159,12 +193,27 @@ export default function Navbar() {
             return (
               <button
                 key={tab}
-                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${isActive
-                  ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-200'
-                  : isLogout
-                    ? 'bg-red-100 text-red-700 hover:bg-red-200 border border-red-200'
-                    : 'bg-amber-100 text-amber-800 hover:bg-amber-200 border border-amber-200'
+                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${isLogout ? 'border' : 'border'
                   }`}
+                style={
+                  isActive
+                    ? {
+                      backgroundColor: 'var(--primary-3)', // dark brown
+                      color: 'var(--primary-2)',          // white
+                      borderColor: 'var(--primary-3)',
+                    }
+                    : isLogout
+                      ? {
+                        backgroundColor: '#fee2e2',
+                        color: '#b91c1c',
+                        borderColor: '#fecaca',
+                      }
+                      : {
+                        backgroundColor: 'var(--primary-4)', // creamy latte
+                        color: 'var(--primary-3)',          // black
+                        borderColor: 'var(--primary-1)',
+                      }
+                }
                 onClick={() => {
                   if (tab === 'Logout') handleLogout();
                   else setSelectedTab(tab);
@@ -176,6 +225,8 @@ export default function Navbar() {
                   <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
                 )}
               </button>
+
+
             );
           })}
         </div>

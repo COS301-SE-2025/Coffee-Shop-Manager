@@ -38,7 +38,7 @@ body {
 
 
 .btn {
-  background-color: var(--primary-3);  /* Dark Brown */
+  background-color: var(--primary-3);  /* Or any other custom color */
   color: var(--primary-2);             /* White */
   padding: 0.75rem 1rem;
   border-radius: 0.5rem;
@@ -47,15 +47,21 @@ body {
   align-items: center;
   justify-content: center;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    background-color 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .btn:hover {
-  background-color: #4a3328; /* Slightly darker brown for hover */
+  filter: brightness(90%);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
 }
 
 .btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  filter: none;
+  box-shadow: none;
 }
+
