@@ -21,55 +21,16 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
       return;
     }
 
-    for (const p of products) {
-      if (!p.product_id && !p.name) {
-        res.status(400).json({ error: 'Each product must have at least a product_id or a name' });
-        return;
-      }
-    }
-
-    const ids = products.map(p => p.product_id).filter(Boolean);
-    const names = products.map(p => p.name).filter(Boolean);
-
-    const { data: allProducts, error: fetchError } = await supabase
-      .from('products')
-      .select('id, name')
-      .or([
-        ids.length > 0 ? `id.in.(${ids.join(',')})` : '',
-        names.length > 0 ? `name.in.(${names.map(n => `"${n}"`).join(',')})` : '',
-      ].filter(Boolean).join(','));
-
-    if (fetchError) throw fetchError;
-
-    if (!allProducts || allProducts.length < products.length) {
-      res.status(400).json({ error: 'One or more products were not found' });
+    const validationError = validateProductInputs(products);
+    if (validationError) {
+      res.status(400).json({ error: validationError });
       return;
     }
 
-    const productMap = new Map(allProducts.map(p => [p.id, p]));
-    const nameMap = new Map(allProducts.map(p => [p.name, p]));
-
-    const orderProducts = [];
-
-    for (const p of products) {
-      let matchedProduct = null;
-
-      if (p.product_id && productMap.has(p.product_id)) {
-        matchedProduct = productMap.get(p.product_id);
-      } else if (p.name && nameMap.has(p.name)) {
-        matchedProduct = nameMap.get(p.name);
-      }
-
-      if (!matchedProduct) {
-        res.status(400).json({ error: `Product not found: ${p.name || p.product_id}` });
-        return;
-      }
-
-      orderProducts.push({
-        order_id: null,
-        product_id: matchedProduct.id,
-        quantity: p.quantity,
-      });
+    const resolvedProducts = await resolveProductReferences(products);
+    if ('error' in resolvedProducts) {
+      res.status(400).json({ error: resolvedProducts.error });
+      return;
     }
 
     const { data: orderData, error: orderError } = await supabase
@@ -80,11 +41,10 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
 
     if (orderError) throw orderError;
 
-    const orderId = orderData.id;
-
-    const finalOrderProducts = orderProducts.map(op => ({
-      ...op,
-      order_id: orderId,
+    const finalOrderProducts = resolvedProducts.matched.map(p => ({
+      order_id: orderData.id,
+      product_id: p.product_id,
+      quantity: p.quantity,
     }));
 
     const { error: insertError } = await supabase
@@ -95,7 +55,7 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
 
     res.status(201).json({
       success: true,
-      order_id: orderId,
+      order_id: orderData.id,
       message: 'Order created successfully',
     });
     return;
@@ -104,4 +64,61 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
     res.status(500).json({ error: error.message || 'Internal server error' });
     return;
   }
+}
+
+function validateProductInputs(products: ProductInput[]): string | null {
+  for (const product of products) {
+    if (!product.product_id && !product.name) {
+      return 'Each product must have at least a product_id or a name';
+    }
+    if (!product.quantity || product.quantity <= 0) {
+      return `Invalid quantity for product: ${product.name ?? product.product_id}`;
+    }
+  }
+  return null;
+}
+
+async function resolveProductReferences(products: ProductInput[]): Promise<
+  { matched: { product_id: string; quantity: number }[] } | { error: string } >
+  {
+  const ids = products.map(p => p.product_id).filter(Boolean);
+  const names = products.map(p => p.name).filter(Boolean);
+
+  const { data: foundProducts, error } = await supabase
+    .from('products')
+    .select('id, name')
+    .or([
+      ids.length ? `id.in.(${ids.join(',')})` : '',
+      names.length ? `name.in.(${names.map(n => `"${n}"`).join(',')})` : '',
+    ].filter(Boolean).join(','));
+
+  if (error) return { error: error.message };
+
+  const matched: { product_id: string; quantity: number }[] = [];
+  const missing: string[] = [];
+
+  for (const p of products) {
+    let matchedProduct;
+
+    if (p.product_id) {
+      matchedProduct = foundProducts?.find(fp => fp.id === p.product_id);
+    } else if (p.name) {
+      matchedProduct = foundProducts?.find(fp => fp.name === p.name);
+    }
+
+    if (!matchedProduct) {
+      missing.push(p.name || p.product_id!);
+    } else {
+      matched.push({
+        product_id: matchedProduct.id,
+        quantity: p.quantity,
+      });
+    }
+  }
+
+  if (missing.length > 0) {
+    return { error: `The following products were not found: ${missing.join(', ')}` };
+  }
+
+  return { matched };
 }

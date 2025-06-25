@@ -37,13 +37,18 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
         )
       `)
       .eq('user_id', userId)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: true });
 
     if (ordersError) {
       throw ordersError;
     }
 
-    res.status(200).json({ success: true, orders });
+    const numberedOrders = orders.map((order, index) => ({
+      ...order,
+      number: index + 1,
+    }));
+
+    res.status(200).json({ success: true, orders: numberedOrders });
   } catch (error: any) {
     console.error('Get orders error:', error);
     res.status(500).json({ error: error.message || 'Internal server error' });

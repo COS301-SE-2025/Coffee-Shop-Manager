@@ -27,13 +27,14 @@ CREATE TABLE IF NOT EXISTS orders (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "user_id" UUID NOT NULL,
     "total_price" DECIMAL(8, 2) NOT NULL DEFAULT 0,
-    "status" VARCHAR(255) NOT NULL DEFAULT 'created',
+    "status" VARCHAR(255) NOT NULL DEFAULT 'pending',
     "created_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "updated_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     CONSTRAINT orders_pkey PRIMARY KEY (id),
     CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
     CONSTRAINT orders_status_check CHECK (status IN (
+        'pending',
         'created',
         'preparing',
         'ready',

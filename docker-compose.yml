@@ -1,7 +1,15 @@
 # Usage
-#   Start:                      docker compose -f docker-compose.yml -f supabase/docker-compose.yml up -d
-#         -> Reset database:    rm -rf supabase/volumes/db/data
-#   Stop:                       docker compose -f docker-compose.yml -f supabase/docker-compose.yml down -d
+# Please ensure a .env file copied from .env.example exists in root
+# start:
+#         docker compose up
+
+# stop:
+#         docker compose down
+
+# reset:    Reset database [this will initialize it with the values from data.sql again]
+  # stop the docker
+  # rm -rf supabase/volumes/db/data
+  # start the docker
 
 name: Coffee_Shop_Manager
 
@@ -34,7 +42,7 @@ services:
       - "${API_PORT}:5000"
     command: npx ts-node src/server.ts
     env_file:
-      - .env
+      - ./.env
     depends_on:
       - db
 
