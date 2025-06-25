@@ -75,9 +75,11 @@ export default function LoginPage() {
         if (result.success && result.user?.user_metadata?.display_name) {
           const username = result.user.user_metadata.display_name;
           const token = result.session?.access_token ?? 'N/A'; // ✅ Safely fallback
-
+          localStorage.setItem('username', username);
           console.log('👤 Welcome:', username);
           console.log('🔐 Token:', token); // Debug only
+
+
 
           setLoginError('');
           router.push('/dashboard');

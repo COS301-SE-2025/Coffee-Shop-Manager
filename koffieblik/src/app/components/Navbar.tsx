@@ -9,6 +9,15 @@ export default function Navbar() {
   const pathname = usePathname();
 
   const [username, setUsername] = useState('Guest');
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    if (storedUsername && storedUsername.trim() !== '') {
+      setUsername(storedUsername);
+    } else {
+      setUsername('Guest');
+    }
+  }, []);
+
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
 
   const [date, setDate] = useState('');
@@ -94,7 +103,9 @@ export default function Navbar() {
       const result = await res.json();
 
       if (result.success) {
-        console.log('✅ Cookies cleared successfully.');
+
+        localStorage.removeItem('username'); // or localStorage.clear()
+        console.log('✅ Cookies and LocalStorage cleared successfully.');
         router.push('/login');
       } else {
         console.warn('⚠️ Logout failed:', result.message);
