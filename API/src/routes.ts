@@ -5,6 +5,7 @@ import { authMiddleware } from './middleware/auth';
 import { loginHandler } from './endpoint/login';
 import { signupHandler } from './endpoint/signup';
 import { createOrderHandler } from './endpoint/createOrder';
+import { getOrdersHandler } from './endpoint/getOrders';
 import { logoutHandler } from './endpoint/logout';
 import { checkTokenHandler } from './endpoint/check-token'; 
 
@@ -18,6 +19,7 @@ router.get('/', (req, res) => {
 router.post('/login', loginHandler);
 router.post('/signup', signupHandler);
 router.post('/create_order', authMiddleware, createOrderHandler);
+router.get('/get_orders', authMiddleware, getOrdersHandler);
 router.post('/logout', logoutHandler);
 router.get('/check-token', checkTokenHandler); 
 
