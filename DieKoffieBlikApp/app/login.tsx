@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from './lib/Supabase';
 import {
   View,
   Text,
@@ -64,7 +65,7 @@ export default function LoginScreen({
 
   const handleSubmit = async () => {
     setFormSubmitted(true);
-    
+
     // Validate inputs
     const emailValidationResult = validateEmail(email);
     setEmailError(emailValidationResult ?? '');
@@ -73,27 +74,54 @@ export default function LoginScreen({
     const passwordValidationResult = validatePassword(password);
     setPasswordError(passwordValidationResult ?? '');
     const isPasswordValid = !passwordValidationResult;
-    
-    if (isEmailValid && isPasswordValid) {
-      setIsLoading(true);
-      
-      try {
-        // Simulate network request
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        
-        if (onLogin) {
-          onLogin(email, password, rememberMe);
-        } else {
-          Alert.alert('Success', 'Login successful!');
-          console.log('Login successful', { email, password: '********', rememberMe });
-        }
-        
-      } catch (error) {
-        console.error('Login failed', error);
-        Alert.alert('Error', 'Login failed. Please try again.');
-      } finally {
-        setIsLoading(false);
+
+    if (!isEmailValid || !isPasswordValid) return;
+
+    setIsLoading(true);
+
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) {
+        Alert.alert('Login failed', error.message);
+        return;
       }
+
+      // Optional: fetch user data (like from user_profiles)
+      const userId = data?.user?.id;
+      if (userId) {
+        const { data: profile, error: profileError } = await supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+
+        if (profileError) {
+          console.warn('Profile not found:', profileError.message);
+          // Optional: redirect user to complete profile
+        } else {
+          console.log('User profile:', profile);
+        }
+      }
+
+      if (onLogin) {
+        onLogin(email, password, rememberMe);
+      } else {
+        Alert.alert('Success', 'Login successful!');
+        console.log('Login successful', { email, password: '********', rememberMe });
+      }
+
+      // Optional: route to homepage or dashboard
+      router.replace('/home'); // adjust route as needed
+
+    } catch (err: any) {
+      console.error('Unexpected login error:', err);
+      Alert.alert('Error', 'An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
     }
   };
 

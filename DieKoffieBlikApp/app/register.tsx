@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { supabase } from './lib/Supabase'
 import {
   View,
   Text,
@@ -190,32 +191,73 @@ export default function RegisterScreen() {
         handleNextStep();
       }
     } else if (currentStep === 3) {
-      // Final submission
-      if (!agreedToTerms) {
-        Alert.alert('Error', 'Please agree to the terms and conditions');
-        return;
-      }
+        if (!agreedToTerms) {
+          Alert.alert('Error', 'Please agree to the terms and conditions');
+          return;
+        }
 
-      setIsLoading(true);
-      
+        setIsLoading(true);
+
       try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+        const normalizedEmail = email.trim().toLowerCase();
         
-        console.log('Registration successful', { 
-          email, 
-          firstName, 
-          lastName, 
-          phoneNumber, 
-          dateOfBirth,
-          agreedToMarketing,
-          password: '********' 
+        // 1. Sign up with Supabase Auth
+        const { data, error } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
         });
         
+        if (error) {
+          console.error('Registration failed', error);
+          Alert.alert('Error', error.message);
+          return;
+        }
+
+        const user = data?.user;
+        if (!user) {
+          Alert.alert('Error', 'User creation failed');
+          return;
+        }
+
+        // 2. Insert into your public.users table
+        const { error: userInsertError } = await supabase.from('users').insert([
+          {
+            auth_user_id: user.id,
+            email: normalizedEmail,
+            role: "user",
+            // add other required fields with defaults if needed
+          }
+        ]);
+
+        if (userInsertError) {
+          console.error('Inserting into users table failed:', userInsertError);
+          Alert.alert('Error', 'Failed to create user record.');
+          return;
+        }
+
+        // 3. Insert into user_profiles table (now the FK will work)
+        const displayName = firstName + ' ' + lastName; // add space between names
+        const { error: profileError } = await supabase.from('user_profiles').insert([
+          {
+            user_id: user.id,
+            display_name: displayName,
+            phone_number: phoneNumber,
+            // other profile fields
+          }
+        ]);
+
+        if (profileError) {
+          console.error('Profile insert failed:', profileError);
+          Alert.alert('Error', 'Failed to save profile.');
+          return;
+        }
+
         Alert.alert('Success', 'Account created successfully!');
-        
-      } catch (error) {
+        router.replace('/login');
+
+      } catch (error: any) {
         console.error('Registration failed', error);
-        Alert.alert('Error', 'Failed to create account. Please try again.');
+        Alert.alert('Error', error.message || 'Something went wrong during registration');
       } finally {
         setIsLoading(false);
       }
