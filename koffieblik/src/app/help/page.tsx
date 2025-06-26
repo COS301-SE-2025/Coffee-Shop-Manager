@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     question: "Who can use the POS system?",
-    answer: "The POS system is designed for both employees and registered customers to place orders.",
+    answer: "The POS system is designed for employees to place orders.",
   }
 ];
 
