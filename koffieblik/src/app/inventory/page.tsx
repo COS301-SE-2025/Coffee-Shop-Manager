@@ -1,4 +1,4 @@
-'use client'
+'use client';
 
 import React, { useState, useEffect } from 'react';
 
@@ -12,9 +12,23 @@ interface InventoryItem {
   percentage_left: number | null;
 }
 
+interface FailedItem {
+  idOrItem: string;
+  reason: string;
+}
+
 export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
+  const [formData, setFormData] = useState({
+    item: '',
+    quantity: '',
+    unit_type: '',
+    max_capacity: '',
+    reserved_quantity: '',
+  });
 
   useEffect(() => {
     const fetchStock = async () => {
@@ -38,12 +52,134 @@ export default function InventoryPage() {
     fetchStock();
   }, []);
 
+  const handleSubmit = async () => {
+    if (!formData.item || !formData.quantity || !formData.unit_type) {
+      alert('Please fill in item, quantity, and unit type');
+      return;
+    }
+
+    const payload = {
+      item: formData.item,
+      quantity: parseInt(formData.quantity),
+      unit_type: formData.unit_type,
+      max_capacity: formData.max_capacity ? parseInt(formData.max_capacity) : null,
+      reserved_quantity: formData.reserved_quantity ? parseInt(formData.reserved_quantity) : 0,
+    };
+
+    try {
+      const response = await fetch('http://localhost:5000/update_stock', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify(
+          isUpdating
+            ? { updates: [{ item: payload.item, fields: payload }] }
+            : { creates: [payload] }
+        ),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        if (isUpdating) {
+          alert(`✅ Updated: ${result.updatedItems?.join(', ')}`);
+          setItems(prev =>
+            prev.map(i =>
+              i.item === payload.item
+                ? {
+                    ...i,
+                    ...payload,
+                    percentage_left: payload.max_capacity
+                      ? Math.round((payload.quantity / payload.max_capacity) * 100)
+                      : null,
+                  }
+                : i
+            )
+          );
+        } else {
+          alert(`✅ Added: ${result.createdItems?.join(', ')}`);
+          setItems(prev => [
+            ...prev,
+            {
+              ...payload,
+              id: crypto.randomUUID(),
+              percentage_left: payload.max_capacity
+                ? Math.round((payload.quantity / payload.max_capacity) * 100)
+                : null,
+              max_capacity: payload.max_capacity ?? null,
+              reserved_quantity: payload.reserved_quantity ?? 0,
+            },
+          ]);
+        }
+
+        setFormData({ item: '', quantity: '', unit_type: '', max_capacity: '', reserved_quantity: '' });
+        setIsUpdating(false);
+        setShowForm(false);
+      } else {
+        alert(`❌ Failed: ${result.failedItems?.map((f: FailedItem) => `${f.idOrItem}: ${f.reason}`).join(', ')}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert('❌ An error occurred while submitting the item');
+    }
+  };
+
+  const handleEdit = (item: InventoryItem) => {
+    setFormData({
+      item: item.item,
+      quantity: item.quantity.toString(),
+      unit_type: item.unit_type,
+      max_capacity: item.max_capacity?.toString() ?? '',
+      reserved_quantity: item.reserved_quantity?.toString() ?? '',
+    });
+    setIsUpdating(true);
+    setShowForm(true);
+  };
+
   return (
     <main className="min-h-screen p-6" style={{ backgroundColor: 'var(--primary-2)' }}>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-4xl font-bold" style={{ color: 'var(--primary-3)' }}>
+          Inventory Stock
+        </h1>
+        <button className="btn" onClick={() => {
+          setShowForm(prev => !prev);
+          setFormData({ item: '', quantity: '', unit_type: '', max_capacity: '', reserved_quantity: '' });
+          setIsUpdating(false);
+        }}>
+          {showForm ? 'Cancel' : 'Add Inventory'}
+        </button>
+      </div>
 
-      <h1 className="text-4xl font-bold mb-6" style={{ color: 'var(--primary-3)' }}>
-        Inventory Stock
-      </h1>
+      {showForm && (
+        <div className="mb-6 bg-amber-50 p-4 rounded-xl border border-amber-200">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {['item', 'quantity', 'unit_type', 'max_capacity', 'reserved_quantity'].map((field) => (
+              <div key={field}>
+                <label htmlFor={field} className="block text-sm font-medium text-brown-800 capitalize">
+                  {field.replace('_', ' ')}
+                </label>
+                <input
+                  id={field}
+                  name={field}
+                  type={field.includes('quantity') || field === 'max_capacity' ? 'number' : 'text'}
+                  value={(formData as any)[field]}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
+                  }
+                  className="w-full border border-amber-300 rounded-lg px-3 py-2 mt-1"
+                />
+              </div>
+            ))}
+          </div>
+
+          <button className="btn mt-4" onClick={handleSubmit}>
+            {isUpdating ? 'Update' : 'Submit'}
+          </button>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-lg" style={{ color: 'var(--primary-3)' }}>Loading stock...</p>
@@ -58,6 +194,7 @@ export default function InventoryPage() {
                 <th className="px-4 py-3 text-right text-sm font-medium" style={{ color: 'var(--primary-3)' }}>% Left</th>
                 <th className="px-4 py-3 text-right text-sm font-medium" style={{ color: 'var(--primary-3)' }}>Max Capacity</th>
                 <th className="px-4 py-3 text-right text-sm font-medium" style={{ color: 'var(--primary-3)' }}>Reserved</th>
+                <th className="px-4 py-3 text-right text-sm font-medium" style={{ color: 'var(--primary-3)' }}>Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: 'var(--primary-3)' }}>
@@ -73,6 +210,9 @@ export default function InventoryPage() {
                     {item.max_capacity !== null ? item.max_capacity : '∞'}
                   </td>
                   <td className="px-4 py-2 text-right" style={{ color: 'var(--primary-3)' }}>{item.reserved_quantity}</td>
+                  <td className="px-4 py-2 text-right">
+                    <button className="btn" onClick={() => handleEdit(item)}>Edit</button>
+                  </td>
                 </tr>
               ))}
             </tbody>
