@@ -89,12 +89,12 @@ export default function InventoryPage() {
             prev.map(i =>
               i.item === payload.item
                 ? {
-                    ...i,
-                    ...payload,
-                    percentage_left: payload.max_capacity
-                      ? Math.round((payload.quantity / payload.max_capacity) * 100)
-                      : null,
-                  }
+                  ...i,
+                  ...payload,
+                  percentage_left: payload.max_capacity
+                    ? Math.round((payload.quantity / payload.max_capacity) * 100)
+                    : null,
+                }
                 : i
             )
           );
@@ -154,23 +154,31 @@ export default function InventoryPage() {
       </div>
 
       {showForm && (
-        <div className="mb-6 bg-amber-50 p-4 rounded-xl border border-amber-200">
+        <div className="mb-6 p-4 rounded-xl border" style={{ backgroundColor: 'var(--primary-4)', borderColor: 'var(--primary-3)' }}>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {['item', 'quantity', 'unit_type', 'max_capacity', 'reserved_quantity'].map((field) => (
               <div key={field}>
-                <label htmlFor={field} className="block text-sm font-medium text-brown-800 capitalize">
+                <label htmlFor={field} className="block text-sm font-medium capitalize" style={{ color: 'var(--primary-3)' }}>
+
                   {field.replace('_', ' ')}
                 </label>
                 <input
-                  id={field}
-                  name={field}
-                  type={field.includes('quantity') || field === 'max_capacity' ? 'number' : 'text'}
-                  value={(formData as any)[field]}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
-                  }
-                  className="w-full border border-amber-300 rounded-lg px-3 py-2 mt-1"
-                />
+  id={field}
+  name={field}
+  type={field.includes('quantity') || field === 'max_capacity' ? 'number' : 'text'}
+  value={(formData as any)[field]}
+  onChange={(e) =>
+    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
+  }
+  className="w-full border rounded-lg px-3 py-2 mt-1"
+  style={{
+    borderColor: 'var(--primary-3)',
+    color: 'var(--primary-3)',
+    caretColor: 'var(--primary-3)',
+  }}
+/>
+
               </div>
             ))}
           </div>
