@@ -57,13 +57,13 @@ export default function POSPage() {
     }
 
     const mockOrder = {
-  user_id: userId,
-  customer: customerName,
-  items: cart,
-  total,
-  date: new Date().toLocaleString(),
-  status: 'pending', // ✅ Add this
-};
+      user_id: userId,
+      customer: customerName,
+      items: cart,
+      total,
+      date: new Date().toLocaleString(),
+      status: 'pending', // ✅ Add this
+    };
 
 
     const existingOrders = JSON.parse(localStorage.getItem('mockOrders') || '[]');
@@ -74,11 +74,18 @@ export default function POSPage() {
     setUserId('');
     setMessage('');
 
-    
+
   };
 
   return (
-    <main className="min-h-screen bg-amber-50 p-8 text-amber-900">
+    <main
+      className="min-h-screen p-8"
+      style={{
+        backgroundColor: 'var(--primary-4)',
+        color: 'var(--primary-3)',
+      }}
+    >
+
       <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
@@ -87,34 +94,57 @@ export default function POSPage() {
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
           placeholder="Customer Name"
-          className="p-3 border border-amber-300 rounded-lg w-full"
+          className="p-3 rounded-lg w-full"
+          style={{
+            border: '1px solid var(--primary-3)',
+            color: 'var(--primary-3)',
+            backgroundColor: 'transparent'
+          }}
         />
         <input
           type="text"
           value={userId}
           onChange={(e) => setUserId(e.target.value)}
           placeholder="User ID / Cell Number"
-          className="p-3 border border-amber-300 rounded-lg w-full"
+          className="p-3 rounded-lg w-full"
+          style={{
+            border: '1px solid var(--primary-3)',
+            color: 'var(--primary-3)',
+            backgroundColor: 'transparent'
+          }}
         />
+
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
         {menu.map((item) => (
           <button
             key={item.name}
-            className="bg-white border border-amber-300 rounded-xl p-4 hover:shadow-md"
             onClick={() => addToCart(item)}
+            className="rounded-xl p-4 hover:shadow-md"
+            style={{
+              backgroundColor: 'var(--primary-2)',
+              border: '1px solid var(--primary-3)',
+              color: 'var(--primary-3)',
+            }}
           >
             <h2 className="font-semibold text-lg">{item.name}</h2>
-            <p className="text-amber-600">R{item.price}</p>
+            <p>R{item.price}</p>
           </button>
+
         ))}
       </div>
 
-      <div className="bg-white rounded-xl shadow-md p-6 mb-6">
+      <div
+        className="rounded-xl shadow-md p-6 mb-6"
+        style={{
+          backgroundColor: 'var(--primary-2)',
+        }}
+      >
+
         <h2 className="text-xl font-bold mb-4">🛒 Cart</h2>
         {cart.length === 0 ? (
-          <p className="text-amber-500">Cart is empty.</p>
+          <p className="text-red-500">Cart is empty.</p>
         ) : (
           <ul>
             {cart.map((item) => (
@@ -138,12 +168,10 @@ export default function POSPage() {
 
       {message && <p className="mb-4 text-green-700 font-semibold">{message}</p>}
 
-      <button
-        onClick={completeOrder}
-        className="bg-amber-600 text-white px-6 py-3 rounded-xl font-bold hover:bg-amber-700"
-      >
+      <button onClick={completeOrder} className="btn">
         Complete Order
       </button>
+
     </main>
   );
 }

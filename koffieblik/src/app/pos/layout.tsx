@@ -14,7 +14,11 @@ export default function POSLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: 'var(--primary-4)' }}
+    >
+
       <Navbar />
       {children}
     </div>
