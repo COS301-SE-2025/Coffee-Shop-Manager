@@ -84,7 +84,7 @@ export default function InventoryPage() {
 
       if (result.success) {
         if (isUpdating) {
-          alert(`✅ Updated: ${result.updatedItems?.join(', ')}`);
+          alert(`Updated: ${result.updatedItems?.join(', ')}`);
           setItems(prev =>
             prev.map(i =>
               i.item === payload.item
@@ -99,7 +99,7 @@ export default function InventoryPage() {
             )
           );
         } else {
-          alert(`✅ Added: ${result.createdItems?.join(', ')}`);
+          alert(`Added: ${result.createdItems?.join(', ')}`);
           setItems(prev => [
             ...prev,
             {

@@ -33,7 +33,7 @@ export default function SignUpPage() {
 
 
 
-    // Form validation states
+    
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [emailError, setEmailError] = useState('');
@@ -86,7 +86,7 @@ export default function SignUpPage() {
                 });
 
                 const result = await response.json();
-                // console.log('🧪 Full SignUp response:', result);
+                // console.log('Full SignUp response:', result);
 
                 if (result.success && result.user?.user_metadata?.display_name) {
                     setSignUpError('');
@@ -115,7 +115,7 @@ export default function SignUpPage() {
                     className="w-full max-w-md p-6 md:p-8 rounded-xl shadow-lg border relative overflow-hidden"
                     style={{
                         backgroundColor: 'var(--primary-2)',
-                        borderColor: 'var(--primary-3)' // Optional: Dark brown border
+                        borderColor: 'var(--primary-3)' 
                     }}
                 >
 

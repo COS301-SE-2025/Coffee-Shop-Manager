@@ -18,7 +18,7 @@ export async function checkTokenHandler(req: Request, res: Response): Promise<vo
       return;
     }
 
-    // ✅ Token is valid
+    // Token is valid
     res.status(200).json({ valid: true, user: data.user });
   } catch (err) {
     console.error('Token check error:', err);
