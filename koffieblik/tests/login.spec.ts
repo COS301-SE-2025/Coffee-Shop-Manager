@@ -3,8 +3,8 @@ import { test, expect } from '@playwright/test';
 test.describe('Login Flow', () => {
     test('Login works with valid credentials', async ({ page }) => {
         await page.goto('http://localhost:3000/login');
-        await page.fill('#email', 'pizza3496@gmail.com');      // ✅ replace with real user
-        await page.fill('#password', 'DarkQu@ntum9#');
+        await page.fill('#email', 'testuser@example.com');     
+        await page.fill('#password', 'password123');
 
         await Promise.all([
             page.waitForURL('**/dashboard'),
