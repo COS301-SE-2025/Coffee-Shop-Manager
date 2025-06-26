@@ -21,6 +21,9 @@ export default function SignUpPage() {
     const [SignUpError, setSignUpError] = useState('');
     const router = useRouter();
     const [username, setUsername] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [confirmPasswordError, setConfirmPasswordError] = useState('');
+
 
 
 
@@ -42,14 +45,25 @@ export default function SignUpPage() {
         return (
             email !== '' &&
             password !== '' &&
+            confirmPassword !== '' &&
             username !== '' &&
+            password === confirmPassword &&
             !emailError &&
-            !passwordError
+            !passwordError &&
+            !confirmPasswordError
         );
     };
 
 
+
     const handleSubmit = async (e: FormEvent) => {
+        if (password !== confirmPassword) {
+            setConfirmPasswordError('Passwords do not match.');
+            return;
+        } else {
+            setConfirmPasswordError('');
+        }
+
         e.preventDefault();
         setFormSubmitted(true);
 
@@ -220,7 +234,7 @@ export default function SignUpPage() {
                                 >
                                     Password
                                 </label>
-                                
+
                             </div>
                             <div className="relative">
                                 <input
@@ -273,6 +287,55 @@ export default function SignUpPage() {
                                 </p>
                             )}
                         </div>
+                        <div>
+                            <label
+                                htmlFor="confirm-password"
+                                className="block text-sm font-medium mb-1.5"
+                                style={{ color: 'var(--primary-3)' }}
+                            >
+                                Confirm Password
+                            </label>
+
+                            <input
+                                id="confirm-password"
+                                type={passwordVisible ? 'text' : 'password'}
+                                placeholder="••••••••"
+                                value={confirmPassword}
+                                onChange={(e) => setConfirmPassword(e.target.value)}
+                                onBlur={() => {
+                                    if (formSubmitted && confirmPassword !== password) {
+                                        setConfirmPasswordError('Passwords do not match.');
+                                    } else {
+                                        setConfirmPasswordError('');
+                                    }
+                                }}
+                                className={`w-full px-4 py-2.5 border ${confirmPasswordError
+                                        ? 'border-red-400 dark:border-red-600'
+                                        : 'border-amber-200 dark:border-amber-900'
+                                    } rounded-lg placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${confirmPasswordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'
+                                    }`}
+                                style={{
+                                    backgroundColor: 'var(--primary-4)',
+                                    color: 'var(--primary-3)',
+                                }}
+                                aria-invalid={confirmPasswordError ? 'true' : 'false'}
+                                aria-describedby={
+                                    confirmPasswordError ? 'confirm-password-error' : undefined
+                                }
+                            />
+
+                            {confirmPasswordError && (
+                                <p
+                                    id="confirm-password-error"
+                                    className="mt-1 text-sm text-red-500 dark:text-red-400"
+                                >
+                                    {confirmPasswordError}
+                                </p>
+                            )}
+                        </div>
+
+
+
 
 
                         {SignUpError && (
