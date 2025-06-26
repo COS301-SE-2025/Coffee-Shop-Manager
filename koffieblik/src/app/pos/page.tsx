@@ -1,70 +1,76 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface MenuItem {
+  id: string;
   name: string;
+  description?: string;
   price: number;
+  stock_quantity: number;
 }
 
 interface CartItem extends MenuItem {
   quantity: number;
 }
 
-const menu: MenuItem[] = [
-  { name: 'Latte', price: 35 },
-  { name: 'Espresso', price: 25 },
-  { name: 'Cappuccino', price: 40 },
-  { name: 'Flat White', price: 35 },
-  { name: 'Mocha', price: 40 },
-  { name: 'Americano', price: 28 },
-  { name: 'Chai Latte', price: 30 },
-  { name: 'Macchiato', price: 29 },
-  { name: 'Iced Coffee', price: 32 },
-  { name: 'Croissant', price: 20 },
-];
-
 export default function POSPage() {
+  const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [customerName, setCustomerName] = useState('');
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
 
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/getProducts', {
+          credentials: 'include', // include cookies (token)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+          setMenu(data.products);
+        } else {
+          console.error('Failed to load products:', data.error);
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
-      const existing = prev.find((ci) => ci.name === item.name);
+      const existing = prev.find((ci) => ci.id === item.id);
       if (existing) {
         return prev.map((ci) =>
-          ci.name === item.name ? { ...ci, quantity: ci.quantity + 1 } : ci
+          ci.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci
         );
       }
       return [...prev, { ...item, quantity: 1 }];
     });
   };
 
-  const removeFromCart = (name: string) => {
-    setCart((prev) => prev.filter((item) => item.name !== name));
+  const removeFromCart = (id: string) => {
+    setCart((prev) => prev.filter((item) => item.id !== id));
   };
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const completeOrder = () => {
-    // if (!customerName || !userId || cart.length === 0) {
-    //   setMessage('Please enter both customer name and user ID, and add items to the cart.');
-    //   return;
-    // }
-
     const mockOrder = {
       user_id: userId,
       customer: customerName,
       items: cart,
       total,
       date: new Date().toLocaleString(),
-      status: 'pending', 
+      status: 'pending',
     };
-
 
     const existingOrders = JSON.parse(localStorage.getItem('mockOrders') || '[]');
     localStorage.setItem('mockOrders', JSON.stringify([...existingOrders, mockOrder]));
@@ -72,9 +78,7 @@ export default function POSPage() {
     setCart([]);
     setCustomerName('');
     setUserId('');
-    setMessage('');
-
-
+    setMessage('Order completed!');
   };
 
   return (
@@ -85,11 +89,10 @@ export default function POSPage() {
         color: 'var(--primary-3)',
       }}
     >
-
       <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        {/* <input
+        <input
           type="text"
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
@@ -98,7 +101,7 @@ export default function POSPage() {
           style={{
             border: '1px solid var(--primary-3)',
             color: 'var(--primary-3)',
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
           }}
         />
         <input
@@ -110,17 +113,15 @@ export default function POSPage() {
           style={{
             border: '1px solid var(--primary-3)',
             color: 'var(--primary-3)',
-            backgroundColor: 'transparent'
+            backgroundColor: 'transparent',
           }}
-        /> */}
-       
-
+        />
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
         {menu.map((item) => (
           <button
-            key={item.name}
+            key={item.id}
             onClick={() => addToCart(item)}
             className="rounded-xl p-4 hover:shadow-md"
             style={{
@@ -132,7 +133,6 @@ export default function POSPage() {
             <h2 className="font-semibold text-lg">{item.name}</h2>
             <p>R{item.price}</p>
           </button>
-
         ))}
       </div>
 
@@ -142,19 +142,20 @@ export default function POSPage() {
           backgroundColor: 'var(--primary-2)',
         }}
       >
-
         <h2 className="text-xl font-bold mb-4">🛒 Cart</h2>
         {cart.length === 0 ? (
           <p className="text-red-500">Cart is empty.</p>
         ) : (
           <ul>
             {cart.map((item) => (
-              <li key={item.name} className="flex justify-between items-center mb-2">
-                <span>{item.name} x{item.quantity}</span>
+              <li key={item.id} className="flex justify-between items-center mb-2">
+                <span>
+                  {item.name} x{item.quantity}
+                </span>
                 <div className="flex items-center gap-3">
                   <span className="text-amber-700">R{item.price * item.quantity}</span>
                   <button
-                    onClick={() => removeFromCart(item.name)}
+                    onClick={() => removeFromCart(item.id)}
                     className="text-red-500 hover:text-red-700"
                   >
                     ✕
@@ -172,7 +173,6 @@ export default function POSPage() {
       <button onClick={completeOrder} className="btn">
         Complete Order
       </button>
-
     </main>
   );
 }

@@ -8,6 +8,7 @@ import { createOrderHandler } from './endpoint/createOrder';
 import { getOrdersHandler } from './endpoint/getOrders';
 import { logoutHandler } from './endpoint/logout';
 import { checkTokenHandler } from './endpoint/check-token'; 
+import { getProductsHandler } from './endpoint/getProducts'; 
 
 const router = Router();
 
@@ -22,5 +23,7 @@ router.post('/create_order', authMiddleware, createOrderHandler);
 router.get('/get_orders', authMiddleware, getOrdersHandler);
 router.post('/logout', logoutHandler);
 router.get('/check-token', checkTokenHandler); 
+router.get('/getProducts', authMiddleware, getProductsHandler);
+
 
 export default router;
