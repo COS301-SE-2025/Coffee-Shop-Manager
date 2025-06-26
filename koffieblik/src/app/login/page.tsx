@@ -69,15 +69,15 @@ export default function LoginPage() {
         });
 
         const result = await response.json();
-        console.log('🧪 Full login response:', result);
+        // console.log('🧪 Full login response:', result);
 
 
         if (result.success && result.user?.user_metadata?.display_name) {
           const username = result.user.user_metadata.display_name;
           const token = result.session?.access_token ?? 'N/A'; // ✅ Safely fallback
           localStorage.setItem('username', username);
-          console.log('👤 Welcome:', username);
-          console.log('🔐 Token:', token); // Debug only
+          // console.log('👤 Welcome:', username);
+          // console.log('🔐 Token:', token); // Debug only
 
 
 
@@ -155,6 +155,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
+                name="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => {

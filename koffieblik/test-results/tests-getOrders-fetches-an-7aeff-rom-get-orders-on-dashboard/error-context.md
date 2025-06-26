@@ -1,0 +1,46 @@
+# Page snapshot
+
+```yaml
+- alert: Dashboard - DieKoffieBlik
+- button "Open Next.js Dev Tools":
+  - img
+- navigation:
+  - text: ☕
+  - heading "Coffee Shop Dashboard" [level=1]
+  - paragraph: Welcome back, test
+  - paragraph: Thursday, 26 June 2025
+  - paragraph: 21:30
+  - button "📊 Dashboard"
+  - button "📦 Inventory"
+  - button "📈 Reports"
+  - button "🛒 POS"
+  - button "⚙️ Manage"
+  - button "❓ Help"
+  - button "👤 test"
+  - button "🚪 Logout"
+- main:
+  - heading "Total Sales Today" [level=2]
+  - paragraph: R0.00
+  - heading "Orders Completed" [level=2]
+  - paragraph: "0"
+  - heading "Top-Selling Item" [level=2]
+  - paragraph: N/A
+  - heading "Stock Alerts" [level=2]
+  - paragraph: Milk Low
+  - text: 📋
+  - heading "Recent Orders" [level=2]
+  - combobox:
+    - option "Today" [selected]
+    - option "This Week"
+    - option "This Month"
+    - option "Custom Range"
+  - table:
+    - rowgroup:
+      - 'row "Order # Items Total Status Date"':
+        - 'cell "Order #"'
+        - cell "Items"
+        - cell "Total"
+        - cell "Status"
+        - cell "Date"
+    - rowgroup
+```

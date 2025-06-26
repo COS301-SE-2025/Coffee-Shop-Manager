@@ -18,6 +18,7 @@ test('signs up a new user', async ({ page }) => {
   await page.fill('input#username', username);
   await page.fill('input#email', email);
   await page.fill('input#password', password);
+  await page.fill('input#confirm-password', password); 
   await page.click('button[type="submit"]');
 
   // Wait for client-side navigation to login
@@ -30,12 +31,16 @@ test('fails to register duplicate user', async ({ page }) => {
   const { email, username, password } = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
 
   await page.goto('http://localhost:3000/signup');
+  await page.waitForSelector('input#username'); // ✅ wait for form to render
+
   await page.fill('input#username', username);
   await page.fill('input#email', email);
   await page.fill('input#password', password);
+  await page.fill('input#confirm-password', password);
   await page.click('button[type="submit"]');
 
-  // Expect the backend to reject the duplicate registration
+  // Wait for the error to appear
   const errorLocator = page.locator('text=User already registered');
   await expect(errorLocator).toBeVisible({ timeout: 5000 });
 });
+

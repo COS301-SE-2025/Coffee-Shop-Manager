@@ -57,13 +57,6 @@ export default function SignUpPage() {
 
 
     const handleSubmit = async (e: FormEvent) => {
-        if (password !== confirmPassword) {
-            setConfirmPasswordError('Passwords do not match.');
-            return;
-        } else {
-            setConfirmPasswordError('');
-        }
-
         e.preventDefault();
         setFormSubmitted(true);
 
@@ -75,7 +68,13 @@ export default function SignUpPage() {
         setPasswordError(passwordValidationResult ?? '');
         const isPasswordValid = !passwordValidationResult;
 
-        if (isEmailValid && isPasswordValid) {
+        if (password !== confirmPassword) {
+            setConfirmPasswordError('Passwords do not match.');
+        } else {
+            setConfirmPasswordError('');
+        }
+
+        if (isEmailValid && isPasswordValid && password === confirmPassword) {
             setIsLoading(true);
 
             try {
@@ -83,22 +82,16 @@ export default function SignUpPage() {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, username }),
-                    credentials: 'include'
+                    credentials: 'include',
                 });
 
                 const result = await response.json();
-                console.log('🧪 Full SignUp response:', result);
-
+                // console.log('🧪 Full SignUp response:', result);
 
                 if (result.success && result.user?.user_metadata?.display_name) {
-
-
-
                     setSignUpError('');
                     router.push('/login');
-                }
-
-                else {
+                } else {
                     setSignUpError(result.message || 'Invalid SignUp response.');
                 }
             } catch (err) {
@@ -310,8 +303,8 @@ export default function SignUpPage() {
                                     }
                                 }}
                                 className={`w-full px-4 py-2.5 border ${confirmPasswordError
-                                        ? 'border-red-400 dark:border-red-600'
-                                        : 'border-amber-200 dark:border-amber-900'
+                                    ? 'border-red-400 dark:border-red-600'
+                                    : 'border-amber-200 dark:border-amber-900'
                                     } rounded-lg placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${confirmPasswordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'
                                     }`}
                                 style={{

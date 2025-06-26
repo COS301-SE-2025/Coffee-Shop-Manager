@@ -9,46 +9,34 @@ test('fetches and displays Products from /getProducts on POS', async ({ page }) 
 
   // Step 1: Login
   await page.goto('http://localhost:3000/login');
-  await page.waitForTimeout(3000); // allow hydration
-  const content = await page.content();
-  // console.log(content.slice(0, 1000)); // preview rendered HTML
-
-  await page.waitForSelector('input[name="email"], #email', { timeout: 10000 });
-  await page.fill('input[name="email"], #email', email);
-  await page.fill('input[name="password"], #password', password);
+  await page.waitForSelector('input[name="email"]', { timeout: 10000 });
+  await page.fill('input[name="email"]', email);
+  await page.fill('input[name="password"]', password);
   await page.click('button[type="submit"]');
 
-  //Wait for either dashboard or login error
-  const dashboardLoaded = page.locator('text=Recent Orders');
   const loginError = page.locator('text=Invalid email or password');
 
+  // Wait for dashboard or error
   await Promise.race([
-    dashboardLoaded.waitFor({ timeout: 10000 }),
+    page.waitForURL('**/dashboard', { timeout: 10000 }),
     loginError.waitFor({ timeout: 10000 }),
   ]);
 
   if (await loginError.isVisible()) {
-    throw new Error('Login failed: Invalid credentials');
+    throw new Error('❌ Login failed: Invalid credentials');
   }
 
-  //Confirm session cookie is set
-  const cookies = await page.context().cookies();
-  // console.log('Cookies after login:', cookies);
-  const tokenCookie = cookies.find(c => c.name === 'token');
-  expect(tokenCookie).toBeDefined();
+  // Step 2: Navigate to POS
+  const posLink = page.locator('a[href="/pos"]');
+  await posLink.waitFor({ timeout: 10000 });
+  await posLink.click();
+  await page.waitForURL('**/pos', { timeout: 10000 });
 
-  // Check for order rows
-  const orderRow = page.locator('table tbody tr');
+  // Step 3: Wait for product cards or table
+  const productSection = page.locator('text=Products').first();
+  await expect(productSection).toBeVisible({ timeout: 10000 });
 
-  try {
-    await page.waitForSelector('table tbody tr', { timeout: 15000 });
-    const rowCount = await orderRow.count();
-    // console.log('Order rows:', rowCount);
-    expect(rowCount).toBeGreaterThan(0);
-
-    await expect(page.locator('text=R')).toBeVisible();
-    await expect(page.locator('text=Completed')).toBeVisible();
-  } catch (err) {
-    // console.warn('No orders found on dashboard within timeout.');
-  }
+  // Example check for actual product display (adapt if using cards/grid)
+  const productName = page.locator('text=Cappuccino'); // Use a real product name if dynamic
+  await expect(productName).toBeVisible({ timeout: 10000 });
 });

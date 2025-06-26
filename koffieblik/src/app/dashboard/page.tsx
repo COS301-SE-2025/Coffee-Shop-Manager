@@ -53,7 +53,7 @@ export default function DashboardPage() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    console.log('✅ Orders fetched:', data.orders);
+                    // console.log('✅ Orders fetched:', data.orders);
                     setOrders(data.orders);
                 } else {
                     console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
