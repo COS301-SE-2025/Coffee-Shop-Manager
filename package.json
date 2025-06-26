@@ -1,4 +1,6 @@
 {
+  "dependencies": {
+    "@supabase/supabase-js": "^2.50.2"
   "devDependencies": {
     "@types/cors": "^2.8.19",
     "@types/express": "^5.0.3",

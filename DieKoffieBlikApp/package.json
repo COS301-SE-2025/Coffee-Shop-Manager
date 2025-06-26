@@ -1,0 +1,38 @@
+{
+  "name": "diekoffieblik-app",
+  "version": "1.0.0",
+  "main": "expo-router/entry",
+  "scripts": {
+    "linuxAndroid": "expo start",
+    "linux-high-mem": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start",
+    "windowsAndroid": "expo start --android",
+    "windows-high-mem": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "reset-cache": "expo start --clear"
+  },
+  "dependencies": {
+    "@expo/vector-icons": "^14.0.4",
+    "@react-native-async-storage/async-storage": "^2.2.0",
+    "@supabase/supabase-js": "^2.50.2",
+    "expo": "~53.0.0",
+    "expo-constants": "~17.1.6",
+    "expo-linear-gradient": "~14.1.4",
+    "expo-router": "~5.0.7",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-url-polyfill": "^2.0.0",
+    "react-native-web": "^0.20.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0",
+    "@types/react": "~19.0.10",
+    "@types/react-native": "^0.72.8",
+    "cross-env": "^7.0.3",
+    "dotenv": "^16.5.0",
+    "typescript": "~5.8.3"
+  },
+  "private": true
+}
