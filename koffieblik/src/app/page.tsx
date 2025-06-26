@@ -26,11 +26,10 @@ export default function Home() {
             >
               Login
             </button>
-
-
-
           </Link>
-          <Link href="/register">
+
+
+          <Link href="/signup">
             <button
               className="px-6 py-2 rounded-lg transition-colors font-medium shadow-lg"
               style={{
@@ -40,7 +39,6 @@ export default function Home() {
             >
               Get Started
             </button>
-
           </Link>
         </div>
       </header>
@@ -66,7 +64,7 @@ export default function Home() {
           </p>
 
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
+          {/* <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
             <Link href="/pos">
               <button
                 className="px-8 py-4 rounded-full text-lg font-semibold transition-all duration-300 shadow-xl hover:shadow-2xl transform hover:-translate-y-1"
@@ -94,7 +92,7 @@ export default function Home() {
 
 
             </Link>
-          </div>
+          </div> */}
 
           { }
 

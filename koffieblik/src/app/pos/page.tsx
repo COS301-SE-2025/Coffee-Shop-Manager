@@ -62,7 +62,7 @@ export default function POSPage() {
       items: cart,
       total,
       date: new Date().toLocaleString(),
-      status: 'pending', // ✅ Add this
+      status: 'pending', 
     };
 
 
