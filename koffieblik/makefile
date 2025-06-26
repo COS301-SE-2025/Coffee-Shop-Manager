@@ -17,6 +17,7 @@ signup:
 getOrders:
 	npx playwright test tests/getOrders.spec.ts
 
+
 # Run all tests
 test:
 	npx playwright test tests/

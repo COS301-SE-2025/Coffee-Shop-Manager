@@ -4,7 +4,7 @@ import path from 'path';
 
 const userPath = path.join(__dirname, 'user.json');
 
-test('fetches and displays orders from /get_orders on dashboard', async ({ page }) => {
+test('fetches and displays Products from /getProducts on POS', async ({ page }) => {
   const { email, password } = JSON.parse(fs.readFileSync(userPath, 'utf-8'));
 
   // Step 1: Login
