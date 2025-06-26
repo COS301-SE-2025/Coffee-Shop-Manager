@@ -10,6 +10,7 @@ type OrderStatus = 'Completed' | 'Pending' | 'Cancelled' | 'created';
 
 interface Order {
     id: string;
+    number: number; // ✅ Add this line
     status: string;
     total_price: number;
     created_at: string;
@@ -23,6 +24,7 @@ interface Order {
         };
     }[];
 }
+
 
 
 interface Metric {
@@ -112,12 +114,47 @@ export default function DashboardPage() {
         color?: string;
     };
 
+    const totalSales = orders.reduce((sum, order) => sum + order.total_price, 0);
+    const ordersCompleted = orders.filter(order => order.status === 'completed').length;
+    const topSelling = (() => {
+        const productCountMap: Record<string, number> = {};
+
+        for (const order of orders) {
+            for (const op of order.order_products) {
+                const name = op.products.name;
+                productCountMap[name] = (productCountMap[name] || 0) + op.quantity;
+            }
+        }
+
+        return Object.entries(productCountMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
+    })();
+
+    // Placeholder for stock alerts — replace with real logic if needed
+    const stockAlerts = 'Milk Low';
+
     const metrics: Metric[] = [
-        { label: 'Total Sales Today', value: 'R1,540', color: 'var(--primary-3)' },
-        { label: 'Orders Completed', value: '42', color: 'var(--primary-3)' },
-        { label: 'Top-Selling Item', value: 'Cappuccino', color: 'var(--primary-3)' },
-        { label: 'Stock Alerts', value: 'Milk Low', color: '#dc2626' }, // red-600
+        {
+            label: 'Total Sales Today',
+            value: `R${totalSales.toFixed(2)}`,
+            color: 'var(--primary-3)',
+        },
+        {
+            label: 'Orders Completed',
+            value: ordersCompleted.toString(),
+            color: 'var(--primary-3)',
+        },
+        {
+            label: 'Top-Selling Item',
+            value: topSelling,
+            color: 'var(--primary-3)',
+        },
+        {
+            label: 'Stock Alerts',
+            value: stockAlerts,
+            color: '#dc2626',
+        },
     ];
+
 
 
 
@@ -296,7 +333,7 @@ export default function DashboardPage() {
                                     <tbody className="divide-y text-[var(--primary-3)]" style={{ borderColor: 'var(--primary-3)' }}>
                                         {orders.map((order) => (
                                             <tr key={order.id}>
-                                                <td className="px-6 py-4 font-medium">{order.id}</td>
+                                                <td className="px-6 py-4 font-medium">{order.number}</td>
                                                 {/* <td className="px-6 py-4">Customer</td> */}
                                                 <td className="px-6 py-4">
                                                     {order.order_products.map(p => `${p.products.name} x${p.quantity}`).join(', ')}
