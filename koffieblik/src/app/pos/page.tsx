@@ -108,7 +108,7 @@ export default function POSPage() {
     >
       <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
+      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <input
           type="text"
           value={customerName}
@@ -133,7 +133,7 @@ export default function POSPage() {
             backgroundColor: 'transparent',
           }}
         />
-      </div>
+      </div> */}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
         {menu.map((item) => (
