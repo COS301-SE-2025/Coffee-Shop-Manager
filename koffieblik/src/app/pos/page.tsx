@@ -27,10 +27,9 @@ export default function POSPage() {
     const fetchProducts = async () => {
       try {
         const res = await fetch('http://localhost:5000/getProducts', {
-          credentials: 'include', // include cookies (token)
+          credentials: 'include',
         });
         const data = await res.json();
-
         if (data.success) {
           setMenu(data.products);
         } else {
@@ -62,23 +61,41 @@ export default function POSPage() {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  const completeOrder = () => {
-    const mockOrder = {
-      user_id: userId,
-      customer: customerName,
-      items: cart,
-      total,
-      date: new Date().toLocaleString(),
-      status: 'pending',
+  const completeOrder = async () => {
+    if (cart.length === 0) {
+      setMessage('Please add products to the cart first.');
+      return;
+    }
+
+    const payload = {
+      products: cart.map((item) => ({
+        name: item.name,
+        quantity: item.quantity,
+      })),
     };
 
-    const existingOrders = JSON.parse(localStorage.getItem('mockOrders') || '[]');
-    localStorage.setItem('mockOrders', JSON.stringify([...existingOrders, mockOrder]));
+    try {
+      const res = await fetch('http://localhost:5000/create_order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
 
-    setCart([]);
-    setCustomerName('');
-    setUserId('');
-    setMessage('Order completed!');
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setCart([]);
+        setCustomerName('');
+        setUserId('');
+        setMessage('✅ Order successfully submitted!');
+      } else {
+        setMessage(`❌ Failed to create order: ${result.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Order error:', err);
+      setMessage('❌ Failed to submit order. Please try again.');
+    }
   };
 
   return (
@@ -168,7 +185,7 @@ export default function POSPage() {
         )}
       </div>
 
-      {message && <p className="mb-4 text-green-700 font-semibold">{message}</p>}
+      {message && <p className="mb-4 text-sm font-medium">{message}</p>}
 
       <button onClick={completeOrder} className="btn">
         Complete Order
