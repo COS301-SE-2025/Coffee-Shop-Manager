@@ -13,6 +13,10 @@ login:
 signup:
 	npx playwright test tests/signup.spec.ts
 
+# Run getOredrs test
+getOrders:
+	npx playwright test tests/getOrders.spec.ts
+
 # Run all tests
 test:
 	npx playwright test tests/
