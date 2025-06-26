@@ -5,12 +5,11 @@ import { useRouter } from 'next/navigation';
 import { getTabs } from '@/constants/tabs';
 
 
-type OrderStatus = 'Completed' | 'Pending' | 'Cancelled' | 'created';
 
 
 interface Order {
     id: string;
-    number: number; 
+    number: number;
     status: string;
     total_price: number;
     created_at: string;
@@ -27,11 +26,6 @@ interface Order {
 
 
 
-interface Metric {
-    label: string;
-    value: string;
-    color: string;
-}
 
 export default function DashboardPage() {
     const [selectedTab, setSelectedTab] = useState('Dashboard');
@@ -60,7 +54,7 @@ export default function DashboardPage() {
 
                 if (response.ok) {
                     console.log('✅ Orders fetched:', data.orders);
-                    setOrders(data.orders); 
+                    setOrders(data.orders);
                 } else {
                     console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
                 }
@@ -146,7 +140,10 @@ export default function DashboardPage() {
         });
     }
 
-    const totalSales = filteredOrders.reduce((sum, order) => sum + order.total_price, 0);
+    const totalSales = filteredOrders
+        .filter(order => order.status === 'completed')
+        .reduce((sum, order) => sum + order.total_price, 0);
+
     const ordersCompleted = filteredOrders.filter(order => order.status === 'completed').length;
 
     const topSelling = (() => {
