@@ -15,6 +15,10 @@
   /* Light Creamy Latte */
 }
 
+.tr-hover-prim4:hover {
+  background-color: var(--primary-4);
+}
+
 
 @theme inline {
   --color-background: var(--background);

@@ -168,9 +168,10 @@ export default function InventoryPage() {
       </nav> */}
 
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-4xl font-bold text-brown-800">
+        <h1 className="text-4xl font-bold" style={{ color: 'var(--primary-3)' }}>
           {isAdding ? 'Add New Item' : 'Inventory'}
         </h1>
+
         <button
           onClick={() => {
             setIsAdding(prev => !prev)
@@ -179,10 +180,11 @@ export default function InventoryPage() {
               setShowSuccess(false)
             }
           }}
-          className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded transition-colors"
+          className="btn"
         >
           {isAdding ? 'Back to Inventory' : 'Add Item'}
         </button>
+
       </div>
 
       {isAdding ? (
@@ -200,11 +202,15 @@ export default function InventoryPage() {
           )}
 
           {/* Form */}
-          <div className="bg-white rounded-xl shadow-lg p-8">
+          <div
+            className="rounded-xl shadow-lg p-8"
+            style={{ backgroundColor: 'var(--primary-2)' }}
+          >
+
             <div className="space-y-6">
               {/* Item Name */}
               <div className="space-y-2">
-                <label htmlFor="name" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                <label htmlFor="name" className="block text-sm font-semibold uppercase tracking-wide" style={{ color: 'var(--primary-3)' }}>
                   Item Name
                 </label>
                 <input
@@ -213,23 +219,40 @@ export default function InventoryPage() {
                   name="name"
                   value={addForm.name}
                   onChange={handleAddChange}
-                  className="w-full px-4 py-3 border-2 border-brown-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-amber-100 focus:border-amber-500 text-brown-700 placeholder-brown-400"
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4"
                   placeholder="Enter item name..."
+                  style={{
+                    borderColor: 'var(--primary-3)',
+                    color: 'var(--primary-3)',
+                    caretColor: 'var(--primary-3)',
+                  }}
                 />
+
               </div>
 
               {/* Category */}
               <div className="space-y-2">
-                <label htmlFor="category" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                <label
+                  htmlFor="category"
+                  className="block text-sm font-semibold uppercase tracking-wide"
+                  style={{ color: 'var(--primary-3)' }}
+                >
                   Category
                 </label>
+
                 <select
                   id="category"
                   name="category"
                   value={addForm.category}
                   onChange={handleAddChange}
-                  className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500"
+                  className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4"
+                  style={{
+                    color: 'var(--primary-3)',
+                    borderColor: 'var(--primary-3)',
+                    caretColor: 'var(--primary-3)',
+                  }}
                 >
+
                   <option value="">Select a category</option>
                   <option value="Coffee">Coffee</option>
                   <option value="Tea">Tea</option>
@@ -246,9 +269,14 @@ export default function InventoryPage() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Quantity */}
                 <div className="space-y-2">
-                  <label htmlFor="quantity" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                  <label
+                    htmlFor="quantity"
+                    className="block text-sm font-semibold uppercase tracking-wide"
+                    style={{ color: 'var(--primary-3)' }}
+                  >
                     Quantity
                   </label>
+
                   <input
                     type="number"
                     id="quantity"
@@ -256,16 +284,27 @@ export default function InventoryPage() {
                     value={addForm.quantity === 0 ? '' : addForm.quantity}
                     onChange={handleAddChange}
                     min="0"
-                    className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
+                    className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4"
                     placeholder="0"
+                    style={{
+                      color: 'var(--primary-3)',
+                      borderColor: 'var(--primary-3)',
+                      caretColor: 'var(--primary-3)',
+                    }}
                   />
+
                 </div>
 
                 {/* Price */}
                 <div className="space-y-2">
-                  <label htmlFor="price" className="block text-sm font-semibold text-brown-800 uppercase tracking-wide">
+                  <label
+                    htmlFor="price"
+                    className="block text-sm font-semibold uppercase tracking-wide"
+                    style={{ color: 'var(--primary-3)' }}
+                  >
                     Price (R)
                   </label>
+
                   <input
                     type="number"
                     id="price"
@@ -274,9 +313,15 @@ export default function InventoryPage() {
                     onChange={handleAddChange}
                     min="0"
                     step="0.01"
-                    className="w-full px-4 py-3 text-brown-700 border-2 border-brown-200 rounded-xl focus:ring-4 focus:ring-amber-100 focus:border-amber-500 placeholder-brown-400"
+                    className="w-full px-4 py-3 border-2 rounded-xl focus:outline-none focus:ring-4"
                     placeholder="0.00"
+                    style={{
+                      color: 'var(--primary-3)',
+                      borderColor: 'var(--primary-3)',
+                      caretColor: 'var(--primary-3)',
+                    }}
                   />
+
                 </div>
               </div>
 
@@ -285,12 +330,27 @@ export default function InventoryPage() {
                 <button
                   onClick={handleAddSubmit}
                   disabled={isSubmitting}
-                  className="flex-1 px-6 py-3 bg-amber-500 hover:bg-amber-600 disabled:bg-amber-300 text-white font-semibold rounded-xl transition-colors duration-200 flex items-center justify-center"
+                  className="btn flex-1 mt-4 flex items-center justify-center"
+                  style={{
+                    opacity: isSubmitting ? 0.5 : 1,
+                    cursor: isSubmitting ? 'not-allowed' : 'pointer',
+                  }}
                 >
                   {isSubmitting ? (
                     <>
-                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <svg
+                        className="animate-spin -ml-1 mr-3 h-5 w-5"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                      >
+                        <circle
+                          className="opacity-25"
+                          cx="12"
+                          cy="12"
+                          r="10"
+                          stroke="currentColor"
+                          strokeWidth="4"
+                        ></circle>
                       </svg>
                       Adding Item...
                     </>
@@ -299,16 +359,18 @@ export default function InventoryPage() {
                   )}
                 </button>
 
+
                 <button
                   onClick={() => {
-                    setIsAdding(false)
-                    setAddForm({ name: '', category: '', quantity: 0, price: 0 })
-                    setShowSuccess(false)
+                    setIsAdding(false);
+                    setAddForm({ name: '', category: '', quantity: 0, price: 0 });
+                    setShowSuccess(false);
                   }}
-                  className="flex-1 px-6 py-3 bg-brown-200 hover:bg-brown-300 text-brown-800 font-semibold rounded-xl transition-colors duration-200 text-center flex items-center justify-center"
+                  className="btn flex-1 mt-4 flex items-center justify-center"
                 >
                   Cancel
                 </button>
+
               </div>
             </div>
           </div>
@@ -339,53 +401,106 @@ export default function InventoryPage() {
           )}
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white rounded-xl shadow-lg">
-          <table className="min-w-full divide-y divide-brown-100">
-            <thead className="bg-amber-100">
+        <div
+          className="overflow-x-auto rounded-xl shadow-lg"
+          style={{ backgroundColor: 'var(--primary-2)' }}
+        >
+
+          <table
+            className="min-w-full divide-y"
+            style={{ borderColor: 'var(--primary-3)' }}
+          >
+
+            <thead
+              className="rounded-t-xl"
+              style={{ backgroundColor: 'var(--primary-4)' }}
+            >
+
               <tr>
-                <th className="px-4 py-3 text-left text-sm font-medium text-brown-800">Item</th>
-                <th className="px-4 py-3 text-left text-sm font-medium text-brown-800">Category</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-brown-800">Quantity</th>
-                <th className="px-4 py-3 text-right text-sm font-medium text-brown-800">Price</th>
-                <th className="px-4 py-3 text-center text-sm font-medium text-brown-800">Actions</th>
+                <th
+                  className="px-4 py-3 text-left text-sm font-medium"
+                  style={{ color: 'var(--primary-3)' }}
+                >
+                  Item
+                </th>
+                <th
+                  className="px-4 py-3 text-left text-sm font-medium"
+                  style={{ color: 'var(--primary-3)' }}
+                >
+                  Category
+                </th>
+                <th
+                  className="px-4 py-3 text-right text-sm font-medium"
+                  style={{ color: 'var(--primary-3)' }}
+                >
+                  Quantity
+                </th>
+                <th
+                  className="px-4 py-3 text-right text-sm font-medium"
+                  style={{ color: 'var(--primary-3)' }}
+                >
+                  Price
+                </th>
+                <th
+                  className="px-4 py-3 text-center text-sm font-medium"
+                  style={{ color: 'var(--primary-3)' }}
+                >
+                  Actions
+                </th>
               </tr>
+
             </thead>
-            <tbody className="divide-y divide-brown-100">
+
+            <tbody className="divide-y" style={{ borderColor: 'var(--primary-3)' }}>
+
               {items.map(item => {
                 const isEditing = item.id === editingId
                 return (
-                  <tr key={item.id} className="hover:bg-amber-50">
-                    <td className="px-4 py-2 text-brown-700">
+                  <tr key={item.id} className="tr-hover-prim4">
+
+                    <td className="px-4 py-2" style={{ color: 'var(--primary-3)' }}>
                       {isEditing ? (
                         <input
                           type="text"
                           value={editForm.name}
                           onChange={e => handleEditChange(e, 'name')}
                           className="w-full border rounded p-1"
+                          style={{ color: 'var(--primary-3)', borderColor: 'var(--primary-3)' }}
                         />
-                      ) : item.name}
+                      ) : (
+                        item.name
+                      )}
                     </td>
-                    <td className="px-4 py-2 text-brown-700">
+
+                    <td className="px-4 py-2" style={{ color: 'var(--primary-3)' }}>
                       {isEditing ? (
                         <input
                           type="text"
                           value={editForm.category}
                           onChange={e => handleEditChange(e, 'category')}
                           className="w-full border rounded p-1"
+                          style={{ color: 'var(--primary-3)', borderColor: 'var(--primary-3)' }}
                         />
-                      ) : item.category}
+                      ) : (
+                        item.category
+                      )}
                     </td>
-                    <td className="px-4 py-2 text-right text-brown-700">
+
+                    <td className="px-4 py-2 text-right" style={{ color: 'var(--primary-3)' }}>
                       {isEditing ? (
                         <input
                           type="number"
                           value={editForm.quantity}
                           onChange={e => handleEditChange(e, 'quantity')}
                           className="w-20 border rounded p-1 text-right"
+                          style={{ color: 'var(--primary-3)', borderColor: 'var(--primary-3)' }}
                         />
-                      ) : item.quantity}
+                      ) : (
+                        item.quantity
+                      )}
                     </td>
-                    <td className="px-4 py-2 text-right text-brown-700">
+
+                    <td className="px-4 py-2 text-right" style={{ color: 'var(--primary-3)' }}>
                       {isEditing ? (
                         <input
                           type="number"
@@ -393,9 +508,13 @@ export default function InventoryPage() {
                           value={editForm.price}
                           onChange={e => handleEditChange(e, 'price')}
                           className="w-24 border rounded p-1 text-right"
+                          style={{ color: 'var(--primary-3)', borderColor: 'var(--primary-3)' }}
                         />
-                      ) : `R ${item.price.toFixed(2)}`}
+                      ) : (
+                        `R ${item.price.toFixed(2)}`
+                      )}
                     </td>
+
                     <td className="px-4 py-2 text-center space-x-2">
                       {isEditing ? (
                         <>
@@ -412,8 +531,11 @@ export default function InventoryPage() {
                         <>
                           <button
                             onClick={() => startEdit(item)}
-                            className="px-3 py-1 bg-amber-500 hover:bg-amber-600 text-white rounded transition-colors"
-                          >Edit</button>
+                            className="btn px-3 py-1"
+                          >
+                            Edit
+                          </button>
+
                           <button
                             onClick={() => handleDelete(item.id, item.name)}
                             className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white rounded transition-colors"
