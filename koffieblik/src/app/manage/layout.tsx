@@ -1,6 +1,4 @@
 import Navbar from '@/app/components/Navbar';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'Dashboard - DieKoffieBlik',
@@ -10,12 +8,11 @@ export const metadata = {
   }
 };
 
-export default function DashboardLayout({
+export default function MANAGELayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  
   return (
     <div className="min-h-screen bg-amber-50">
       <Navbar />

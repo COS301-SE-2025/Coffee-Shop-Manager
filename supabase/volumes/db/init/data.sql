@@ -1,61 +1,3 @@
--- USERS --
-CREATE TABLE IF NOT EXISTS users (
-    "auth_user_id" UUID NOT NULL,
-    "display_name" TEXT NULL,
-    "role" VARCHAR(255) NOT NULL,
-    "created_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    "updated_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    "last_login" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    "is_active" BOOLEAN NOT NULL DEFAULT FALSE,
-    
-    CONSTRAINT users_pkey PRIMARY KEY (auth_user_id),
-    CONSTRAINT users_role_check CHECK (role IN (
-        'user',
-        'admin',
-        'barista',
-        'stock_manager'
-    ))
-    -- NOTE TO SELF PLEASE ADD BACK AFTER TESTING
-    --# CONSTRAINT users_auth_user_id_fkey FOREIGN KEY (auth_user_id) REFERENCES auth.users(id) ON DELETE CASCADE
-);
-
--- ENABLE ROW LEVEL SECURITY
-CREATE POLICY "Users can view their own profile"
-ON public.users
-FOR select
-USING (auth.uid() = auth_user_id);
-
-CREATE POLICY "Users can insert their own profile"
-ON public.users
-FOR insert
-WITH CHECK (auth.uid() = auth_user_id);
-
-ALTER TABLE public.users ENABLE row level security;
-
--- REFERENCE PLACEHOLDER USER IF USER GETS DELETED
-CREATE OR REPLACE FUNCTION reassign_orders_to_placeholder()
-RETURNS TRIGGER AS $$
-BEGIN
-  -- PREVENT DELETION OF PLACEHOLDER USER
-  IF OLD.auth_user_id = '00000000-0000-0000-0000-000000000000' THEN
-    RAISE EXCEPTION 'Cannot delete the placeholder user.';
-  END IF;
-
-  -- REASSIGN ORDERS
-  UPDATE orders SET user_id = '00000000-0000-0000-0000-000000000000' WHERE user_id = OLD.auth_user_id;
-  -- REASSIGN PAYMENTS
-  UPDATE payments SET user_id = '00000000-0000-0000-0000-000000000000' WHERE user_id = OLD.auth_user_id;
-  
-  RETURN OLD;
-END;
-$$ LANGUAGE plpgsql;
-
-
-CREATE TRIGGER trg_reassign_orders
-BEFORE DELETE ON users
-FOR EACH ROW
-EXECUTE FUNCTION reassign_orders_to_placeholder();
-
 -- PRODUCTS --
 CREATE TABLE IF NOT EXISTS products (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -77,7 +19,7 @@ CREATE TABLE IF NOT EXISTS user_profiles (
     
     CONSTRAINT user_profiles_pkey PRIMARY KEY (user_id),
     CONSTRAINT favourite_product_fkey FOREIGN KEY (favourite_product_id) REFERENCES products(id) ON DELETE SET NULL,
-    CONSTRAINT user_fkey FOREIGN KEY (user_id) REFERENCES users(auth_user_id) ON DELETE CASCADE
+    CONSTRAINT user_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
 -- ORDERS --
@@ -85,17 +27,19 @@ CREATE TABLE IF NOT EXISTS orders (
     "id" UUID NOT NULL DEFAULT gen_random_uuid(),
     "user_id" UUID NOT NULL,
     "total_price" DECIMAL(8, 2) NOT NULL DEFAULT 0,
-    "status" VARCHAR(255) NOT NULL DEFAULT 'created',
+    "status" VARCHAR(255) NOT NULL DEFAULT 'pending',
     "created_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "updated_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     CONSTRAINT orders_pkey PRIMARY KEY (id),
-    CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(auth_user_id) ON DELETE CASCADE,
+    CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
     CONSTRAINT orders_status_check CHECK (status IN (
+        'pending',
         'created',
         'preparing',
         'ready',
-        'completed'
+        'completed',
+        'cancelled'
     ))
 );
 
@@ -204,7 +148,7 @@ CREATE TABLE IF NOT EXISTS payments (
     updated_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     CONSTRAINT payments_order_fkey FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
-    CONSTRAINT payments_user_fkey FOREIGN KEY (user_id) REFERENCES users(auth_user_id),
+    CONSTRAINT payments_user_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
     CONSTRAINT payment_method_check CHECK (method IN (
         'cash',
         'card',
@@ -227,7 +171,7 @@ CREATE TABLE loyalty_point_transactions (
     reason VARCHAR(255) NOT NULL,
     created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
-    CONSTRAINT loyalty_point_transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES users(auth_user_id),
+    CONSTRAINT loyalty_point_transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
     CONSTRAINT loyalty_point_transactions_payment_id_fkey FOREIGN KEY (payment_id) REFERENCES payments(id),
     CHECK (reason IN (
         'earned',
@@ -257,8 +201,149 @@ CREATE TABLE IF NOT EXISTS stock (
     item TEXT NOT NULL,
     quantity DECIMAL(8, 2) NOT NULL CHECK (quantity >= 0),
     unit_type TEXT NOT NULL,  -- [grams, ml, pieces, etc.]
-    max_capacity DECIMAL(8, 2) CHECK (max_capacity >= 0)
+    max_capacity DECIMAL(8, 2) CHECK (max_capacity >= 0),
+    reserved_quantity DECIMAL(8, 2) NOT NULL DEFAULT 0,
+
+    CONSTRAINT stock_reserved_not_exceed_quantity CHECK (reserved_quantity <= quantity)
 );
+
+CREATE OR REPLACE FUNCTION validate_reserved_stock_on_order_products()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_product_id UUID;
+  v_quantity_diff DECIMAL(8,2);
+  v_stock RECORD;
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    v_quantity_diff := NEW.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    v_quantity_diff := NEW.quantity - OLD.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    RETURN NEW;  -- No validation needed on delete
+  ELSE
+    RETURN NULL;
+  END IF;
+
+  -- Check each related stock item
+  FOR v_stock IN
+    SELECT s.id, s.quantity, s.reserved_quantity, ps.quantity AS per_unit_usage
+    FROM stock s
+    JOIN product_stock ps ON ps.stock_id = s.id
+    WHERE ps.product_id = v_product_id
+  LOOP
+    IF (v_stock.reserved_quantity + (v_stock.per_unit_usage * v_quantity_diff)) > v_stock.quantity THEN
+      RAISE EXCEPTION 
+        'Insufficient stock for stock item "%". Available: %, Requested reserve: %',
+        v_stock.id,
+        v_stock.quantity - v_stock.reserved_quantity,
+        (v_stock.per_unit_usage * v_quantity_diff);
+    END IF;
+  END LOOP;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validate_reserved_stock_on_order_products
+BEFORE INSERT OR UPDATE ON order_products
+FOR EACH ROW
+EXECUTE FUNCTION validate_reserved_stock_on_order_products();
+
+CREATE OR REPLACE FUNCTION adjust_reserved_stock_on_order_products()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_product_id UUID;
+  v_quantity_diff DECIMAL(8,2);
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    v_quantity_diff := NEW.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    v_quantity_diff := NEW.quantity - OLD.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    v_quantity_diff := -OLD.quantity;
+    v_product_id := OLD.product_id;
+  ELSE
+    RETURN NULL;
+  END IF;
+
+  -- Update reserved_quantity in stock for each stock item linked to the product
+  UPDATE stock s
+  SET reserved_quantity = reserved_quantity + (ps.quantity * v_quantity_diff)
+  FROM product_stock ps
+  WHERE ps.stock_id = s.id
+    AND ps.product_id = v_product_id;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_adjust_reserved_stock_order_products
+AFTER INSERT OR UPDATE OR DELETE ON order_products
+FOR EACH ROW
+EXECUTE FUNCTION adjust_reserved_stock_on_order_products();
+
+CREATE OR REPLACE FUNCTION finalize_stock_on_order_status_change()
+RETURNS TRIGGER AS $$
+DECLARE
+  rec RECORD;
+BEGIN
+  -- Only act if status changed to ready or completed
+  IF (NEW.status IN ('ready', 'completed')) AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+    FOR rec IN
+      SELECT op.product_id, op.quantity
+      FROM order_products op
+      WHERE op.order_id = NEW.id
+    LOOP
+      -- Reduce reserved_quantity and actual quantity in stock for related stock items
+      UPDATE stock s
+      SET quantity = s.quantity - (ps.quantity * rec.quantity),
+          reserved_quantity = s.reserved_quantity - (ps.quantity * rec.quantity)
+      FROM product_stock ps
+      WHERE ps.stock_id = s.id AND ps.product_id = rec.product_id;
+    END LOOP;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_finalize_stock_on_order_status
+AFTER UPDATE OF status ON orders
+FOR EACH ROW
+EXECUTE FUNCTION finalize_stock_on_order_status_change();
+
+CREATE OR REPLACE FUNCTION release_reserved_stock_on_order_cancel()
+RETURNS TRIGGER AS $$
+DECLARE
+  rec RECORD;
+BEGIN
+  -- Only act if status changed to cancelled
+  IF (NEW.status = 'cancelled') AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+    FOR rec IN
+      SELECT op.product_id, op.quantity
+      FROM order_products op
+      WHERE op.order_id = NEW.id
+    LOOP
+      UPDATE stock s
+      SET reserved_quantity = reserved_quantity - (ps.quantity * rec.quantity)
+      FROM product_stock ps
+      WHERE ps.stock_id = s.id AND ps.product_id = rec.product_id;
+    END LOOP;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_release_reserved_stock_on_order_cancel
+AFTER UPDATE OF status ON orders
+FOR EACH ROW
+EXECUTE FUNCTION release_reserved_stock_on_order_cancel();
+
 
 -- PRODUCT_STOCK --
 CREATE TABLE IF NOT EXISTS product_stock (
@@ -275,6 +360,24 @@ CREATE TABLE IF NOT EXISTS product_stock (
 
 
 -- SEEDING --
--- INSERT INTO users (auth_user_id, display_name, role, created_at, updated_at, last_login, is_active)
--- VALUES ('00000000-0000-0000-0000-000000000000', 'Deleted User', 'user', NOW(), NOW(), NOW(), FALSE)
--- ON CONFLICT (auth_user_id) DO NOTHING;
+-- STOCK --
+INSERT INTO stock (item, quantity, unit_type, max_capacity) VALUES
+('Coffee Beans', 10000, 'grams', 20000),
+('Milk', 5000, 'ml', 10000),
+('Sugar', 10000, 'grams', 20000),
+('Ice', 3000, 'cubes', NULL);
+
+-- PRODUCTS --
+INSERT INTO products (name, description, price, stock_quantity) VALUES
+('Ice Coffee', 'Ice Coffee.', 32.00, 10),
+('Cappuccino', 'A rich espresso-based drink topped with steamed milk and foam.', 32.00, 10),
+('Latte', 'Espresso with steamed milk and a light layer of foam.', 35.00, 20),
+('Americano', 'Espresso diluted with hot water for a smooth black coffee.', 28.00, 25),
+('Muffin', 'Freshly baked blueberry muffin.', 22.00, 5),
+('Croissant', 'Buttery and flaky croissant, baked fresh daily.', 25.00, 5);
+
+-- PRODUCT_STOCK --
+INSERT INTO product_stock (product_id, stock_id, quantity) VALUES
+((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Coffee Beans'), 10),
+((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Sugar'), 5),
+((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Milk'), 1);

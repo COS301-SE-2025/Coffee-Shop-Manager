@@ -436,6 +436,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB}
       JWT_SECRET: ${JWT_SECRET}
       JWT_EXP: ${JWT_EXPIRY}
+      LANG: en_US.utf8
+      LC_ALL: en_US.utf8
     command:
       [
         "postgres",
@@ -527,6 +529,18 @@ services:
         "-c",
         "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
       ]
+      
+  seed-user:
+    image: node:20
+    working_dir: /app
+    volumes:
+      - ./API:/app
+    env_file:
+      - .env
+    depends_on:
+      - db
+      - auth
+    command: npx ts-node scripts/seed.ts
 
 volumes:
   db-config:

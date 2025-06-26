@@ -3,7 +3,22 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+
+  /* ✅ Primary Colors */
+  --primary-1: #000000;
+  /* Black */
+  --primary-2: #ffffff;
+  /* White */
+  --primary-3: #5C4033;
+  /* Dark Brown */
+  --primary-4: #f5e3c3;
+  /* Light Creamy Latte */
 }
+
+.tr-hover-prim4:hover {
+  background-color: var(--primary-4);
+}
+
 
 @theme inline {
   --color-background: var(--background);
@@ -24,3 +39,43 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+
+.btn {
+  background-color: var(--primary-3);  /* Or any other custom color */
+  color: var(--primary-2);             /* White */
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition:
+    background-color 0.2s ease,
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.btn:hover {
+  filter: brightness(90%);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+}
+
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  filter: none;
+  box-shadow: none;
+}
+
+
+.tr-hover {
+  color: var(--primary-3);
+  transition: background-color 0.2s ease;
+}
+
+.tr-hover:hover {
+  background-color: var(--primary-4);
+}
+
