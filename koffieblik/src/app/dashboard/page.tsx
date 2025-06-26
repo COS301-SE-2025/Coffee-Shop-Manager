@@ -39,6 +39,9 @@ export default function DashboardPage() {
     const router = useRouter();
     const [username, setUsername] = useState('Guest');
     const [orders, setOrders] = useState<Order[]>([]);
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
+
 
 
 
@@ -114,8 +117,38 @@ export default function DashboardPage() {
         color?: string;
     };
 
-    const totalSales = orders.reduce((sum, order) => sum + order.total_price, 0);
-    const ordersCompleted = orders.filter(order => order.status === 'completed').length;
+    const now = new Date();
+    let filteredOrders = orders;
+
+    if (filter === 'Today') {
+        filteredOrders = orders.filter(order =>
+            new Date(order.created_at).toDateString() === now.toDateString()
+        );
+    } else if (filter === 'This Week') {
+        const startOfWeek = new Date(now);
+        startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+        filteredOrders = orders.filter(order =>
+            new Date(order.created_at) >= startOfWeek
+        );
+    } else if (filter === 'This Month') {
+        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        filteredOrders = orders.filter(order =>
+            new Date(order.created_at) >= startOfMonth
+        );
+    } else if (filter === 'Custom Range' && startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999); // include the full end day
+
+        filteredOrders = orders.filter(order => {
+            const orderDate = new Date(order.created_at);
+            return orderDate >= start && orderDate <= end;
+        });
+    }
+
+    const totalSales = filteredOrders.reduce((sum, order) => sum + order.total_price, 0);
+    const ordersCompleted = filteredOrders.filter(order => order.status === 'completed').length;
+
     const topSelling = (() => {
         const productCountMap: Record<string, number> = {};
 
@@ -294,23 +327,36 @@ export default function DashboardPage() {
                                         </select>
                                         {filter === 'Custom Range' && (
                                             <>
-                                                <input type="date" className={dateInputStyle} style={{
-                                                    borderColor: 'var(--primary-3)',
-                                                    color: 'var(--primary-3)',
-                                                    boxShadow: '0 0 0 0 transparent',
-                                                }} />
+                                                <input
+                                                    type="date"
+                                                    className={dateInputStyle}
+                                                    value={startDate}
+                                                    onChange={e => setStartDate(e.target.value)}
+                                                    style={{
+                                                        borderColor: 'var(--primary-3)',
+                                                        color: 'var(--primary-3)',
+                                                        boxShadow: '0 0 0 0 transparent',
+                                                    }}
+                                                />
                                                 <span
                                                     className="flex items-center font-medium"
                                                     style={{ color: 'var(--primary-3)' }}
                                                 >
                                                     to
                                                 </span>
-                                                <input type="date" className={dateInputStyle} style={{
-                                                    borderColor: 'var(--primary-3)',
-                                                    color: 'var(--primary-3)',
-                                                    boxShadow: '0 0 0 0 transparent',
-                                                }} />
+                                                <input
+                                                    type="date"
+                                                    className={dateInputStyle}
+                                                    value={endDate}
+                                                    onChange={e => setEndDate(e.target.value)}
+                                                    style={{
+                                                        borderColor: 'var(--primary-3)',
+                                                        color: 'var(--primary-3)',
+                                                        boxShadow: '0 0 0 0 transparent',
+                                                    }}
+                                                />
                                             </>
+
                                         )}
 
                                     </div>
@@ -331,7 +377,8 @@ export default function DashboardPage() {
                                     </thead>
 
                                     <tbody className="divide-y text-[var(--primary-3)]" style={{ borderColor: 'var(--primary-3)' }}>
-                                        {orders.map((order) => (
+                                        {filteredOrders.map((order) => (
+
                                             <tr key={order.id}>
                                                 <td className="px-6 py-4 font-medium">{order.number}</td>
                                                 {/* <td className="px-6 py-4">Customer</td> */}
