@@ -11,6 +11,7 @@ import { checkTokenHandler } from './endpoint/check-token';
 import { getProductsHandler } from './endpoint/getProducts'; 
 import { updateOrderStatusHandler } from './endpoint/update_order_status'; 
 import { getStockHandler } from './endpoint/getStock';
+import { updateStockHandler } from './endpoint/updateStock';
 
 const router = Router();
 
@@ -28,6 +29,7 @@ router.get('/check-token', checkTokenHandler);
 router.get('/getProducts', authMiddleware, getProductsHandler);
 router.put('/update_order_status', authMiddleware, updateOrderStatusHandler);
 router.get('/get_stock', authMiddleware, getStockHandler);
+router.post('/update_stock', authMiddleware, updateStockHandler);
 
 
 export default router;
