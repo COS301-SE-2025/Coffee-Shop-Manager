@@ -15,7 +15,7 @@ test.describe('API Integration Tests', () => {
 
         expect(loginResponse.status()).toBe(200);
 
-       
+
         const rawSetCookie = loginResponse.headers()['set-cookie'];
         expect(rawSetCookie).toBeDefined();
 
@@ -68,5 +68,38 @@ test.describe('API Integration Tests', () => {
 
         const body = await res.json();
         expect(Array.isArray(body.stock)).toBe(true);
+    });
+
+    test('GET /get_orders fails without auth token', async () => {
+        const context = await request.newContext();
+        const res = await context.get(`${BASE_URL}/get_orders`);
+
+        expect(res.status()).toBe(401);
+        const body = await res.json();
+        expect(body?.success ?? false).toBe(false);
+        expect(body?.error ?? '').toMatch(/missing auth token/i);
+
+    });
+
+    test('GET /getProducts fails without auth token', async () => {
+        const context = await request.newContext();
+        const res = await context.get(`${BASE_URL}/getProducts`);
+
+        expect(res.status()).toBe(401);
+        const body = await res.json();
+        expect(body?.success ?? false).toBe(false);
+        expect(body?.error ?? '').toMatch(/missing auth token/i);
+
+    });
+
+    test('GET /get_stock fails without auth token', async () => {
+        const context = await request.newContext();
+        const res = await context.get(`${BASE_URL}/get_stock`);
+
+        expect(res.status()).toBe(401);
+        const body = await res.json();
+        expect(body?.success ?? false).toBe(false);
+        expect(body?.error ?? '').toMatch(/missing auth token/i);
+
     });
 });
