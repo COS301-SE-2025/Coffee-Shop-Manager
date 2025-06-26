@@ -10,7 +10,7 @@ type OrderStatus = 'Completed' | 'Pending' | 'Cancelled' | 'created';
 
 interface Order {
     id: string;
-    number: number; // ✅ Add this line
+    number: number; 
     status: string;
     total_price: number;
     created_at: string;
@@ -60,7 +60,7 @@ export default function DashboardPage() {
 
                 if (response.ok) {
                     console.log('✅ Orders fetched:', data.orders);
-                    setOrders(data.orders); // ✅ use real orders
+                    setOrders(data.orders); 
                 } else {
                     console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
                 }
