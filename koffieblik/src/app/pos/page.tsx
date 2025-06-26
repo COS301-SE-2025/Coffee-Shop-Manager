@@ -51,10 +51,10 @@ export default function POSPage() {
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   const completeOrder = () => {
-    if (!customerName || !userId || cart.length === 0) {
-      setMessage('Please enter both customer name and user ID, and add items to the cart.');
-      return;
-    }
+    // if (!customerName || !userId || cart.length === 0) {
+    //   setMessage('Please enter both customer name and user ID, and add items to the cart.');
+    //   return;
+    // }
 
     const mockOrder = {
       user_id: userId,
@@ -89,7 +89,7 @@ export default function POSPage() {
       <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <input
+        {/* <input
           type="text"
           value={customerName}
           onChange={(e) => setCustomerName(e.target.value)}
@@ -112,7 +112,8 @@ export default function POSPage() {
             color: 'var(--primary-3)',
             backgroundColor: 'transparent'
           }}
-        />
+        /> */}
+       
 
       </div>
 
