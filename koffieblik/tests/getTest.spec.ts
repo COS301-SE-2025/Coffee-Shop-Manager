@@ -29,7 +29,7 @@ async function login(page: Page) {
     throw new Error('Login failed: Invalid credentials');
   }
 
-  await page.waitForSelector('h1:text("Dashboard")', { timeout: 10000 }); // ✅ Confirm dashboard is loaded
+  await page.waitForSelector('h1:text("Dashboard")', { timeout: 10000 }); //Confirm dashboard is loaded
 }
 
 test('fetches and displays orders from /get_orders on dashboard', async ({ page }) => {
@@ -41,10 +41,10 @@ test('fetches and displays orders from /get_orders on dashboard', async ({ page 
   const rows = page.locator('table tbody tr');
   const rowCount = await rows.count();
 
-//   console.log(`🧾 Found ${rowCount} orders in table`);
+  //   console.log(`Found ${rowCount} orders in table`);
 
   if (rowCount === 0) {
-    // console.warn('⚠️ No orders found – possibly a fresh database or user.');
+    // console.warn('No orders found – possibly a fresh database or user.');
     expect(rowCount).toBe(0); // Passes test intentionally
   } else {
     await expect(rows.first()).toBeVisible({ timeout: 10000 });
@@ -56,12 +56,11 @@ test('fetches and displays orders from /get_orders on dashboard', async ({ page 
 test('fetches and displays Products from /getProducts on POS', async ({ page }) => {
   await login(page);
 
-  // ✅ Use a more robust locator instead of relying on href
   await page.locator('text=POS').click();
   await page.waitForURL('**/pos', { timeout: 10000 });
   await page.waitForTimeout(3000); // hydration
 
-  const productCards = page.locator('button:has(h2)'); // ✅ Adjusted for POS buttons
+  const productCards = page.locator('button:has(h2)'); // Adjusted for POS buttons
   await expect(productCards.first()).toBeVisible({ timeout: 10000 });
   const count = await productCards.count();
   expect(count).toBeGreaterThan(0);
@@ -70,7 +69,6 @@ test('fetches and displays Products from /getProducts on POS', async ({ page }) 
 test('fetches and displays Inventory from /get_stock on Inventory page', async ({ page }) => {
   await login(page);
 
-  // ✅ More robust selector again
   await page.locator('text=Inventory').click();
   await page.waitForURL('**/inventory', { timeout: 10000 });
   await page.waitForTimeout(3000); // hydration
