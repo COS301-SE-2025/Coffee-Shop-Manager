@@ -3,10 +3,10 @@ import { test, expect, request } from '@playwright/test';
 test.describe('Login API', () => {
   const BASE_URL = 'http://localhost:5000';
 
-  test('Login succeeds with valid credentials', async ({ request }) => {
+  test('POST /login to pass', async ({ request }) => {
     const response = await request.post(`${BASE_URL}/login`, {
       data: {
-        email: 'test@example.com',
+        email: 'test0@example.com',
         password: 'P@ssword123',
       },
     });
@@ -17,7 +17,7 @@ test.describe('Login API', () => {
     expect(json.user).toBeDefined();
   });
 
-  test('Login fails with invalid credentials', async ({ request }) => {
+  test('POST /login to fail', async ({ request }) => {
     const response = await request.post(`${BASE_URL}/login`, {
       data: {
         email: 'invalid@example.com',
@@ -25,7 +25,7 @@ test.describe('Login API', () => {
       },
     });
 
-    expect(response.status()).toBe(401); // or 400 depending on your API
+    expect(response.status()).toBe(401);
     const json = await response.json();
     expect(json.success).toBe(false);
     expect(json.message).toMatch(/Invalid/i);

@@ -4,8 +4,8 @@ import { test, expect } from '@playwright/test';
 
 test.describe('Signup API', () => {
     const BASE_URL = 'http://localhost:5000';
-    const username = 'testuser';
-    const email = 'test@example.com';
+    const username = 'testuser0';
+    const email = 'test0@example.com';
     const password = 'P@ssword123';
 
     test('signup succeeds with new user', async ({ request }) => {
