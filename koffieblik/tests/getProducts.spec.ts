@@ -28,7 +28,7 @@ test('fetches and displays Products from /getProducts on POS', async ({ page }) 
   ]);
 
   if (await loginError.isVisible()) {
-    throw new Error('❌ Login failed: Invalid credentials');
+    throw new Error('Login failed: Invalid credentials');
   }
 
   //Confirm session cookie is set
