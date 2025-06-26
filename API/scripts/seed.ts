@@ -6,7 +6,7 @@ const SERVICE_ROLE_KEY = process.env.SERVICE_ROLE_KEY!;
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
 const TEST_USER_EMAIL = 'testuser@example.com';
-const TEST_USER_PASSWORD = 'password123';
+const TEST_USER_PASSWORD = 'P@ssword123';
 
 async function main() {
   const { data: usersList, error: listError } = await supabase.auth.admin.listUsers();
