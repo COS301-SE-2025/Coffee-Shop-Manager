@@ -1,0 +1,2 @@
+npx playwright test tests/login.spec.ts
+npx playwright test tests/signup.spec.ts
