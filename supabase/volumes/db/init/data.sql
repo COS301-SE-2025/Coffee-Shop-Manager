@@ -38,7 +38,8 @@ CREATE TABLE IF NOT EXISTS orders (
         'created',
         'preparing',
         'ready',
-        'completed'
+        'completed',
+        'cancelled'
     ))
 );
 
@@ -200,8 +201,149 @@ CREATE TABLE IF NOT EXISTS stock (
     item TEXT NOT NULL,
     quantity DECIMAL(8, 2) NOT NULL CHECK (quantity >= 0),
     unit_type TEXT NOT NULL,  -- [grams, ml, pieces, etc.]
-    max_capacity DECIMAL(8, 2) CHECK (max_capacity >= 0)
+    max_capacity DECIMAL(8, 2) CHECK (max_capacity >= 0),
+    reserved_quantity DECIMAL(8, 2) NOT NULL DEFAULT 0,
+
+    CONSTRAINT stock_reserved_not_exceed_quantity CHECK (reserved_quantity <= quantity)
 );
+
+CREATE OR REPLACE FUNCTION validate_reserved_stock_on_order_products()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_product_id UUID;
+  v_quantity_diff DECIMAL(8,2);
+  v_stock RECORD;
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    v_quantity_diff := NEW.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    v_quantity_diff := NEW.quantity - OLD.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    RETURN NEW;  -- No validation needed on delete
+  ELSE
+    RETURN NULL;
+  END IF;
+
+  -- Check each related stock item
+  FOR v_stock IN
+    SELECT s.id, s.quantity, s.reserved_quantity, ps.quantity AS per_unit_usage
+    FROM stock s
+    JOIN product_stock ps ON ps.stock_id = s.id
+    WHERE ps.product_id = v_product_id
+  LOOP
+    IF (v_stock.reserved_quantity + (v_stock.per_unit_usage * v_quantity_diff)) > v_stock.quantity THEN
+      RAISE EXCEPTION 
+        'Insufficient stock for stock item "%". Available: %, Requested reserve: %',
+        v_stock.id,
+        v_stock.quantity - v_stock.reserved_quantity,
+        (v_stock.per_unit_usage * v_quantity_diff);
+    END IF;
+  END LOOP;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_validate_reserved_stock_on_order_products
+BEFORE INSERT OR UPDATE ON order_products
+FOR EACH ROW
+EXECUTE FUNCTION validate_reserved_stock_on_order_products();
+
+CREATE OR REPLACE FUNCTION adjust_reserved_stock_on_order_products()
+RETURNS TRIGGER AS $$
+DECLARE
+  v_product_id UUID;
+  v_quantity_diff DECIMAL(8,2);
+BEGIN
+  IF TG_OP = 'INSERT' THEN
+    v_quantity_diff := NEW.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'UPDATE' THEN
+    v_quantity_diff := NEW.quantity - OLD.quantity;
+    v_product_id := NEW.product_id;
+  ELSIF TG_OP = 'DELETE' THEN
+    v_quantity_diff := -OLD.quantity;
+    v_product_id := OLD.product_id;
+  ELSE
+    RETURN NULL;
+  END IF;
+
+  -- Update reserved_quantity in stock for each stock item linked to the product
+  UPDATE stock s
+  SET reserved_quantity = reserved_quantity + (ps.quantity * v_quantity_diff)
+  FROM product_stock ps
+  WHERE ps.stock_id = s.id
+    AND ps.product_id = v_product_id;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_adjust_reserved_stock_order_products
+AFTER INSERT OR UPDATE OR DELETE ON order_products
+FOR EACH ROW
+EXECUTE FUNCTION adjust_reserved_stock_on_order_products();
+
+CREATE OR REPLACE FUNCTION finalize_stock_on_order_status_change()
+RETURNS TRIGGER AS $$
+DECLARE
+  rec RECORD;
+BEGIN
+  -- Only act if status changed to ready or completed
+  IF (NEW.status IN ('ready', 'completed')) AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+    FOR rec IN
+      SELECT op.product_id, op.quantity
+      FROM order_products op
+      WHERE op.order_id = NEW.id
+    LOOP
+      -- Reduce reserved_quantity and actual quantity in stock for related stock items
+      UPDATE stock s
+      SET quantity = s.quantity - (ps.quantity * rec.quantity),
+          reserved_quantity = s.reserved_quantity - (ps.quantity * rec.quantity)
+      FROM product_stock ps
+      WHERE ps.stock_id = s.id AND ps.product_id = rec.product_id;
+    END LOOP;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_finalize_stock_on_order_status
+AFTER UPDATE OF status ON orders
+FOR EACH ROW
+EXECUTE FUNCTION finalize_stock_on_order_status_change();
+
+CREATE OR REPLACE FUNCTION release_reserved_stock_on_order_cancel()
+RETURNS TRIGGER AS $$
+DECLARE
+  rec RECORD;
+BEGIN
+  -- Only act if status changed to cancelled
+  IF (NEW.status = 'cancelled') AND (OLD.status IS DISTINCT FROM NEW.status) THEN
+    FOR rec IN
+      SELECT op.product_id, op.quantity
+      FROM order_products op
+      WHERE op.order_id = NEW.id
+    LOOP
+      UPDATE stock s
+      SET reserved_quantity = reserved_quantity - (ps.quantity * rec.quantity)
+      FROM product_stock ps
+      WHERE ps.stock_id = s.id AND ps.product_id = rec.product_id;
+    END LOOP;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_release_reserved_stock_on_order_cancel
+AFTER UPDATE OF status ON orders
+FOR EACH ROW
+EXECUTE FUNCTION release_reserved_stock_on_order_cancel();
+
 
 -- PRODUCT_STOCK --
 CREATE TABLE IF NOT EXISTS product_stock (
