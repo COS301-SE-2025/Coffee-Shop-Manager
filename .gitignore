@@ -4,7 +4,10 @@ node_modules/
 dist/
 
 # Environment variables
-.env.*
+**/.env
+**/.env.*
+# Allow example .env files
+!**/.env.example
 
 .env 
 # Logs
@@ -15,3 +18,7 @@ dist/
 
 # Testing
 coverage/
+
+# supabase
+# IGNORE ACTUAL DATA
+supabase/volumes/db/data

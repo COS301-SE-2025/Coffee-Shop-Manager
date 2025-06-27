@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: ./koffieblik
@@ -30,6 +30,11 @@ jobs:
       - name: Lint (optional)
         run: npm run lint || true
 
-
       - name: Build the app
         run: npm run build
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run Playwright Tests
+        run: npx playwright test

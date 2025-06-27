@@ -2,138 +2,178 @@
 
 import { useEffect, useState } from 'react';
 
-interface CartItem {
-  name: string;
-  price: number;
+interface OrderProduct {
+  product_id: string;
   quantity: number;
+  price: number;
+  products: {
+    name: string;
+    description?: string;
+    price: number;
+  };
 }
 
 interface Order {
-  user_id: string;
-  customer: string;
-  items: CartItem[];
-  total: number;
-  date: string;
-  status: 'pending' | 'processing' | 'finished';
+  id: string;
+  number: number;
+  status: 'pending' | 'completed' | 'cancelled';
+  total_price: number;
+  created_at: string;
+  updated_at: string;
+  order_products: OrderProduct[];
 }
 
 export default function ManageOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  const updateOrderStatus = async (
+    orderId: string,
+    newStatus: 'completed' | 'cancelled' | 'pending'
+  ) => {
+    try {
+      const res = await fetch(`http://localhost:5000/update_order_status`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === orderId ? { ...order, status: newStatus } : order
+          )
+        );
+      } else {
+        console.error('❌ Failed to update order status:', data.message || data.error);
+      }
+    } catch (err) {
+      console.error('❌ Error updating status:', err);
+    }
+  };
 
   useEffect(() => {
-    const savedOrdersRaw = JSON.parse(localStorage.getItem('mockOrders') || '[]');
+    const fetchOrders = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/get_orders', {
+          credentials: 'include',
+        });
+        const data = await res.json();
 
-    // Ensure each order has a valid status
-    const validatedOrders: Order[] = savedOrdersRaw.map((order: any) => ({
-      ...order,
-      status: order.status || 'pending',
-    }));
+        if (data.success) {
+          const validated = data.orders.map((order: any) => ({
+            ...order,
+            status: order.status || 'pending',
+          }));
+          setOrders(validated);
+        } else {
+          console.error('❌ Failed to load orders:', data.message || data.error);
+        }
+      } catch (err) {
+        console.error('❌ Error fetching orders:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-    setOrders(validatedOrders);
+    fetchOrders();
   }, []);
 
-  const updateOrderStatus = (index: number) => {
-    const updated = [...orders];
-    const currentStatus = updated[index].status;
-
-    updated[index].status =
-      currentStatus === 'pending'
-        ? 'processing'
-        : currentStatus === 'processing'
-        ? 'finished'
-        : 'finished';
-
-    setOrders(updated);
-    localStorage.setItem('mockOrders', JSON.stringify(updated));
-  };
-
-  const clearOrders = () => {
-    localStorage.removeItem('mockOrders');
-    setOrders([]);
-  };
-
-  const removeOrder = (index: number) => {
-    const updated = [...orders];
-    updated.splice(index, 1);
-    setOrders(updated);
-    localStorage.setItem('mockOrders', JSON.stringify(updated));
-  };
-
   return (
-    <main className="min-h-screen bg-amber-100 p-8 text-amber-900">
+    <main
+      className="min-h-screen p-8"
+      style={{
+        backgroundColor: 'var(--primary-4)',
+        color: 'var(--primary-3)',
+      }}
+    >
       <h1 className="text-4xl font-bold mb-6">📦 Manage Orders</h1>
 
-      {orders.length === 0 ? (
+      {loading ? (
+        <p className="text-gray-600">Loading orders...</p>
+      ) : orders.length === 0 ? (
         <p className="text-gray-600">No orders found.</p>
       ) : (
         <div className="space-y-6">
-          {orders.map((order, index) => (
+          {orders.map((order) => (
             <div
-              key={index}
+              key={order.id}
               className={`rounded-xl shadow p-6 relative ${
-                order.status === 'finished'
+                order.status === 'completed'
                   ? 'bg-green-100'
-                  : order.status === 'processing'
-                  ? 'bg-yellow-100'
+                  : order.status === 'cancelled'
+                  ? 'bg-red-100'
                   : 'bg-white'
               }`}
             >
-              <h2 className="text-xl font-semibold mb-2">
-                {order.customer} (ID: {order.user_id})
-              </h2>
-              <p className="text-sm text-gray-500 mb-3">Date: {order.date}</p>
+              <h2 className="text-xl font-semibold mb-2">Order #{order.number}</h2>
+              <p className="text-sm text-gray-500 mb-3">
+                Placed on: {new Date(order.created_at).toLocaleString()}
+              </p>
               <p className="mb-3 text-sm">
                 Status:{' '}
                 <span
                   className={`font-bold ${
                     order.status === 'pending'
-                      ? 'text-red-600'
-                      : order.status === 'processing'
                       ? 'text-yellow-600'
-                      : 'text-green-600'
+                      : order.status === 'completed'
+                      ? 'text-green-600'
+                      : 'text-red-600'
                   }`}
                 >
-                  {(order.status || 'pending').toUpperCase()}
+                  {order.status.toUpperCase()}
                 </span>
               </p>
+
               <ul className="mb-3">
-                {order.items.map((item, idx) => (
+                {order.order_products.map((item, idx) => (
                   <li key={idx} className="flex justify-between border-b py-1">
-                    <span>{item.name} x{item.quantity}</span>
+                    <span>
+                      {item.products.name} x{item.quantity}
+                    </span>
                     <span>R{item.price * item.quantity}</span>
                   </li>
                 ))}
               </ul>
-              <p className="font-bold mb-4">Total: R{order.total}</p>
 
-              <div className="flex gap-4">
-                {order.status !== 'finished' && (
+              <p className="font-bold mb-4">Total: R{order.total_price}</p>
+
+              {/* 🟡 Buttons to update status */}
+              {order.status === 'pending' && (
+                <div className="flex gap-4">
                   <button
-                    onClick={() => updateOrderStatus(index)}
-                    className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+                    className="btn bg-green-600 text-white hover:bg-green-700"
+                    onClick={() => updateOrderStatus(order.id, 'completed')}
                   >
-                    Mark as {order.status === 'pending' ? 'Processing' : 'Finished'}
+                    ✅ Mark as Completed
                   </button>
-                )}
-                <button
-                  onClick={() => removeOrder(index)}
-                  className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-                >
-                  🗑 Clear Order
-                </button>
-              </div>
+                  <button
+                    className="btn bg-red-600 text-white hover:bg-red-700"
+                    onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                  >
+                    ❌ Cancel Order
+                  </button>
+                </div>
+              )}
+
+              {order.status === 'completed' && (
+                <div className="mt-4">
+                  <button
+                    className="btn bg-yellow-600 text-white hover:bg-yellow-700"
+                    onClick={() => updateOrderStatus(order.id, 'pending')}
+                  >
+                    🔄 Revert to Pending
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
-      )}
-
-      {orders.length > 0 && (
-        <button
-          onClick={clearOrders}
-          className="mt-8 px-4 py-2 bg-red-700 text-white rounded hover:bg-red-800"
-        >
-          Clear All Orders
-        </button>
       )}
     </main>
   );
