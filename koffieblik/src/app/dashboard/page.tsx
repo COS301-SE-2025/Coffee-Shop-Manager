@@ -53,7 +53,7 @@ export default function DashboardPage() {
                 const data = await response.json();
 
                 if (response.ok) {
-                    console.log('✅ Orders fetched:', data.orders);
+                    // console.log('Orders fetched:', data.orders);
                     setOrders(data.orders);
                 } else {
                     console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
@@ -120,7 +120,7 @@ export default function DashboardPage() {
         );
     } else if (filter === 'This Week') {
         const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday
+        startOfWeek.setDate(now.getDate() - now.getDay()); 
         filteredOrders = orders.filter(order =>
             new Date(order.created_at) >= startOfWeek
         );
@@ -132,7 +132,7 @@ export default function DashboardPage() {
     } else if (filter === 'Custom Range' && startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); // include the full end day
+        end.setHours(23, 59, 59, 999); 
 
         filteredOrders = orders.filter(order => {
             const orderDate = new Date(order.created_at);
@@ -159,7 +159,6 @@ export default function DashboardPage() {
         return Object.entries(productCountMap).sort((a, b) => b[1] - a[1])[0]?.[0] || 'N/A';
     })();
 
-    // Placeholder for stock alerts — replace with real logic if needed
     const stockAlerts = 'Milk Low';
 
     const metrics: Metric[] = [
@@ -222,7 +221,7 @@ export default function DashboardPage() {
             case 'Completed': return 'text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Pending': return 'text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Cancelled': return 'text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium';
-            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium'; // fallback for 'created', etc.
+            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium'; 
         }
     };
 

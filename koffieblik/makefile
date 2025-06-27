@@ -2,23 +2,21 @@
 
 .PHONY: all login signup test
 
-# Run all tests
 all: test
 
-# Run login test
-login:
-	npx playwright test tests/login.spec.ts
-
-# Run signup test
-signup:
-	npx playwright test tests/signup.spec.ts
-
-# Run getOredrs test
-getOrders:
-	npx playwright test tests/getOrders.spec.ts
+testint:
+	npx playwright test tests/intsignup.spec.ts && \
+	npx playwright test tests/intlogin.spec.ts && \
+	npx playwright test tests/intGetTests.spec.ts
 
 
-# Run all tests
+teste2e:
+	npx playwright test tests/signup.spec.ts && \
+	npx playwright test tests/login.spec.ts && \
+	npx playwright test tests/getTest.spec.ts
+
 test:
-	npx playwright test tests/
+	make testint
+	make teste2e
+
 

@@ -23,25 +23,25 @@ export default function Navbar() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
-  // useEffect(() => {
-  //   fetch('http://localhost:5000/check-token', {
-  //     credentials: 'include', // <-- This sends cookies like 'token'
-  //   })
-  //     .then(res => {
-  //       if (!res.ok) throw new Error('Unauthorized');
-  //       return res.json();
-  //     })
-  //     .then(data => {
-  //       if (!data.valid) {
-  //         router.push('/login');
-  //       }
-  //     })
-  //     .catch(() => {
-  //       router.push('/login');
-  //     });
-  // }, []);
+  useEffect(() => {
+    fetch('http://localhost:5000/check-token', {
+      credentials: 'include',
+    })
+      .then(res => {
+        if (!res.ok) throw new Error('Unauthorized');
+        return res.json();
+      })
+      .then(data => {
+        if (!data.valid) {
+          router.push('/login');
+        }
+      })
+      .catch(() => {
+        router.push('/login');
+      });
+  }, []);
 
-  // ✅ Set date and time on client only
+
   useEffect(() => {
     const now = new Date();
     setDate(
@@ -60,7 +60,7 @@ export default function Navbar() {
     );
   }, []);
 
-  // Detect current tab from pathname on mount
+
   useEffect(() => {
     const routeMap: Record<string, string> = {
       '/dashboard': 'Dashboard',
@@ -74,7 +74,7 @@ export default function Navbar() {
     setSelectedTab(current);
   }, [pathname]);
 
-  // Navigate on tab change
+  
   useEffect(() => {
     if (!selectedTab) return;
 
@@ -104,8 +104,8 @@ export default function Navbar() {
 
       if (result.success) {
 
-        localStorage.removeItem('username'); // or localStorage.clear()
-        console.log('✅ Cookies and LocalStorage cleared successfully.');
+        localStorage.removeItem('username'); 
+        console.log('Cookies and LocalStorage cleared successfully.');
         router.push('/login');
       } else {
         console.warn('⚠️ Logout failed:', result.message);

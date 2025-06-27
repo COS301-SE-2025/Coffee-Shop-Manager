@@ -28,7 +28,7 @@ export default function LoginPage() {
 
 
 
-  // Form validation states
+  
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState('');
@@ -69,15 +69,15 @@ export default function LoginPage() {
         });
 
         const result = await response.json();
-        console.log('🧪 Full login response:', result);
+        // console.log('Full login response:', result);
 
 
         if (result.success && result.user?.user_metadata?.display_name) {
           const username = result.user.user_metadata.display_name;
-          const token = result.session?.access_token ?? 'N/A'; // ✅ Safely fallback
+          const token = result.session?.access_token ?? 'N/A'; 
           localStorage.setItem('username', username);
-          console.log('👤 Welcome:', username);
-          console.log('🔐 Token:', token); // Debug only
+          // console.log('👤 Welcome:', username);
+          // console.log('🔐 Token:', token); // Debug only
 
 
 
@@ -109,7 +109,7 @@ export default function LoginPage() {
           className="w-full max-w-md p-6 md:p-8 rounded-xl shadow-lg border relative overflow-hidden"
           style={{
             backgroundColor: 'var(--primary-2)',
-            borderColor: 'var(--primary-3)' // Optional: Dark brown border
+            borderColor: 'var(--primary-3)' 
           }}
         >
 
@@ -155,6 +155,7 @@ export default function LoginPage() {
               <input
                 id="email"
                 type="email"
+                name="email"
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => {
@@ -206,6 +207,7 @@ export default function LoginPage() {
               <div className="relative">
                 <input
                   id="password"
+                  name="password"
                   type={passwordVisible ? "text" : "password"}
                   placeholder="••••••••"
                   value={password}
