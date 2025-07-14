@@ -44,8 +44,8 @@ const menuItems = [
 ];
 
 const paymentMethods = [
-  { id: 'card', name: 'Credit/Debit Card', icon: 'card', popular: true },
-  { id: 'cash', name: 'Cash', icon: 'cash', popular: false },
+  { id: 'card', name: 'Credit/Debit Card', icon: 'card'},
+  { id: 'cash', name: 'Cash', icon: 'cash' },
 ];
 
 const CustomerDetails = memo(({ 
@@ -249,11 +249,6 @@ export default function CheckoutScreen() {
             </Text>
           </View>
           <View style={styles.paymentRight}>
-            {method.popular && (
-              <View style={styles.popularTag}>
-                <Text style={styles.popularTagText}>Popular</Text>
-              </View>
-            )}
             {selectedPayment === method.id && (
               <Ionicons name="checkmark-circle" size={20} color="#10b981" />
             )}
