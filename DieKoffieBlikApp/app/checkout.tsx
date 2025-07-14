@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo } from 'react';
 import { 
   View, 
   Text, 
@@ -17,6 +17,19 @@ import { useRouter, useLocalSearchParams } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
+type CustomerInfo = {
+  name: string;
+  phone: string;
+  email: string;
+  notes: string;
+};
+
+type CustomerDetailsProps = {
+  customerInfo: CustomerInfo;
+  setCustomerInfo: React.Dispatch<React.SetStateAction<CustomerInfo>>;
+  slideAnim: Animated.Value;
+};
+
 const menuItems = [
   { id: '1', name: 'Americano', price: 30 },
   { id: '2', name: 'Cappuccino', price: 35 },
@@ -32,17 +45,73 @@ const menuItems = [
 
 const paymentMethods = [
   { id: 'card', name: 'Credit/Debit Card', icon: 'card', popular: true },
-  { id: 'cash', name: 'Cash on Delivery', icon: 'cash', popular: false },
-  { id: 'mobile', name: 'Mobile Payment', icon: 'phone-portrait', popular: true },
-  { id: 'wallet', name: 'Digital Wallet', icon: 'wallet', popular: false },
+  { id: 'cash', name: 'Cash', icon: 'cash', popular: false },
 ];
+
+const CustomerDetails = memo(({ 
+  customerInfo, 
+  setCustomerInfo, 
+  slideAnim 
+}: CustomerDetailsProps) => {
+  return (
+    <Animated.View style={[styles.section, { opacity: 1, transform: [{ translateY: slideAnim }] }]}>
+      <Text style={styles.sectionTitle}>Customer Details</Text>
+      
+      <View style={styles.inputContainer}>
+        <Ionicons name="person" size={20} color="#6b7280" />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Full Name *"
+          value={customerInfo.name}
+          onChangeText={(text) => setCustomerInfo(prev => ({...prev, name: text}))}
+          placeholderTextColor="#9ca3af"
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Ionicons name="call" size={20} color="#6b7280" />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Phone Number *"
+          value={customerInfo.phone}
+          onChangeText={(text) => setCustomerInfo(prev => ({...prev, phone: text}))}
+          keyboardType="phone-pad"
+          placeholderTextColor="#9ca3af"
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Ionicons name="mail" size={20} color="#6b7280" />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Email (Optional)"
+          value={customerInfo.email}
+          onChangeText={(text) => setCustomerInfo(prev => ({...prev, email: text}))}
+          keyboardType="email-address"
+          placeholderTextColor="#9ca3af"
+        />
+      </View>
+      
+      <View style={styles.inputContainer}>
+        <Ionicons name="chatbubble" size={20} color="#6b7280" />
+        <TextInput
+          style={styles.textInput}
+          placeholder="Special Instructions (Optional)"
+          value={customerInfo.notes}
+          onChangeText={(text) => setCustomerInfo(prev => ({...prev, notes: text}))}
+          multiline
+          placeholderTextColor="#9ca3af"
+        />
+      </View>
+    </Animated.View>
+  );
+});
 
 export default function CheckoutScreen() {
   const router = useRouter();
   const { cart: cartParam } = useLocalSearchParams();
   const [cart, setCart] = useState<{ [key: string]: number }>({});
   const [selectedPayment, setSelectedPayment] = useState('card');
-  const [deliveryMethod, setDeliveryMethod] = useState('pickup');
   const [fadeAnim] = useState(new Animated.Value(0));
   const [slideAnim] = useState(new Animated.Value(50));
   const [isProcessing, setIsProcessing] = useState(false);
@@ -51,7 +120,6 @@ export default function CheckoutScreen() {
     name: '',
     phone: '',
     email: '',
-    address: '',
     notes: ''
   });
 
@@ -85,24 +153,14 @@ export default function CheckoutScreen() {
   }).filter(Boolean);
 
   const subtotal = cartItems.reduce((total, item) => total + (item!.price * item!.quantity), 0);
-  const deliveryFee = deliveryMethod === 'delivery' ? 15 : 0;
   const tax = Math.round(subtotal * 0.15);
-  const total = subtotal + deliveryFee + tax;
+  const total = subtotal + tax;
 
   const handlePlaceOrder = () => {
     if (!customerInfo.name || !customerInfo.phone) {
       Alert.alert(
         "Missing Information",
         "Please fill in your name and phone number",
-        [{ text: "OK", style: "default" }]
-      );
-      return;
-    }
-
-    if (deliveryMethod === 'delivery' && !customerInfo.address) {
-      Alert.alert(
-        "Missing Address",
-        "Please provide a delivery address",
         [{ text: "OK", style: "default" }]
       );
       return;
@@ -123,7 +181,7 @@ export default function CheckoutScreen() {
   };
 
   const OrderSummary = () => (
-    <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View style={[styles.section, { opacity: 1, transform: [{ translateY: 0 }] }]}>
       <Text style={styles.sectionTitle}>Order Summary</Text>
       
       {cartItems.map((item) => (
@@ -149,11 +207,6 @@ export default function CheckoutScreen() {
       </View>
       
       <View style={styles.summaryRow}>
-        <Text style={styles.summaryLabel}>Delivery Fee</Text>
-        <Text style={styles.summaryValue}>R{deliveryFee}</Text>
-      </View>
-      
-      <View style={styles.summaryRow}>
         <Text style={styles.summaryLabel}>Tax (15%)</Text>
         <Text style={styles.summaryValue}>R{tax}</Text>
       </View>
@@ -167,76 +220,8 @@ export default function CheckoutScreen() {
     </Animated.View>
   );
 
-  const DeliveryOptions = () => (
-    <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-      <Text style={styles.sectionTitle}>Delivery Method</Text>
-      
-      <TouchableOpacity 
-        style={[
-          styles.optionCard,
-          deliveryMethod === 'pickup' && styles.optionCardSelected
-        ]}
-        onPress={() => setDeliveryMethod('pickup')}
-      >
-        <View style={styles.optionIcon}>
-          <Ionicons 
-            name="storefront" 
-            size={24} 
-            color={deliveryMethod === 'pickup' ? '#78350f' : '#6b7280'} 
-          />
-        </View>
-        <View style={styles.optionContent}>
-          <Text style={[
-            styles.optionTitle,
-            deliveryMethod === 'pickup' && styles.optionTitleSelected
-          ]}>
-            Pickup
-          </Text>
-          <Text style={styles.optionSubtitle}>Ready in 15-20 minutes</Text>
-        </View>
-        <View style={styles.optionRight}>
-          <Text style={styles.optionPrice}>FREE</Text>
-          {deliveryMethod === 'pickup' && (
-            <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-          )}
-        </View>
-      </TouchableOpacity>
-      
-      <TouchableOpacity 
-        style={[
-          styles.optionCard,
-          deliveryMethod === 'delivery' && styles.optionCardSelected
-        ]}
-        onPress={() => setDeliveryMethod('delivery')}
-      >
-        <View style={styles.optionIcon}>
-          <Ionicons 
-            name="bicycle" 
-            size={24} 
-            color={deliveryMethod === 'delivery' ? '#78350f' : '#6b7280'} 
-          />
-        </View>
-        <View style={styles.optionContent}>
-          <Text style={[
-            styles.optionTitle,
-            deliveryMethod === 'delivery' && styles.optionTitleSelected
-          ]}>
-            Delivery
-          </Text>
-          <Text style={styles.optionSubtitle}>30-45 minutes</Text>
-        </View>
-        <View style={styles.optionRight}>
-          <Text style={styles.optionPrice}>R15</Text>
-          {deliveryMethod === 'delivery' && (
-            <Ionicons name="checkmark-circle" size={20} color="#10b981" />
-          )}
-        </View>
-      </TouchableOpacity>
-    </Animated.View>
-  );
-
   const PaymentMethods = () => (
-    <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
+    <Animated.View style={[styles.section, { opacity: 1, transform: [{ translateY: slideAnim }] }]}>
       <Text style={styles.sectionTitle}>Payment Method</Text>
       
       {paymentMethods.map((method) => (
@@ -275,73 +260,6 @@ export default function CheckoutScreen() {
           </View>
         </TouchableOpacity>
       ))}
-    </Animated.View>
-  );
-
-  const CustomerDetails = () => (
-    <Animated.View style={[styles.section, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}>
-      <Text style={styles.sectionTitle}>Customer Details</Text>
-      
-      <View style={styles.inputContainer}>
-        <Ionicons name="person" size={20} color="#6b7280" />
-        <TextInput
-          style={styles.textInput}
-          placeholder="Full Name *"
-          value={customerInfo.name}
-          onChangeText={(text) => setCustomerInfo({...customerInfo, name: text})}
-          placeholderTextColor="#9ca3af"
-        />
-      </View>
-      
-      <View style={styles.inputContainer}>
-        <Ionicons name="call" size={20} color="#6b7280" />
-        <TextInput
-          style={styles.textInput}
-          placeholder="Phone Number *"
-          value={customerInfo.phone}
-          onChangeText={(text) => setCustomerInfo({...customerInfo, phone: text})}
-          keyboardType="phone-pad"
-          placeholderTextColor="#9ca3af"
-        />
-      </View>
-      
-      <View style={styles.inputContainer}>
-        <Ionicons name="mail" size={20} color="#6b7280" />
-        <TextInput
-          style={styles.textInput}
-          placeholder="Email (Optional)"
-          value={customerInfo.email}
-          onChangeText={(text) => setCustomerInfo({...customerInfo, email: text})}
-          keyboardType="email-address"
-          placeholderTextColor="#9ca3af"
-        />
-      </View>
-      
-      {deliveryMethod === 'delivery' && (
-        <View style={styles.inputContainer}>
-          <Ionicons name="location" size={20} color="#6b7280" />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Delivery Address *"
-            value={customerInfo.address}
-            onChangeText={(text) => setCustomerInfo({...customerInfo, address: text})}
-            multiline
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
-      )}
-      
-      <View style={styles.inputContainer}>
-        <Ionicons name="chatbubble" size={20} color="#6b7280" />
-        <TextInput
-          style={styles.textInput}
-          placeholder="Special Instructions (Optional)"
-          value={customerInfo.notes}
-          onChangeText={(text) => setCustomerInfo({...customerInfo, notes: text})}
-          multiline
-          placeholderTextColor="#9ca3af"
-        />
-      </View>
     </Animated.View>
   );
 
@@ -404,9 +322,12 @@ export default function CheckoutScreen() {
         contentContainerStyle={styles.scrollContent}
       >
         <OrderSummary />
-        <DeliveryOptions />
         <PaymentMethods />
-        <CustomerDetails />
+        <CustomerDetails 
+          customerInfo={customerInfo}
+          setCustomerInfo={setCustomerInfo}
+          slideAnim={slideAnim}
+        />
       </ScrollView>
 
       {/* Place Order Button */}
