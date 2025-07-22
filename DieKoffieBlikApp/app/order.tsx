@@ -338,12 +338,6 @@ export default function OrderScreen() {
         }
       ]}
     >
-      {item.popular && (
-        <View style={styles.popularBadge}>
-          <Ionicons name="trending-up" size={10} color="#fff" />
-          <Text style={styles.popularText}>Popular</Text>
-        </View>
-      )}
       
       <View style={styles.cardContent}>
         <View style={styles.itemImageContainer}>
@@ -369,19 +363,6 @@ export default function OrderScreen() {
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
             ))}
-          </View>
-          
-          <View style={styles.ratingPriceContainer}>
-            <View style={styles.ratingContainer}>
-              <View style={styles.starsContainer}>
-                {renderStars(item.rating)}
-              </View>
-              <Text style={styles.ratingText}>
-                {item.rating} ({item.reviews})
-              </Text>
-            </View>
-            
-            <Text style={styles.itemPrice}>R{item.price}</Text>
           </View>
         </View>
         
@@ -538,6 +519,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#78350f',
     paddingVertical: 16,
     paddingHorizontal: 20,
+    paddingTop: 30,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 8,
