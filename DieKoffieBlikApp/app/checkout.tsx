@@ -53,6 +53,21 @@ const CustomerDetails = memo(({
   setCustomerInfo, 
   slideAnim 
 }: CustomerDetailsProps) => {
+  // Add phone number validation
+  const validatePhoneNumber = (text: string) => {
+    // Only allow numbers and limit to 10 digits
+    const numbersOnly = text.replace(/[^0-9]/g, '');
+    if (numbersOnly.length > 10) return;
+    
+    // Ensure it starts with 0
+    if (numbersOnly.length > 0 && !numbersOnly.startsWith('0')) {
+      Alert.alert('Invalid Number', 'Phone number must start with 0');
+      return;
+    }
+    
+    setCustomerInfo(prev => ({...prev, phone: numbersOnly}));
+  };
+
   return (
     <Animated.View style={[styles.section, { opacity: 1, transform: [{ translateY: slideAnim }] }]}>
       <Text style={styles.sectionTitle}>Customer Details</Text>
@@ -72,10 +87,11 @@ const CustomerDetails = memo(({
         <Ionicons name="call" size={20} color="#6b7280" />
         <TextInput
           style={styles.textInput}
-          placeholder="Phone Number *"
+          placeholder="Phone Number * (10 digits)"
           value={customerInfo.phone}
-          onChangeText={(text) => setCustomerInfo(prev => ({...prev, phone: text}))}
+          onChangeText={validatePhoneNumber}
           keyboardType="phone-pad"
+          maxLength={10}
           placeholderTextColor="#9ca3af"
         />
       </View>
@@ -116,6 +132,7 @@ export default function CheckoutScreen() {
   const [slideAnim] = useState(new Animated.Value(50));
   const [isProcessing, setIsProcessing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [orderNumber, setOrderNumber] = useState('');
   const [customerInfo, setCustomerInfo] = useState({
     name: '',
     phone: '',
@@ -166,7 +183,20 @@ export default function CheckoutScreen() {
       return;
     }
 
+    // Validate phone number format
+    if (customerInfo.phone.length !== 10 || !customerInfo.phone.startsWith('0')) {
+      Alert.alert(
+        "Invalid Phone Number",
+        "Please enter a valid 10-digit phone number starting with 0",
+        [{ text: "OK", style: "default" }]
+      );
+      return;
+    }
+
     setIsProcessing(true);
+
+    const generatedOrderNumber = generateOrderNumber(customerInfo.phone);
+    setOrderNumber(generatedOrderNumber);
     
     // Simulate order processing
     setTimeout(() => {
@@ -179,6 +209,12 @@ export default function CheckoutScreen() {
       }, 3000);
     }, 2000);
   };
+
+  function generateOrderNumber(phoneNumber?: string) {
+    const timestamp = new Date().toISOString().slice(0,10).replace(/-/g, '');
+    const random = Math.floor(1000 + Math.random() * 9000);
+    return `ORD-${timestamp}-${random}`;
+  }
 
   const OrderSummary = () => (
     <Animated.View style={[styles.section, { opacity: 1, transform: [{ translateY: 0 }] }]}>
@@ -258,7 +294,7 @@ export default function CheckoutScreen() {
     </Animated.View>
   );
 
-  const SuccessModal = () => (
+  const SuccessModal = ({ orderNumber }: { orderNumber: string }) => (
     <Modal visible={showSuccess} transparent animationType="fade">
       <View style={styles.modalOverlay}>
         <View style={styles.successModal}>
@@ -268,7 +304,7 @@ export default function CheckoutScreen() {
             Your order has been confirmed. You'll receive a notification when it's ready.
           </Text>
           <View style={styles.orderNumber}>
-            <Text style={styles.orderNumberText}>Order #12345</Text>
+            <Text style={styles.orderNumberText}>{orderNumber}</Text>
           </View>
         </View>
       </View>
@@ -342,7 +378,7 @@ export default function CheckoutScreen() {
       </View>
 
       <ProcessingModal />
-      <SuccessModal />
+      <SuccessModal orderNumber={orderNumber} />
     </View>
   );
 }
