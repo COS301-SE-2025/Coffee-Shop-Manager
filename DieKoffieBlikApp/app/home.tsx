@@ -50,33 +50,25 @@ export default function HomeScreen() {
       name: "Signature Cappuccino", 
       price: "R45", 
       icon: "cafe-outline", 
-      popular: true,
-      rating: 4.8,
-      discount: "20% OFF"
+      popular: true
     },
     { 
       name: "Double Espresso", 
       price: "R35", 
       icon: "flash-outline", 
-      popular: false,
-      rating: 4.6,
-      discount: null
+      popular: false
     },
     { 
       name: "Vanilla Latte", 
       price: "R50", 
       icon: "heart-outline", 
-      popular: true,
-      rating: 4.9,
-      discount: "NEW"
+      popular: true
     },
     { 
       name: "Iced Americano", 
       price: "R40", 
       icon: "snow-outline", 
-      popular: false,
-      rating: 4.4,
-      discount: null
+      popular: false
     }
   ];
 
@@ -311,14 +303,6 @@ export default function HomeScreen() {
             style={styles.featuredCard}
             android_ripple={{ color: '#78350f20' }}
           >
-            {item.discount && (
-              <View style={[
-                styles.discountBadge,
-                item.discount === "NEW" && styles.newBadge
-              ]}>
-                <Text style={styles.discountText}>{item.discount}</Text>
-              </View>
-            )}
             {item.popular && (
               <View style={styles.popularBadge}>
                 <Ionicons name="star" size={10} color="#fff" />
@@ -334,7 +318,6 @@ export default function HomeScreen() {
             
             <View style={styles.ratingContainer}>
               <Ionicons name="star" size={12} color="#f59e0b" />
-              <Text style={styles.ratingText}>{item.rating}</Text>
             </View>
             
             <Text style={styles.featuredItemPrice}>{item.price}</Text>
@@ -638,10 +621,12 @@ const styles = StyleSheet.create({
   // Featured Items
   featuredSection: {
     paddingLeft: 20,
+    paddingRight: 20,
     marginTop: 32,
   },
   featuredScroll: {
     paddingRight: 20,
+    overflow: 'visible',
   },
   featuredScrollContent: {
     paddingRight: 20,
@@ -650,6 +635,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     width: 160,
     padding: 16,
+    paddingBottom: 24,
     borderRadius: 16,
     marginRight: 16,
     alignItems: 'center',
