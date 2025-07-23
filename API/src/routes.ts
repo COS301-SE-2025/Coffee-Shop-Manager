@@ -2,16 +2,29 @@ import { Router } from 'express';
 
 import { authMiddleware } from './middleware/auth';
 
+// USERS
 import { loginHandler } from './endpoint/login';
 import { signupHandler } from './endpoint/signup';
+import { logoutHandler } from './endpoint/logout';
+
+// STOCK
+import { getStockHandler } from './endpoint/getStock';
+import { createStockHandler } from './endpoint/createStock';
+import { updateStockByIdHandler } from './endpoint/updateStockId';
+import { updateStockByIdOrNameHandler } from './endpoint/updateStockItem';
+import { batchUpdateStockHandler } from './endpoint/updateStockBatch';
+
+// ORDERS
+
+
+// LEGACY
 import { createOrderHandler } from './endpoint/createOrder';
 import { getOrdersHandler } from './endpoint/getOrders';
-import { logoutHandler } from './endpoint/logout';
 import { checkTokenHandler } from './endpoint/check-token'; 
 import { getProductsHandler } from './endpoint/getProducts'; 
 import { updateOrderStatusHandler } from './endpoint/update_order_status'; 
-import { getStockHandler } from './endpoint/getStock';
 import { updateStockHandler } from './endpoint/updateStock';
+
 
 const router = Router();
 
@@ -20,11 +33,26 @@ router.get('/', (req, res) => {
   res.status(200).json({ message: 'API is live' });
 });
 
+
+// USERS
 router.post('/login', loginHandler);
 router.post('/signup', signupHandler);
+router.post('/logout', logoutHandler);
+
+// STOCK
+router.get('/stock', authMiddleware, getStockHandler);
+router.post('/stock', authMiddleware, createStockHandler);
+router.put('/stock', authMiddleware, updateStockByIdOrNameHandler);
+router.put('/stock/batch', authMiddleware, batchUpdateStockHandler);
+router.put('/stock/:id', authMiddleware, updateStockByIdHandler);
+
+
+// ORDERS
+
+
+// LEGACY
 router.post('/create_order', authMiddleware, createOrderHandler);
 router.get('/get_orders', authMiddleware, getOrdersHandler);
-router.post('/logout', logoutHandler);
 router.get('/check-token', checkTokenHandler); 
 router.get('/getProducts', authMiddleware, getProductsHandler);
 router.put('/update_order_status', authMiddleware, updateOrderStatusHandler);
