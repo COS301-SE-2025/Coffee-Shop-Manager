@@ -15,13 +15,18 @@ import { updateStockByIdOrNameHandler } from './endpoint/updateStockItem';
 import { batchUpdateStockHandler } from './endpoint/updateStockBatch';
 
 // ORDERS
+import { getOrdersHandler } from './endpoint/getOrders';
+import { createOrderHandler } from './endpoint/createOrder';
 
+// PRODUCTS
+import { createProductHandler } from './endpoint/createProduct';
+import { getProductsHandler } from './endpoint/getProducts';
+import { getProductsWithStockHandler } from './endpoint/getProducts';
+import { updateProductHandler } from './endpoint/updateProduct';
 
 // LEGACY
-import { createOrderHandler } from './endpoint/createOrder';
-import { getOrdersHandler } from './endpoint/getOrders';
 import { checkTokenHandler } from './endpoint/check-token'; 
-import { getProductsHandler } from './endpoint/getProducts'; 
+import { getProductsHandler_old } from './endpoint/getProducts_old'; 
 import { updateOrderStatusHandler } from './endpoint/update_order_status'; 
 import { updateStockHandler } from './endpoint/updateStock';
 
@@ -51,12 +56,17 @@ router.put('/stock/:id', authMiddleware, updateStockByIdHandler);
 router.get('/order', authMiddleware, getOrdersHandler);
 router.post('/order', authMiddleware, createOrderHandler);
 
+// PRODUCTS
+router.get('/product', authMiddleware, getProductsHandler);
+router.get('/product/stock', authMiddleware, getProductsWithStockHandler);
+router.post('/product', authMiddleware, createProductHandler);
+router.put('/product', authMiddleware, updateProductHandler);
 
 // LEGACY
 router.post('/create_order', authMiddleware, createOrderHandler);
 router.get('/get_orders', authMiddleware, getOrdersHandler);
 router.get('/check-token', checkTokenHandler); 
-router.get('/getProducts', authMiddleware, getProductsHandler);
+router.get('/getProducts', authMiddleware, getProductsHandler_old);
 router.put('/update_order_status', authMiddleware, updateOrderStatusHandler);
 router.get('/get_stock', authMiddleware, getStockHandler);
 router.post('/update_stock', authMiddleware, updateStockHandler);
