@@ -48,6 +48,8 @@ router.put('/stock/:id', authMiddleware, updateStockByIdHandler);
 
 
 // ORDERS
+router.get('/order', authMiddleware, getOrdersHandler);
+router.post('/order', authMiddleware, createOrderHandler);
 
 
 // LEGACY
