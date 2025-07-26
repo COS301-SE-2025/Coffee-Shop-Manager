@@ -2,8 +2,8 @@ import { Request, Response, NextFunction } from 'express';
 import { supabase } from '../supabase/client';
 
 export async function authMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
-  // extract token from cookie or header
-  const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+  // extract token from header or cookie
+  const token = req.headers.authorization?.split(' ')[1] || req.cookies?.token;
 
   if (!token) {
     res.status(401).json({ error: 'Missing auth token' });
