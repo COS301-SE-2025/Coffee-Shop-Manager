@@ -7,7 +7,7 @@ import { getTabs } from '@/constants/tabs';
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
-  const [role, setRole] = useState('user');
+  const [role, setRole] = useState('Guest');
 
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
@@ -16,13 +16,13 @@ export default function Navbar() {
     if (storedUsername && storedUsername.trim() !== '') {
       setUsername(storedUsername);
     } else {
-      setUsername('user');
+      setUsername('Guest');
     }
 
     if (storedRole && storedRole.trim() !== '') {
       setRole(storedRole);
     } else {
-      setRole('user');
+      setRole('Guest');
     }
   }, []);
 
@@ -34,7 +34,7 @@ export default function Navbar() {
     if (storedUsername && storedUsername.trim() !== '') {
       setUsername(storedUsername);
     } else {
-      setUsername('user');
+      setUsername('Guest');
     }
   }, []);
 
@@ -156,7 +156,7 @@ export default function Navbar() {
 
   // Show only based on rol
   if (role === 'user') {
-    tabs = tabs.filter(tab => tab === 'Dashboard' || tab === 'pos');
+    tabs = tabs.filter(tab => tab === 'Dashboard' || tab === 'pos' || tab === 'Logout');
   }
 
   if (!tabs.includes('Dashboard')) {
