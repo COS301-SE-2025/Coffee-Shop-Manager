@@ -50,6 +50,7 @@ services:
       NEXT_ANALYTICS_BACKEND_PROVIDER: postgres
       # Uncomment to use Big Query backend for analytics
       # NEXT_ANALYTICS_BACKEND_PROVIDER: bigquery
+    profiles: ["dev"]
 
   kong:
     container_name: supabase-kong
@@ -78,6 +79,7 @@ services:
       DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD}
     # https://unix.stackexchange.com/a/294837
     entrypoint: bash -c 'eval "echo \"$$(cat ~/temp.yml)\"" > ~/kong.yml && /docker-entrypoint.sh kong docker-start'
+    profiles: ["dev"]
 
   auth:
     container_name: supabase-auth
@@ -161,6 +163,7 @@ services:
       # GOTRUE_HOOK_SEND_EMAIL_ENABLED: "false"
       # GOTRUE_HOOK_SEND_EMAIL_URI: "http://host.docker.internal:54321/functions/v1/email_sender"
       # GOTRUE_HOOK_SEND_EMAIL_SECRETS: "v1,whsec_VGhpcyBpcyBhbiBleGFtcGxlIG9mIGEgc2hvcnRlciBCYXNlNjQgc3RyaW5n"
+    profiles: ["dev"]
 
   rest:
     container_name: supabase-rest
@@ -184,6 +187,7 @@ services:
       [
         "postgrest"
       ]
+    profiles: ["dev"]
 
   realtime:
     # This container name looks inconsistent but is correct because realtime constructs tenant id by parsing the subdomain
@@ -229,6 +233,7 @@ services:
       APP_NAME: realtime
       SEED_SELF_HOST: true
       RUN_JANITOR: true
+    profiles: ["dev"]
 
   # To use S3 backed storage: docker compose -f docker-compose.yml -f docker-compose.s3.yml up
   storage:
@@ -273,6 +278,7 @@ services:
       GLOBAL_S3_BUCKET: stub
       ENABLE_IMAGE_TRANSFORMATION: "true"
       IMGPROXY_URL: http://imgproxy:5001
+    profiles: ["dev"]
 
   imgproxy:
     container_name: supabase-imgproxy
@@ -295,6 +301,7 @@ services:
       IMGPROXY_LOCAL_FILESYSTEM_ROOT: /
       IMGPROXY_USE_ETAG: "true"
       IMGPROXY_ENABLE_WEBP_DETECTION: ${IMGPROXY_ENABLE_WEBP_DETECTION}
+    profiles: ["dev"]
 
   meta:
     container_name: supabase-meta
@@ -313,6 +320,7 @@ services:
       PG_META_DB_NAME: ${POSTGRES_DB}
       PG_META_DB_USER: supabase_admin
       PG_META_DB_PASSWORD: ${POSTGRES_PASSWORD}
+    profiles: ["dev"]
 
   functions:
     container_name: supabase-edge-functions
@@ -337,6 +345,7 @@ services:
         "--main-service",
         "/home/deno/functions/main"
       ]
+    profiles: ["dev"]
 
   analytics:
     container_name: supabase-analytics
@@ -384,6 +393,7 @@ services:
       # Uncomment to use Big Query backend for analytics
       # GOOGLE_PROJECT_ID: ${GOOGLE_PROJECT_ID}
       # GOOGLE_PROJECT_NUMBER: ${GOOGLE_PROJECT_NUMBER}
+    profiles: ["dev"]
 
   # Comment out everything below this point if you are using an external Postgres database
   db:
@@ -446,6 +456,7 @@ services:
         "-c",
         "log_min_messages=fatal" # prevents Realtime polling queries from appearing in logs
       ]
+    profiles: ["dev"]
 
   # vector:
   #   container_name: supabase-vector
@@ -476,6 +487,7 @@ services:
   #     ]
   #   security_opt:
   #     - "label=disable"
+  #   profiles: ["dev"]
 
   # Update the DATABASE_URL if you are using an external Postgres database
   supavisor:
@@ -529,6 +541,7 @@ services:
         "-c",
         "/app/bin/migrate && /app/bin/supavisor eval \"$$(cat /etc/pooler/pooler.exs)\" && /app/bin/server"
       ]
+    profiles: ["dev"]
       
   seed-user:
     image: node:20
@@ -541,6 +554,7 @@ services:
       - db
       - auth
     command: npx ts-node scripts/seed.ts
+    profiles: ["dev"]
 
 volumes:
   db-config:

@@ -1,10 +1,21 @@
 # Usage
 # Please ensure a .env file copied from .env.example exists in root
-# start:
-#         docker compose up
 
-# stop:
-#         docker compose down
+# PROFILES:
+# DEV - Runs everything locally including supabase [.env]
+# PROD - Runs frontend and API locally and references hosted supabase [.env.prod]
+
+# START:
+#   DEV:
+#     ENV_FILE=.env docker compose --profile dev up
+#   PROD:
+#     ENV_FILE=.env.prod docker compose --profile prod up
+
+# STOP:
+#   DEV:
+#     ENV_FILE=.env docker compose --profile dev down
+#   PROD:
+#     ENV_FILE=.env.prod docker compose --profile prod sown
 
 # reset:    Reset database [this will initialize it with the values from data.sql again]
   # stop the docker
@@ -17,8 +28,6 @@ services:
   frontend:
     container_name: react-frontend
     image: node:20
-    # build:
-      # context: ./koffieblik
     ports:
       - "3000:3000"
     volumes:
@@ -26,10 +35,11 @@ services:
       - ./koffieblik/node_modules:/app/node_modules
     working_dir: /app
     env_file:
-      - ./.env
-    depends_on:
-      - db
+      - ${ENV_FILE}
+    # depends_on:
+    #   - db
     command: npm run dev
+    profiles: ["dev", "prod"]
 
   api:
     container_name: ts-api
@@ -42,9 +52,7 @@ services:
       - "${API_PORT}:5000"
     command: npx ts-node src/server.ts
     env_file:
-      - ./.env
-    depends_on:
-      - db
-
-# volumes:
-  # node_modules:
+      - ${ENV_FILE}
+    # depends_on:
+    #   - db
+    profiles: ["dev", "prod"]
