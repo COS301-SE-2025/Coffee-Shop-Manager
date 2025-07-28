@@ -49,9 +49,11 @@ export default function LoginPage() {
 
         if (result.success && result.user) {
           const username = result.user.user_metadata?.display_name ?? result.user.email;
-
+          const role = result.user.user_metadata?.role ?? 'guest';
           const token = result.session?.access_token ?? 'N/A';
           localStorage.setItem('username', username);
+          localStorage.setItem('role', result.user.user_metadata?.role ?? 'user');
+            console.log('🧑‍💼 Role:', role); // Log role
           setLoginError('');
           router.push('/dashboard');
         } else {

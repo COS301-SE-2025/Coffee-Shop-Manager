@@ -55,6 +55,7 @@ export default function DashboardPage() {
                 if (response.ok) {
                     // console.log('Orders fetched:', data.orders);
                     setOrders(data.orders);
+                    // console.log(orders);
                 } else {
                     console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
                 }
@@ -120,7 +121,7 @@ export default function DashboardPage() {
         );
     } else if (filter === 'This Week') {
         const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay()); 
+        startOfWeek.setDate(now.getDate() - now.getDay());
         filteredOrders = orders.filter(order =>
             new Date(order.created_at) >= startOfWeek
         );
@@ -132,7 +133,7 @@ export default function DashboardPage() {
     } else if (filter === 'Custom Range' && startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); 
+        end.setHours(23, 59, 59, 999);
 
         filteredOrders = orders.filter(order => {
             const orderDate = new Date(order.created_at);
@@ -221,7 +222,7 @@ export default function DashboardPage() {
             case 'Completed': return 'text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Pending': return 'text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Cancelled': return 'text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium';
-            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium'; 
+            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium';
         }
     };
 

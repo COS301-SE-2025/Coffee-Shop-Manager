@@ -69,7 +69,7 @@ export default function POSPage() {
 
     const payload = {
       products: cart.map((item) => ({
-        name: item.name,
+        product: item.name,
         quantity: item.quantity,
       })),
     };
