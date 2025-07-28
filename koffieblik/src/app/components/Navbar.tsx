@@ -7,6 +7,26 @@ import { getTabs } from '@/constants/tabs';
 export default function Navbar() {
   const router = useRouter();
   const pathname = usePathname();
+  const [role, setRole] = useState('user');
+
+  useEffect(() => {
+    const storedUsername = localStorage.getItem('username');
+    const storedRole = localStorage.getItem('role');
+
+    if (storedUsername && storedUsername.trim() !== '') {
+      setUsername(storedUsername);
+    } else {
+      setUsername('user');
+    }
+
+    if (storedRole && storedRole.trim() !== '') {
+      setRole(storedRole);
+    } else {
+      setRole('user');
+    }
+  }, []);
+
+
 
   const [username, setUsername] = useState('Guest');
   useEffect(() => {
@@ -14,7 +34,7 @@ export default function Navbar() {
     if (storedUsername && storedUsername.trim() !== '') {
       setUsername(storedUsername);
     } else {
-      setUsername('Guest');
+      setUsername('user');
     }
   }, []);
 
@@ -74,7 +94,7 @@ export default function Navbar() {
     setSelectedTab(current);
   }, [pathname]);
 
-  
+
   useEffect(() => {
     if (!selectedTab) return;
 
@@ -104,7 +124,7 @@ export default function Navbar() {
 
       if (result.success) {
 
-        localStorage.removeItem('username'); 
+        localStorage.removeItem('username');
         console.log('Cookies and LocalStorage cleared successfully.');
         router.push('/login');
       } else {
@@ -133,6 +153,11 @@ export default function Navbar() {
 
   // Load and modify tabs
   let tabs = username ? getTabs(username) : [];
+
+  // Show only based on rol
+  if (role === 'user') {
+    tabs = tabs.filter(tab => tab === 'Dashboard' || tab === 'pos');
+  }
 
   if (!tabs.includes('Dashboard')) {
     tabs.unshift('Dashboard');
