@@ -15,7 +15,7 @@
 #   DEV:
 #     ENV_FILE=.env docker compose --profile dev down
 #   PROD:
-#     ENV_FILE=.env.prod docker compose --profile prod sown
+#     ENV_FILE=.env.prod docker compose --profile prod down
 
 # reset:    Reset database [this will initialize it with the values from data.sql again]
   # stop the docker
