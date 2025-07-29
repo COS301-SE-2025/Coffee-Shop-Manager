@@ -4,7 +4,7 @@ import { supabase } from '../supabase/client';
 export async function loginHandler(req: Request, res: Response): Promise<void> {
   try {
     const { email, password } = req.body;
-
+    console.log(req.body);
     if (!email || !password) {
       res.status(400).json({ success: false, message: 'Email and password required' });
       return;

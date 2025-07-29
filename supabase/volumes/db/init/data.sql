@@ -67,8 +67,8 @@ CREATE TABLE IF NOT EXISTS order_products (
     quantity INTEGER NOT NULL DEFAULT 1,
     -- UNIT PRICE AT TIME OF PURCHASE
     price DECIMAL(8, 2),
+    custom JSON DEFAULT "{}",
 
-    UNIQUE (order_id, product_id),
     CONSTRAINT order_products_order_fkey FOREIGN KEY (order_id) REFERENCES orders(id) ON DELETE CASCADE,
     CONSTRAINT order_products_product_fkey FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE RESTRICT
 );
@@ -356,6 +356,19 @@ CREATE TABLE IF NOT EXISTS product_stock (
     CONSTRAINT product_stock_product_fkey FOREIGN KEY (product_id) REFERENCES products(id) ON DELETE CASCADE,
     CONSTRAINT product_stock_stock_fkey FOREIGN KEY (stock_id) REFERENCES stock(id) ON DELETE CASCADE,
     CONSTRAINT product_stock_unique UNIQUE (product_id, stock_id)
+);
+
+-- ORDER MODIFICATION --
+CREATE TABLE IF NOT EXISTS custom_order_modifications (
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    order_product_id UUID NOT NULL,
+    stock_id UUID NOT NULL,
+    action TEXT NOT NULL CHECK (action IN ('add', 'remove', 'replace')),
+    quantity DECIMAL(8, 2) NULL,
+    created_at TIMESTAMPTZ DEFAULT NOW(),
+
+    CONSTRAINT fk_order_product FOREIGN KEY (order_product_id) REFERENCES order_products(id) ON DELETE CASCADE,
+    CONSTRAINT fk_stock FOREIGN KEY (stock_id) REFERENCES stock(id) ON DELETE CASCADE
 );
 
 
