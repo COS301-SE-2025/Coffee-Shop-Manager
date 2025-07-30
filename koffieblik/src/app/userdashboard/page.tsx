@@ -132,26 +132,26 @@ export default function DashboardPage() {
                                 setShowOrders(true);
                                 fetchOrders();
                             }}
-                            className="w-full sm:w-auto px-6 py-4 bg-[var(--primary-4)] backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
+                            className="select-none w-full sm:w-auto px-6 py-4 bg-black/45 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-4)] text-left flex items-center gap-4 text-[var(--primary-2)]"
 
                         >
                             <div className="text-3xl">📋</div>
                             <div>
-                                <h2 className="text-xl font-bold text-[var(--primary-3)]">View Orders</h2>
-                                <p className="text-sm text-[var(--primary-1)]">Click to view your past orders.</p>
+                                <h2 className="text-xl font-bold text-[var(--primary-2)]">View Orders</h2>
+                                <p className="text-sm text-[var(--primary-4)]">Click to view your past orders.</p>
                             </div>
                         </button>
 
                         <button
-                            className="w-full sm:w-auto px-6 py-4 bg-[var(--primary-4)] backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
+                            className="select-none w-full sm:w-auto px-6 py-4 bg-black/45 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-4)] text-left flex items-center gap-4 text-[var(--primary-2)]"
                             onClick={() => {
                                 setShowPoints(true);
                             }}>
 
                             <div className="text-3xl">🎯</div>
                             <div>
-                                <h2 className="text-xl font-bold text-[var(--primary-3)]">See Points</h2>
-                                <p className="text-sm text-[var(--primary-1)]">Check your rewards or loyalty points.</p>
+                                <h2 className="text-xl font-bold text-[var(--primary-2)]">See Points</h2>
+                                <p className="text-sm text-[var(--primary-4)]">Check your rewards or loyalty points.</p>
                             </div>
                         </button>
                     </div>
@@ -183,20 +183,19 @@ export default function DashboardPage() {
                     ) : (
                         <>
                             <button
-                                className="w-full sm:w-auto px-4 py-2 bg-[var(--primary-4)] backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-2"
-                                onClick={() => {
-                                    setShowOrders(false);
-                                }}
+                                className="select-none backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+                                onClick={() => setShowOrders(false)}
                             >
-                                <div>
-                                    <h2 className="text-lg font-semibold text-[var(--primary-3)]">Back</h2>
-                                </div>
+                                ←
                             </button>
+
+
+
 
 
                             {/* Orders Section */}
                             <section
-                                className="backdrop-blur-sm bg-black/45 border border-[var(--primary-3)] rounded-2xl shadow-xl"
+                                className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl"
                             >
 
 
@@ -247,7 +246,7 @@ export default function DashboardPage() {
                                                         value={startDate}
                                                         onChange={e => setStartDate(e.target.value)}
                                                         style={{
-                                                            borderColor: 'var(--primary-3)',
+                                                            borderColor: 'var(--primary-4)',
                                                             color: 'var(--primary-2)',
                                                             boxShadow: '0 0 0 0 transparent',
                                                         }}
@@ -264,7 +263,7 @@ export default function DashboardPage() {
                                                         value={endDate}
                                                         onChange={e => setEndDate(e.target.value)}
                                                         style={{
-                                                            borderColor: 'var(--primary-3)',
+                                                            borderColor: 'var(--primary-4)',
                                                             color: 'var(--primary-2)',
                                                             boxShadow: '0 0 0 0 transparent',
                                                         }}
@@ -323,12 +322,13 @@ export default function DashboardPage() {
             {showPoints && (
                 <div className="p-8">
                     <button
-                        className="px-4 py-2 bg-[var(--primary-4)] text-[var(--primary-3)] rounded-xl border border-[var(--primary-3)] hover:bg-[var(--primary-3)] hover:text-[var(--primary-1)] transition"
+                        className="select-none backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
                         onClick={() => setShowPoints(false)}
                     >
-                        Back
+                        ←
                     </button>
-                    <div className="backdrop-blur-sm bg-black/45 border border-[var(--primary-3)] rounded-2xl shadow-xl p-6 space-y-6 text-[var(--primary-2)]">
+
+                    <div className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl p-6 space-y-6 text-[var(--primary-2)]">
 
                         {/* Header */}
                         <div className="flex justify-between items-center">
@@ -338,21 +338,22 @@ export default function DashboardPage() {
 
                         {/* Points Overview */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
-                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner">
+                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border" style={{ borderColor: 'var(--primary-4)' }}>
                                 <p className="text-sm opacity-70">Total Points</p>
                                 <p className="text-3xl font-bold text-green-400">1,250</p>
                             </div>
 
-                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner">
+                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border" style={{ borderColor: 'var(--primary-4)' }}>
                                 <p className="text-sm opacity-70">Points This Month</p>
                                 <p className="text-2xl font-semibold text-yellow-300">300</p>
                             </div>
 
-                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner">
+                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border" style={{ borderColor: 'var(--primary-4)' }}>
                                 <p className="text-sm opacity-70">Redeemed Points</p>
                                 <p className="text-2xl font-semibold text-red-300">150</p>
                             </div>
                         </div>
+
 
                         {/* Recent Activity */}
                         <div>
