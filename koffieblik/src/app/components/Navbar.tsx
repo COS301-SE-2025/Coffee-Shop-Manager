@@ -179,12 +179,9 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-50 backdrop-blur-sm border-b shadow-lg"
-      style={{
-        backgroundColor: 'var(--primary-4)',
-        borderColor: 'var(--primary-3)',
-      }}
+      className="sticky top-0 z-50 backdrop-blur-sm border-b border-[var(--primary-3)] bg-transparent shadow-lg"
     >
+
 
 
       <div className="px-6 py-4">
@@ -200,13 +197,13 @@ export default function Navbar() {
             <div>
               <h1
                 className="text-xl font-bold"
-                style={{ color: 'var(--primary-1)' }}
+                style={{ color: 'var(--primary-2)' }}
               >
                 Coffee Shop Dashboard
               </h1>
               <p
                 className="text-sm"
-                style={{ color: 'var(--primary-3)' }}
+                style={{ color: 'var(--primary-2)' }}
               >
                 Welcome back, {username}
               </p>
@@ -216,13 +213,13 @@ export default function Navbar() {
           <div className="text-right">
             <p
               className="text-sm font-medium"
-              style={{ color: 'var(--primary-1)' }}
+              style={{ color: 'var(--primary-2)' }}
             >
               {date}
             </p>
             <p
               className="text-xs"
-              style={{ color: 'var(--primary-1)' }}
+              style={{ color: 'var(--primary-2)' }}
             >
               {time}
             </p>
@@ -253,7 +250,7 @@ export default function Navbar() {
               }
             };
 
-            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${isActive ? 'bg-white/10 text-white' : 'text-[var(--primary-3)] '
+            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${isActive ? 'bg-white/10 text-white' : 'text-[var(--primary-2)] '
               }`;
 
             if (isLogout) {
