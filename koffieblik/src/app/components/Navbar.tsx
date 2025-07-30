@@ -9,6 +9,7 @@ export default function Navbar() {
   const pathname = usePathname();
   const [role, setRole] = useState('Guest');
 
+
   useEffect(() => {
     const storedUsername = localStorage.getItem('username');
     const storedRole = localStorage.getItem('role');
@@ -42,6 +43,7 @@ export default function Navbar() {
 
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
+
 
   useEffect(() => {
     fetch('http://localhost:5000/check-token', {
@@ -99,13 +101,14 @@ export default function Navbar() {
     if (!selectedTab) return;
 
     const routes = {
-      Dashboard: '/dashboard',
-      Inventory: '/inventory',
-      pos: '/pos',
-      manage: '/manage',
-      Reports: '/reports',
-      Help: '/help'
+      Dashboard: role === 'user' ? '/userdashboard' : '/dashboard',
+      Inventory: role === 'user' ? '/userinventory' : '/inventory',
+      pos: role === 'user' ? '/userPOS' : '/pos',
+      manage: role === 'user' ? '/userManage' : '/manage',
+      Reports: role === 'user' ? '/userReports' : '/reports',
+      Help: role === 'user' ? '/help' : '/help'
     };
+
 
     const target = routes[selectedTab as keyof typeof routes];
     if (target && pathname !== target) router.push(target);
@@ -151,22 +154,23 @@ export default function Navbar() {
     }
   };
 
-  // Load and modify tabs
+
   let tabs = username ? getTabs(username) : [];
 
   // Show only based on rol
   if (role === 'user') {
-    tabs = tabs.filter(tab => tab === 'Dashboard' || tab === 'pos' || tab === 'Logout');
+    tabs = ['Dashboard', 'pos', 'Help', username, 'Logout'];
+  }
+  else {
+    tabs = ['Dashboard'];
   }
 
-  if (!tabs.includes('Dashboard')) {
-    tabs.unshift('Dashboard');
+  if (role === 'admin') {
+    tabs = username ? getTabs(username) : [];
   }
 
-  if (!tabs.includes('Help') && tabs.includes('manage')) {
-    const manageIndex = tabs.indexOf('manage');
-    tabs.splice(manageIndex + 1, 0, 'Help');
-  }
+
+
 
   return (
     <nav
