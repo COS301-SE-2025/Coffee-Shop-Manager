@@ -230,52 +230,60 @@ export default function Navbar() {
 
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-3">
           {tabs.map((tab) => {
             const isActive = selectedTab === tab;
             const isLogout = tab === 'Logout';
 
-            return (
-              <button
-                key={tab}
-                className={`group relative flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all duration-200 transform hover:scale-105 ${isLogout ? 'border' : 'border'
-                  }`}
-                style={
-                  isActive
-                    ? {
-                      backgroundColor: 'var(--primary-3)',
-                      color: 'var(--primary-2)',
-                      borderColor: 'var(--primary-3)',
-                    }
-                    : isLogout
-                      ? {
-                        backgroundColor: '#fee2e2',
-                        color: '#b91c1c',
-                        borderColor: '#fecaca',
-                      }
-                      : {
-                        backgroundColor: 'var(--primary-4)',
-                        color: 'var(--primary-3)',
-                        borderColor: 'var(--primary-1)',
-                      }
+            const getHref = () => {
+              if (role === 'user') {
+                switch (tab) {
+                  case 'Dashboard': return '/userdashboard';
+                  case 'Order Here': return '/userpos';
                 }
-                onClick={() => {
-                  if (tab === 'Logout') handleLogout();
-                  else handleTabNavigation(tab);
-                }}
+              }
+              switch (tab) {
+                case 'Dashboard': return '/dashboard';
+                case 'Inventory': return '/inventory';
+                case 'Reports': return '/reports';
+                case 'pos': return '/pos';
+                case 'manage': return '/manage';
+                case 'Help': return '/help';
+                default: return '#';
+              }
+            };
 
+            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${isActive ? 'bg-white/10 text-white' : 'text-[var(--primary-3)] '
+              }`;
+
+            if (isLogout) {
+              return (
+                <button
+                  key={tab}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:text-white hover:bg-red-500 transition-colors duration-200"
+                  onClick={handleLogout}
+                >
+                  <span className="text-lg">{getTabIcon(tab)}</span>
+                  <span className="capitalize">{tab}</span>
+                </button>
+              );
+            }
+
+            return (
+              <a
+                key={tab}
+                href={getHref()}
+                className={baseClass}
+                onClick={() => setSelectedTab(tab)}
               >
                 <span className="text-lg">{getTabIcon(tab)}</span>
                 <span className="capitalize">{tab === 'pos' ? 'POS' : tab === 'manage' ? 'Manage' : tab}</span>
-                {isActive && (
-                  <div className="absolute -bottom-1 left-1/2 transform -translate-x-1/2 w-1 h-1 bg-white rounded-full"></div>
-                )}
-              </button>
-
-
+              </a>
             );
           })}
         </div>
+
+
       </div>
     </nav>
   );

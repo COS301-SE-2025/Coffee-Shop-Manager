@@ -120,7 +120,7 @@ export default function DashboardPage() {
 
     return (
 
-        <main className="relative min-h-full bg-cover bg-center bg-no-repeat"
+        <main className="relative min-h-full bg-fixed bg-cover bg-center bg-no-repeat"
             style={{
                 backgroundImage: 'url("/assets/close-up-view-dark-fresh-roasted-coffee-beans-coffee-beans-background.jpg")',
             }}
@@ -135,7 +135,8 @@ export default function DashboardPage() {
                                     setShowOrders(true);
                                     fetchOrders();
                                 }}
-                                className="w-full sm:w-auto px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
+                                className="w-full sm:w-auto px-6 py-4 bg-[var(--primary-4)] backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
+
                             >
                                 <div className="text-3xl">📋</div>
                                 <div>
@@ -145,7 +146,7 @@ export default function DashboardPage() {
                             </button>
 
                             <button
-                                className="w-full sm:w-auto px-6 py-4 bg-white/90 backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
+                                className="w-full sm:w-auto px-6 py-4 bg-[var(--primary-4)] backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
                             >
                                 <div className="text-3xl">🎯</div>
                                 <div>
@@ -181,6 +182,17 @@ export default function DashboardPage() {
                             <Loader />
                         ) : (
                             <>
+                                <button
+                                    className="w-full sm:w-auto px-4 py-2 bg-[var(--primary-4)] backdrop-blur-md rounded-xl shadow-lg hover:shadow-xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-2"
+                                    onClick={() => {
+                                        setShowOrders(false);
+                                    }}
+                                >
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-[var(--primary-3)]">Back</h2>
+                                    </div>
+                                </button>
+
 
                                 {/* Orders Section */}
                                 <section
