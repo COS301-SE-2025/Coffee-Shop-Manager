@@ -179,7 +179,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-50 backdrop-blur-sm border-b border-[var(--primary-3)] bg-transparent shadow-lg"
+      className="sticky top-0 z-50 backdrop-blur-sm border-b border-[var(--primary-4)] bg-transparent shadow-lg"
     >
 
 
