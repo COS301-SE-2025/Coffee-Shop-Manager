@@ -242,10 +242,7 @@ export default function DashboardPage() {
     const tabs = username ? getTabs(username) : [];
 
     return (
-        <main
-            className="min-h-screen"
-            style={{ backgroundColor: 'var(--primary-4)' }}
-        >
+        <main className="relative min-h-full bg-transparent">
 
             {/* Page Content */}
             <div className="p-8">
@@ -254,10 +251,12 @@ export default function DashboardPage() {
                         {/* Metrics Section */}
                         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                             {metrics.map((metric, index) => (
-                                <div key={index} className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-white/50">
+                                <div
+                                    key={index}
+                                    className="bg-black/45 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[var(--primary-4)]"
+                                >
                                     <h2
-                                        className="text-sm mb-2 font-medium"
-                                        style={{ color: 'var(--primary-1)' }}
+                                        className="text-sm mb-2 font-medium text-[var(--primary-2)]"
                                     >
                                         {metric.label}
                                     </h2>
@@ -270,20 +269,15 @@ export default function DashboardPage() {
                                         className="mt-3 h-1 rounded-full"
                                         style={{ backgroundColor: 'var(--primary-4)' }}
                                     ></div>
-
                                 </div>
                             ))}
                         </section>
 
+
                         {/* Orders Section */}
                         <section
-                            className="backdrop-blur-sm rounded-2xl shadow-xl"
-                            style={{
-                                backgroundColor: 'var(--primary-2)',
-                                border: '1px solid var(--primary-3)',
-                            }}
+                            className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl"
                         >
-
                             <div
                                 className="p-6 border-b"
                                 style={{ borderColor: 'var(--primary-3)' }}
@@ -300,7 +294,7 @@ export default function DashboardPage() {
 
                                         <h2
                                             className="text-xl font-bold"
-                                            style={{ color: 'var(--primary-3)' }}
+                                            style={{ color: 'var(--primary-2)' }}
                                         >
                                             Recent Orders
                                         </h2>
@@ -308,10 +302,10 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="flex flex-wrap gap-3">
                                         <select
-                                            className={dateInputStyle}
+                                            className={`${dateInputStyle} backdrop-blur-md text-[var(--primary-2)]`}
                                             style={{
+                                                backgroundColor: 'var(--primary-3)',
                                                 borderColor: 'var(--primary-3)',
-                                                color: 'var(--primary-3)',
                                                 boxShadow: '0 0 0 0 transparent',
                                             }}
                                             value={filter}
@@ -330,14 +324,14 @@ export default function DashboardPage() {
                                                     value={startDate}
                                                     onChange={e => setStartDate(e.target.value)}
                                                     style={{
-                                                        borderColor: 'var(--primary-3)',
-                                                        color: 'var(--primary-3)',
+                                                        borderColor: 'var(--primary-4)',
+                                                        color: 'var(--primary-2)',
                                                         boxShadow: '0 0 0 0 transparent',
                                                     }}
                                                 />
                                                 <span
                                                     className="flex items-center font-medium"
-                                                    style={{ color: 'var(--primary-3)' }}
+                                                    style={{ color: 'var(--primary-2)' }}
                                                 >
                                                     to
                                                 </span>
@@ -347,8 +341,8 @@ export default function DashboardPage() {
                                                     value={endDate}
                                                     onChange={e => setEndDate(e.target.value)}
                                                     style={{
-                                                        borderColor: 'var(--primary-3)',
-                                                        color: 'var(--primary-3)',
+                                                        borderColor: 'var(--primary-4)',
+                                                        color: 'var(--primary-2)',
                                                         boxShadow: '0 0 0 0 transparent',
                                                     }}
                                                 />
@@ -373,7 +367,7 @@ export default function DashboardPage() {
                                         </tr>
                                     </thead>
 
-                                    <tbody className="divide-y text-[var(--primary-3)]" style={{ borderColor: 'var(--primary-3)' }}>
+                                    <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-3)' }}>
                                         {filteredOrders.map((order) => (
 
                                             <tr key={order.id}>
