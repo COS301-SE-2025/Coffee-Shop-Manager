@@ -33,6 +33,7 @@ export default function DashboardPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
     const [showOrder, setShowOrders] = useState(false);
+    const [showPoints, setShowPoints] = useState(false);
     const [loading, setLoading] = useState(false);
 
 
@@ -123,7 +124,7 @@ export default function DashboardPage() {
         <main className="relative min-h-full bg-transparent">
             {/* <div className="absolute inset-0 bg-black opacity-60 z-0"></div> */}
             {/* <div className="relative z-10"> */}
-            {!showOrder && (
+            {!showOrder && !showPoints && (
                 <div className="p-8 flex flex-col items-center justify-center min-h-full w-full">
                     <div className="flex flex-row gap-6">
                         <button
@@ -143,7 +144,10 @@ export default function DashboardPage() {
 
                         <button
                             className="w-full sm:w-auto px-6 py-4 bg-[var(--primary-4)] backdrop-blur-md rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-3)] text-left flex items-center gap-4"
-                        >
+                            onClick={() => {
+                                setShowPoints(true);
+                            }}>
+
                             <div className="text-3xl">🎯</div>
                             <div>
                                 <h2 className="text-xl font-bold text-[var(--primary-3)]">See Points</h2>
@@ -192,12 +196,9 @@ export default function DashboardPage() {
 
                             {/* Orders Section */}
                             <section
-                                className="backdrop-blur-sm rounded-2xl shadow-xl"
-                                style={{
-                                    backgroundColor: 'var(--primary-2)',
-                                    border: '1px solid var(--primary-3)',
-                                }}
+                                className="backdrop-blur-sm bg-black/45 border border-[var(--primary-3)] rounded-2xl shadow-xl"
                             >
+
 
                                 <div
                                     className="p-6 border-b"
@@ -215,7 +216,7 @@ export default function DashboardPage() {
 
                                             <h2
                                                 className="text-xl font-bold"
-                                                style={{ color: 'var(--primary-3)' }}
+                                                style={{ color: 'var(--primary-2)' }}
                                             >
                                                 Recent Orders
                                             </h2>
@@ -223,15 +224,16 @@ export default function DashboardPage() {
                                         </div>
                                         <div className="flex flex-wrap gap-3">
                                             <select
-                                                className={dateInputStyle}
+                                                className={`${dateInputStyle} backdrop-blur-md text-[var(--primary-2)]`}
                                                 style={{
+                                                    backgroundColor: 'var(--primary-3)',
                                                     borderColor: 'var(--primary-3)',
-                                                    color: 'var(--primary-3)',
                                                     boxShadow: '0 0 0 0 transparent',
                                                 }}
                                                 value={filter}
                                                 onChange={(e) => setFilter(e.target.value)}
                                             >
+
                                                 <option>Today</option>
                                                 <option>This Week</option>
                                                 <option>This Month</option>
@@ -246,13 +248,13 @@ export default function DashboardPage() {
                                                         onChange={e => setStartDate(e.target.value)}
                                                         style={{
                                                             borderColor: 'var(--primary-3)',
-                                                            color: 'var(--primary-3)',
+                                                            color: 'var(--primary-2)',
                                                             boxShadow: '0 0 0 0 transparent',
                                                         }}
                                                     />
                                                     <span
                                                         className="flex items-center font-medium"
-                                                        style={{ color: 'var(--primary-3)' }}
+                                                        style={{ color: 'var(--primary-2)' }}
                                                     >
                                                         to
                                                     </span>
@@ -263,7 +265,7 @@ export default function DashboardPage() {
                                                         onChange={e => setEndDate(e.target.value)}
                                                         style={{
                                                             borderColor: 'var(--primary-3)',
-                                                            color: 'var(--primary-3)',
+                                                            color: 'var(--primary-2)',
                                                             boxShadow: '0 0 0 0 transparent',
                                                         }}
                                                     />
@@ -288,7 +290,7 @@ export default function DashboardPage() {
                                             </tr>
                                         </thead>
 
-                                        <tbody className="divide-y text-[var(--primary-3)]" style={{ borderColor: 'var(--primary-3)' }}>
+                                        <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-3)' }}>
                                             {filteredOrders.map((order) => (
 
                                                 <tr key={order.id}>
@@ -317,6 +319,66 @@ export default function DashboardPage() {
 
                 </div>
             )}
+
+            {showPoints && (
+                <div className="p-8">
+                    <button
+                        className="px-4 py-2 bg-[var(--primary-4)] text-[var(--primary-3)] rounded-xl border border-[var(--primary-3)] hover:bg-[var(--primary-3)] hover:text-[var(--primary-1)] transition"
+                        onClick={() => setShowPoints(false)}
+                    >
+                        Back
+                    </button>
+                    <div className="backdrop-blur-sm bg-black/45 border border-[var(--primary-3)] rounded-2xl shadow-xl p-6 space-y-6 text-[var(--primary-2)]">
+
+                        {/* Header */}
+                        <div className="flex justify-between items-center">
+                            <h2 className="text-xl font-bold text-[var(--primary-4)]">🎯 Your Loyalty Points</h2>
+
+                        </div>
+
+                        {/* Points Overview */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
+                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner">
+                                <p className="text-sm opacity-70">Total Points</p>
+                                <p className="text-3xl font-bold text-green-400">1,250</p>
+                            </div>
+
+                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner">
+                                <p className="text-sm opacity-70">Points This Month</p>
+                                <p className="text-2xl font-semibold text-yellow-300">300</p>
+                            </div>
+
+                            <div className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner">
+                                <p className="text-sm opacity-70">Redeemed Points</p>
+                                <p className="text-2xl font-semibold text-red-300">150</p>
+                            </div>
+                        </div>
+
+                        {/* Recent Activity */}
+                        <div>
+                            <h3 className="text-lg font-semibold text-[var(--primary-4)] mb-3">📅 Recent Activity</h3>
+                            <ul className="space-y-2 text-lg">
+                                <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
+                                    <span>+100 points — Latte Purchase</span>
+                                    <span className="opacity-70">2025-07-29</span>
+                                </li>
+                                <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
+                                    <span>+200 points — Referral Bonus</span>
+                                    <span className="opacity-70">2025-07-27</span>
+                                </li>
+                                <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
+                                    <span>-150 points — Free Cappuccino</span>
+                                    <span className="opacity-70">2025-07-24</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                    </div>
+                </div>
+            )}
+
+
+
             {/* </div> */}
         </main>
     );
