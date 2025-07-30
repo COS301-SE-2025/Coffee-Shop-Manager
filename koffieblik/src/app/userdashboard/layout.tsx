@@ -1,6 +1,5 @@
+// layout.tsx - Updated
 import Navbar from '@/app/components/Navbar';
-import { cookies } from 'next/headers';
-import { redirect } from 'next/navigation';
 
 export const metadata = {
   title: 'Dashboard - DieKoffieBlik',
@@ -15,11 +14,12 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="h-screen bg-amber-50 flex flex-col">
       <Navbar />
-      {children}
+      <div className="flex-1 overflow-auto">
+        {children}
+      </div>
     </div>
   );
 }

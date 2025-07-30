@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { getTabs } from '@/constants/tabs';
 
 export default function Navbar() {
   const router = useRouter();
@@ -83,36 +82,8 @@ export default function Navbar() {
   }, []);
 
 
-  useEffect(() => {
-    const routeMap: Record<string, string> = {
-      '/dashboard': 'Dashboard',
-      '/inventory': 'Inventory',
-      '/pos': 'pos',
-      '/manage': 'manage',
-      '/reports': 'Reports',
-      '/help': 'Help'
-    };
-    const current = routeMap[pathname] || null;
-    setSelectedTab(current);
-  }, [pathname]);
 
 
-  useEffect(() => {
-    if (!selectedTab) return;
-
-    const routes = {
-      Dashboard: role === 'user' ? '/userdashboard' : '/dashboard',
-      Inventory: role === 'user' ? '/userinventory' : '/inventory',
-      pos: role === 'user' ? '/userPOS' : '/pos',
-      manage: role === 'user' ? '/userManage' : '/manage',
-      Reports: role === 'user' ? '/userReports' : '/reports',
-      Help: role === 'user' ? '/help' : '/help'
-    };
-
-
-    const target = routes[selectedTab as keyof typeof routes];
-    if (target && pathname !== target) router.push(target);
-  }, [selectedTab, router, pathname]);
 
   const handleLogout = async () => {
     try {
@@ -147,6 +118,7 @@ export default function Navbar() {
       case 'Inventory': return '📦';
       case 'Reports': return '📈';
       case 'pos': return '🛒';
+      case 'Order Here': return '🛒';
       case 'manage': return '⚙️';
       case 'Help': return '❓';
       case 'Logout': return '🚪';
@@ -155,21 +127,54 @@ export default function Navbar() {
   };
 
 
-  let tabs = username ? getTabs(username) : [];
+  let tabs = [''];
 
   // Show only based on rol
   if (role === 'user') {
-    tabs = ['Dashboard', 'pos', 'Help', username, 'Logout'];
+    tabs = ['Dashboard', 'Order Here', 'Help', username, 'Logout'];
   }
   else {
     tabs = ['Dashboard'];
   }
 
   if (role === 'admin') {
-    tabs = username ? getTabs(username) : [];
+    tabs = ['Dashboard', 'Inventory', 'Reports', 'pos', 'manage', username, 'Logout'];
   }
 
 
+  const handleTabNavigation = (tab: string) => {
+    setSelectedTab(tab);
+
+    switch (tab) {
+      case 'Dashboard':
+        if (role === 'user') {
+          router.push('/userdashboard');
+        } else {
+          router.push('/dashboard');
+        }
+        break;
+      case 'Inventory':
+        router.push('/inventory');
+        break;
+      case 'Order Here':
+        router.push('/userpos');
+        break;
+      case 'Reports':
+        router.push('/reports');
+        break;
+      case 'pos':
+        router.push('/pos');
+        break;
+      case 'manage':
+        router.push('/manage');
+        break;
+      case 'Help':
+        router.push('/help');
+        break;
+      default:
+        break;
+    }
+  };
 
 
   return (
@@ -256,8 +261,9 @@ export default function Navbar() {
                 }
                 onClick={() => {
                   if (tab === 'Logout') handleLogout();
-                  else setSelectedTab(tab);
+                  else handleTabNavigation(tab);
                 }}
+
               >
                 <span className="text-lg">{getTabIcon(tab)}</span>
                 <span className="capitalize">{tab === 'pos' ? 'POS' : tab === 'manage' ? 'Manage' : tab}</span>
