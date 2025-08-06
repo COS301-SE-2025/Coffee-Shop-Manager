@@ -33,6 +33,7 @@ export default function ProfileScreen() {
   };
 
   const profileMenuItems = [
+    
     {
       title: "Order History",
       icon: "time" as const,
@@ -40,22 +41,16 @@ export default function ProfileScreen() {
       description: "View your past orders"
     },
     {
-      title: "Favorites",
+      title: 'Account Settings',
+      icon: "settings" as const,
+      route: 'settings',
+      description: '/settings'
+    },
+    {
+      title: "Favourites",
       icon: "heart" as const,
-      route: "/favorites", 
+      route: "/favourites", 
       description: "Your saved items"
-    },
-    {
-      title: "Payment Methods",
-      icon: "card" as const,
-      route: "/payment",
-      description: "Manage cards & payments"
-    },
-    {
-      title: "Addresses",
-      icon: "location" as const,
-      route: "/addresses",
-      description: "Delivery addresses"
     },
     {
       title: "Help & Support",
