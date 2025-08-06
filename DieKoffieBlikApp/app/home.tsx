@@ -89,9 +89,9 @@ export default function HomeScreen() {
       description: "View past orders"
     },
     { 
-      title: "Favorites", 
+      title: "Favourites", 
       icon: "heart" as const, 
-      route: "/favorites", 
+      route: "/favourites", 
       primary: false,
       description: "Saved items"
     }
