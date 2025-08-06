@@ -99,7 +99,7 @@ export default function HelpSupportScreen() {
 
   const appInfo = {
     version: '1.0.0',
-    lastUpdated: 'July 2024',
+    lastUpdated: 'August 2025',
     platform: Platform.OS === 'ios' ? 'iOS' : 'Android'
   };
 
