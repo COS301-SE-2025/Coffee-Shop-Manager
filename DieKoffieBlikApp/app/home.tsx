@@ -166,10 +166,15 @@ export default function HomeScreen() {
           <Pressable style={styles.navButton} android_ripple={{ color: '#78350f20' }}>
             <Ionicons name="search" size={22} color="#78350f" />
           </Pressable>
-          <Pressable style={styles.navButton} android_ripple={{ color: '#78350f20' }}>
+          <Pressable 
+            style={styles.navButton} 
+            android_ripple={{ color: '#78350f20' }}
+            onPress={() => router.push('/notifications')}
+          >
             <Ionicons name="notifications-outline" size={22} color="#78350f" />
             <View style={styles.notificationBadge} />
           </Pressable>
+
           {/* Added profile icon as requested */}
           <Pressable 
             style={styles.profileButton} 
