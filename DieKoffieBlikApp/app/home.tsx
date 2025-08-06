@@ -378,7 +378,7 @@ export default function HomeScreen() {
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Made with ❤️ and lots of ☕</Text>
-          <Text style={styles.footerSubtext}>© 2024 DieKoffieBlik</Text>
+          <Text style={styles.footerSubtext}>© 2025 DieKoffieBlik</Text>
         </View>
       </Animated.ScrollView>
     </SafeAreaView>
