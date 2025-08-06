@@ -78,12 +78,20 @@ export default function LoginScreen({
     if (!isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
-
+    console.log("Email: " + email);
+    console.log("Password: " + password);
     try {
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
+
+
+      if (error) {
+        console.error("❌ Supabase error:", error.message, error);
+      } else {
+        console.log("✅ Logged in:", data);
+      }
 
       if (error) {
         Alert.alert('Login failed', error.message);
