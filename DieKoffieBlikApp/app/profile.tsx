@@ -26,7 +26,7 @@ export default function ProfileScreen() {
     name: "Phillip Retief",
     email: "phillip.Retief@example.com",
     phone: "+27 61 123 4567",
-    memberSince: "March 2024",
+    memberSince: "August 2025",
     totalOrders: 50,
     favoriteItems: 54,
     loyaltyPoints: 1250
