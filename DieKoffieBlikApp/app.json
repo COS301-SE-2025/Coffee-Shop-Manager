@@ -28,7 +28,7 @@
     },
     "extra": {
       "SUPABASE_PUBLIC_URL": "https://your-project.supabase.co",
-      "ANON_KEY": "your-anon-key"
+      "SERVICE_ROLE_KEY": "your-anon-key"
     }
   }
 }
