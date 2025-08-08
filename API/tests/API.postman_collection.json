@@ -282,34 +282,6 @@
 						"type": "text/javascript",
 						"packages": {},
 						"exec": [
-							"const SUPABASE_URL = pm.environment.get('SUPABASE_URL');\r",
-							"const SUPABASE_ANON_KEY = pm.environment.get('SUPABASE_ANON_KEY');\r",
-							"const EMAIL = pm.environment.get('SUPABASE_EMAIL');\r",
-							"const PASSWORD = pm.environment.get('SUPABASE_PASSWORD');\r",
-							"\r",
-							"pm.sendRequest({\r",
-							"    url: `${SUPABASE_URL}/auth/v1/token?grant_type=password`,\r",
-							"    method: 'POST',\r",
-							"    header: {\r",
-							"        'Content-Type': 'application/json',\r",
-							"        'apikey': SUPABASE_ANON_KEY\r",
-							"    },\r",
-							"    body: {\r",
-							"        mode: 'raw',\r",
-							"        raw: JSON.stringify({\r",
-							"            email: EMAIL,\r",
-							"            password: PASSWORD\r",
-							"        })\r",
-							"    }\r",
-							"}, function (err, res) {\r",
-							"    if (err || res.code !== 200) {\r",
-							"        console.error('Token request failed', err || res.json());\r",
-							"        return;\r",
-							"    }\r",
-							"\r",
-							"    const token = res.json().access_token;\r",
-							"    pm.environment.set('TOKEN', token);\r",
-							"});\r",
 							""
 						]
 					}
@@ -331,12 +303,39 @@
 			"item": [
 				{
 					"name": "Create Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Has success, order_id, message\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data).to.have.property(\"success\");\r",
+									"    pm.expect(data).to.have.property(\"order_id\");\r",
+									"    pm.expect(data).to.have.property(\"message\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Sucess is true\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.success).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "POST",
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"products\": [\r\n    {\r\n      \"product\": \"Ice Coffee\",\r\n      \"quantity\": 1,\r\n      \"custom\": { \"note\": \"Put milk before hot water\" }\r\n    },\r\n    {\r\n      \"product\": \"Ice Coffee\",\r\n      \"quantity\": 1,\r\n      \"modifications\": [\r\n        { \"stock_item\": \"Sugar\", \"action\": \"remove\", \"quantity\": 5 },\r\n        { \"stock_item\": \"Milk\", \"action\": \"add\", \"quantity\": 10 }\r\n      ]\r\n    },\r\n    {\r\n      \"product\": \"Latte\",\r\n      \"quantity\": 1\r\n    }\r\n  ]\r\n}",
+							"raw": "{\r\n  \"products\": [\r\n    {\r\n      \"product\": \"Iced Coffee\",\r\n      \"quantity\": 1,\r\n      \"custom\": { \"note\": \"Put milk before hot water\" }\r\n    },\r\n    {\r\n      \"product\": \"Iced Coffee\",\r\n      \"quantity\": 1,\r\n      \"modifications\": [\r\n        { \"stock_item\": \"Sugar\", \"action\": \"remove\", \"quantity\": 5 },\r\n        { \"stock_item\": \"Milk\", \"action\": \"add\", \"quantity\": 10 }\r\n      ]\r\n    },\r\n    {\r\n      \"product\": \"Latte\",\r\n      \"quantity\": 1\r\n    }\r\n  ]\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -373,6 +372,56 @@
 						}
 					},
 					"response": []
+				}
+			],
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							"const EMAIL = pm.environment.get(\"SUPABASE_EMAIL\");\r",
+							"const PASSWORD = pm.environment.get('SUPABASE_PASSWORD');\r",
+							"\r",
+							"pm.sendRequest({\r",
+							"    url: pm.environment.get(\"URL\") + \":\" + pm.environment.get(\"PORT\") + \"/login\",\r",
+							"    method: \"POST\",\r",
+							"    header: {\r",
+							"        \"Content-Type\": \"application/json\"\r",
+							"    },\r",
+							"    body: {\r",
+							"        mode: \"raw\",\r",
+							"        raw: JSON.stringify({\r",
+							"            email: EMAIL,\r",
+							"            password: PASSWORD\r",
+							"        })\r",
+							"    }\r",
+							"}, function (err, res) {\r",
+							"    if (err) {\r",
+							"        console.error(err);\r",
+							"        return;\r",
+							"    }\r",
+							"    const jsonData = res.json();\r",
+							"    if (jsonData.session.access_token) {\r",
+							"        pm.environment.set(\"TOKEN\", jsonData.session.access_token);\r",
+							"    } else {\r",
+							"        console.error(\"Login failed: no token returned\");\r",
+							"    }\r",
+							"});\r",
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"exec": [
+							""
+						]
+					}
 				}
 			]
 		},
@@ -582,36 +631,6 @@
 				"type": "text/javascript",
 				"packages": {},
 				"exec": [
-					"const SUPABASE_URL = pm.environment.get('SUPABASE_URL');\r",
-					"const SUPABASE_ANON_KEY = pm.environment.get('SUPABASE_ANON_KEY');\r",
-					"const EMAIL = pm.environment.get('SUPABASE_EMAIL');\r",
-					"const PASSWORD = pm.environment.get('SUPABASE_PASSWORD');\r",
-					"\r",
-					"console.log('Starting login request as: ', EMAIL);\r",
-					"\r",
-					"pm.sendRequest({\r",
-					"    url: `${SUPABASE_URL}/auth/v1/token?grant_type=password`,\r",
-					"    method: 'POST',\r",
-					"    header: {\r",
-					"        'Content-Type': 'application/json',\r",
-					"        'apikey': SUPABASE_ANON_KEY\r",
-					"    },\r",
-					"    body: {\r",
-					"        mode: 'raw',\r",
-					"        raw: JSON.stringify({\r",
-					"            email: EMAIL,\r",
-					"            password: PASSWORD\r",
-					"        })\r",
-					"    }\r",
-					"}, function (err, res) {\r",
-					"    if (err || res.code !== 200) {\r",
-					"        console.error('Token request failed', err || res.json());\r",
-					"        return;\r",
-					"    }\r",
-					"\r",
-					"    const token = res.json().access_token;\r",
-					"    pm.environment.set('TOKEN', token);\r",
-					"});\r",
 					""
 				]
 			}
