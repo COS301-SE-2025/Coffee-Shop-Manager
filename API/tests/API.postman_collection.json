@@ -11,6 +11,79 @@
 			"name": "Users",
 			"item": [
 				{
+					"name": "Signup",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Generate random user for testing\r",
+									"const randomNumber = Math.floor(Math.random() * 100000);\r",
+									"const email = `testuser${randomNumber}@example.com`;\r",
+									"\r",
+									"pm.environment.set(\"signupEmail\", email);\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 201\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Has success, message, user\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data).to.have.property(\"success\");\r",
+									"    pm.expect(data).to.have.property(\"message\");\r",
+									"    pm.expect(data).to.have.property(\"user\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Success is true\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Message is valid\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.message).to.eql(\"User registered successfully.\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\" : \"newuser\",\r\n    \"email\" : \"{{signupEmail}}\",\r\n    \"password\" : \"P@ssword123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}:{{PORT}}/signup",
+							"host": [
+								"{{URL}}"
+							],
+							"port": "{{PORT}}",
+							"path": [
+								"signup"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Login",
 					"event": [
 						{
@@ -29,7 +102,7 @@
 									"\r",
 									"pm.test(\"Sucess is true\", function () {\r",
 									"    const data = pm.response.json();\r",
-									"    pm.expect(data.success).to.eql(\"true\");\r",
+									"    pm.expect(data.success).to.eql(true);\r",
 									"});\r",
 									""
 								],
@@ -43,7 +116,7 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "{\r\n  \"email\": \"user@coffee.com\",\r\n  \"password\": \"user\"\r\n}",
+							"raw": "{\r\n  \"email\": \"{{signupEmail}}\",\r\n  \"password\": \"P@ssword123\"\r\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -58,33 +131,6 @@
 							"port": "{{PORT}}",
 							"path": [
 								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Signup",
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"username\" : \"newuser\",\r\n    \"email\" : \"new@user.com\",\r\n    \"password\" : \"P@ssword1\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{URL}}:{{PORT}}/signup",
-							"host": [
-								"{{URL}}"
-							],
-							"port": "{{PORT}}",
-							"path": [
-								"signup"
 							]
 						}
 					},
