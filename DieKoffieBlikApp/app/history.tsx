@@ -23,7 +23,7 @@ export default function OrderHistoryScreen() {
     {
       id: 'ORD-2024-001',
       date: '2024-07-28',
-      status: 'delivered',
+      status: 'completed',
       items: 3,
       total: 'R 145.50',
       restaurant: 'Die Koffieblik Café',
@@ -32,7 +32,7 @@ export default function OrderHistoryScreen() {
     {
       id: 'ORD-2024-002',
       date: '2024-07-25',
-      status: 'delivered',
+      status: 'completed',
       items: 2,
       total: 'R 89.00',
       restaurant: 'Die Koffieblik Express',
@@ -50,7 +50,7 @@ export default function OrderHistoryScreen() {
     {
       id: 'ORD-2024-004',
       date: '2024-07-15',
-      status: 'delivered',
+      status: 'completed',
       items: 4,
       total: 'R 220.00',
       restaurant: 'Die Koffieblik Roastery',
@@ -60,13 +60,13 @@ export default function OrderHistoryScreen() {
 
   const filterOptions = [
     { key: 'all', label: 'All Orders' },
-    { key: 'delivered', label: 'Delivered' },
+    { key: 'completed', label: 'completed' },
     { key: 'cancelled', label: 'Cancelled' }
   ];
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'delivered':
+      case 'completed':
         return '#10b981';
       case 'cancelled':
         return '#ef4444';

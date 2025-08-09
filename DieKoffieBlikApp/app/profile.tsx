@@ -44,7 +44,7 @@ export default function ProfileScreen() {
       title: 'Account Settings',
       icon: "settings" as const,
       route: 'settings',
-      description: '/settings'
+      description: 'Your account settings'
     },
     {
       title: "Favourites",
@@ -183,7 +183,7 @@ export default function ProfileScreen() {
         />
       </View>
 
-      <View style={styles.settingItem}>
+      {/* <View style={styles.settingItem}>
         <View style={styles.settingLeft}>
           <View style={styles.settingIconContainer}>
             <Ionicons name="location" size={20} color="#78350f" />
@@ -199,7 +199,7 @@ export default function ProfileScreen() {
           trackColor={{ false: '#e5e7eb', true: '#78350f' }}
           thumbColor={locationEnabled ? '#fff' : '#f3f4f6'}
         />
-      </View>
+      </View> */}
 
       <View style={styles.settingItem}>
         <View style={styles.settingLeft}>
@@ -223,13 +223,13 @@ export default function ProfileScreen() {
 
   const ActionButtons = () => (
     <View style={styles.actionButtonsSection}>
-      <Pressable 
+      {/* <Pressable 
         style={styles.editProfileBtn}
         android_ripple={{ color: '#78350f20' }}
       >
         <Ionicons name="create" size={20} color="#78350f" />
         <Text style={styles.editProfileBtnText}>Edit Profile</Text>
-      </Pressable>
+      </Pressable> */}
       
       <Pressable 
         style={styles.logoutBtn}

@@ -217,7 +217,7 @@ const coffeeFacts = [
             onPress={() => router.push('/notifications')}
           >
             <Ionicons name="notifications-outline" size={22} color="#78350f" />
-            <View style={styles.notificationBadge} />
+            {/* <View style={styles.notificationBadge} />       only when new notifications */}
           </Pressable>
 
           {/* Added profile icon as requested */}

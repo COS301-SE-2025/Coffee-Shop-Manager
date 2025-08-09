@@ -260,7 +260,7 @@ export default function HelpSupportScreen() {
           </View>
         </View>
         
-        {/* Footer */}
+        {/* Footer
         <View style={styles.footer}>
           <Text style={styles.footerTitle}>Still need help?</Text>
           <Text style={styles.footerText}>
@@ -270,7 +270,7 @@ export default function HelpSupportScreen() {
             <Ionicons name="headset" size={16} color="#fff" />
             <Text style={styles.contactSupportText}>Contact Support</Text>
           </Pressable>
-        </View>
+        </View> */}
       </ScrollView>
     </SafeAreaView>
   );
