@@ -284,6 +284,31 @@
 				},
 				{
 					"name": "Update Stock Batch",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Has success\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data).to.have.property(\"success\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"success is true\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.success).to.eql(true);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [],
