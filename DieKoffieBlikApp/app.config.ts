@@ -13,6 +13,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY,
   },
   "plugins": [
-    "expo-router"
+    "expo-router",
+    "expo-web-browser"
   ]
 });

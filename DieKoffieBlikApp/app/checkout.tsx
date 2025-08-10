@@ -14,6 +14,8 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
+import PaymentService from './api/paymentServiceApi';
+import * as WebBrowser from 'expo-web-browser';
 
 const { width } = Dimensions.get('window');
 
@@ -173,41 +175,56 @@ export default function CheckoutScreen() {
   const tax = Math.round(subtotal * 0.15);
   const total = subtotal + tax;
 
-  const handlePlaceOrder = () => {
-    if (!customerInfo.name || !customerInfo.phone) {
-      Alert.alert(
-        "Missing Information",
-        "Please fill in your name and phone number",
-        [{ text: "OK", style: "default" }]
-      );
-      return;
-    }
+  const handlePlaceOrder = async () => {
+  if (!customerInfo.name || !customerInfo.phone) {
+    Alert.alert("Missing Information", "Please fill in your name and phone number");
+    return;
+  }
 
-    // Validate phone number format
-    if (customerInfo.phone.length !== 10 || !customerInfo.phone.startsWith('0')) {
-      Alert.alert(
-        "Invalid Phone Number",
-        "Please enter a valid 10-digit phone number starting with 0",
-        [{ text: "OK", style: "default" }]
-      );
-      return;
-    }
+  if (customerInfo.phone.length !== 10 || !customerInfo.phone.startsWith('0')) {
+    Alert.alert("Invalid Phone Number", "Please enter a valid 10-digit phone number starting with 0");
+    return;
+  }
 
-    setIsProcessing(true);
-
-    const generatedOrderNumber = generateOrderNumber(customerInfo.phone);
+  const generatedOrderNumber = generateOrderNumber(customerInfo.phone);
     setOrderNumber(generatedOrderNumber);
-    
-    // Simulate order processing
-    setTimeout(() => {
-      setIsProcessing(false);
-      setShowSuccess(true);
-      
+
+    if (selectedPayment === 'cash') {
+      setIsProcessing(true);
       setTimeout(() => {
-        setShowSuccess(false);
-        router.push('/home');
-      }, 3000);
-    }, 2000);
+        setIsProcessing(false);
+        setShowSuccess(true);
+        setTimeout(() => {
+          setShowSuccess(false);
+          router.push('/home');
+        }, 3000);
+      }, 2000);
+      return;
+    }
+
+    // If card, integrate PayFast
+    if (selectedPayment === 'card') {
+      try {
+        setIsProcessing(true);
+        const res = await PaymentService.initiatePayment(
+          generatedOrderNumber,
+          total,
+          customerInfo
+        );
+
+        setIsProcessing(false);
+
+        if (res.success && res.paymentUrl) {
+          await WebBrowser.openBrowserAsync(res.paymentUrl);
+        } else {
+          Alert.alert("Payment Error", res.message || "Could not start payment.");
+        }
+      } catch (err) {
+        console.error(err);
+        setIsProcessing(false);
+        Alert.alert("Error", "Something went wrong while starting the payment.");
+      }
+    }
   };
 
   function generateOrderNumber(phoneNumber?: string) {
