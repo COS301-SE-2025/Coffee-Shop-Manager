@@ -227,6 +227,35 @@
 				},
 				{
 					"name": "Update Stock Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Has success, updatedItem\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data).to.have.property(\"success\");\r",
+									"    pm.expect(data).to.have.property(\"updatedItem\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"success is true and item matches\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.success).to.eql(true);\r",
+									"\r",
+									"    const reqBody = JSON.parse(pm.request.body.raw)\r",
+									"    pm.expect(data.updatedItem).to.eql(reqBody.item);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [],
