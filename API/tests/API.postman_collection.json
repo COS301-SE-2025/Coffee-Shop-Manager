@@ -671,6 +671,37 @@
 				},
 				{
 					"name": "Get Products",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.length).to.be.greaterThan(0);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each item has correct structure\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    data.forEach(item => {\r",
+									"        pm.expect(item).to.have.property(\"id\").that.is.a(\"string\");\r",
+									"        pm.expect(item).to.have.property(\"name\").that.is.a(\"string\");\r",
+									"        pm.expect(item).to.have.property(\"description\").that.is.a(\"string\");\r",
+									"        pm.expect(item).to.have.property(\"price\").that.is.a(\"number\");\r",
+									"        pm.expect(item).to.have.property(\"stock_quantity\").that.is.a(\"number\");\r",
+									"    });\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
