@@ -720,6 +720,45 @@
 				},
 				{
 					"name": "Get Products With Stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status is 200\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    pm.expect(data.length).to.be.greaterThan(0);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each item has correct structure\", function () {\r",
+									"    const data = pm.response.json();\r",
+									"    data.forEach(product => {\r",
+									"        pm.expect(product).to.have.property(\"id\").that.is.a(\"string\");\r",
+									"        pm.expect(product).to.have.property(\"name\").that.is.a(\"string\");\r",
+									"        pm.expect(product).to.have.property(\"description\").that.is.a(\"string\");\r",
+									"        pm.expect(product).to.have.property(\"price\").that.is.a(\"number\");\r",
+									"        pm.expect(product).to.have.property(\"stock_quantity\").that.is.a(\"number\");\r",
+									"        pm.expect(product).to.have.property(\"ingredients\").that.is.an(\"array\");\r",
+									"\r",
+									"        product.ingredients.forEach(ingredient => {\r",
+									"            pm.expect(ingredient).to.have.property(\"stock_id\").that.is.a(\"string\");\r",
+									"            pm.expect(ingredient).to.have.property(\"item\").that.is.a(\"string\");\r",
+									"            pm.expect(ingredient).to.have.property(\"unit_type\").that.is.a(\"string\");\r",
+									"            pm.expect(ingredient).to.have.property(\"quantity\").that.is.a(\"number\");\r",
+									"        });\r",
+									"    });\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [],
