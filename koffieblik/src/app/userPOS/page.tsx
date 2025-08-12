@@ -193,7 +193,7 @@ export default function OrderPage() {
                       <div className="flex justify-between items-start mb-3">
                         <h3 className="text-xl font-semibold" style={{color: 'var(--primary-3)'}}>{item.name}</h3>
                         <div className="flex items-center" style={{color: 'var(--primary-3)'}}>
-                          <span className="text-lg font-bold">${item.price.toFixed(2)}</span>
+                          <span className="text-lg font-bold">R{item.price.toFixed(2)}</span>
                         </div>
                       </div>
                       <p className="text-gray-600 mb-4">{item.description}</p>
@@ -241,7 +241,7 @@ export default function OrderPage() {
               <div className="bg-white rounded-lg shadow-lg border" style={{borderColor: 'var(--primary-4)'}}>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold mb-4" style={{color: 'var(--primary-3)'}}>
-                    Your Order {cart.length > 0 && `(${cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
+                    Your Order {cart.length > 0 && `(R{cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
                   </h3>
                   
                   {cart.length === 0 ? (
@@ -258,7 +258,7 @@ export default function OrderPage() {
                             </div>
                             <div className="text-right">
                               <p className="font-semibold" style={{color: 'var(--primary-3)'}}>
-                                ${(item.price * item.quantity).toFixed(2)}
+                                R{(item.price * item.quantity).toFixed(2)}
                               </p>
                             </div>
                           </div>
@@ -269,15 +269,15 @@ export default function OrderPage() {
                       <div className="space-y-2 mb-6">
                         <div className="flex justify-between">
                           <span>Subtotal:</span>
-                          <span>${orderSummary.subtotal.toFixed(2)}</span>
+                          <span>R{orderSummary.subtotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
                           <span>Tax:</span>
-                          <span>${orderSummary.tax.toFixed(2)}</span>
+                          <span>R{orderSummary.tax.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between font-bold text-lg border-t pt-2" style={{borderColor: 'var(--primary-4)', color: 'var(--primary-3)'}}>
                           <span>Total:</span>
-                          <span>${orderSummary.total.toFixed(2)}</span>
+                          <span>R{orderSummary.total.toFixed(2)}</span>
                         </div>
                       </div>
 
