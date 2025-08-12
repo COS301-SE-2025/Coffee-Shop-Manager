@@ -21,7 +21,6 @@ interface CartItem extends MenuItem {
 interface OrderSummary {
   items: CartItem[];
   subtotal: number;
-  tax: number;
   total: number;
 }
 
@@ -32,17 +31,17 @@ export default function OrderPage() {
 
   //  menu items -mock data 
   const menuItems: MenuItem[] = [
-    { id: 1, name: 'Espresso', description: 'Rich and bold single shot', price: 2.50, category: 'coffee' },
-    { id: 2, name: 'Cappuccino', description: 'Espresso with steamed milk foam', price: 4.25, category: 'coffee' },
-    { id: 3, name: 'Latte', description: 'Smooth espresso with steamed milk', price: 4.75, category: 'coffee' },
-    { id: 4, name: 'Americano', description: 'Espresso with hot water', price: 3.50, category: 'coffee' },
-    { id: 5, name: 'Mocha', description: 'Chocolate and espresso delight', price: 5.25, category: 'coffee' },
-    { id: 6, name: 'Cold Brew', description: 'Smooth cold-brewed coffee', price: 3.75, category: 'cold' },
-    { id: 7, name: 'Iced Latte', description: 'Chilled latte with ice', price: 4.50, category: 'cold' },
-    { id: 8, name: 'Frappuccino', description: 'Blended coffee drink', price: 5.75, category: 'cold' },
-    { id: 9, name: 'Croissant', description: 'Buttery, flaky pastry', price: 3.25, category: 'food' },
-    { id: 10, name: 'Muffin', description: 'Fresh baked blueberry muffin', price: 2.75, category: 'food' },
-    { id: 11, name: 'Sandwich', description: 'Turkey and cheese on sourdough', price: 7.50, category: 'food' },
+    { id: 1, name: 'Espresso', description: 'Rich and bold single shot', price: 20.00, category: 'coffee' },
+    { id: 2, name: 'Cappuccino', description: 'Espresso with steamed milk foam', price: 25.00, category: 'coffee' },
+    { id: 3, name: 'Latte', description: 'Smooth espresso with steamed milk', price: 22.00, category: 'coffee' },
+    { id: 4, name: 'Americano', description: 'Espresso with hot water', price: 30.00, category: 'coffee' },
+    { id: 5, name: 'Mocha', description: 'Chocolate and espresso delight', price: 30.00, category: 'coffee' },
+    { id: 6, name: 'iced coffee', description: 'Smooth cold-brewed coffee', price: 40.00, category: 'cold' },
+    { id: 7, name: 'Iced Latte', description: 'Chilled latte with ice', price: 47.00, category: 'cold' },
+    { id: 8, name: 'Frappuccino', description: 'Blended coffee drink', price: 40.00, category: 'cold' },
+    { id: 9, name: 'Croissant', description: 'Buttery, flaky pastry', price: 15.00, category: 'food' },
+    { id: 10, name: 'Muffin', description: 'Fresh baked blueberry muffin', price: 15.00, category: 'food' },
+    { id: 11, name: 'Sandwich', description: 'Turkey and cheese on sourdough', price: 25.00, category: 'food' },
   ];
 
   const categories = [
@@ -88,13 +87,12 @@ export default function OrderPage() {
 
   const getOrderSummary = (): OrderSummary => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const tax = subtotal * 0.08; // 8% tax
-    const total = subtotal + tax;
+    
+    const total = subtotal;
     
     return {
       items: cart,
       subtotal,
-      tax,
       total
     };
   };
@@ -272,8 +270,8 @@ export default function OrderPage() {
                           <span>R{orderSummary.subtotal.toFixed(2)}</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Tax:</span>
-                          <span>R{orderSummary.tax.toFixed(2)}</span>
+                          
+                          
                         </div>
                         <div className="flex justify-between font-bold text-lg border-t pt-2" style={{borderColor: 'var(--primary-4)', color: 'var(--primary-3)'}}>
                           <span>Total:</span>
