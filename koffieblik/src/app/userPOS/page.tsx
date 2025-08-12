@@ -45,91 +45,91 @@ export default function OrderPage() {
     { id: 11, name: 'Sandwich', description: 'Turkey and cheese on sourdough', price: 7.50, category: 'food' },
   ];
 
-//   const categories = [
-//     { id: 'coffee', name: 'Hot Coffee'},
-//     { id: 'cold', name: 'Cold Drinks' },
-//     { id: 'food', name: 'Food' },
-//   ];
+  const categories = [
+    { id: 'coffee', name: 'Hot Coffee'},
+    { id: 'cold', name: 'Cold Drinks' },
+    { id: 'food', name: 'Food' },
+  ];
 
-//   const addToCart = (item: MenuItem) => {
-//     setCart(prevCart => {
-//       const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
-//       if (existingItem) {
-//         return prevCart.map(cartItem =>
-//           cartItem.id === item.id
-//             ? { ...cartItem, quantity: cartItem.quantity + 1 }
-//             : cartItem
-//         );
-//       } else {
-//         return [...prevCart, { ...item, quantity: 1 }];
-//       }
-//     });
-//   };
+  const addToCart = (item: MenuItem) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.id === item.id);
+      if (existingItem) {
+        return prevCart.map(cartItem =>
+          cartItem.id === item.id
+            ? { ...cartItem, quantity: cartItem.quantity + 1 }
+            : cartItem
+        );
+      } else {
+        return [...prevCart, { ...item, quantity: 1 }];
+      }
+    });
+  };
 
-//   const removeFromCart = (itemId: number) => {
-//     setCart(prevCart => {
-//       const existingItem = prevCart.find(cartItem => cartItem.id === itemId);
-//       if (existingItem && existingItem.quantity > 1) {
-//         return prevCart.map(cartItem =>
-//           cartItem.id === itemId
-//             ? { ...cartItem, quantity: cartItem.quantity - 1 }
-//             : cartItem
-//         );
-//       } else {
-//         return prevCart.filter(cartItem => cartItem.id !== itemId);
-//       }
-//     });
-//   };
+  const removeFromCart = (itemId: number) => {
+    setCart(prevCart => {
+      const existingItem = prevCart.find(cartItem => cartItem.id === itemId);
+      if (existingItem && existingItem.quantity > 1) {
+        return prevCart.map(cartItem =>
+          cartItem.id === itemId
+            ? { ...cartItem, quantity: cartItem.quantity - 1 }
+            : cartItem
+        );
+      } else {
+        return prevCart.filter(cartItem => cartItem.id !== itemId);
+      }
+    });
+  };
 
-//   const getCartItemQuantity = (itemId: number): number => {
-//     const item = cart.find(cartItem => cartItem.id === itemId);
-//     return item ? item.quantity : 0;
-//   };
+  const getCartItemQuantity = (itemId: number): number => {
+    const item = cart.find(cartItem => cartItem.id === itemId);
+    return item ? item.quantity : 0;
+  };
 
-//   const getOrderSummary = (): OrderSummary => {
-//     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-//     const tax = subtotal * 0.08; // 8% tax
-//     const total = subtotal + tax;
+  const getOrderSummary = (): OrderSummary => {
+    const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+    const tax = subtotal * 0.08; // 8% tax
+    const total = subtotal + tax;
     
-//     return {
-//       items: cart,
-//       subtotal,
-//       tax,
-//       total
-//     };
-//   };
+    return {
+      items: cart,
+      subtotal,
+      tax,
+      total
+    };
+  };
 
-//   const handlePlaceOrder = () => {
-//     setOrderStatus('confirming');
-//     // Simulate order processing
-//     setTimeout(() => {
-//       setOrderStatus('placed');
-//       setCart([]); // Clear cart after order is placed
-//     }, 2000);
-//   };
+  const handlePlaceOrder = () => {
+    setOrderStatus('confirming');
+    // Simulate order processing
+    setTimeout(() => {
+      setOrderStatus('placed');
+      setCart([]); // Clear cart after order is placed
+    }, 2000);
+  };
 
-//   const filteredItems = menuItems.filter(item => item.category === activeCategory);
-//   const orderSummary = getOrderSummary();
+  const filteredItems = menuItems.filter(item => item.category === activeCategory);
+  const orderSummary = getOrderSummary();
 
-//   if (orderStatus === 'placed') {
-//     return (
-//       <div className="min-h-screen flex items-center justify-center">
-//         <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-//           <div className="mb-4">
-//             <span className="text-6xl">✅</span>
-//           </div>
-//           <h2 className="text-2xl font-bold mb-2" style={{color: 'var(--primary-3)'}}>Order Placed Successfully!</h2>
-//           <p className="text-gray-600 mb-4">Your order is being prepared. Estimated time: 15-20 minutes</p>
-//           <button 
-//             onClick={() => setOrderStatus('ordering')} 
-//             className="btn"
-//           >
-//             Place Another Order
-//           </button>
-//         </div>
-//       </div>
-//     );
-//   }
+  if (orderStatus === 'placed') {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+          <div className="mb-4">
+            <span className="text-6xl">✅</span>
+          </div>
+          <h2 className="text-2xl font-bold mb-2" style={{color: 'var(--primary-3)'}}>Order Placed Successfully!</h2>
+          <p className="text-gray-600 mb-4">Your order is being prepared. Estimated time: 15-20 minutes</p>
+          <button 
+            onClick={() => setOrderStatus('ordering')} 
+            className="btn"
+          >
+            Place Another Order
+          </button>
+        </div>
+      </div>
+    );
+  }
 
 //   return (
 //     <div className="min-h-screen" style={{backgroundColor: 'var(--background)'}}>
