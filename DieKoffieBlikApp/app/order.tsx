@@ -183,6 +183,9 @@ export default function OrderScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   
+  // Add flatListRef to control scrolling
+  const flatListRef = React.useRef<FlatList>(null);
+  
   // Memoized filtered items
   const filteredItems = useMemo(() => {
     let items = menuItems.filter(item => item.category === selectedCategory);
@@ -227,6 +230,13 @@ export default function OrderScreen() {
       })
     ]).start();
   }, []);
+
+  // Reset scroll position when category or search changes
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+    }
+  }, [selectedCategory, searchQuery]);
 
   const addToCart = useCallback((itemId: string) => {
     if (Platform.OS === 'ios') {
@@ -480,6 +490,7 @@ export default function OrderScreen() {
 
       {/* Menu Items */}
       <FlatList
+        ref={flatListRef}
         data={filteredItems}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
@@ -495,11 +506,11 @@ export default function OrderScreen() {
             <Text style={styles.emptyText}>No items found</Text>
           </View>
         }
-        getItemLayout={(data, index) => ({
-          length: 160,
-          offset: 160 * index,
-          index,
-        })}
+        // Removed getItemLayout to prevent positioning issues with filtered data
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+          autoscrollToTopThreshold: 10
+        }}
       />
 
       {/* Floating Cart */}

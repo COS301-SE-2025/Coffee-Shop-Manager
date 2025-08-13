@@ -36,68 +36,107 @@ export default function HomeScreen() {
     "Coffee is my love language ❤️"
   ];
 
-  const coffeeFacts = [
-    "The word 'coffee' comes from the Arabic word 'qahwa' 🌍",
-    "Espresso has less caffeine than drip coffee per cup! ⚡",
-    "Coffee was first discovered by goats in Ethiopia 🐐",
-    "Finland consumes the most coffee per capita globally 🇫🇮",
-    "Coffee beans are actually seeds, not beans! 🌱",
-    "The most expensive coffee comes from elephant dung 🐘"
-  ];
+  
+const coffeeFacts = [
+  "The word 'coffee' comes from the Arabic word 'qahwa' 🌍",
+  "Espresso has less caffeine than drip coffee per cup! ⚡",
+  "Coffee was first discovered by goats in Ethiopia 🐐",
+  "Finland consumes the most coffee per capita globally 🇫🇮",
+  "Coffee beans are actually seeds, not beans! 🌱",
+  "The most expensive coffee comes from elephant dung 🐘",
+  "Brazil is the largest producer of coffee in the world 🇧🇷",
+  "Decaf coffee still contains small amounts of caffeine ☕",
+  "Coffee is the second most traded commodity after oil 🛢️",
+  "Cold brew coffee is less acidic than hot brewed coffee ❄️",
+  "Adding milk to coffee can slow down the effects of caffeine 🥛",
+  "Instant coffee was invented in 1901 by Japanese scientist Satori Kato ⏱️",
+  "A typical coffee tree can live up to 100 years 🌳",
+  "There are two main coffee species: Arabica and Robusta 🌿",
+  "Drinking coffee may help improve memory and alertness 🧠",
+  "Turkey has one of the oldest coffee brewing methods: Turkish coffee 🇹🇷",
+  "The world’s largest cup of coffee was over 22,000 liters in South Korea ☕",
+  "Coffee cherries turn bright red when they are ripe for picking 🍒",
+  "The first webcam was invented at Cambridge University to monitor a coffee pot 🎥",
+  "Beethoven was obsessed with coffee and counted 60 beans per cup he drank 🎼",
+  "Coffee was banned in Mecca in the 16th century because of its stimulating effect 🚫",
+  "New Yorkers drink seven times more coffee than people in other U.S. cities 🗽",
+  "The word 'cappuccino' comes from the brown robes worn by Capuchin monks 🤎",
+  "Coffee was originally chewed, not sipped, by mixing ground beans with fat 🥩",
+  "Italy has over 150,000 coffee bars across the country 🇮🇹",
+  "Luwak coffee, made from civet droppings, is one of the priciest coffees 🐾",
+  "Coffee plants can grow up to 30 feet tall in the wild 🌴",
+  "The Boston Tea Party helped popularize coffee in the United States 🇺🇸",
+  "Dark roast coffee has less caffeine than light roast coffee due to roasting 🔥",
+  "Coffee houses were called 'penny universities' in 17th century England 🎓",
+  "Coffee grounds can be used as natural fertilizer and insect repellent 🌾",
+  "Hawaii is the only U.S. state that grows coffee commercially 🌺",
+  "Coffee was first brought to Europe through Venice in the 1600s 🚢",
+  "A single coffee tree yields about one pound of roasted coffee per year 📦",
+  "Norway ranks among the highest consumers of coffee per capita in the world 🇳🇴",
+  "Caffeine is a natural pesticide produced by the coffee plant 🐛",
+  "The Americano was created by soldiers in WWII diluting espresso with water 💧",
+  "In Japan, there are coffee spas where you can literally bathe in coffee 🛁",
+  "Coffee is believed to have originated around the 9th century in Ethiopia ⏳",
+  "The average barista makes about 200 cups of coffee per day ☕",
+  "Coffee drinkers tend to live longer according to several studies ⌛",
+  "The largest coffee-producing continent is South America 🌎",
+  "Coffee foam (crema) is a sign of freshness and quality in espresso 💨",
+  "Coffee can enhance physical performance by increasing adrenaline levels 🏃‍♂️",
+  "Black coffee contains almost zero calories, making it diet-friendly 🥤",
+  "The smell of coffee alone can help reduce stress and improve alertness 😌",
+  "Vietnam is the world’s second-largest coffee producer 🇻🇳",
+  "Coffee beans are roasted at temperatures between 370°F and 540°F (188°C–282°C) 🌡️",
+  "There are over 25 million coffee farmers around the world 🌍"
+];
+
 
   const featuredItems = [
     { 
       name: "Signature Cappuccino", 
       price: "R45", 
-      icon: "cafe-outline", 
+      icon: "cafe-outline" as const, 
       popular: true
     },
     { 
       name: "Double Espresso", 
       price: "R35", 
-      icon: "flash-outline", 
+      icon: "flash-outline" as const, 
       popular: false
     },
     { 
       name: "Vanilla Latte", 
       price: "R50", 
-      icon: "heart-outline", 
+      icon: "heart-outline" as const, 
       popular: true
     },
     { 
       name: "Iced Americano", 
       price: "R40", 
-      icon: "snow-outline", 
+      icon: "snow-outline" as const, 
       popular: false
     }
   ];
 
+  // Removed profile quick action as requested
   const quickActions = [
     { 
       title: "Order Coffee", 
-      icon: "cart", 
+      icon: "cart" as const, 
       route: "/order", 
       primary: true,
       description: "Browse menu & order"
     },
     { 
-      title: "My Account", 
-      icon: "person-circle", 
-      route: "/login", 
-      primary: false,
-      description: "Login or register"
-    },
-    { 
       title: "Order History", 
-      icon: "time", 
+      icon: "time" as const, 
       route: "/history", 
       primary: false,
       description: "View past orders"
     },
     { 
-      title: "Favorites", 
-      icon: "heart", 
-      route: "/favorites", 
+      title: "Favourites", 
+      icon: "heart" as const, 
+      route: "/favourites", 
       primary: false,
       description: "Saved items"
     }
@@ -172,9 +211,22 @@ export default function HomeScreen() {
           <Pressable style={styles.navButton} android_ripple={{ color: '#78350f20' }}>
             <Ionicons name="search" size={22} color="#78350f" />
           </Pressable>
-          <Pressable style={styles.navButton} android_ripple={{ color: '#78350f20' }}>
+          <Pressable 
+            style={styles.navButton} 
+            android_ripple={{ color: '#78350f20' }}
+            onPress={() => router.push('/notifications')}
+          >
             <Ionicons name="notifications-outline" size={22} color="#78350f" />
-            <View style={styles.notificationBadge} />
+            {/* <View style={styles.notificationBadge} />       only when new notifications */}
+          </Pressable>
+
+          {/* Added profile icon as requested */}
+          <Pressable 
+            style={styles.profileButton} 
+            android_ripple={{ color: '#78350f20' }}
+            onPress={() => router.push('/profile')}
+          >
+            <Ionicons name="person-circle" size={28} color="#78350f" />
           </Pressable>
         </View>
       </View>
@@ -228,10 +280,9 @@ export default function HomeScreen() {
               ]}
             >
               <Ionicons name="cafe" size={60} color="#78350f" />
-               </Animated.View>
-            </View>
+            </Animated.View>
           </View>
-        
+        </View>
       </LinearGradient>
     </Animated.View>
   );
@@ -257,7 +308,7 @@ export default function HomeScreen() {
               action.primary && styles.primaryIconContainer
             ]}>
               <Ionicons 
-                name={action.icon as any} 
+                name={action.icon} 
                 size={24} 
                 color={action.primary ? "#fff" : "#78350f"} 
               />
@@ -303,15 +354,8 @@ export default function HomeScreen() {
             style={styles.featuredCard}
             android_ripple={{ color: '#78350f20' }}
           >
-            {item.popular && (
-              <View style={styles.popularBadge}>
-                <Ionicons name="star" size={10} color="#fff" />
-                <Text style={styles.popularText}>Popular</Text>
-              </View>
-            )}
-            
             <View style={styles.featuredIconContainer}>
-              <Ionicons name={item.icon as any} size={32} color="#78350f" />
+              <Ionicons name={item.icon} size={32} color="#78350f" />
             </View>
             
             <Text style={styles.featuredItemName}>{item.name}</Text>
@@ -351,8 +395,6 @@ export default function HomeScreen() {
     </Animated.View>
   );
 
-
-
   return (
     <SafeAreaView style={styles.container}>
       <StatusBar 
@@ -378,11 +420,10 @@ export default function HomeScreen() {
         <FeaturedItems />
         <CoffeeFactCard />
         
-        
         {/* Footer */}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Made with ❤️ and lots of ☕</Text>
-          <Text style={styles.footerSubtext}>© 2024 DieKoffieBlik</Text>
+          <Text style={styles.footerSubtext}>© 2025 DieKoffieBlik</Text>
         </View>
       </Animated.ScrollView>
     </SafeAreaView>
@@ -457,6 +498,15 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: 8,
     position: 'relative',
+  },
+  profileButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 8,
+    backgroundColor: '#fff7ed',
   },
   notificationBadge: {
     position: 'absolute',
@@ -646,24 +696,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
   },
-  discountBadge: {
-    position: 'absolute',
-    top: -6,
-    right: -6,
-    backgroundColor: '#ef4444',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    zIndex: 1,
-  },
-  newBadge: {
-    backgroundColor: '#10b981',
-  },
-  discountText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-  },
   popularBadge: {
     position: 'absolute',
     top: -6,
@@ -703,11 +735,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 8,
-  },
-  ratingText: {
-    fontSize: 12,
-    color: '#6b7280',
-    marginLeft: 4,
   },
   featuredItemPrice: {
     fontSize: 16,
@@ -760,38 +787,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#6b7280',
     lineHeight: 20,
-  },
-  
-  // Stats Section
-  statsSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    marginTop: 32,
-  },
-  statCard: {
-    backgroundColor: '#fff',
-    flex: 1,
-    padding: 20,
-    borderRadius: 16,
-    alignItems: 'center',
-    marginHorizontal: 6,
-    elevation: 3,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-  },
-  statNumber: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#78350f',
-    marginBottom: 4,
-  },
-  statLabel: {
-    fontSize: 12,
-    color: '#6b7280',
-    textAlign: 'center',
   },
   
   // Footer
