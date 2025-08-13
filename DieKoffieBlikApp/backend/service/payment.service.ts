@@ -24,14 +24,14 @@ class PaymentService {
       const paymentData = {
         merchant_id: this.MERCHANT_ID,
         merchant_key: this.MERCHANT_KEY,
-        return_url: 'https://www.google.com/success', // Basic return URL
-        cancel_url: 'https://www.google.com/cancel',  // Basic cancel URL
-        notify_url: 'https://www.example.com/notify', // Webhook URL (not needed for basic test)
+        return_url: 'https://payment-result/success',
+        cancel_url: 'https://payment-result/failed',
+        notify_url: 'https://your-backend.com/api/payfast/notify', // webhook for backend verification
         name_first: firstName,
         name_last: lastName,
         email_address: email,
         m_payment_id: orderNumber,
-        amount: total.toFixed(2), // PayFast wants "35.00" format
+        amount: total.toFixed(2),
         item_name: 'Coffee Shop Order',
         item_description: `Order ${orderNumber} - ${customerInfo.name}`
       };

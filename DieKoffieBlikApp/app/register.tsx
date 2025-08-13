@@ -8,13 +8,13 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import CoffeeLoading from './loading';
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -573,7 +573,7 @@ export default function RegisterScreen() {
                 }
               >
                 {isLoading ? (
-                  <ActivityIndicator color="white" />
+                  <CoffeeLoading visible={isLoading} />
                 ) : (
                   <>
                     <Text style={styles.nextButtonText}>

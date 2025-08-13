@@ -11,11 +11,11 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import CoffeeLoading from './loading';
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
@@ -118,7 +118,6 @@ export default function LoginScreen({
       if (onLogin) {
         onLogin(email, password, rememberMe);
       } else {
-        Alert.alert('Success', 'Login successful!');
         console.log('Login successful', { email, password: '********', rememberMe });
       }
 
@@ -279,7 +278,9 @@ export default function LoginScreen({
                 disabled={!isFormValid() || isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="white" size="small" />
+                  <Text style={styles.loginButtonText}>
+                    Login to Account
+                  </Text>
                 ) : (
                   <>
                     <Text style={styles.loginButtonText}>
@@ -289,6 +290,7 @@ export default function LoginScreen({
                   </>
                 )}
               </TouchableOpacity>
+              <CoffeeLoading visible={isLoading} />
 
               {/* Create account link */}
               <View style={styles.signupContainer}>
