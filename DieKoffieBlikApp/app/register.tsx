@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { supabase } from './lib/Supabase'
+import { supabase } from '../lib/supabase'
 import {
   View,
   Text,
@@ -8,13 +8,13 @@ import {
   ScrollView,
   StyleSheet,
   Alert,
-  ActivityIndicator,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import CoffeeLoading from './loading';
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -222,9 +222,9 @@ export default function RegisterScreen() {
         // 2. Insert into your public.users table
         const { error: userInsertError } = await supabase.from('users').insert([
           {
-            auth_user_id: user.id,
+            username: firstName,
             email: normalizedEmail,
-            role: "user",
+            password: password
             // add other required fields with defaults if needed
           }
         ]);
@@ -240,7 +240,6 @@ export default function RegisterScreen() {
         const { error: profileError } = await supabase.from('user_profiles').insert([
           {
             user_id: user.id,
-            display_name: displayName,
             phone_number: phoneNumber,
             // other profile fields
           }
@@ -574,7 +573,7 @@ export default function RegisterScreen() {
                 }
               >
                 {isLoading ? (
-                  <ActivityIndicator color="white" />
+                  <CoffeeLoading visible={isLoading} />
                 ) : (
                   <>
                     <Text style={styles.nextButtonText}>

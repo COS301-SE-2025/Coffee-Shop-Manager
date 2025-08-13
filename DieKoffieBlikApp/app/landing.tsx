@@ -10,6 +10,7 @@ import {
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import NotificationService from '../services/NotificationService';
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -59,7 +60,10 @@ export default function LandingScreen() {
           {/* Guest Access */}
           <TouchableOpacity
             style={styles.guestButton}
-            onPress={() => router.push('/home')}
+            onPress={() => {
+              NotificationService.showNotification("You are a guest!!");
+              router.push('/home');
+            }}
           >
             <Text style={styles.guestButtonText}>Continue as Guest</Text>
           </TouchableOpacity>

@@ -183,6 +183,9 @@ export default function OrderScreen() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   
+  // Add flatListRef to control scrolling
+  const flatListRef = React.useRef<FlatList>(null);
+  
   // Memoized filtered items
   const filteredItems = useMemo(() => {
     let items = menuItems.filter(item => item.category === selectedCategory);
@@ -227,6 +230,13 @@ export default function OrderScreen() {
       })
     ]).start();
   }, []);
+
+  // Reset scroll position when category or search changes
+  useEffect(() => {
+    if (flatListRef.current) {
+      flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+    }
+  }, [selectedCategory, searchQuery]);
 
   const addToCart = useCallback((itemId: string) => {
     if (Platform.OS === 'ios') {
@@ -338,12 +348,6 @@ export default function OrderScreen() {
         }
       ]}
     >
-      {item.popular && (
-        <View style={styles.popularBadge}>
-          <Ionicons name="trending-up" size={10} color="#fff" />
-          <Text style={styles.popularText}>Popular</Text>
-        </View>
-      )}
       
       <View style={styles.cardContent}>
         <View style={styles.itemImageContainer}>
@@ -369,19 +373,6 @@ export default function OrderScreen() {
                 <Text style={styles.tagText}>{tag}</Text>
               </View>
             ))}
-          </View>
-          
-          <View style={styles.ratingPriceContainer}>
-            <View style={styles.ratingContainer}>
-              <View style={styles.starsContainer}>
-                {renderStars(item.rating)}
-              </View>
-              <Text style={styles.ratingText}>
-                {item.rating} ({item.reviews})
-              </Text>
-            </View>
-            
-            <Text style={styles.itemPrice}>R{item.price}</Text>
           </View>
         </View>
         
@@ -499,6 +490,7 @@ export default function OrderScreen() {
 
       {/* Menu Items */}
       <FlatList
+        ref={flatListRef}
         data={filteredItems}
         keyExtractor={(item) => item.id}
         contentContainerStyle={styles.list}
@@ -514,11 +506,11 @@ export default function OrderScreen() {
             <Text style={styles.emptyText}>No items found</Text>
           </View>
         }
-        getItemLayout={(data, index) => ({
-          length: 160,
-          offset: 160 * index,
-          index,
-        })}
+        // Removed getItemLayout to prevent positioning issues with filtered data
+        maintainVisibleContentPosition={{
+          minIndexForVisible: 0,
+          autoscrollToTopThreshold: 10
+        }}
       />
 
       {/* Floating Cart */}
@@ -538,6 +530,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#78350f',
     paddingVertical: 16,
     paddingHorizontal: 20,
+    paddingTop: 30,
     flexDirection: 'row',
     alignItems: 'center',
     elevation: 8,
