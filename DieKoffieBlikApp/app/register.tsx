@@ -222,10 +222,9 @@ export default function RegisterScreen() {
         // 2. Insert into your public.users table
         const { error: userInsertError } = await supabase.from('users').insert([
           {
-            username: user.id,
+            username: firstName,
             email: normalizedEmail,
-            password: password,
-            role: "user",
+            password: password
             // add other required fields with defaults if needed
           }
         ]);
@@ -241,7 +240,6 @@ export default function RegisterScreen() {
         const { error: profileError } = await supabase.from('user_profiles').insert([
           {
             user_id: user.id,
-            display_name: displayName,
             phone_number: phoneNumber,
             // other profile fields
           }
