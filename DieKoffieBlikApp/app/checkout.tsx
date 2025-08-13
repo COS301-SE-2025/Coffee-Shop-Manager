@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter, useLocalSearchParams } from 'expo-router';
-import PaymentService from './api/paymentServiceApi';
+import PaymentService from '../backend/service/payment.service';
 import * as WebBrowser from 'expo-web-browser';
 
 const { width } = Dimensions.get('window');
@@ -206,6 +206,7 @@ export default function CheckoutScreen() {
     if (selectedPayment === 'card') {
       try {
         setIsProcessing(true);
+        
         const res = await PaymentService.initiatePayment(
           generatedOrderNumber,
           total,
@@ -215,12 +216,36 @@ export default function CheckoutScreen() {
         setIsProcessing(false);
 
         if (res.success && res.paymentUrl) {
-          await WebBrowser.openBrowserAsync(res.paymentUrl);
+          console.log('Opening PayFast payment page...');
+          
+          // Open PayFast payment page
+          const result = await WebBrowser.openBrowserAsync(res.paymentUrl, {
+            presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
+            showTitle: true,
+            toolbarColor: '#78350f',
+            controlsColor: '#fff',
+          });
+          
+          // Handle the result
+          if (result.type === 'cancel') {
+            Alert.alert('Payment Cancelled', 'You cancelled the payment. Your order was not placed.');
+          } else if (result.type === 'dismiss') {
+            // User closed the browser - we can't know if payment succeeded
+            Alert.alert(
+              'Payment Status Unknown', 
+              'The payment window was closed. If you completed the payment, your order will be processed.',
+              [
+                { text: 'OK', onPress: () => router.push('/home') }
+              ]
+            );
+          }
+          
         } else {
           Alert.alert("Payment Error", res.message || "Could not start payment.");
         }
+        
       } catch (err) {
-        console.error(err);
+        console.error('Payment error:', err);
         setIsProcessing(false);
         Alert.alert("Error", "Something went wrong while starting the payment.");
       }
