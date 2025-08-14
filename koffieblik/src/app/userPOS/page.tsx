@@ -130,9 +130,9 @@ export default function OrderPage() {
   }
 
    return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--background)'}}>
+    <div className="min-h-screen" style={{backgroundColor: 'var(--primary-4)'}}>
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b" style={{backgroundColor: 'var(--background)', borderColor: 'var(--primary-4)'}}>
+      <header className="sticky top-0 z-50 border-b" style={{backgroundColor: 'var(--primary-4)', borderColor: 'var(--primary-4)'}}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1 className="text-2xl font-bold" style={{color: 'var(--primary-3)'}}>Order Online</h1>
@@ -239,7 +239,7 @@ export default function OrderPage() {
               <div className="bg-white rounded-lg shadow-lg border" style={{borderColor: 'var(--primary-4)'}}>
                 <div className="p-6">
                   <h3 className="text-xl font-semibold mb-4" style={{color: 'var(--primary-3)'}}>
-                    Your Order {cart.length > 0 && `(R{cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
+                    Your Order {cart.length > 0 && `(${cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
                   </h3>
                   
                   {cart.length === 0 ? (
