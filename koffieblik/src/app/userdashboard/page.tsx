@@ -44,7 +44,7 @@ export default function DashboardPage() {
         }
     }, [router]);
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
     async function fetchOrders() {
         setLoading(true);

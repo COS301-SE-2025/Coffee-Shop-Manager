@@ -22,7 +22,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const [formData, setFormData] = useState({
     item: '',
     quantity: '',

@@ -40,7 +40,7 @@ export default function SignUpPage() {
     const [passwordError, setPasswordError] = useState('');
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
-    const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
     const isFormValid = () => {
         return (

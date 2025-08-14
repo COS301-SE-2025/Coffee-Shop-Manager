@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
 
   const isFormValid = () => email !== '' && password !== '' && !emailError;

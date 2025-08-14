@@ -22,7 +22,7 @@ export default function POSPage() {
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
-const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     const fetchProducts = async () => {
       try {

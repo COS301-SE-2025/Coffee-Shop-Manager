@@ -43,7 +43,7 @@ export default function Navbar() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
-   const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
 
     fetch( `${API_BASE_URL}/check-token`, {

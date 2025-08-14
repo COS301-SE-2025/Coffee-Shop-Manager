@@ -26,7 +26,7 @@ interface Order {
 export default function ManageOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
   const updateOrderStatus = async (
     orderId: string,
