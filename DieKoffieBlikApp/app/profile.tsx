@@ -18,21 +18,20 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { supabase } from '../lib/supabase'; // Import your supabase client
 
 interface UserProfile {
-  user_id: string;
+  id: string;
   username: string;
   email: string;
   last_name: string;
+  password: string;
   phone_number: string;
   date_of_birth: string;
   created_at: string;
-  // Add any other fields from your user_profiles table
 }
 
 interface UserData {
   name: string;
   email: string;
   phone: string;
-  memberSince: string;
   totalOrders: number;
   favoriteItems: number;
   loyaltyPoints: number;
@@ -83,33 +82,36 @@ export default function ProfileScreen() {
         throw new Error(`Profile error: ${profileError.message}`);
       }
 
-      // You can also fetch additional data like order history, favorites, etc.
-      const [ordersResult, favoritesResult] = await Promise.all([
-        // Fetch total orders count (adjust table name as needed)
+      // Fetch additional data based on your actual tables
+      const [ordersResult, stockResult] = await Promise.all([
+        // Fetch total orders count from orders table
         supabase
-          .from('orders') // Replace with your actual orders table name
+          .from('orders')
           .select('id', { count: 'exact' })
-          .eq('user_email', user.email),
+          .eq('user_id', userProfile.id), 
         
-        // Fetch favorites count (adjust table name as needed)  
+
         supabase
-          .from('favorites') // Replace with your actual favorites table name
+          .from('products')
           .select('id', { count: 'exact' })
-          .eq('user_email', user.email)
-      ]);
+          .limit(10),
+          
+        // Fetch user profile data
+        supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userProfile.id)
+            ]);
 
       // Format the data for your component
       const formattedUserData: UserData = {
         name: `${userProfile.username} ${userProfile.last_name}`,
         email: userProfile.email,
         phone: userProfile.phone_number || 'Not provided',
-        memberSince: new Date(userProfile.created_at).toLocaleDateString('en-US', { 
-          year: 'numeric', 
-          month: 'long' 
-        }),
+        
         totalOrders: ordersResult.count || 0,
-        favoriteItems: favoritesResult.count || 0,
-        loyaltyPoints: 1250 // You can calculate this based on orders or store it separately
+        favoriteItems: stockResult.count || 0, // You can change this to actual favorites later
+        loyaltyPoints: 0
       };
 
       setUserData(formattedUserData);
@@ -204,7 +206,7 @@ export default function ProfileScreen() {
   const statsData = [
     { label: "Total Orders", value: userData.totalOrders.toString(), icon: "receipt" as const },
     { label: "Favorites", value: userData.favoriteItems.toString(), icon: "heart" as const },
-    { label: "Loyalty Points", value: userData.loyaltyPoints.toString(), icon: "star" as const }
+    { label: "Loyalty Points", value: userData.loyaltyPoints, icon: "star" as const }
   ];
 
   const NavBar = () => (
@@ -245,7 +247,6 @@ export default function ProfileScreen() {
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{userData.name}</Text>
           <Text style={styles.profileEmail}>{userData.email}</Text>
-          <Text style={styles.memberSince}>Member since {userData.memberSince}</Text>
         </View>
       </LinearGradient>
     </View>

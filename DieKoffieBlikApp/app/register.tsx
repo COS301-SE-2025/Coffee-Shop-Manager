@@ -309,6 +309,8 @@ export default function RegisterScreen() {
         const { error: profileError } = await supabase.from('user_profiles').insert([
           {
             user_id: user.id,
+            phone_number: phoneNumber,
+            date_of_birth: dateOfBirth.toISOString().split('T')[0] // Format as YYYY-MM-DD
             // Add other profile fields as needed
           }
         ]);
