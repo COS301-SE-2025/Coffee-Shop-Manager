@@ -43,9 +43,10 @@ export default function Navbar() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
-
+   const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
   useEffect(() => {
-    fetch('http://localhost:5000/check-token', {
+
+    fetch( `${API_BASE_URL}/check-token`, {
       credentials: 'include',
     })
       .then(res => {
@@ -87,7 +88,7 @@ export default function Navbar() {
 
   const handleLogout = async () => {
     try {
-      const res = await fetch('http://localhost:5000/logout', {
+      const res = await fetch(`${API_BASE_URL}/logout`, {
         method: 'POST',
         credentials: 'include',
       });

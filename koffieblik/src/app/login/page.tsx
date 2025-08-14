@@ -22,7 +22,7 @@ export default function LoginPage() {
   const [emailError, setEmailError] = useState('');
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
   const router = useRouter();
 
   const isFormValid = () => email !== '' && password !== '' && !emailError;
@@ -38,7 +38,7 @@ export default function LoginPage() {
     if (isEmailValid) {
       setIsLoading(true);
       try {
-        const response = await fetch('http://localhost:5000/login', {
+        const response = await fetch(`${API_BASE_URL}/login`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ email, password }),
