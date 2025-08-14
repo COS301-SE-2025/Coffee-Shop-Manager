@@ -25,6 +25,7 @@ interface OrderSummary {
 }
 
 export default function OrderPage() {
+    const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('coffee');
   const [orderStatus, setOrderStatus] = useState<'ordering' | 'confirming' | 'placed'>('ordering');
@@ -49,6 +50,29 @@ export default function OrderPage() {
     { id: 'cold', name: 'Cold Drinks' },
     { id: 'food', name: 'Food' },
   ];
+
+   useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await fetch('http://localhost:5000/getProducts', {
+          credentials: 'include',
+        });
+        const data = await res.json();
+        if (data.success) {
+          setMenu(data.products);
+        } else {
+          console.error('Failed to load products:', data.error);
+        }
+      } catch (err) {
+        console.error('Error fetching products:', err);
+      }
+    };
+
+    fetchProducts();
+  }, []);
+
+
+  
 
   const addToCart = (item: MenuItem) => {
     setCart(prevCart => {
