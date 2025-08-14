@@ -35,9 +35,14 @@ export default function DashboardPage() {
     const [showOrder, setShowOrders] = useState(false);
     const [showPoints, setShowPoints] = useState(false);
     const [loading, setLoading] = useState(false);
+    const router = useRouter();
 
-
-
+    useEffect(() => {
+        const role = localStorage.getItem('role');
+        if (role !== 'user') {
+            router.replace('/login');
+        }
+    }, [router]);
 
 
     async function fetchOrders() {

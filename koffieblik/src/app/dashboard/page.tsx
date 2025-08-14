@@ -36,7 +36,12 @@ export default function DashboardPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-
+useEffect(() => {
+        const role = localStorage.getItem('role');
+        if (role !== 'admin') {
+            router.replace('/login');
+        }
+    }, [router]);
 
 
     useEffect(() => {
