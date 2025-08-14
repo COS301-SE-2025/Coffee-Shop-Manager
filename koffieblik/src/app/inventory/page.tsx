@@ -22,6 +22,7 @@ export default function InventoryPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
   const [formData, setFormData] = useState({
     item: '',
     quantity: '',
@@ -33,7 +34,7 @@ export default function InventoryPage() {
   useEffect(() => {
     const fetchStock = async () => {
       try {
-        const response = await fetch('http://localhost:5000/get_stock', {
+        const response = await fetch(`${API_BASE_URL}/get_stock`, {
           credentials: 'include',
         });
         const data = await response.json();
@@ -67,7 +68,7 @@ export default function InventoryPage() {
     };
 
     try {
-      const response = await fetch('http://localhost:5000/update_stock', {
+      const response = await fetch(`${API_BASE_URL}/update_stock`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
