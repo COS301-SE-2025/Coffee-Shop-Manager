@@ -142,39 +142,39 @@ export default function Navbar() {
   }
 
 
-  const handleTabNavigation = (tab: string) => {
-    setSelectedTab(tab);
+  // const handleTabNavigation = (tab: string) => {
+  //   setSelectedTab(tab);
 
-    switch (tab) {
-      case 'Dashboard':
-        if (role === 'user') {
-          router.push('/userdashboard');
-        } else {
-          router.push('/dashboard');
-        }
-        break;
-      case 'Inventory':
-        router.push('/inventory');
-        break;
-      case 'Order Here':
-        router.push('/userpos');
-        break;
-      case 'Reports':
-        router.push('/reports');
-        break;
-      case 'pos':
-        router.push('/pos');
-        break;
-      case 'manage':
-        router.push('/manage');
-        break;
-      case 'Help':
-        router.push('/help');
-        break;
-      default:
-        break;
-    }
-  };
+  //   switch (tab) {
+  //     case 'Dashboard':
+  //       if (role === 'user') {
+  //         router.push('/userdashboard');
+  //       } else {
+  //         router.push('/dashboard');
+  //       }
+  //       break;
+  //     case 'Inventory':
+  //       router.push('/inventory');
+  //       break;
+  //     case 'Order Here':
+  //       router.push('/userPOS');
+  //       break;
+  //     case 'Reports':
+  //       router.push('/reports');
+  //       break;
+  //     case 'pos':
+  //       router.push('/pos');
+  //       break;
+  //     case 'manage':
+  //       router.push('/manage');
+  //       break;
+  //     case 'Help':
+  //       router.push('/help');
+  //       break;
+  //     default:
+  //       break;
+  //   }
+  // };
 
 
   return (
@@ -236,7 +236,7 @@ export default function Navbar() {
               if (role === 'user') {
                 switch (tab) {
                   case 'Dashboard': return '/userdashboard';
-                  case 'Order Here': return '/userpos';
+                  case 'Order Here': return '/userPOS';
                 }
               }
               switch (tab) {

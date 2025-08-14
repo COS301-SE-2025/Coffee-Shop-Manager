@@ -44,11 +44,12 @@ export default function DashboardPage() {
         }
     }, [router]);
 
+    const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
 
     async function fetchOrders() {
         setLoading(true);
         try {
-            const response = await fetch('http://localhost:5000/get_orders', {
+            const response = await fetch(`${API_BASE_URL}/get_orders`, {
                 method: 'GET',
                 headers: {
                     'Content-Type': 'application/json'
