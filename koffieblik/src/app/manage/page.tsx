@@ -26,13 +26,14 @@ interface Order {
 export default function ManageOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
+  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
 
   const updateOrderStatus = async (
     orderId: string,
     newStatus: 'completed' | 'cancelled' | 'pending'
   ) => {
     try {
-      const res = await fetch(`http://localhost:5000/update_order_status`, {
+      const res = await fetch(`${API_BASE_URL}/update_order_status`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -60,7 +61,7 @@ export default function ManageOrdersPage() {
   useEffect(() => {
     const fetchOrders = async () => {
       try {
-        const res = await fetch('http://localhost:5000/get_orders', {
+        const res = await fetch(`${API_BASE_URL}/get_orders`, {
           credentials: 'include',
         });
         const data = await res.json();

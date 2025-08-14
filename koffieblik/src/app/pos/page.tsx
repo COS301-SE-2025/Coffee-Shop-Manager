@@ -22,11 +22,11 @@ export default function POSPage() {
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
-
+const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
   useEffect(() => {
     const fetchProducts = async () => {
       try {
-        const res = await fetch('http://localhost:5000/getProducts', {
+        const res = await fetch(`${API_BASE_URL}/getProducts`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -69,13 +69,13 @@ export default function POSPage() {
 
     const payload = {
       products: cart.map((item) => ({
-        name: item.name,
+        product: item.name,
         quantity: item.quantity,
       })),
     };
 
     try {
-      const res = await fetch('http://localhost:5000/create_order', {
+      const res = await fetch(`${API_BASE_URL}/create_order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',

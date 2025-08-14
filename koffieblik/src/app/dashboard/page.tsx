@@ -36,13 +36,18 @@ export default function DashboardPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
+useEffect(() => {
+        const role = localStorage.getItem('role');
+        if (role !== 'admin') {
+            router.replace('/login');
+        }
+    }, [router]);
 
-
-
+   const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
     useEffect(() => {
         async function fetchOrders() {
             try {
-                const response = await fetch('http://localhost:5000/get_orders', {
+                const response = await fetch(`${API_BASE_URL}/get_orders`, {
                     method: 'GET',
                     headers: {
                         'Content-Type': 'application/json'
@@ -55,6 +60,7 @@ export default function DashboardPage() {
                 if (response.ok) {
                     // console.log('Orders fetched:', data.orders);
                     setOrders(data.orders);
+                    // console.log(orders);
                 } else {
                     console.warn('⚠️ Failed to fetch orders:', data.error || 'Unknown error');
                 }
@@ -120,7 +126,7 @@ export default function DashboardPage() {
         );
     } else if (filter === 'This Week') {
         const startOfWeek = new Date(now);
-        startOfWeek.setDate(now.getDate() - now.getDay()); 
+        startOfWeek.setDate(now.getDate() - now.getDay());
         filteredOrders = orders.filter(order =>
             new Date(order.created_at) >= startOfWeek
         );
@@ -132,7 +138,7 @@ export default function DashboardPage() {
     } else if (filter === 'Custom Range' && startDate && endDate) {
         const start = new Date(startDate);
         const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999); 
+        end.setHours(23, 59, 59, 999);
 
         filteredOrders = orders.filter(order => {
             const orderDate = new Date(order.created_at);
@@ -221,7 +227,7 @@ export default function DashboardPage() {
             case 'Completed': return 'text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Pending': return 'text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium';
             case 'Cancelled': return 'text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium';
-            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium'; 
+            default: return 'text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium';
         }
     };
 
@@ -241,10 +247,7 @@ export default function DashboardPage() {
     const tabs = username ? getTabs(username) : [];
 
     return (
-        <main
-            className="min-h-screen"
-            style={{ backgroundColor: 'var(--primary-4)' }}
-        >
+        <main className="relative min-h-full bg-transparent">
 
             {/* Page Content */}
             <div className="p-8">
@@ -253,10 +256,12 @@ export default function DashboardPage() {
                         {/* Metrics Section */}
                         <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
                             {metrics.map((metric, index) => (
-                                <div key={index} className="bg-white/80 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-white/50">
+                                <div
+                                    key={index}
+                                    className="bg-black/45 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[var(--primary-4)]"
+                                >
                                     <h2
-                                        className="text-sm mb-2 font-medium"
-                                        style={{ color: 'var(--primary-1)' }}
+                                        className="text-sm mb-2 font-medium text-[var(--primary-2)]"
                                     >
                                         {metric.label}
                                     </h2>
@@ -269,20 +274,15 @@ export default function DashboardPage() {
                                         className="mt-3 h-1 rounded-full"
                                         style={{ backgroundColor: 'var(--primary-4)' }}
                                     ></div>
-
                                 </div>
                             ))}
                         </section>
 
+
                         {/* Orders Section */}
                         <section
-                            className="backdrop-blur-sm rounded-2xl shadow-xl"
-                            style={{
-                                backgroundColor: 'var(--primary-2)',
-                                border: '1px solid var(--primary-3)',
-                            }}
+                            className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl"
                         >
-
                             <div
                                 className="p-6 border-b"
                                 style={{ borderColor: 'var(--primary-3)' }}
@@ -299,7 +299,7 @@ export default function DashboardPage() {
 
                                         <h2
                                             className="text-xl font-bold"
-                                            style={{ color: 'var(--primary-3)' }}
+                                            style={{ color: 'var(--primary-2)' }}
                                         >
                                             Recent Orders
                                         </h2>
@@ -307,10 +307,10 @@ export default function DashboardPage() {
                                     </div>
                                     <div className="flex flex-wrap gap-3">
                                         <select
-                                            className={dateInputStyle}
+                                            className={`${dateInputStyle} backdrop-blur-md text-[var(--primary-2)]`}
                                             style={{
+                                                backgroundColor: 'var(--primary-3)',
                                                 borderColor: 'var(--primary-3)',
-                                                color: 'var(--primary-3)',
                                                 boxShadow: '0 0 0 0 transparent',
                                             }}
                                             value={filter}
@@ -329,14 +329,14 @@ export default function DashboardPage() {
                                                     value={startDate}
                                                     onChange={e => setStartDate(e.target.value)}
                                                     style={{
-                                                        borderColor: 'var(--primary-3)',
-                                                        color: 'var(--primary-3)',
+                                                        borderColor: 'var(--primary-4)',
+                                                        color: 'var(--primary-2)',
                                                         boxShadow: '0 0 0 0 transparent',
                                                     }}
                                                 />
                                                 <span
                                                     className="flex items-center font-medium"
-                                                    style={{ color: 'var(--primary-3)' }}
+                                                    style={{ color: 'var(--primary-2)' }}
                                                 >
                                                     to
                                                 </span>
@@ -346,8 +346,8 @@ export default function DashboardPage() {
                                                     value={endDate}
                                                     onChange={e => setEndDate(e.target.value)}
                                                     style={{
-                                                        borderColor: 'var(--primary-3)',
-                                                        color: 'var(--primary-3)',
+                                                        borderColor: 'var(--primary-4)',
+                                                        color: 'var(--primary-2)',
                                                         boxShadow: '0 0 0 0 transparent',
                                                     }}
                                                 />
@@ -372,7 +372,7 @@ export default function DashboardPage() {
                                         </tr>
                                     </thead>
 
-                                    <tbody className="divide-y text-[var(--primary-3)]" style={{ borderColor: 'var(--primary-3)' }}>
+                                    <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-3)' }}>
                                         {filteredOrders.map((order) => (
 
                                             <tr key={order.id}>
