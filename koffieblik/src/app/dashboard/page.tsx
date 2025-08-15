@@ -36,14 +36,14 @@ export default function DashboardPage() {
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
 
-useEffect(() => {
+    useEffect(() => {
         const role = localStorage.getItem('role');
         if (role !== 'admin') {
             router.replace('/login');
         }
     }, [router]);
 
-   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
     useEffect(() => {
         async function fetchOrders() {
             try {
@@ -171,17 +171,17 @@ useEffect(() => {
         {
             label: 'Total Sales Today',
             value: `R${totalSales.toFixed(2)}`,
-            color: 'var(--primary-3)',
+            color: 'var(--primary-2)',
         },
         {
             label: 'Orders Completed',
             value: ordersCompleted.toString(),
-            color: 'var(--primary-3)',
+            color: 'var(--primary-2)',
         },
         {
             label: 'Top-Selling Item',
             value: topSelling,
-            color: 'var(--primary-3)',
+            color: 'var(--primary-2)',
         },
         {
             label: 'Stock Alerts',
@@ -258,8 +258,8 @@ useEffect(() => {
                             {metrics.map((metric, index) => (
                                 <div
                                     key={index}
-                                    className="bg-black/45 backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[var(--primary-4)]"
-                                >
+                                    className="backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-[var(--primary-4)]"
+                                    style={{ backgroundColor: 'var(--primary-3)' }}>
                                     <h2
                                         className="text-sm mb-2 font-medium text-[var(--primary-2)]"
                                     >
@@ -281,20 +281,24 @@ useEffect(() => {
 
                         {/* Orders Section */}
                         <section
-                            className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl"
+                            className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
+                            style={{ backgroundColor: 'var(--primary-3)' }}
                         >
+                            {/* Heading */}
                             <div
-                                className="p-6 border-b"
-                                style={{ borderColor: 'var(--primary-3)' }}
+                                className="p-6 border-b-2"
+                                style={{
+                                    borderColor: 'var(--primary-4)', // more contrast
+                                    backgroundColor: 'var(--primary-3)',
+                                }}
                             >
-
                                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                     <div className="flex items-center gap-3">
                                         <div
                                             className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                            style={{ backgroundColor: 'var(--primary-3)' }}
+                                            style={{ backgroundColor: 'var(--primary-4)' }}
                                         >
-                                            <span className="text-sm" style={{ color: 'var(--primary-3)' }}>📋</span>
+                                            <span className="text-sm" style={{ color: 'var(--primary-2)' }}>📋</span>
                                         </div>
 
                                         <h2
@@ -303,14 +307,15 @@ useEffect(() => {
                                         >
                                             Recent Orders
                                         </h2>
-
                                     </div>
+
+                                    {/* Filter */}
                                     <div className="flex flex-wrap gap-3">
                                         <select
-                                            className={`${dateInputStyle} backdrop-blur-md text-[var(--primary-2)]`}
+                                            className={`${dateInputStyle} text-[var(--primary-2)]`}
                                             style={{
                                                 backgroundColor: 'var(--primary-3)',
-                                                borderColor: 'var(--primary-3)',
+                                                borderColor: 'var(--primary-4)',
                                                 boxShadow: '0 0 0 0 transparent',
                                             }}
                                             value={filter}
@@ -321,14 +326,16 @@ useEffect(() => {
                                             <option>This Month</option>
                                             <option>Custom Range</option>
                                         </select>
+
                                         {filter === 'Custom Range' && (
                                             <>
                                                 <input
                                                     type="date"
                                                     className={dateInputStyle}
                                                     value={startDate}
-                                                    onChange={e => setStartDate(e.target.value)}
+                                                    onChange={(e) => setStartDate(e.target.value)}
                                                     style={{
+                                                        backgroundColor: 'var(--primary-3)',
                                                         borderColor: 'var(--primary-4)',
                                                         color: 'var(--primary-2)',
                                                         boxShadow: '0 0 0 0 transparent',
@@ -344,27 +351,32 @@ useEffect(() => {
                                                     type="date"
                                                     className={dateInputStyle}
                                                     value={endDate}
-                                                    onChange={e => setEndDate(e.target.value)}
+                                                    onChange={(e) => setEndDate(e.target.value)}
                                                     style={{
+                                                        backgroundColor: 'var(--primary-3)',
                                                         borderColor: 'var(--primary-4)',
                                                         color: 'var(--primary-2)',
                                                         boxShadow: '0 0 0 0 transparent',
                                                     }}
                                                 />
                                             </>
-
                                         )}
-
                                     </div>
                                 </div>
                             </div>
 
+                            {/* Table */}
                             <div className="overflow-x-auto">
                                 <table className="min-w-full text-sm">
-                                    <thead style={{ backgroundColor: 'var(--primary-3)' }}>
+                                    <thead
+                                        className="border-b"
+                                        style={{
+                                            backgroundColor: 'var(--primary-3)',
+                                            borderColor: 'var(--primary-4)'
+                                        }}
+                                    >
                                         <tr>
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Order #</th>
-                                            {/* <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Customer</th> */}
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Items</th>
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Total</th>
                                             <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Status</th>
@@ -372,12 +384,11 @@ useEffect(() => {
                                         </tr>
                                     </thead>
 
-                                    <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-3)' }}>
-                                        {filteredOrders.map((order) => (
 
+                                    <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-4)' }}>
+                                        {filteredOrders.map((order) => (
                                             <tr key={order.id}>
                                                 <td className="px-6 py-4 font-medium">{order.number}</td>
-                                                {/* <td className="px-6 py-4">Customer</td> */}
                                                 <td className="px-6 py-4">
                                                     {order.order_products.map(p => `${p.products.name} x${p.quantity}`).join(', ')}
                                                 </td>
@@ -392,7 +403,6 @@ useEffect(() => {
                                         ))}
                                     </tbody>
                                 </table>
-
                             </div>
                         </section>
                     </>
