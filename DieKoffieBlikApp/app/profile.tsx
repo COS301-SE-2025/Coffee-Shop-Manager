@@ -14,7 +14,8 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import CoffeeLoading from './loading';
+import CoffeeLoading from '../assets/loading';
+import CoffeeBackground from '../assets/coffee-background';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen() {
@@ -268,29 +269,31 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent 
-      />
-      <CoffeeLoading visible={isLoading} />
-      <NavBar />
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <ProfileHeader />
-        <StatsSection />
-        <MenuSection />
-        <SettingsSection />
-        <ActionButtons />
-        
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>DieKoffieBlik</Text>
-          <Text style={styles.footerSubtext}>Version 1.0.0</Text>
-        </View>
-      </ScrollView>
+      <CoffeeBackground>
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor="transparent" 
+          translucent 
+        />
+        <CoffeeLoading visible={isLoading} />
+        <NavBar />
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ProfileHeader />
+          <StatsSection />
+          <MenuSection />
+          <SettingsSection />
+          <ActionButtons />
+          
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>DieKoffieBlik</Text>
+            <Text style={styles.footerSubtext}>Version 1.0.0</Text>
+          </View>
+        </ScrollView>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }

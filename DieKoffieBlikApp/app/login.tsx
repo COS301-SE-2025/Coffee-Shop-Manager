@@ -15,7 +15,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
-import CoffeeLoading from './loading';
+import CoffeeLoading from '../assets/loading';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CoffeeBackground from "../assets/coffee-background";
 
