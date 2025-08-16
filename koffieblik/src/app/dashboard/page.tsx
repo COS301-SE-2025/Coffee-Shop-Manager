@@ -280,131 +280,131 @@ export default function DashboardPage() {
 
 
                         {/* Orders Section */}
-                        <section
-                            className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
-                            style={{ backgroundColor: 'var(--primary-3)' }}
-                        >
-                            {/* Heading */}
-                            <div
-                                className="p-6 border-b-2"
-                                style={{
-                                    borderColor: 'var(--primary-4)', // more contrast
-                                    backgroundColor: 'var(--primary-3)',
-                                }}
+                           <section
+                                className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
+                                style={{ backgroundColor: 'var(--primary-3)' }}
                             >
-                                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                                    <div className="flex items-center gap-3">
-                                        <div
-                                            className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                            style={{ backgroundColor: 'var(--primary-4)' }}
-                                        >
-                                            <span className="text-sm" style={{ color: 'var(--primary-2)' }}>📋</span>
+                                {/* Heading */}
+                                <div
+                                    className="p-6 border-b-2"
+                                    style={{
+                                        borderColor: 'var(--primary-4)', // more contrast
+                                        backgroundColor: 'var(--primary-3)',
+                                    }}
+                                >
+                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div
+                                                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                                                style={{ backgroundColor: 'var(--primary-4)' }}
+                                            >
+                                                <span className="text-sm" style={{ color: 'var(--primary-2)' }}>📋</span>
+                                            </div>
+
+                                            <h2
+                                                className="text-xl font-bold"
+                                                style={{ color: 'var(--primary-2)' }}
+                                            >
+                                                Recent Orders
+                                            </h2>
                                         </div>
 
-                                        <h2
-                                            className="text-xl font-bold"
-                                            style={{ color: 'var(--primary-2)' }}
-                                        >
-                                            Recent Orders
-                                        </h2>
-                                    </div>
+                                        {/* Filter */}
+                                        <div className="flex flex-wrap gap-3">
+                                            <select
+                                                className={`${dateInputStyle} text-[var(--primary-2)]`}
+                                                style={{
+                                                    backgroundColor: 'var(--primary-3)',
+                                                    borderColor: 'var(--primary-4)',
+                                                    boxShadow: '0 0 0 0 transparent',
+                                                }}
+                                                value={filter}
+                                                onChange={(e) => setFilter(e.target.value)}
+                                            >
+                                                <option>Today</option>
+                                                <option>This Week</option>
+                                                <option>This Month</option>
+                                                <option>Custom Range</option>
+                                            </select>
 
-                                    {/* Filter */}
-                                    <div className="flex flex-wrap gap-3">
-                                        <select
-                                            className={`${dateInputStyle} text-[var(--primary-2)]`}
-                                            style={{
-                                                backgroundColor: 'var(--primary-3)',
-                                                borderColor: 'var(--primary-4)',
-                                                boxShadow: '0 0 0 0 transparent',
-                                            }}
-                                            value={filter}
-                                            onChange={(e) => setFilter(e.target.value)}
-                                        >
-                                            <option>Today</option>
-                                            <option>This Week</option>
-                                            <option>This Month</option>
-                                            <option>Custom Range</option>
-                                        </select>
-
-                                        {filter === 'Custom Range' && (
-                                            <>
-                                                <input
-                                                    type="date"
-                                                    className={dateInputStyle}
-                                                    value={startDate}
-                                                    onChange={(e) => setStartDate(e.target.value)}
-                                                    style={{
-                                                        backgroundColor: 'var(--primary-3)',
-                                                        borderColor: 'var(--primary-4)',
-                                                        color: 'var(--primary-2)',
-                                                        boxShadow: '0 0 0 0 transparent',
-                                                    }}
-                                                />
-                                                <span
-                                                    className="flex items-center font-medium"
-                                                    style={{ color: 'var(--primary-2)' }}
-                                                >
-                                                    to
-                                                </span>
-                                                <input
-                                                    type="date"
-                                                    className={dateInputStyle}
-                                                    value={endDate}
-                                                    onChange={(e) => setEndDate(e.target.value)}
-                                                    style={{
-                                                        backgroundColor: 'var(--primary-3)',
-                                                        borderColor: 'var(--primary-4)',
-                                                        color: 'var(--primary-2)',
-                                                        boxShadow: '0 0 0 0 transparent',
-                                                    }}
-                                                />
-                                            </>
-                                        )}
+                                            {filter === 'Custom Range' && (
+                                                <>
+                                                    <input
+                                                        type="date"
+                                                        className={dateInputStyle}
+                                                        value={startDate}
+                                                        onChange={(e) => setStartDate(e.target.value)}
+                                                        style={{
+                                                            backgroundColor: 'var(--primary-3)',
+                                                            borderColor: 'var(--primary-4)',
+                                                            color: 'var(--primary-2)',
+                                                            boxShadow: '0 0 0 0 transparent',
+                                                        }}
+                                                    />
+                                                    <span
+                                                        className="flex items-center font-medium"
+                                                        style={{ color: 'var(--primary-2)' }}
+                                                    >
+                                                        to
+                                                    </span>
+                                                    <input
+                                                        type="date"
+                                                        className={dateInputStyle}
+                                                        value={endDate}
+                                                        onChange={(e) => setEndDate(e.target.value)}
+                                                        style={{
+                                                            backgroundColor: 'var(--primary-3)',
+                                                            borderColor: 'var(--primary-4)',
+                                                            color: 'var(--primary-2)',
+                                                            boxShadow: '0 0 0 0 transparent',
+                                                        }}
+                                                    />
+                                                </>
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Table */}
-                            <div className="overflow-x-auto">
-                                <table className="min-w-full text-sm">
-                                    <thead
-                                        className="border-b"
-                                        style={{
-                                            backgroundColor: 'var(--primary-3)',
-                                            borderColor: 'var(--primary-4)'
-                                        }}
-                                    >
-                                        <tr>
-                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Order #</th>
-                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Items</th>
-                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Total</th>
-                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Status</th>
-                                            <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Date</th>
-                                        </tr>
-                                    </thead>
-
-
-                                    <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-4)' }}>
-                                        {filteredOrders.map((order) => (
-                                            <tr key={order.id}>
-                                                <td className="px-6 py-4 font-medium">{order.number}</td>
-                                                <td className="px-6 py-4">
-                                                    {order.order_products.map(p => `${p.products.name} x${p.quantity}`).join(', ')}
-                                                </td>
-                                                <td className="px-6 py-4 font-semibold">R{order.total_price}</td>
-                                                <td className="px-6 py-4">
-                                                    <span className={getStatusStyle(order.status)}>{order.status}</span>
-                                                </td>
-                                                <td className="px-6 py-4">
-                                                    {new Date(order.created_at).toLocaleDateString('en-ZA')}
-                                                </td>
+                                {/* Table */}
+                                <div className="overflow-x-auto">
+                                    <table className="min-w-full text-sm">
+                                        <thead
+                                            className="border-b"
+                                            style={{
+                                                backgroundColor: 'var(--primary-3)',
+                                                borderColor: 'var(--primary-2)'
+                                            }}
+                                        >
+                                            <tr>
+                                                <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Order #</th>
+                                                <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Items</th>
+                                                <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Total</th>
+                                                <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Status</th>
+                                                <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Date</th>
                                             </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </section>
+                                        </thead>
+
+
+                                        <tbody className="divide-y text-[var(--primary-3)]" style={{ backgroundColor: 'var(--primary-2)', borderColor: 'var(--primary-3)' }}>
+                                            {filteredOrders.map((order) => (
+                                                <tr key={order.id}>
+                                                    <td className="px-6 py-4 font-medium">{order.number}</td>
+                                                    <td className="px-6 py-4">
+                                                        {order.order_products.map(p => `${p.products.name} x${p.quantity}`).join(', ')}
+                                                    </td>
+                                                    <td className="px-6 py-4 font-semibold">R{order.total_price}</td>
+                                                    <td className="px-6 py-4">
+                                                        <span className={getStatusStyle(order.status)}>{order.status}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        {new Date(order.created_at).toLocaleDateString('en-ZA')}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </section>
                     </>
                 )}
 

@@ -295,7 +295,7 @@ export default function DashboardPage() {
                                             className="border-b"
                                             style={{
                                                 backgroundColor: 'var(--primary-3)',
-                                                borderColor: 'var(--primary-4)'
+                                                borderColor: 'var(--primary-2)'
                                             }}
                                         >
                                             <tr>
@@ -308,7 +308,7 @@ export default function DashboardPage() {
                                         </thead>
 
 
-                                        <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-4)' }}>
+                                        <tbody className="divide-y text-[var(--primary-3)]" style={{ backgroundColor: 'var(--primary-2)', borderColor: 'var(--primary-3)' }}>
                                             {filteredOrders.map((order) => (
                                                 <tr key={order.id}>
                                                     <td className="px-6 py-4 font-medium">{order.number}</td>
