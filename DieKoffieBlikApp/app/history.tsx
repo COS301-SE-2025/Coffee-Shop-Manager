@@ -13,6 +13,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CoffeeBackground from "../assets/coffee-background";
 
 export default function OrderHistoryScreen() {
   const router = useRouter();
@@ -60,7 +61,7 @@ export default function OrderHistoryScreen() {
 
   const filterOptions = [
     { key: 'all', label: 'All Orders' },
-    { key: 'completed', label: 'completed' },
+    { key: 'completed', label: 'Completed' },
     { key: 'cancelled', label: 'Cancelled' }
   ];
 
@@ -138,7 +139,8 @@ export default function OrderHistoryScreen() {
             key={option.key}
             style={[
               styles.filterTab,
-              selectedFilter === option.key && styles.filterTabActive
+              selectedFilter === option.key && styles.filterTabActive,
+              
             ]}
             onPress={() => setSelectedFilter(option.key)}
             android_ripple={{ color: '#78350f20' }}
@@ -195,34 +197,36 @@ export default function OrderHistoryScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent 
-      />
-      <NavBar />
-      <HeaderStats />
-      <FilterTabs />
-      
-      <FlatList
-        data={filteredOrders}
-        keyExtractor={(item) => item.id}
-        renderItem={({ item }) => <OrderItem order={item} />}
-        contentContainerStyle={styles.listContainer}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={() => (
-          <View style={styles.emptyState}>
-            <Ionicons name="receipt-outline" size={64} color="#9ca3af" />
-            <Text style={styles.emptyStateTitle}>No orders found</Text>
-            <Text style={styles.emptyStateText}>
-              {selectedFilter === 'all' 
-                ? "You haven't made any orders yet"
-                : `No ${selectedFilter} orders found`
-              }
-            </Text>
-          </View>
-        )}
-      />
+      <CoffeeBackground>
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor="transparent" 
+          translucent 
+        />
+        <NavBar />
+        <HeaderStats />
+        <FilterTabs />
+        
+        <FlatList
+          data={filteredOrders}
+          keyExtractor={(item) => item.id}
+          renderItem={({ item }) => <OrderItem order={item} />}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={() => (
+            <View style={styles.emptyState}>
+              <Ionicons name="receipt-outline" size={64} color="#9ca3af" />
+              <Text style={styles.emptyStateTitle}>No orders found</Text>
+              <Text style={styles.emptyStateText}>
+                {selectedFilter === 'all' 
+                  ? "You haven't made any orders yet"
+                  : `No ${selectedFilter} orders found`
+                }
+              </Text>
+            </View>
+          )}
+        />
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }
@@ -321,6 +325,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+    marginBottom: 10
   },
   filterTabActive: {
     backgroundColor: '#78350f',

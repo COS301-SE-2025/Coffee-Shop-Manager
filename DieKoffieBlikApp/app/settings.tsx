@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import CoffeeBackground from '../assets/coffee-background';
 
 export default function AccountSettingsScreen() {
   const router = useRouter();
@@ -24,101 +25,103 @@ export default function AccountSettingsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <CoffeeBackground>
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Navbar */}
-      <View style={styles.navbar}>
-        <Pressable onPress={() => router.back()} style={styles.navButton}>
-          <Ionicons name="arrow-back" size={24} color="#78350f" />
-        </Pressable>
-        <Text style={styles.navTitle}>Account Settings</Text>
-        <View style={{ width: 24 }} /> {/* Spacer for alignment */}
-      </View>
-
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {/* Profile Section */}
-        <View style={styles.profileSection}>
-          <Ionicons name="person-circle" size={80} color="#78350f" />
-          <Text style={styles.profileName}>{name}</Text>
-          <Text style={styles.profileEmail}>{email}</Text>
+        {/* Navbar */}
+        <View style={styles.navbar}>
+          <Pressable onPress={() => router.back()} style={styles.navButton}>
+            <Ionicons name="arrow-back" size={24} color="#78350f" />
+          </Pressable>
+          <Text style={styles.navTitle}>Account Settings</Text>
+          <View style={{ width: 24 }} /> {/* Spacer for alignment */}
         </View>
 
-        {/* Editable Fields */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Personal Information</Text>
-          
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Name</Text>
-            <TextInput
-              style={styles.input}
-              value={name}
-              onChangeText={setName}
-              placeholder="Enter your name"
-              placeholderTextColor="#9ca3af"
-            />
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {/* Profile Section */}
+          <View style={styles.profileSection}>
+            <Ionicons name="person-circle" size={80} color="#78350f" />
+            <Text style={styles.profileName}>{name}</Text>
+            <Text style={styles.profileEmail}>{email}</Text>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Email</Text>
-            <TextInput
-              style={styles.input}
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              placeholder="Enter your email"
-              placeholderTextColor="#9ca3af"
-            />
+          {/* Editable Fields */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Personal Information</Text>
+            
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Name</Text>
+              <TextInput
+                style={styles.input}
+                value={name}
+                onChangeText={setName}
+                placeholder="Enter your name"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email</Text>
+              <TextInput
+                style={styles.input}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                placeholder="Enter your email"
+                placeholderTextColor="#9ca3af"
+              />
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Password</Text>
+              <TextInput
+                style={styles.input}
+                value={password}
+                onChangeText={setPassword}
+                placeholder="Enter new password"
+                placeholderTextColor="#9ca3af"
+                secureTextEntry
+              />
+            </View>
           </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.inputLabel}>Password</Text>
-            <TextInput
-              style={styles.input}
-              value={password}
-              onChangeText={setPassword}
-              placeholder="Enter new password"
-              placeholderTextColor="#9ca3af"
-              secureTextEntry
-            />
-          </View>
-        </View>
+          {/* Preferences Section */}
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Preferences</Text>
 
-        {/* Preferences Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Preferences</Text>
+            <View style={styles.preferenceRow}>
+              <Text style={styles.preferenceText}>Enable Notifications</Text>
+              <Switch
+                value={notificationsEnabled}
+                onValueChange={setNotificationsEnabled}
+                trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
+                thumbColor={notificationsEnabled ? "#78350f" : "#f4f3f4"}
+              />
+            </View>
 
-          <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceText}>Enable Notifications</Text>
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
-              thumbColor={notificationsEnabled ? "#78350f" : "#f4f3f4"}
-            />
+            <View style={styles.preferenceRow}>
+              <Text style={styles.preferenceText}>Dark Mode</Text>
+              <Switch
+                value={darkModeEnabled}
+                onValueChange={setDarkModeEnabled}
+                trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
+                thumbColor={darkModeEnabled ? "#78350f" : "#f4f3f4"}
+              />
+            </View>
           </View>
 
-          <View style={styles.preferenceRow}>
-            <Text style={styles.preferenceText}>Dark Mode</Text>
-            <Switch
-              value={darkModeEnabled}
-              onValueChange={setDarkModeEnabled}
-              trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
-              thumbColor={darkModeEnabled ? "#78350f" : "#f4f3f4"}
-            />
-          </View>
-        </View>
+          {/* Save Button */}
+          <Pressable style={styles.saveButton} android_ripple={{ color: '#ffffff30' }}>
+            <Text style={styles.saveButtonText}>Save Changes</Text>
+          </Pressable>
 
-        {/* Save Button */}
-        <Pressable style={styles.saveButton} android_ripple={{ color: '#ffffff30' }}>
-          <Text style={styles.saveButtonText}>Save Changes</Text>
-        </Pressable>
-
-        {/* Logout */}
-        <Pressable style={styles.logoutButton} android_ripple={{ color: '#78350f20' }}>
-          <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
-          <Text style={styles.logoutText}>Log Out</Text>
-        </Pressable>
-      </ScrollView>
+          {/* Logout */}
+          <Pressable style={styles.logoutButton} android_ripple={{ color: '#78350f20' }}>
+            <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
+            <Text style={styles.logoutText}>Log Out</Text>
+          </Pressable>
+        </ScrollView>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }
