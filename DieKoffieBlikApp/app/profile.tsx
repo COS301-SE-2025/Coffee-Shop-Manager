@@ -14,12 +14,15 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CoffeeLoading from './loading';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   // Mock user data
   const userData = {
@@ -66,18 +69,39 @@ export default function ProfileScreen() {
     { label: "Loyalty Points", value: userData.loyaltyPoints.toString(), icon: "star" as const }
   ];
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setIsLoading(true); // show loader immediately
+
+    try {
+      await AsyncStorage.removeItem('user_session');
+      console.log('Session removed successfully');
+    } catch (error) {
+      console.error('Error removing session:', error);
+      Alert.alert('Error', 'Failed to clear session.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Show confirmation alert
     Alert.alert(
       "Logout",
       "Are you sure you want to logout?",
       [
-        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Cancel", 
+          style: "cancel",
+          onPress: () => setIsLoading(false) // hide loader if cancelled
+        },
         { 
           text: "Logout", 
           style: "destructive",
-          onPress: () => router.push('/login')
+          onPress: () => {
+            setIsLoading(false);  // hide loader before navigation
+            router.push('/login');
+          }
         }
-      ]
+      ],
+      { cancelable: false }
     );
   };
 
@@ -249,6 +273,7 @@ export default function ProfileScreen() {
         backgroundColor="transparent" 
         translucent 
       />
+      <CoffeeLoading visible={isLoading} />
       <NavBar />
       <ScrollView 
         contentContainerStyle={styles.scrollContent}

@@ -16,6 +16,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import CoffeeLoading from './loading';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CoffeeBackground from "../assets/coffee-background";
+
+const REFRESH_THRESHOLD = 60 * 60 * 1000; // 1 hour in milliseconds
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
@@ -54,6 +58,55 @@ export default function LoginScreen({
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
 
+  React.useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const sessionData = await AsyncStorage.getItem('user_session');
+        if (sessionData) {
+          const { email: storedEmail, session } = JSON.parse(sessionData);
+          
+          // Verify if session is still valid
+          const { data: { session: currentSession } } = await supabase.auth.getSession();
+          
+          if (currentSession) {
+            setEmail(storedEmail);
+            setRememberMe(true);
+            router.replace('/home');
+          } else {
+            // Session expired, clear storage
+            await AsyncStorage.removeItem('user_session');
+          }
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      }
+    };
+
+    checkSession();
+  }, []);
+
+  const refreshSessionIfNeeded = async (session: any) => {
+    try {
+      const expiresAt = new Date(session.expires_at).getTime();
+      const now = new Date().getTime();
+      
+      if (expiresAt - now < REFRESH_THRESHOLD) {
+        const { data: { session: newSession }, error } = await supabase.auth.refreshSession();
+        if (error) throw error;
+        
+        if (newSession) {
+          await AsyncStorage.setItem('user_session', JSON.stringify({
+            email,
+            session: newSession,
+            user: newSession.user
+          }));
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing session:', error);
+    }
+  };
+
   const isFormValid = () => {
     return (
       email !== '' &&
@@ -77,28 +130,26 @@ export default function LoginScreen({
 
     if (!isEmailValid || !isPasswordValid) return;
 
-    setIsLoading(true);
-    console.log("Email: " + email);
-    console.log("Password: " + password);
+    setIsLoading(true); // show loader at the start
+
     try {
+      console.log("Email: " + email);
+      console.log("Password: " + password);
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
-
       if (error) {
         console.error("❌ Supabase error:", error.message, error);
-      } else {
-        console.log("✅ Logged in:", data);
-      }
-
-      if (error) {
         Alert.alert('Login failed', error.message);
         return;
       }
 
-      // Optional: fetch user data (like from user_profiles)
+      console.log("✅ Logged in:", data);
+
+      // Optional: fetch user profile
       const userId = data?.user?.id;
       if (userId) {
         const { data: profile, error: profileError } = await supabase
@@ -109,25 +160,47 @@ export default function LoginScreen({
 
         if (profileError) {
           console.warn('Profile not found:', profileError.message);
-          // Optional: redirect user to complete profile
         } else {
           console.log('User profile:', profile);
         }
       }
 
+      // Call optional onLogin callback
       if (onLogin) {
         onLogin(email, password, rememberMe);
       } else {
         console.log('Login successful', { email, password: '********', rememberMe });
       }
 
-      // Optional: route to homepage or dashboard
-      router.replace('/home'); // adjust route as needed
+      // Handle "Remember Me" storage
+      if (rememberMe) {
+        try {
+          await AsyncStorage.setItem('user_session', JSON.stringify({
+            email: email,
+            session: data.session,
+            user: data.user
+          }));
+          console.log('Session stored successfully');
+        } catch (storageError) {
+          console.error('Error storing session:', storageError);
+        }
+      } else {
+        try {
+          await AsyncStorage.removeItem('user_session');
+          console.log('Session removed successfully');
+        } catch (removeError) {
+          console.error('Error removing session:', removeError);
+        }
+      }
+
+      // Navigate to home AFTER everything is done
+      router.replace('/home');
 
     } catch (err: any) {
       console.error('Unexpected login error:', err);
       Alert.alert('Error', 'An unexpected error occurred.');
     } finally {
+      // Hide loader at the very end
       setIsLoading(false);
     }
   };
@@ -160,10 +233,7 @@ export default function LoginScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#fffbeb', '#fef3c7']} // amber-50 to amber-100
-        style={styles.gradient}
-      >
+      <CoffeeBackground>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -302,7 +372,7 @@ export default function LoginScreen({
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }
