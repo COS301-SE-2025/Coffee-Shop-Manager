@@ -22,7 +22,14 @@ export default function POSPage() {
   const [userId, setUserId] = useState('');
   const [message, setMessage] = useState('');
   const router = useRouter();
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if (role !== 'admin') {
+      router.replace('/login');
+    }
+  }, [router]);
+
   useEffect(() => {
     const fetchProducts = async () => {
       try {

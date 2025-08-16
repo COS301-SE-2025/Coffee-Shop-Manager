@@ -2,14 +2,15 @@
 
 import React, { useState } from 'react';
 import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface MenuItem {
-  id: string; 
+  id: string;
   name: string;
-  description?: string; 
+  description?: string;
   price: number;
-  category?: string; 
-  stock_quantity?: number; 
+  category?: string;
+  stock_quantity?: number;
 }
 
 interface CartItem extends MenuItem {
@@ -28,11 +29,19 @@ export default function OrderPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [orderStatus, setOrderStatus] = useState<'ordering' | 'confirming' | 'placed'>('ordering');
   const [loading, setLoading] = useState(true);
+  const router = useRouter();
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if (role !== 'user') {
+      router.replace('/login');
+    }
+  }, [router]);
 
   // Categories 
   const categories = [
     { id: 'all', name: 'All Items' },
-    { id: 'coffee', name: 'Hot Coffee'},
+    { id: 'coffee', name: 'Hot Coffee' },
     { id: 'cold', name: 'Cold Drinks' },
     { id: 'food', name: 'Food' },
   ];
@@ -98,7 +107,7 @@ export default function OrderPage() {
   const getOrderSummary = (): OrderSummary => {
     const subtotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
     const total = subtotal;
-    
+
     return {
       items: cart,
       subtotal,
@@ -110,16 +119,16 @@ export default function OrderPage() {
   //still mocking the place order 
   const handlePlaceOrder = () => {
     setOrderStatus('confirming');
-   
+
     setTimeout(() => {
       setOrderStatus('placed');
-      setCart([]); 
+      setCart([]);
     }, 2000);
   };
 
-  
-  const filteredItems = activeCategory === 'all' 
-    ? menu 
+
+  const filteredItems = activeCategory === 'all'
+    ? menu
     : menu.filter(item => item.category?.toLowerCase() === activeCategory.toLowerCase());
 
   const orderSummary = getOrderSummary();
@@ -131,10 +140,10 @@ export default function OrderPage() {
           <div className="mb-4">
             <span className="text-6xl">✅</span>
           </div>
-          <h2 className="text-2xl font-bold mb-2" style={{color: 'var(--primary-3)'}}>Order Placed Successfully!</h2>
+          <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--primary-3)' }}>Order Placed Successfully!</h2>
           <p className="text-gray-600 mb-4">Your order is being prepared. </p>
-          <button 
-            onClick={() => setOrderStatus('ordering')} 
+          <button
+            onClick={() => setOrderStatus('ordering')}
             className="btn"
           >
             Place Another Order
@@ -145,12 +154,12 @@ export default function OrderPage() {
   }
 
   return (
-    <div className="min-h-screen" style={{backgroundColor: 'var(--primary-4)'}}>
+    <div className="min-h-screen" style={{ backgroundColor: 'var(--primary-4)' }}>
       {/* Header */}
-      <header className="sticky top-0 z-50 border-b" style={{backgroundColor: 'var(--primary-4)', borderColor: 'var(--primary-4)'}}>
+      <header className="sticky top-0 z-50 border-b" style={{ backgroundColor: 'var(--primary-4)', borderColor: 'var(--primary-4)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
-            <h1 className="text-2xl font-bold" style={{color: 'var(--primary-3)'}}>Order Online</h1>
+            <h1 className="text-2xl font-bold" style={{ color: 'var(--primary-3)' }}>Order Online</h1>
             <div className="flex items-center space-x-4">
               <div className="relative">
                 <span className="text-2xl">🛒</span>
@@ -168,7 +177,7 @@ export default function OrderPage() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="flex justify-center items-center h-64">
-            <div className="text-xl" style={{color: 'var(--primary-3)'}}>Loading menu...</div>
+            <div className="text-xl" style={{ color: 'var(--primary-3)' }}>Loading menu...</div>
           </div>
         ) : (
           <div className="lg:grid lg:grid-cols-3 lg:gap-8">
@@ -176,18 +185,17 @@ export default function OrderPage() {
             <div className="lg:col-span-2">
               {/* Category Tabs */}
               <div className="mb-8">
-                <nav className="flex space-x-1 rounded-lg p-1" style={{backgroundColor: 'var(--primary-4)'}}>
+                <nav className="flex space-x-1 rounded-lg p-1" style={{ backgroundColor: 'var(--primary-4)' }}>
                   {categories.map((category) => {
                     return (
                       <button
                         key={category.id}
                         onClick={() => setActiveCategory(category.id)}
-                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-colors ${
-                          activeCategory === category.id
-                            ? 'text-white'
-                            : 'tr-hover'
-                        }`}
-                        style={activeCategory === category.id ? {backgroundColor: 'var(--primary-3)'} : {}}
+                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-colors ${activeCategory === category.id
+                          ? 'text-white'
+                          : 'tr-hover'
+                          }`}
+                        style={activeCategory === category.id ? { backgroundColor: 'var(--primary-3)' } : {}}
                       >
                         {category.name}
                       </button>
@@ -209,12 +217,12 @@ export default function OrderPage() {
                       <div
                         key={item.id}
                         className="bg-white rounded-lg shadow-md overflow-hidden border"
-                        style={{borderColor: 'var(--primary-4)'}}
+                        style={{ borderColor: 'var(--primary-4)' }}
                       >
                         <div className="p-6">
                           <div className="flex justify-between items-start mb-3">
-                            <h3 className="text-xl font-semibold" style={{color: 'var(--primary-3)'}}>{item.name}</h3>
-                            <div className="flex items-center" style={{color: 'var(--primary-3)'}}>
+                            <h3 className="text-xl font-semibold" style={{ color: 'var(--primary-3)' }}>{item.name}</h3>
+                            <div className="flex items-center" style={{ color: 'var(--primary-3)' }}>
                               <span className="text-lg font-bold">R{item.price.toFixed(2)}</span>
                             </div>
                           </div>
@@ -224,7 +232,7 @@ export default function OrderPage() {
                           {item.stock_quantity !== undefined && (
                             <p className="text-sm text-gray-500 mb-4">Stock: {item.stock_quantity}</p>
                           )}
-                          
+
                           {/* Add to Cart Controls */}
                           <div className="flex items-center justify-between">
                             {quantity === 0 ? (
@@ -241,15 +249,15 @@ export default function OrderPage() {
                                 <button
                                   onClick={() => removeFromCart(item.id)}
                                   className="w-8 h-8 rounded-full flex items-center justify-center"
-                                  style={{backgroundColor: 'var(--primary-4)', color: 'var(--primary-3)'}}
+                                  style={{ backgroundColor: 'var(--primary-4)', color: 'var(--primary-3)' }}
                                 >
                                   <span className="text-lg font-bold">−</span>
                                 </button>
-                                <span className="font-semibold text-lg min-w-[2rem] text-center" style={{color: 'var(--primary-3)'}}>{quantity}</span>
+                                <span className="font-semibold text-lg min-w-[2rem] text-center" style={{ color: 'var(--primary-3)' }}>{quantity}</span>
                                 <button
                                   onClick={() => addToCart(item)}
                                   className="w-8 h-8 rounded-full flex items-center justify-center"
-                                  style={{backgroundColor: 'var(--primary-3)', color: 'var(--primary-2)'}}
+                                  style={{ backgroundColor: 'var(--primary-3)', color: 'var(--primary-2)' }}
                                   disabled={item.stock_quantity !== undefined && quantity >= item.stock_quantity}
                                 >
                                   <span className="text-lg font-bold">+</span>
@@ -268,12 +276,12 @@ export default function OrderPage() {
             {/* Cart/Order Summary */}
             <div className="lg:col-span-1 mt-8 lg:mt-0">
               <div className="sticky top-24">
-                <div className="bg-white rounded-lg shadow-lg border" style={{borderColor: 'var(--primary-4)'}}>
+                <div className="bg-white rounded-lg shadow-lg border" style={{ borderColor: 'var(--primary-4)' }}>
                   <div className="p-6">
-                    <h3 className="text-xl font-semibold mb-4" style={{color: 'var(--primary-3)'}}>
+                    <h3 className="text-xl font-semibold mb-4" style={{ color: 'var(--primary-3)' }}>
                       Your Order {cart.length > 0 && `(${cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
                     </h3>
-                    
+
                     {cart.length === 0 ? (
                       <p className="text-gray-500 text-center py-8">Your cart is empty</p>
                     ) : (
@@ -281,13 +289,13 @@ export default function OrderPage() {
                         {/* Cart Items */}
                         <div className="space-y-3 mb-6">
                           {cart.map((item) => (
-                            <div key={item.id} className="flex justify-between items-center py-2 border-b" style={{borderColor: 'var(--primary-4)'}}>
+                            <div key={item.id} className="flex justify-between items-center py-2 border-b" style={{ borderColor: 'var(--primary-4)' }}>
                               <div className="flex-1">
-                                <h4 className="font-medium" style={{color: 'var(--primary-3)'}}>{item.name}</h4>
+                                <h4 className="font-medium" style={{ color: 'var(--primary-3)' }}>{item.name}</h4>
                                 <p className="text-sm text-gray-600">Qty: {item.quantity}</p>
                               </div>
                               <div className="text-right">
-                                <p className="font-semibold" style={{color: 'var(--primary-3)'}}>
+                                <p className="font-semibold" style={{ color: 'var(--primary-3)' }}>
                                   R{(item.price * item.quantity).toFixed(2)}
                                 </p>
                               </div>
@@ -301,7 +309,7 @@ export default function OrderPage() {
                             <span>Subtotal:</span>
                             <span>R{orderSummary.subtotal.toFixed(2)}</span>
                           </div>
-                          <div className="flex justify-between font-bold text-lg border-t pt-2" style={{borderColor: 'var(--primary-4)', color: 'var(--primary-3)'}}>
+                          <div className="flex justify-between font-bold text-lg border-t pt-2" style={{ borderColor: 'var(--primary-4)', color: 'var(--primary-3)' }}>
                             <span>Total:</span>
                             <span>R{orderSummary.total.toFixed(2)}</span>
                           </div>
