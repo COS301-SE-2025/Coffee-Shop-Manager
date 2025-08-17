@@ -15,7 +15,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = 'http://192.168.101.124:5000';
+const API_BASE_URL = "http://192.168.101.124:5000";
 
 const validateEmail = (email: string) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;

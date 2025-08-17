@@ -12,14 +12,13 @@ import {
   Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import CoffeeLoading from '../assets/loading';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CoffeeBackground from "../assets/coffee-background";
 
 // API Configuration
-const API_BASE_URL = 'http://192.168.101.124:5000'; // Change this to your actual server URL when deployed
+const API_BASE_URL = "http://192.168.101.124:5000";
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
@@ -34,6 +33,8 @@ const validatePassword = (password: string): string | null => {
   if (password.length < 8) return 'Password must be at least 8 characters';
   return null;
 };
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface LoginScreenProps {
   onLogin?: (email: string, password: string, rememberMe: boolean) => void;
@@ -124,6 +125,20 @@ export default function LoginScreen({
         console.error("❌ Login failed:", data.message);
         Alert.alert('Login failed', data.message || 'Invalid credentials');
         return;
+      }
+
+      const accessToken = response.headers.get("x-access-token");
+      const refreshToken = response.headers.get("x-refresh-token");
+
+      console.log("✅ Access token" + accessToken);
+      console.log("✅ Refresh token" + refreshToken);
+
+      if (accessToken && refreshToken) {
+        await AsyncStorage.setItem("access_token", accessToken);
+        await AsyncStorage.setItem("refresh_token", refreshToken);
+        console.log("✅ Tokens stored in AsyncStorage");
+        
+        await sleep(300);
       }
 
       console.log("✅ Login successful:", data);

@@ -30,8 +30,8 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
       maxAge: 10 * 365 * 24 * 60 * 60 * 1000 // long time
     });
 
-
-
+    res.setHeader("x-access-token", access_token);
+    res.setHeader("x-refresh-token", refresh_token);
 
     // res.status(200).json({
     //   success: true,
