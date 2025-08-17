@@ -6,6 +6,7 @@ import { authMiddleware } from './middleware/auth';
 import { loginHandler } from './endpoint/login';
 import { signupHandler } from './endpoint/signup';
 import { logoutHandler } from './endpoint/logout';
+import { deleteUserHandler } from './endpoint/deleteUser';
 
 // STOCK
 import { getStockHandler } from './endpoint/getStock';
@@ -23,6 +24,7 @@ import { createProductHandler } from './endpoint/createProduct';
 import { getProductsHandler } from './endpoint/getProducts';
 import { getProductsWithStockHandler } from './endpoint/getProducts';
 import { updateProductHandler } from './endpoint/updateProduct';
+import { deleteProductHandler } from './endpoint/deleteProduct';
 
 // LEGACY
 import { checkTokenHandler } from './endpoint/check-token'; 
@@ -43,6 +45,8 @@ router.get('/', (req, res) => {
 router.post('/login', loginHandler);
 router.post('/signup', signupHandler);
 router.post('/logout', logoutHandler);
+router.delete('/user/:id', deleteUserHandler);
+router.delete('/user', deleteUserHandler);
 
 // STOCK
 router.get('/stock', authMiddleware, getStockHandler);
@@ -57,10 +61,13 @@ router.get('/order', authMiddleware, getOrdersHandler);
 router.post('/order', authMiddleware, createOrderHandler);
 
 // PRODUCTS
-router.get('/product', authMiddleware, getProductsHandler);
 router.get('/product/stock', authMiddleware, getProductsWithStockHandler);
+router.get('/product/stock/:id', authMiddleware, getProductsWithStockHandler);
+router.get('/product', authMiddleware, getProductsHandler);
+router.get('/product/:id', authMiddleware, getProductsHandler);
 router.post('/product', authMiddleware, createProductHandler);
 router.put('/product', authMiddleware, updateProductHandler);
+router.delete('/product/:id', authMiddleware, deleteProductHandler);
 
 // LEGACY
 router.post('/create_order', authMiddleware, createOrderHandler);
