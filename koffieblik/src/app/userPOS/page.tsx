@@ -29,7 +29,10 @@ export default function OrderPage() {
   const [activeCategory, setActiveCategory] = useState<string>('all');
   const [orderStatus, setOrderStatus] = useState<'ordering' | 'confirming' | 'placed'>('ordering');
   const [loading, setLoading] = useState(true);
+  const [message, setMessage] = useState('');
   const router = useRouter();
+
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:5000';
 
   useEffect(() => {
     const role = localStorage.getItem('role');
@@ -50,7 +53,7 @@ export default function OrderPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch('http://localhost:5000/getProducts', {
+        const res = await fetch(`${API_BASE_URL}/getProducts`, {
           credentials: 'include',
         });
         const data = await res.json();
@@ -67,7 +70,7 @@ export default function OrderPage() {
     };
 
     fetchProducts();
-  }, []);
+  }, [API_BASE_URL]);
 
   const addToCart = (item: MenuItem) => {
     setCart(prevCart => {
@@ -115,17 +118,47 @@ export default function OrderPage() {
     };
   };
 
+  // Updated handlePlaceOrder to actually create the order
+  const handlePlaceOrder = async () => {
+    if (cart.length === 0) {
+      setMessage('Please add items to your cart first.');
+      return;
+    }
 
-  //still mocking the place order 
-  const handlePlaceOrder = () => {
     setOrderStatus('confirming');
+    setMessage('');
 
-    setTimeout(() => {
-      setOrderStatus('placed');
-      setCart([]);
-    }, 2000);
+    const payload = {
+      products: cart.map((item) => ({
+        product: item.name,
+        quantity: item.quantity,
+      })),
+    };
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/create_order`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify(payload),
+      });
+
+      const result = await res.json();
+
+      if (res.ok && result.success) {
+        setOrderStatus('placed');
+        setCart([]);
+        setMessage('Order successfully submitted!');
+      } else {
+        setOrderStatus('ordering');
+        setMessage(`Failed to create order: ${result.message || 'Unknown error'}`);
+      }
+    } catch (err) {
+      console.error('Order error:', err);
+      setOrderStatus('ordering');
+      setMessage('Failed to submit order. Please try again.');
+    }
   };
-
 
   const filteredItems = activeCategory === 'all'
     ? menu
@@ -138,16 +171,20 @@ export default function OrderPage() {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center p-8 bg-white rounded-lg shadow-lg">
           <div className="mb-4">
-            <span className="text-6xl">✅</span>
+            <span className="text-6xl">✓</span>
           </div>
           <h2 className="text-2xl font-bold mb-2" style={{ color: 'var(--primary-3)' }}>Order Placed Successfully!</h2>
-          <p className="text-gray-600 mb-4">Your order is being prepared. </p>
-          <button
-            onClick={() => setOrderStatus('ordering')}
-            className="btn"
-          >
-            Place Another Order
-          </button>
+          <p className="text-gray-600 mb-4">Your order is being prepared. You can track it in your dashboard.</p>
+          {message && <p className="text-green-600 mb-4">{message}</p>}
+          <div className="space-y-3">
+            
+            <button
+              onClick={() => router.push('/dashboard')}
+              className="btn bg-blue-500 hover:bg-blue-600"
+            >
+              View Dashboard
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -175,6 +212,13 @@ export default function OrderPage() {
       </header>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Message Display */}
+        {message && (
+          <div className={`mb-4 p-3 rounded-lg ${message.includes('Failed') || message.includes('error') ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'}`}>
+            {message}
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center items-center h-64">
             <div className="text-xl" style={{ color: 'var(--primary-3)' }}>Loading menu...</div>
