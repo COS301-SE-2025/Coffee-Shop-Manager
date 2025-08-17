@@ -130,6 +130,8 @@ export default function LoginScreen({
       const accessToken = response.headers.get("x-access-token");
       const refreshToken = response.headers.get("x-refresh-token");
 
+      await AsyncStorage.setItem("email", email);
+
       console.log("✅ Access token" + accessToken);
       console.log("✅ Refresh token" + refreshToken);
 
@@ -137,7 +139,7 @@ export default function LoginScreen({
         await AsyncStorage.setItem("access_token", accessToken);
         await AsyncStorage.setItem("refresh_token", refreshToken);
         console.log("✅ Tokens stored in AsyncStorage");
-        
+
         await sleep(300);
       }
 

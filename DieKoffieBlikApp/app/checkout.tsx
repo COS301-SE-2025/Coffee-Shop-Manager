@@ -17,6 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import PaymentService from "../backend/service/payment.service";
 import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get("window");
 
@@ -91,28 +92,28 @@ const CustomerDetails = memo(
         </View>
 
         <View style={styles.inputContainer}>
-          <Ionicons name="call" size={20} color="#6b7280" />
-          <TextInput
-            style={styles.textInput}
-            placeholder="Phone Number * (10 digits)"
-            value={customerInfo.phone}
-            onChangeText={validatePhoneNumber}
-            keyboardType="phone-pad"
-            maxLength={10}
-            placeholderTextColor="#9ca3af"
-          />
-        </View>
-
-        <View style={styles.inputContainer}>
           <Ionicons name="mail" size={20} color="#6b7280" />
           <TextInput
             style={styles.textInput}
-            placeholder="Email (Optional)"
+            placeholder="Email *"
             value={customerInfo.email}
             onChangeText={(text) =>
               setCustomerInfo((prev) => ({ ...prev, email: text }))
             }
             keyboardType="email-address"
+            placeholderTextColor="#9ca3af"
+          />
+        </View>
+
+        <View style={styles.inputContainer}>
+          <Ionicons name="call" size={20} color="#6b7280" />
+          <TextInput
+            style={styles.textInput}
+            placeholder="Phone Number (10 digits)"
+            value={customerInfo.phone}
+            onChangeText={validatePhoneNumber}
+            keyboardType="phone-pad"
+            maxLength={10}
             placeholderTextColor="#9ca3af"
           />
         </View>
@@ -152,6 +153,21 @@ export default function CheckoutScreen() {
     notes: "",
   });
 
+  const loadEmail = async () => {
+    try {
+      const storedEmail = await AsyncStorage.getItem('email');
+      if (storedEmail) {
+        setCustomerInfo(prev => ({ ...prev, email: storedEmail }));
+      }
+    } catch (error) {
+      console.error("Failed to load email from storage:", error);
+    }
+  };
+
+  useEffect(() => {
+    loadEmail();
+  }, []);
+
   useEffect(() => {
     if (cartParam) {
       try {
@@ -190,17 +206,18 @@ export default function CheckoutScreen() {
   const total = subtotal;
 
   const handlePlaceOrder = async () => {
-    if (!customerInfo.name || !customerInfo.phone) {
+    if (!customerInfo.name || !customerInfo.email) {
       Alert.alert(
         "Missing Information",
-        "Please fill in your name and phone number"
+        "Please fill in your name and email"
       );
       return;
     }
 
     if (
-      customerInfo.phone.length !== 10 ||
-      !customerInfo.phone.startsWith("0")
+      customerInfo.phone !== "" &&
+      (customerInfo.phone.length !== 10 ||
+      !customerInfo.phone.startsWith("0"))
     ) {
       Alert.alert(
         "Invalid Phone Number",

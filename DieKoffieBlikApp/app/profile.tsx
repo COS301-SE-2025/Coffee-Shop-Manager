@@ -157,9 +157,15 @@ export default function ProfileScreen() {
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#78350f" />
-        <Text style={styles.loadingText}>Loading profile...</Text>
+      <SafeAreaView style={styles.container}>
+        <CoffeeBackground>
+          <View style={styles.centerContainer}>
+            <CoffeeLoading visible={isLoading} />
+          </View>
+          <View style={styles.centerContainer}>
+            <Text style={styles.loadingText}>Loading profile...</Text>
+          </View>
+        </CoffeeBackground>
       </SafeAreaView>
     );
   }
@@ -722,5 +728,11 @@ const styles = StyleSheet.create({
   footerSubtext: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
   },
 });

@@ -421,14 +421,14 @@ export default function OrderScreen() {
             ))}
           </View>
 
-          <View style={styles.stockContainer}>
+          {/* <View style={styles.stockContainer}>
             <Text style={[
               styles.stockText,
               item.stock < 5 ? styles.lowStock : styles.inStock
             ]}>
               {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
             </Text>
-          </View>
+          </View> */}
         </View>
 
         <View style={styles.cartControls}>
@@ -516,6 +516,8 @@ export default function OrderScreen() {
         <CoffeeBackground>
           <View style={styles.centerContainer}>
             <CoffeeLoading visible={loading} />
+          </View>
+          <View style={styles.centerContainer}>
             <Text style={styles.loadingText}>Loading menu...</Text>
           </View>
         </CoffeeBackground>
