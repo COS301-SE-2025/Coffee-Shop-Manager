@@ -1,7 +1,9 @@
+// app/_layout.tsx
+import React, { useEffect } from 'react';
 import { Stack } from 'expo-router';
-import 'react-native-url-polyfill/auto';
 
 export default function Layout() {
+
   return (
     <Stack
       screenOptions={{

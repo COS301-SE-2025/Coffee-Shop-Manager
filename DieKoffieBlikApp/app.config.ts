@@ -12,4 +12,8 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     SERVICE_ROLE_KEY: process.env.SERVICE_ROLE_KEY,
     SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY || process.env.ONLINE_ANON_KEY || process.env.ANON_KEY,
   },
+  "plugins": [
+    "expo-router",
+    "expo-web-browser"
+  ]
 });

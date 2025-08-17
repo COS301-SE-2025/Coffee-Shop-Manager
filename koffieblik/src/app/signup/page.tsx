@@ -33,13 +33,14 @@ export default function SignUpPage() {
 
 
 
-    
+
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [emailError, setEmailError] = useState('');
     const [passwordError, setPasswordError] = useState('');
     const [formSubmitted, setFormSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
 
     const isFormValid = () => {
         return (
@@ -78,7 +79,7 @@ export default function SignUpPage() {
             setIsLoading(true);
 
             try {
-                const response = await fetch('http://localhost:5000/signup', {
+                const response = await fetch(`${API_BASE_URL}/signup`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ email, password, username }),
@@ -115,7 +116,7 @@ export default function SignUpPage() {
                     className="w-full max-w-md p-6 md:p-8 rounded-xl shadow-lg border relative overflow-hidden"
                     style={{
                         backgroundColor: 'var(--primary-2)',
-                        borderColor: 'var(--primary-3)' 
+                        borderColor: 'var(--primary-3)'
                     }}
                 >
 

@@ -15,6 +15,9 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CoffeeLoading from '../assets/loading';
+import CoffeeBackground from '../assets/coffee-background';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase'; // Import your supabase client
 
 interface UserProfile {
@@ -42,6 +45,7 @@ export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // State for user data
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -209,6 +213,41 @@ export default function ProfileScreen() {
     { label: "Loyalty Points", value: userData.loyaltyPoints, icon: "star" as const }
   ];
 
+  const handleLogout = async () => {
+    setIsLoading(true); // show loader immediately
+
+    try {
+      await AsyncStorage.removeItem('user_session');
+      console.log('Session removed successfully');
+    } catch (error) {
+      console.error('Error removing session:', error);
+      Alert.alert('Error', 'Failed to clear session.');
+      setIsLoading(false);
+      return;
+    }
+
+    // Show confirmation alert
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { 
+          text: "Cancel", 
+          style: "cancel",
+          onPress: () => setIsLoading(false) // hide loader if cancelled
+        },
+        { 
+          text: "Logout", 
+          style: "destructive",
+          onPress: () => {
+            setIsLoading(false);  // hide loader before navigation
+            router.push('/login');
+          }
+        }
+      ],
+      { cancelable: false }
+    );
+  };
   const NavBar = () => (
     <View style={styles.navbar}>
       <View style={styles.navLeft}>
@@ -348,28 +387,31 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent 
-      />
-      <NavBar />
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <ProfileHeader />
-        <StatsSection />
-        <MenuSection />
-        <SettingsSection />
-        <ActionButtons />
-        
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>DieKoffieBlik</Text>
-          <Text style={styles.footerSubtext}>Version 1.0.0</Text>
-        </View>
-      </ScrollView>
+      <CoffeeBackground>
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor="transparent" 
+          translucent 
+        />
+        <CoffeeLoading visible={isLoading} />
+        <NavBar />
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ProfileHeader />
+          <StatsSection />
+          <MenuSection />
+          <SettingsSection />
+          <ActionButtons />
+          
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>DieKoffieBlik</Text>
+            <Text style={styles.footerSubtext}>Version 1.0.0</Text>
+          </View>
+        </ScrollView>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }

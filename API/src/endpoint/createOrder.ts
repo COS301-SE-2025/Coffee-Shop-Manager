@@ -136,6 +136,8 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
       if (modsError) throw modsError;
     }
 
+    await supabase.rpc('recalc_order_total', { order_id: order.id });
+
     res.status(201).json({
       success: true,
       order_id: order.id,

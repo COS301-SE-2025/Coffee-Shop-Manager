@@ -8,12 +8,12 @@ import {
   StatusBar,
   Platform,
   Pressable,
-  Linking,
-  Alert
+  Linking
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CoffeeBackground from '../assets/coffee-background';
 
 export default function HelpSupportScreen() {
   const router = useRouter();
@@ -155,7 +155,6 @@ export default function HelpSupportScreen() {
       <View style={styles.contactInfo}>
         <Text style={styles.contactTitle}>{method.title}</Text>
         <Text style={styles.contactSubtitle}>{method.subtitle}</Text>
-        <Text style={styles.contactDescription}>{method.description}</Text>
       </View>
       <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
     </Pressable>
@@ -204,74 +203,76 @@ export default function HelpSupportScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent 
-      />
-      <NavBar />
-      
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <HeaderSection />
+      <CoffeeBackground>
+        <StatusBar 
+          barStyle="dark-content" 
+          backgroundColor="transparent" 
+          translucent 
+        />
+        <NavBar />
         
-        {/* Contact Methods */}
-        <View style={styles.contactSection}>
-          <Text style={styles.sectionTitle}>Contact Us</Text>
-          {contactMethods.map((method) => (
-            <ContactMethodCard key={method.id} method={method} />
-          ))}
-        </View>
-        
-        {/* Quick Actions
-        <View style={styles.quickActionsSection}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          {quickActions.map((action, index) => (
-            <QuickActionCard key={index} action={action} />
-          ))}
-        </View> */}
-        
-        {/* FAQ Section
-        <View style={styles.faqSection}>
-          <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
-          {faqData.map((item) => (
-            <FAQItem key={item.id} item={item} />
-          ))}
-        </View> */}
-        
-        {/* App Info */}
-        <View style={styles.appInfoSection}>
-          <Text style={styles.sectionTitle}>App Information</Text>
-          <View style={styles.appInfoCard}>
-            <View style={styles.appInfoRow}>
-              <Text style={styles.appInfoLabel}>Version</Text>
-              <Text style={styles.appInfoValue}>{appInfo.version}</Text>
-            </View>
-            <View style={styles.appInfoRow}>
-              <Text style={styles.appInfoLabel}>Platform</Text>
-              <Text style={styles.appInfoValue}>{appInfo.platform}</Text>
-            </View>
-            <View style={styles.appInfoRow}>
-              <Text style={styles.appInfoLabel}>Last Updated</Text>
-              <Text style={styles.appInfoValue}>{appInfo.lastUpdated}</Text>
+        <ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <HeaderSection />
+          
+          {/* Contact Methods */}
+          <View style={styles.contactSection}>
+            <Text style={styles.sectionTitle}>Contact Us</Text>
+            {contactMethods.map((method) => (
+              <ContactMethodCard key={method.id} method={method} />
+            ))}
+          </View>
+          
+          {/* Quick Actions
+          <View style={styles.quickActionsSection}>
+            <Text style={styles.sectionTitle}>Quick Actions</Text>
+            {quickActions.map((action, index) => (
+              <QuickActionCard key={index} action={action} />
+            ))}
+          </View> */}
+          
+          {/* FAQ Section
+          <View style={styles.faqSection}>
+            <Text style={styles.sectionTitle}>Frequently Asked Questions</Text>
+            {faqData.map((item) => (
+              <FAQItem key={item.id} item={item} />
+            ))}
+          </View> */}
+          
+          {/* App Info */}
+          <View style={styles.appInfoSection}>
+            <Text style={styles.sectionTitle}>App Information</Text>
+            <View style={styles.appInfoCard}>
+              <View style={styles.appInfoRow}>
+                <Text style={styles.appInfoLabel}>Version</Text>
+                <Text style={styles.appInfoValue}>{appInfo.version}</Text>
+              </View>
+              <View style={styles.appInfoRow}>
+                <Text style={styles.appInfoLabel}>Platform</Text>
+                <Text style={styles.appInfoValue}>{appInfo.platform}</Text>
+              </View>
+              <View style={styles.appInfoRow}>
+                <Text style={styles.appInfoLabel}>Last Updated</Text>
+                <Text style={styles.appInfoValue}>{appInfo.lastUpdated}</Text>
+              </View>
             </View>
           </View>
-        </View>
-        
-        {/* Footer
-        <View style={styles.footer}>
-          <Text style={styles.footerTitle}>Still need help?</Text>
-          <Text style={styles.footerText}>
-            Our support team is available 24/7 to assist you with any questions or concerns.
-          </Text>
-          <Pressable style={styles.contactSupportButton}>
-            <Ionicons name="headset" size={16} color="#fff" />
-            <Text style={styles.contactSupportText}>Contact Support</Text>
-          </Pressable>
-        </View> */}
-      </ScrollView>
+          
+          {/* Footer
+          <View style={styles.footer}>
+            <Text style={styles.footerTitle}>Still need help?</Text>
+            <Text style={styles.footerText}>
+              Our support team is available 24/7 to assist you with any questions or concerns.
+            </Text>
+            <Pressable style={styles.contactSupportButton}>
+              <Ionicons name="headset" size={16} color="#fff" />
+              <Text style={styles.contactSupportText}>Contact Support</Text>
+            </Pressable>
+          </View> */}
+        </ScrollView>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }

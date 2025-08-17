@@ -3,7 +3,7 @@ import { supabase } from '../supabase/client';
 
 export async function checkTokenHandler(req: Request, res: Response): Promise<void> {
   try {
-    const token = req.cookies?.token;
+    const token = req.cookies?.access_token;
 
     if (!token) {
       res.status(401).json({ valid: false, message: 'Missing token' });

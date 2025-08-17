@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import CoffeeBackground from '../assets/coffee-background';
 
 export default function NotificationsScreen() {
   const router = useRouter();
@@ -48,22 +49,24 @@ export default function NotificationsScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+      <CoffeeBackground>
+        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
 
-      {/* Navbar */}
-      <View style={styles.navbar}>
-        <Pressable onPress={() => router.back()} style={styles.navButton}>
-          <Ionicons name="arrow-back" size={24} color="#78350f" />
-        </Pressable>
-        <Text style={styles.navTitle}>Notifications</Text>
-        <View style={{ width: 24 }} />
-      </View>
+        {/* Navbar */}
+        <View style={styles.navbar}>
+          <Pressable onPress={() => router.back()} style={styles.navButton}>
+            <Ionicons name="arrow-back" size={24} color="#78350f" />
+          </Pressable>
+          <Text style={styles.navTitle}>Notifications</Text>
+          <View style={{ width: 24 }} />
+        </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {renderNotifications('Today', notifications.today)}
-        {renderNotifications('This Week', notifications.week)}
-        {renderNotifications('Earlier', notifications.earlier)}
-      </ScrollView>
+        <ScrollView contentContainerStyle={styles.scrollContent}>
+          {renderNotifications('Today', notifications.today)}
+          {renderNotifications('This Week', notifications.week)}
+          {renderNotifications('Earlier', notifications.earlier)}
+        </ScrollView>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }

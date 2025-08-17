@@ -2,8 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   View, 
   Text, 
-  StyleSheet, 
-  TouchableOpacity, 
+  StyleSheet,
   ScrollView, 
   Animated,
   Dimensions,
@@ -16,6 +15,7 @@ import {
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import CoffeeBackground from "../assets/coffee-background";
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = (width - 60) / 2;
@@ -396,36 +396,42 @@ const coffeeFacts = [
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={{ flex: 1 }}>
       <StatusBar 
         barStyle="dark-content" 
         backgroundColor="transparent" 
         translucent 
       />
-      <NavBar />
-      <Animated.ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-        onScroll={Animated.event(
-          [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-          { useNativeDriver: false }
-        )}
-        scrollEventThrottle={16}
-      >
-        <HeroSection />
-        <QuickActions />
-        <FeaturedItems />
-        <CoffeeFactCard />
-        
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Made with ❤️ and lots of ☕</Text>
-          <Text style={styles.footerSubtext}>© 2025 DieKoffieBlik</Text>
-        </View>
-      </Animated.ScrollView>
+
+      {/* Background image or solid color */}
+      <CoffeeBackground>
+
+        <NavBar />
+
+        <Animated.ScrollView 
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+          }
+          onScroll={Animated.event(
+            [{ nativeEvent: { contentOffset: { y: scrollY } } }],
+            { useNativeDriver: false }
+          )}
+          scrollEventThrottle={16}
+        >
+          <HeroSection />
+          <QuickActions />
+          <FeaturedItems />
+          <CoffeeFactCard />
+          
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>Made with ❤️ and lots of ☕</Text>
+            <Text style={styles.footerSubtext}>© 2025 DieKoffieBlik</Text>
+          </View>
+        </Animated.ScrollView>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }

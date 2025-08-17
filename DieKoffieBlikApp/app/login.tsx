@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { supabase } from '../lib/supabase';
 import {
   View,
   Text,
@@ -11,11 +10,15 @@ import {
   Platform,
   ScrollView,
   Alert,
-  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
+import CoffeeLoading from '../assets/loading';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CoffeeBackground from "../assets/coffee-background";
+
+// API Configuration
+const API_BASE_URL = "http://192.168.101.124:5000";
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
@@ -30,6 +33,8 @@ const validatePassword = (password: string): string | null => {
   if (password.length < 8) return 'Password must be at least 8 characters';
   return null;
 };
+
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 interface LoginScreenProps {
   onLogin?: (email: string, password: string, rememberMe: boolean) => void;
@@ -53,6 +58,26 @@ export default function LoginScreen({
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+
+  React.useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const sessionData = await AsyncStorage.getItem('user_session');
+        if (sessionData) {
+          const { email: storedEmail } = JSON.parse(sessionData);
+          setEmail(storedEmail);
+          setRememberMe(true);
+          router.replace('/home');
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        // Clear storage if there's an error
+        await AsyncStorage.removeItem('user_session');
+      }
+    };
+
+    checkSession();
+  }, []);
 
   const isFormValid = () => {
     return (
@@ -78,56 +103,90 @@ export default function LoginScreen({
     if (!isEmailValid || !isPasswordValid) return;
 
     setIsLoading(true);
-    console.log("Email: " + email);
-    console.log("Password: " + password);
+
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      console.log("Attempting login with email:", email);
+
+      const response = await fetch(`${API_BASE_URL}/login`, {
+        method: 'POST',
+        credentials: 'include', // Include cookies for session management
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
       });
 
+      const data = await response.json();
 
-      if (error) {
-        console.error("❌ Supabase error:", error.message, error);
-      } else {
-        console.log("✅ Logged in:", data);
-      }
-
-      if (error) {
-        Alert.alert('Login failed', error.message);
+      if (!response.ok) {
+        console.error("❌ Login failed:", data.message);
+        Alert.alert('Login failed', data.message || 'Invalid credentials');
         return;
       }
 
-      // Optional: fetch user data (like from user_profiles)
-      const userId = data?.user?.id;
-      if (userId) {
-        const { data: profile, error: profileError } = await supabase
-          .from('user_profiles')
-          .select('*')
-          .eq('user_id', userId)
-          .single();
+      const accessToken = response.headers.get("x-access-token");
+      const refreshToken = response.headers.get("x-refresh-token");
 
-        if (profileError) {
-          console.warn('Profile not found:', profileError.message);
-          // Optional: redirect user to complete profile
-        } else {
-          console.log('User profile:', profile);
-        }
+      console.log("✅ Access token" + accessToken);
+      console.log("✅ Refresh token" + refreshToken);
+
+      if (accessToken && refreshToken) {
+        await AsyncStorage.setItem("access_token", accessToken);
+        await AsyncStorage.setItem("refresh_token", refreshToken);
+        console.log("✅ Tokens stored in AsyncStorage");
+        
+        await sleep(300);
       }
 
+      console.log("✅ Login successful:", data);
+
+      // Call optional onLogin callback
       if (onLogin) {
         onLogin(email, password, rememberMe);
       } else {
-        Alert.alert('Success', 'Login successful!');
         console.log('Login successful', { email, password: '********', rememberMe });
       }
 
-      // Optional: route to homepage or dashboard
-      router.replace('/home'); // adjust route as needed
+      // Handle "Remember Me" storage
+      if (rememberMe) {
+        try {
+          await AsyncStorage.setItem('user_session', JSON.stringify({
+            email: email,
+            user: data.user,
+            username: data.username,
+            loginTime: new Date().toISOString(),
+          }));
+          console.log('Session stored successfully');
+        } catch (storageError) {
+          console.error('Error storing session:', storageError);
+        }
+      } else {
+        try {
+          await AsyncStorage.removeItem('user_session');
+          console.log('Session removed successfully');
+        } catch (removeError) {
+          console.error('Error removing session:', removeError);
+        }
+      }
+
+      // Navigate to home AFTER everything is done
+      router.replace('/home');
 
     } catch (err: any) {
       console.error('Unexpected login error:', err);
-      Alert.alert('Error', 'An unexpected error occurred.');
+      
+      // Handle network errors specifically
+      if (err.message === 'Network request failed' || err.code === 'ECONNREFUSED') {
+        Alert.alert(
+          'Connection Error', 
+          'Unable to connect to the server. Please check your internet connection and try again.'
+        );
+      } else {
+        Alert.alert('Error', 'An unexpected error occurred. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -161,10 +220,7 @@ export default function LoginScreen({
 
   return (
     <SafeAreaView style={styles.container}>
-      <LinearGradient
-        colors={['#fffbeb', '#fef3c7']} // amber-50 to amber-100
-        style={styles.gradient}
-      >
+      <CoffeeBackground>
         <KeyboardAvoidingView
           behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           style={styles.keyboardView}
@@ -279,7 +335,9 @@ export default function LoginScreen({
                 disabled={!isFormValid() || isLoading}
               >
                 {isLoading ? (
-                  <ActivityIndicator color="white" size="small" />
+                  <Text style={styles.loginButtonText}>
+                    Login to Account
+                  </Text>
                 ) : (
                   <>
                     <Text style={styles.loginButtonText}>
@@ -289,6 +347,7 @@ export default function LoginScreen({
                   </>
                 )}
               </TouchableOpacity>
+              <CoffeeLoading visible={isLoading} />
 
               {/* Create account link */}
               <View style={styles.signupContainer}>
@@ -300,7 +359,7 @@ export default function LoginScreen({
             </View>
           </ScrollView>
         </KeyboardAvoidingView>
-      </LinearGradient>
+      </CoffeeBackground>
     </SafeAreaView>
   );
 }
