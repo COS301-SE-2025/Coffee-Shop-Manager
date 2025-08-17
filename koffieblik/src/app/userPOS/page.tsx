@@ -118,7 +118,7 @@ export default function OrderPage() {
     };
   };
 
-  // Updated handlePlaceOrder to actually create the order
+  
   const handlePlaceOrder = async () => {
     if (cart.length === 0) {
       setMessage('Please add items to your cart first.');
