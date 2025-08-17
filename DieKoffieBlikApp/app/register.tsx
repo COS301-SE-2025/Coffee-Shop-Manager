@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import DateTimePicker from '@react-native-community/datetimepicker';
 import CoffeeLoading from "../assets/loading";
 
 const API_BASE_URL = "http://192.168.101.124:5000";
@@ -41,16 +42,14 @@ const WebDatePicker = ({ value, onChange, style, textStyle }: {
           backgroundColor: '#fffbeb',
           color: '#451a03',
           fontSize: 16,
-          fontFamily: 'inherit',
+          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
           ...style,
         }}
       />
     );
   }
   
-  // For native platforms, you would import and use the actual DateTimePicker
-  // import DateTimePicker from '@react-native-community/datetimepicker';
-  return null; // Placeholder for native implementation
+  return null; // Return null for non-web platforms as they use the native picker
 };
 
 const validateEmail = (email: string) => {
@@ -95,7 +94,7 @@ export default function RegisterScreen() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState(new Date());
+  const [dateOfBirth, setDateOfBirth] = useState(new Date(2000, 0, 1)); // Default to a reasonable date
   const [showDatePicker, setShowDatePicker] = useState(false);
   
   const [firstNameError, setFirstNameError] = useState('');
@@ -195,14 +194,15 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleDateChange = (selectedDate: Date) => {
-    setDateOfBirth(selectedDate);
-    const error = validateDateOfBirth(selectedDate);
-    setDobError(error);
-    
-    // Hide date picker for native platforms
-    if (Platform.OS !== 'web') {
+  const handleDateChange = (event: any, selectedDate?: Date) => {
+    if (Platform.OS === 'android') {
       setShowDatePicker(false);
+    }
+    
+    if (selectedDate) {
+      setDateOfBirth(selectedDate);
+      const error = validateDateOfBirth(selectedDate);
+      setDobError(error);
     }
   };
 
@@ -519,41 +519,49 @@ export default function RegisterScreen() {
         {Platform.OS === 'web' ? (
           <WebDatePicker
             value={dateOfBirth}
-            onChange={handleDateChange}
+            onChange={setDateOfBirth}
             style={dobError ? { borderColor: '#f87171' } : {}}
           />
         ) : (
-          <TouchableOpacity
-            style={[styles.datePickerButton, dobError ? styles.inputError : null]}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.datePickerText}>
-              {formatDate(dateOfBirth)}
-            </Text>
-            <Ionicons name="calendar" size={20} color="#b45309" />
-          </TouchableOpacity>
+          <>
+            <TouchableOpacity
+              style={[styles.datePickerButton, dobError ? styles.inputError : null]}
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text style={styles.datePickerText}>
+                {formatDate(dateOfBirth)}
+              </Text>
+              <Ionicons name="calendar" size={20} color="#b45309" />
+            </TouchableOpacity>
+            
+            {showDatePicker && (
+              <DateTimePicker
+                value={dateOfBirth}
+                mode="date"
+                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                onChange={handleDateChange}
+                maximumDate={new Date()}
+                minimumDate={new Date(1900, 0, 1)}
+                textColor={Platform.OS === 'ios' ? '#451a03' : undefined}
+                style={Platform.OS === 'ios' ? styles.iosDatePicker : undefined}
+              />
+            )}
+            
+            {/* iOS needs a done button for the spinner display */}
+            {showDatePicker && Platform.OS === 'ios' && (
+              <View style={styles.iosDatePickerContainer}>
+                <TouchableOpacity
+                  style={styles.datePickerDoneButton}
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <Text style={styles.datePickerDoneText}>Done</Text>
+                </TouchableOpacity>
+              </View>
+            )}
+          </>
         )}
         <Text style={styles.helperText}>You must be at least 13 years old to register</Text>
         {dobError && <Text style={styles.errorText}>{dobError}</Text>}
-
-        {/* For native platforms, you would uncomment and use the actual DateTimePicker */}
-        {/* {showDatePicker && Platform.OS !== 'web' && (
-          <DateTimePicker
-            value={dateOfBirth}
-            mode="date"
-            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
-            onChange={(event, selectedDate) => {
-              if (Platform.OS === 'android') {
-                setShowDatePicker(false);
-              }
-              if (selectedDate) {
-                handleDateChange(selectedDate);
-              }
-            }}
-            maximumDate={new Date()}
-            minimumDate={new Date(1900, 0, 1)}
-          />
-        )} */}
       </View>
     </View>
   );
@@ -882,6 +890,24 @@ const styles = StyleSheet.create({
   datePickerText: {
     color: '#451a03',
     fontSize: 16,
+  },
+  iosDatePicker: {
+    backgroundColor: '#fffbeb',
+    marginTop: 8,
+  },
+  iosDatePickerContainer: {
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  datePickerDoneButton: {
+    backgroundColor: '#b45309',
+    paddingHorizontal: 20,
+    paddingVertical: 8,
+    borderRadius: 6,
+  },
+  datePickerDoneText: {
+    color: 'white',
+    fontWeight: '500',
   },
   reviewContainer: {
     backgroundColor: "#fffbeb",

@@ -45,7 +45,6 @@ export default function ProfileScreen() {
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
   
   // State for user data
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -127,33 +126,33 @@ export default function ProfileScreen() {
     }
   };
 
-  const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Logout", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              const { error } = await supabase.auth.signOut();
-              if (error) {
-                console.error('Logout error:', error);
-                Alert.alert('Error', 'Failed to logout');
-                return;
-              }
-              router.replace('/login');
-            } catch (err) {
-              console.error('Unexpected logout error:', err);
-              Alert.alert('Error', 'An unexpected error occurred');
-            }
-          }
-        }
-      ]
-    );
-  };
+  // const handleLogout = async () => {
+  //   Alert.alert(
+  //     "Logout",
+  //     "Are you sure you want to logout?",
+  //     [
+  //       { text: "Cancel", style: "cancel" },
+  //       { 
+  //         text: "Logout", 
+  //         style: "destructive",
+  //         onPress: async () => {
+  //           try {
+  //             const { error } = await supabase.auth.signOut();
+  //             if (error) {
+  //               console.error('Logout error:', error);
+  //               Alert.alert('Error', 'Failed to logout');
+  //               return;
+  //             }
+  //             router.replace('/login');
+  //           } catch (err) {
+  //             console.error('Unexpected logout error:', err);
+  //             Alert.alert('Error', 'An unexpected error occurred');
+  //           }
+  //         }
+  //       }
+  //     ]
+  //   );
+  // };
 
   // Loading state
   if (isLoading) {

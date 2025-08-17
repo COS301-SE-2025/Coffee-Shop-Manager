@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CoffeeBackground from "../assets/coffee-background";
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import CoffeeLoading from "../assets/loading";
 
 const API_BASE_URL = "http://192.168.101.124:5000";
 
@@ -160,7 +161,7 @@ export default function OrderScreen() {
         });
 
         console.log(response);
-        
+
         if (!response.ok) throw new Error("Failed to fetch menu items");
 
         const data = await response.json();
@@ -514,7 +515,7 @@ export default function OrderScreen() {
       <SafeAreaView style={styles.container}>
         <CoffeeBackground>
           <View style={styles.centerContainer}>
-            <Ionicons name="cafe" size={48} color="#78350f" />
+            <CoffeeLoading visible={loading} />
             <Text style={styles.loadingText}>Loading menu...</Text>
           </View>
         </CoffeeBackground>
