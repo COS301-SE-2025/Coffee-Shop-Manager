@@ -16,6 +16,19 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import CoffeeBackground from "../assets/coffee-background";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CoffeeLoading from '../assets/loading';
+
+interface FeaturedItem {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  stock_quantity?: number;
+  icon: string;
+  popular: boolean;
+  rating: string;
+}
 
 const { width, height } = Dimensions.get('window');
 const CARD_WIDTH = (width - 60) / 2;
@@ -28,6 +41,10 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
+  const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+
+  const API_BASE_URL = "http://192.168.101.124:5000";
 
   const coffeeQuotes = [
     "Life begins after coffee ☕",
@@ -90,32 +107,80 @@ const coffeeFacts = [
 ];
 
 
-  const featuredItems = [
-    { 
-      name: "Signature Cappuccino", 
-      price: "R45", 
-      icon: "cafe-outline" as const, 
-      popular: true
-    },
-    { 
-      name: "Double Espresso", 
-      price: "R35", 
-      icon: "flash-outline" as const, 
-      popular: false
-    },
-    { 
-      name: "Vanilla Latte", 
-      price: "R50", 
-      icon: "heart-outline" as const, 
-      popular: true
-    },
-    { 
-      name: "Iced Americano", 
-      price: "R40", 
-      icon: "snow-outline" as const, 
-      popular: false
-    }
-  ];
+  // const featuredItems = [
+  //   { 
+  //     name: "Signature Cappuccino", 
+  //     price: "R45", 
+  //     icon: "cafe-outline" as const, 
+  //     popular: true
+  //   },
+  //   { 
+  //     name: "Double Espresso", 
+  //     price: "R35", 
+  //     icon: "flash-outline" as const, 
+  //     popular: false
+  //   },
+  //   { 
+  //     name: "Vanilla Latte", 
+  //     price: "R50", 
+  //     icon: "heart-outline" as const, 
+  //     popular: true
+  //   },
+  //   { 
+  //     name: "Iced Americano", 
+  //     price: "R40", 
+  //     icon: "snow-outline" as const, 
+  //     popular: false
+  //   }
+  // ];
+
+  const FeaturedItems = () => (
+    <View style={styles.featuredSection}>
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Featured Items</Text>
+        <Pressable onPress={() => router.push('/order')}>
+          <Text style={styles.seeAllText}>See All</Text>
+        </Pressable>
+      </View>
+      
+      {featuredLoading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading...</Text>
+        </View>
+      ) : (
+      <ScrollView 
+        horizontal 
+        showsHorizontalScrollIndicator={false} 
+        style={styles.featuredScroll}
+        contentContainerStyle={styles.featuredScrollContent}
+      >
+        {featuredItems.map((item, index) => (
+          <Pressable 
+            key={item.id} 
+            style={styles.featuredCard}
+            android_ripple={{ color: '#78350f20' }}
+          >
+            
+            <View style={styles.featuredIconContainer}>
+              <Ionicons name={item.icon as any} size={32} color="#78350f" />
+            </View>
+            
+            <Text style={styles.featuredItemName}>{item.name}</Text>
+            
+            <Text style={styles.featuredItemPrice}>R{item.price}</Text>
+            
+            <Pressable 
+              style={styles.addToCartBtn}
+              android_ripple={{ color: '#ffffff30' }}
+            >
+              <Ionicons name="add" size={16} color="#fff" />
+            </Pressable>
+          </Pressable>
+        ))}
+      </ScrollView>
+      )}
+    </View>
+  );
 
   // Removed profile quick action as requested
   const quickActions = [
@@ -233,6 +298,49 @@ const coffeeFacts = [
     </>
   );
 
+  useEffect(() => {
+    const fetchFeaturedItems = async () => {
+      try {
+        const accessToken = await AsyncStorage.getItem("access_token");
+        if (!accessToken) return;
+
+        const response = await fetch(`${API_BASE_URL}/product`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch");
+        const data = await response.json();
+        
+        // Take first 3 items and enhance them
+        const firstThree: FeaturedItem[] = data.slice(0, 3).map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          stock_quantity: item.stock_quantity,
+          icon: item.name.toLowerCase().includes('espresso') ? 'flash-outline' :
+                item.name.toLowerCase().includes('latte') ? 'heart-outline' : 
+                item.name.toLowerCase().includes('cappuccino') ? 'cafe-outline' :
+                item.name.toLowerCase().includes('americano') ? 'snow-outline' : 'cafe-outline',
+          popular: Math.random() > 0.5,
+          rating: (4.2 + Math.random() * 0.6).toFixed(1)
+        }));
+        
+        setFeaturedItems(firstThree);
+      } catch (error) {
+        console.error('Featured items error:', error);
+      } finally {
+        setFeaturedLoading(false);
+      }
+    };
+
+    fetchFeaturedItems();
+  }, []);
+
   const HeroSection = () => (
     <Animated.View 
       style={[
@@ -331,52 +439,52 @@ const coffeeFacts = [
     </View>
   );
 
-  const FeaturedItems = () => (
-    <View style={styles.featuredSection}>
-      <View style={styles.sectionHeader}>
-        <Text style={styles.sectionTitle}>Featured Items</Text>
-        <Pressable 
-          onPress={() => router.push('/order')}
-          android_ripple={{ color: '#78350f20' }}
-        >
-          <Text style={styles.seeAllText}>See All</Text>
-        </Pressable>
-      </View>
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.featuredScroll}
-        contentContainerStyle={styles.featuredScrollContent}
-      >
-        {featuredItems.map((item, index) => (
-          <Pressable 
-            key={index} 
-            style={styles.featuredCard}
-            android_ripple={{ color: '#78350f20' }}
-          >
-            <View style={styles.featuredIconContainer}>
-              <Ionicons name={item.icon} size={32} color="#78350f" />
-            </View>
+  // const FeaturedItems = () => (
+  //   <View style={styles.featuredSection}>
+  //     <View style={styles.sectionHeader}>
+  //       <Text style={styles.sectionTitle}>Featured Items</Text>
+  //       <Pressable 
+  //         onPress={() => router.push('/order')}
+  //         android_ripple={{ color: '#78350f20' }}
+  //       >
+  //         <Text style={styles.seeAllText}>See All</Text>
+  //       </Pressable>
+  //     </View>
+  //     <ScrollView 
+  //       horizontal 
+  //       showsHorizontalScrollIndicator={false} 
+  //       style={styles.featuredScroll}
+  //       contentContainerStyle={styles.featuredScrollContent}
+  //     >
+  //       {featuredItems.map((item, index) => (
+  //         <Pressable 
+  //           key={index} 
+  //           style={styles.featuredCard}
+  //           android_ripple={{ color: '#78350f20' }}
+  //         >
+  //           <View style={styles.featuredIconContainer}>
+  //             <Ionicons name={item.icon} size={32} color="#78350f" />
+  //           </View>
             
-            <Text style={styles.featuredItemName}>{item.name}</Text>
+  //           <Text style={styles.featuredItemName}>{item.name}</Text>
             
-            <View style={styles.ratingContainer}>
-              <Ionicons name="star" size={12} color="#f59e0b" />
-            </View>
+  //           <View style={styles.ratingContainer}>
+  //             <Ionicons name="star" size={12} color="#f59e0b" />
+  //           </View>
             
-            <Text style={styles.featuredItemPrice}>{item.price}</Text>
+  //           <Text style={styles.featuredItemPrice}>{item.price}</Text>
             
-            <Pressable 
-              style={styles.addToCartBtn}
-              android_ripple={{ color: '#ffffff30' }}
-            >
-              <Ionicons name="add" size={16} color="#fff" />
-            </Pressable>
-          </Pressable>
-        ))}
-      </ScrollView>
-    </View>
-  );
+  //           <Pressable 
+  //             style={styles.addToCartBtn}
+  //             android_ripple={{ color: '#ffffff30' }}
+  //           >
+  //             <Ionicons name="add" size={16} color="#fff" />
+  //           </Pressable>
+  //         </Pressable>
+  //       ))}
+  //     </ScrollView>
+  //   </View>
+  // );
 
   const CoffeeFactCard = () => (
     <Animated.View style={styles.factCard}>
@@ -810,5 +918,20 @@ const styles = StyleSheet.create({
   footerSubtext: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+   loadingContainer: {
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#78350f',
+    fontSize: 14,
+  },
+  ratingText: {
+    fontSize: 11,
+    color: '#f59e0b',
+    fontWeight: '600',
+    marginLeft: 3,
   },
 });
