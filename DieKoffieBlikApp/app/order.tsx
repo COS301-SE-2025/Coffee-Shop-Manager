@@ -21,7 +21,7 @@ import CoffeeBackground from "../assets/coffee-background";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "http://192.168.101.124:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za"
 
 const { width, height } = Dimensions.get("window");
 

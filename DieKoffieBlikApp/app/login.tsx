@@ -17,8 +17,7 @@ import CoffeeLoading from '../assets/loading';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import CoffeeBackground from "../assets/coffee-background";
 
-// API Configuration
-const API_BASE_URL = "http://192.168.101.124:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za"
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
