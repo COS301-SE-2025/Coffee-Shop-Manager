@@ -68,16 +68,12 @@ export async function getProductsWithStockHandler(req: Request, res: Response): 
         }
 
         // Merge ingredients into products
-        const enrichedProducts = productsArray.map((prod: ProductStockRow) => ({
+        const enrichedProducts = productsArray.map((prod: any) => ({
             ...prod,
-            ingredients: ingredientMap[prod.product_id] || []
+            ingredients: ingredientMap[prod.id] || []
         }));
 
-        if (productId) {
-            res.status(200).json(enrichedProducts[0] || null);
-        } else {
-            res.status(200).json(enrichedProducts);
-        }
+        res.status(200).json(productId ? enrichedProducts[0] || null : enrichedProducts);
     } catch (err: any) {
         console.error("Error fetching detailed products:", err);
         res.status(500).json({ error: err.message || "Internal server error" });
