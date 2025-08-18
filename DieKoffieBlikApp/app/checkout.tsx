@@ -20,6 +20,7 @@ import CoffeeLoading from "../assets/loading";
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const { width } = Dimensions.get("window");
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 type CustomerInfo = {
   name: string;
@@ -33,19 +34,6 @@ type CustomerDetailsProps = {
   setCustomerInfo: React.Dispatch<React.SetStateAction<CustomerInfo>>;
   slideAnim: Animated.Value;
 };
-
-const menuItems = [
-  { id: "1", name: "Americano", price: 30 },
-  { id: "2", name: "Cappuccino", price: 35 },
-  { id: "3", name: "Latte", price: 32 },
-  { id: "4", name: "Mocha", price: 38 },
-  { id: "5", name: "Espresso", price: 28 },
-  { id: "6", name: "Iced Coffee", price: 30 },
-  { id: "7", name: "Frappé", price: 42 },
-  { id: "8", name: "Croissant", price: 25 },
-  { id: "9", name: "Muffin", price: 20 },
-  { id: "10", name: "Signature Blend", price: 45 },
-];
 
 const paymentMethods = [
   { id: "card", name: "Credit/Debit Card", icon: "card" },
@@ -152,6 +140,46 @@ export default function CheckoutScreen() {
     email: "",
     notes: "",
   });
+  
+  // NEW: State for dynamic menu items
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [loadingItems, setLoadingItems] = useState(true);
+
+  // NEW: Fetch menu items from API
+  const fetchMenuItems = async () => {
+    try {
+      setLoadingItems(true);
+      const accessToken = await AsyncStorage.getItem("access_token");
+      
+      if (!accessToken) {
+        console.log("No access token found");
+        Alert.alert("Session Expired", "Please log in again");
+        router.replace("/login");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/product`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: Failed to fetch menu items`);
+      }
+
+      const data = await response.json();
+      console.log("Fetched menu items for checkout:", data.length);
+      setMenuItems(data);
+    } catch (error) {
+      console.error("Error fetching menu items:", error);
+      Alert.alert("Error", "Failed to load menu items. Please try again.");
+    } finally {
+      setLoadingItems(false);
+    }
+  };
 
   const loadEmail = async () => {
     try {
@@ -166,12 +194,14 @@ export default function CheckoutScreen() {
 
   useEffect(() => {
     loadEmail();
+    fetchMenuItems(); // NEW: Fetch menu items when component mounts
   }, []);
 
   useEffect(() => {
     if (cartParam) {
       try {
         const parsedCart = JSON.parse(cartParam as string);
+        console.log("Parsed cart:", parsedCart);
         setCart(parsedCart);
       } catch (error) {
         console.error("Error parsing cart:", error);
@@ -192,15 +222,20 @@ export default function CheckoutScreen() {
     ]).start();
   }, [cartParam]);
 
+  // NEW: Calculate cart items using dynamic menu data
   const cartItems = Object.entries(cart)
     .map(([itemId, quantity]) => {
       const item = menuItems.find((item) => item.id === itemId);
-      return item ? { ...item, quantity } : null;
+      if (!item) {
+        console.warn(`Item with ID ${itemId} not found in menu items`);
+        return null;
+      }
+      return { ...item, quantity };
     })
     .filter(Boolean);
 
   const subtotal = cartItems.reduce(
-    (total, item) => total + item!.price * item!.quantity,
+    (total, item) => total + (item!.price * item!.quantity),
     0
   );
   const total = subtotal;
@@ -258,28 +293,6 @@ export default function CheckoutScreen() {
         if (res.success && res.paymentUrl) {
           console.log("Opening PayFast payment page...");
 
-          // // Open PayFast payment page
-          // const result = await WebBrowser.openBrowserAsync(res.paymentUrl, {
-          //   presentationStyle: WebBrowser.WebBrowserPresentationStyle.FULL_SCREEN,
-          //   showTitle: true,
-          //   toolbarColor: '#78350f',
-          //   controlsColor: '#fff',
-          // });
-
-          // // Handle the result
-          // if (result.type === 'cancel') {
-          //   Alert.alert('Payment Cancelled', 'You cancelled the payment. Your order was not placed.');
-          // } else if (result.type === 'dismiss') {
-          //   // User closed the browser - we can't know if payment succeeded
-          //   Alert.alert(
-          //     'Payment Status Unknown',
-          //     'The payment window was closed. If you completed the payment, your order will be processed.',
-          //     [
-          //       { text: 'OK', onPress: () => router.push('/home') }
-          //     ]
-          //   );
-          // }
-
           router.push({
             pathname: "/payment-webview",
             params: { url: encodeURIComponent(res.paymentUrl) },
@@ -313,31 +326,44 @@ export default function CheckoutScreen() {
     >
       <Text style={styles.sectionTitle}>Order Summary</Text>
 
-      {cartItems.map((item) => (
-        <View key={item!.id} style={styles.orderItem}>
-          <View style={styles.orderItemLeft}>
-            <View style={styles.itemIcon}>
-              <Ionicons name="cafe" size={16} color="#78350f" />
-            </View>
-            <View>
-              <Text style={styles.orderItemName}>{item!.name}</Text>
-              <Text style={styles.orderItemQuantity}>
-                Qty: {item!.quantity}
+      {loadingItems ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>Loading order details...</Text>
+        </View>
+      ) : cartItems.length === 0 ? (
+        <View style={styles.emptyCartContainer}>
+          <Ionicons name="cafe-outline" size={48} color="#cbd5e1" />
+          <Text style={styles.emptyCartText}>Your cart is empty</Text>
+        </View>
+      ) : (
+        <>
+          {cartItems.map((item) => (
+            <View key={item!.id} style={styles.orderItem}>
+              <View style={styles.orderItemLeft}>
+                <View style={styles.itemIcon}>
+                  <Ionicons name="cafe" size={16} color="#78350f" />
+                </View>
+                <View>
+                  <Text style={styles.orderItemName}>{item!.name}</Text>
+                  <Text style={styles.orderItemQuantity}>
+                    Qty: {item!.quantity}
+                  </Text>
+                </View>
+              </View>
+              <Text style={styles.orderItemPrice}>
+                R{item!.price * item!.quantity}
               </Text>
             </View>
+          ))}
+
+          <View style={styles.divider} />
+
+          <View style={styles.summaryRow}>
+            <Text style={styles.totalLabel}>Total</Text>
+            <Text style={styles.totalValue}>R{total}</Text>
           </View>
-          <Text style={styles.orderItemPrice}>
-            R{item!.price * item!.quantity}
-          </Text>
-        </View>
-      ))}
-
-      <View style={styles.divider} />
-
-      <View style={styles.summaryRow}>
-        <Text style={styles.totalLabel}>Total</Text>
-        <Text style={styles.totalValue}>R{total}</Text>
-      </View>
+        </>
+      )}
     </Animated.View>
   );
 
@@ -490,8 +516,12 @@ export default function CheckoutScreen() {
         {/* Place Order Button */}
         <View style={styles.bottomContainer}>
           <TouchableOpacity
-            style={styles.placeOrderButton}
+            style={[
+              styles.placeOrderButton,
+              (loadingItems || cartItems.length === 0) && styles.placeOrderButtonDisabled
+            ]}
             onPress={handlePlaceOrder}
+            disabled={loadingItems || cartItems.length === 0}
           >
             <View style={styles.orderButtonContent}>
               <View style={styles.orderButtonLeft}>
@@ -564,6 +594,25 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#78350f",
     marginBottom: 16,
+  },
+
+  // Loading and Empty States
+  loadingContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#6b7280',
+    fontSize: 16,
+  },
+  emptyCartContainer: {
+    padding: 20,
+    alignItems: 'center',
+  },
+  emptyCartText: {
+    color: '#6b7280',
+    fontSize: 16,
+    marginTop: 8,
   },
 
   // Order Summary
@@ -781,6 +830,10 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
   },
+  placeOrderButtonDisabled: {
+    backgroundColor: "#cbd5e1",
+    shadowOpacity: 0.1,
+  },
   orderButtonContent: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -860,7 +913,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     color: "#78350f",
   },
-   cancelButton: {
+  cancelButton: {
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,

@@ -240,8 +240,11 @@ export default function OrderScreen() {
 
   // Reset scroll position when category or search changes
   useEffect(() => {
-    if (flatListRef.current) {
-      flatListRef.current.scrollToOffset({ offset: 0, animated: false });
+    if (flatListRef.current && filteredItems.length > 0) {
+      // Use a small delay to ensure the list has rendered
+      setTimeout(() => {
+        flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
+      }, 100);
     }
   }, [selectedCategory, searchQuery]);
 
@@ -285,50 +288,49 @@ export default function OrderScreen() {
   }, [cartCount, cart, router]);
 
   const CategorySelector = React.memo(() => (
-    <ScrollView
-      horizontal
-      showsHorizontalScrollIndicator={false}
-      style={styles.categoryScroll}
-      contentContainerStyle={[
-        styles.categoryContainer,
-        { alignItems: "center" },
-      ]}
-    >
-      {menuCategories.map((category) => (
-        <TouchableOpacity
-          key={category.id}
-          style={[
-            styles.categoryButton,
-            selectedCategory === category.id && styles.categoryButtonActive,
-          ]}
-          onPress={() => setSelectedCategory(category.id)}
-          activeOpacity={0.7}
-        >
-          <View
+    <View style={styles.categoryWrapper}>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        style={styles.categoryScroll}
+        contentContainerStyle={styles.categoryContainer}
+      >
+        {menuCategories.map((category) => (
+          <TouchableOpacity
+            key={category.id}
             style={[
-              styles.categoryIconContainer,
-              selectedCategory === category.id && {
-                backgroundColor: "rgba(255,255,255,0.2)",
-              },
+              styles.categoryButton,
+              selectedCategory === category.id && styles.categoryButtonActive,
             ]}
+            onPress={() => setSelectedCategory(category.id)}
+            activeOpacity={0.7}
           >
-            <Ionicons
-              name={category.icon as any}
-              size={18}
-              color={selectedCategory === category.id ? "#fff" : "#78350f"}
-            />
-          </View>
-          <Text
-            style={[
-              styles.categoryText,
-              selectedCategory === category.id && styles.categoryTextActive,
-            ]}
-          >
-            {category.name}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+            <View
+              style={[
+                styles.categoryIconContainer,
+                selectedCategory === category.id && {
+                  backgroundColor: "rgba(255,255,255,0.2)",
+                },
+              ]}
+            >
+              <Ionicons
+                name={category.icon as any}
+                size={18}
+                color={selectedCategory === category.id ? "#fff" : "#78350f"}
+              />
+            </View>
+            <Text
+              style={[
+                styles.categoryText,
+                selectedCategory === category.id && styles.categoryTextActive,
+              ]}
+            >
+              {category.name}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+    </View>
   ));
 
   const SortSelector = React.memo(() => (
@@ -389,15 +391,7 @@ export default function OrderScreen() {
   }, []);
 
   const MenuItem = React.memo(({ item }: { item: any }) => (
-    <Animated.View
-      style={[
-        styles.card,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
+    <View style={styles.card}>
       <View style={styles.cardContent}>
         <View style={styles.itemImageContainer}>
           <Ionicons name={item.image as any} size={32} color="#78350f" />
@@ -405,7 +399,7 @@ export default function OrderScreen() {
 
         <View style={styles.itemDetails}>
           <View style={styles.itemHeader}>
-            <Text style={styles.itemName}>{item.name}</Text>
+            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
             <Text style={styles.itemPrice}>R {item.price}</Text>
           </View>
 
@@ -420,15 +414,6 @@ export default function OrderScreen() {
               </View>
             ))}
           </View>
-
-          {/* <View style={styles.stockContainer}>
-            <Text style={[
-              styles.stockText,
-              item.stock < 5 ? styles.lowStock : styles.inStock
-            ]}>
-              {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
-            </Text>
-          </View> */}
         </View>
 
         <View style={styles.cartControls}>
@@ -471,26 +456,12 @@ export default function OrderScreen() {
           )}
         </View>
       </View>
-    </Animated.View>
+    </View>
   ));
 
   const FloatingCart = () =>
     cartCount > 0 && (
-      <Animated.View
-        style={[
-          styles.floatingCart,
-          {
-            transform: [
-              {
-                translateY: fadeAnim.interpolate({
-                  inputRange: [0, 1],
-                  outputRange: [100, 0],
-                }),
-              },
-            ],
-          },
-        ]}
-      >
+      <View style={styles.floatingCart}>
         <TouchableOpacity
           style={styles.floatingCartContent}
           onPress={goToCheckout}
@@ -506,7 +477,7 @@ export default function OrderScreen() {
             <Ionicons name="arrow-forward" size={20} color="#fff" />
           </View>
         </TouchableOpacity>
-      </Animated.View>
+      </View>
     );
 
   // Loading and error states
@@ -540,6 +511,7 @@ export default function OrderScreen() {
                 const fetchMenuItems = async () => {
                   try {
                     setLoading(true);
+                    console.log(process.env.IP)
                     const response = await fetch(`http://${process.env.IP}/product`);
                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
                     const apiData = await response.json();
@@ -567,7 +539,7 @@ export default function OrderScreen() {
       <CoffeeBackground>
         <StatusBar barStyle="light-content" backgroundColor="#78350f" />
 
-        {/* Header */}
+        {/* Fixed Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -595,7 +567,7 @@ export default function OrderScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Search Bar */}
+        {/* Fixed Search Bar */}
         {showSearch && (
           <View style={styles.searchContainer}>
             <TextInput
@@ -615,35 +587,41 @@ export default function OrderScreen() {
           </View>
         )}
 
-        {/* Categories */}
+        {/* Fixed Categories */}
         <CategorySelector />
 
-        {/* Sort Options */}
+        {/* Fixed Sort Options */}
         <SortSelector />
 
-        {/* Menu Items */}
-        <FlatList
-          ref={flatListRef}
-          data={filteredItems}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.list}
-          showsVerticalScrollIndicator={false}
-          renderItem={({ item }) => <MenuItem item={item} />}
-          removeClippedSubviews={true}
-          maxToRenderPerBatch={10}
-          windowSize={10}
-          initialNumToRender={5}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons name="cafe-outline" size={48} color="#cbd5e1" />
-              <Text style={styles.emptyText}>No items found</Text>
-            </View>
-          }
-          maintainVisibleContentPosition={{
-            minIndexForVisible: 0,
-            autoscrollToTopThreshold: 10,
-          }}
-        />
+        {/* Menu Items with fixed content area */}
+        <View style={styles.contentArea}>
+          <FlatList
+            ref={flatListRef}
+            data={filteredItems}
+            keyExtractor={(item) => item.id}
+            contentContainerStyle={[
+              styles.list,
+              filteredItems.length === 0 && styles.emptyList
+            ]}
+            showsVerticalScrollIndicator={false}
+            renderItem={({ item }) => <MenuItem item={item} />}
+            removeClippedSubviews={false}
+            maxToRenderPerBatch={10}
+            windowSize={10}
+            initialNumToRender={8}
+            getItemLayout={(data, index) => ({
+              length: 140, // Fixed item height
+              offset: 140 * index + (index > 0 ? 16 * index : 0), // Account for margins
+              index,
+            })}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons name="cafe-outline" size={48} color="#cbd5e1" />
+                <Text style={styles.emptyText}>No items found</Text>
+              </View>
+            }
+          />
+        </View>
 
         {/* Floating Cart */}
         <FloatingCart />
@@ -690,7 +668,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
   },
 
-  // Header Styles
+  // Header Styles - Fixed positioning
   header: {
     backgroundColor: "#78350f",
     paddingVertical: 16,
@@ -703,6 +681,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 12,
+    position: "relative",
+    zIndex: 1000,
   },
   headerButton: {
     width: 40,
@@ -727,7 +707,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Search Styles
+  // Search Styles - Fixed positioning
   searchContainer: {
     backgroundColor: "#fff",
     paddingHorizontal: 16,
@@ -736,6 +716,8 @@ const styles = StyleSheet.create({
     borderBottomColor: "#e2e8f0",
     flexDirection: "row",
     alignItems: "center",
+    position: "relative",
+    zIndex: 999,
   },
   searchInput: {
     flex: 1,
@@ -751,16 +733,22 @@ const styles = StyleSheet.create({
     left: 28,
   },
 
-  // Category Styles
-  categoryScroll: {
+  // Category Styles - Fixed positioning
+  categoryWrapper: {
     backgroundColor: "#fff",
     borderBottomWidth: 1,
     borderBottomColor: "#f1f5f9",
+    position: "relative",
+    zIndex: 998,
+  },
+  categoryScroll: {
+    flexGrow: 0,
   },
   categoryContainer: {
     paddingHorizontal: 20,
     paddingVertical: 16,
-    gap: 12,
+    flexDirection: "row",
+    alignItems: "center",
   },
   categoryButton: {
     flexDirection: "row",
@@ -769,7 +757,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     borderRadius: 24,
     backgroundColor: "#f8fafc",
-    gap: 8,
+    marginRight: 12,
     borderWidth: 1,
     borderColor: "#e2e8f0",
     minWidth: 120,
@@ -786,6 +774,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     backgroundColor: "rgba(120, 53, 15, 0.1)",
+    marginRight: 8,
   },
   categoryText: {
     fontSize: 14,
@@ -796,16 +785,71 @@ const styles = StyleSheet.create({
     color: "#fff",
   },
 
-  // List Styles
+  // Sort Styles - Fixed positioning
+  sortContainer: {
+    backgroundColor: '#fff',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#f1f5f9',
+    flexDirection: 'row',
+    alignItems: 'center',
+    position: "relative",
+    zIndex: 997,
+  },
+  sortLabel: {
+    fontSize: 14,
+    color: '#64748b',
+    fontWeight: '600',
+    marginRight: 12,
+  },
+  sortOption: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#f8fafc',
+    marginRight: 8,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  sortOptionActive: {
+    backgroundColor: '#78350f',
+    borderColor: 'transparent',
+  },
+  sortOptionText: {
+    fontSize: 12,
+    color: '#78350f',
+    fontWeight: '500',
+    marginLeft: 4,
+  },
+  sortOptionTextActive: {
+    color: '#fff',
+  },
+
+  // Content Area - Flexible space for list
+  contentArea: {
+    flex: 1,
+    position: "relative",
+  },
+
+  // List Styles - Updated for consistent layout
   list: {
     padding: 20,
     paddingBottom: 120,
+    flexGrow: 1,
+  },
+  emptyList: {
+    flex: 1,
+    justifyContent: "center",
   },
   emptyContainer: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 40,
+    minHeight: 200,
   },
   emptyText: {
     marginTop: 16,
@@ -813,7 +857,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
 
-  // Card Styles
+  // Card Styles - Fixed height for consistency
   card: {
     backgroundColor: "#fff",
     borderRadius: 20,
@@ -823,13 +867,14 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.08,
     shadowRadius: 12,
     elevation: 4,
-    position: "relative",
     overflow: "hidden",
+    minHeight: 124, // Fixed minimum height
   },
   cardContent: {
     flexDirection: "row",
     padding: 16,
     alignItems: "flex-start",
+    minHeight: 108, // Fixed content height
   },
   itemImageContainer: {
     width: 48,
@@ -839,10 +884,13 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginRight: 12,
+    flexShrink: 0,
   },
   itemDetails: {
     flex: 1,
     marginRight: 12,
+    justifyContent: "space-between",
+    minHeight: 76, // Ensure consistent spacing
   },
   itemHeader: {
     flexDirection: "row",
@@ -855,52 +903,47 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     color: "#1e293b",
     flex: 1,
+    marginRight: 8,
   },
   itemDescription: {
     fontSize: 13,
     color: "#64748b",
     lineHeight: 18,
     marginBottom: 8,
+    height: 36, // Fixed height for 2 lines
   },
   tagsContainer: {
     flexDirection: "row",
     gap: 6,
-    marginBottom: 8,
+    flexWrap: "wrap",
+    height: 20, // Fixed height
   },
   tag: {
     backgroundColor: "#f1f5f9",
     paddingHorizontal: 8,
     paddingVertical: 2,
     borderRadius: 8,
+    height: 18,
+    justifyContent: "center",
   },
   tagText: {
     fontSize: 10,
     color: "#475569",
     fontWeight: "500",
   },
-  stockContainer: {
-    marginBottom: 4,
-  },
-  stockText: {
-    fontSize: 11,
-    fontWeight: "500",
-  },
-  inStock: {
-    color: "#059669",
-  },
-  lowStock: {
-    color: "#dc2626",
-  },
   itemPrice: {
     fontSize: 16,
     fontWeight: "800",
     color: "#78350f",
+    flexShrink: 0,
   },
 
-  // Cart Control Styles
+  // Cart Control Styles - Fixed positioning
   cartControls: {
     alignItems: "center",
     justifyContent: "center",
+    width: 60,
+    flexShrink: 0,
   },
   quantityControls: {
     flexDirection: "row",
@@ -910,6 +953,8 @@ const styles = StyleSheet.create({
     padding: 4,
     borderWidth: 1,
     borderColor: "#e2e8f0",
+    width: 100,
+    justifyContent: "space-between",
   },
   quantityButton: {
     width: 28,
@@ -925,10 +970,12 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   quantityText: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 8,
     fontSize: 14,
     fontWeight: "700",
     color: "#78350f",
+    minWidth: 20,
+    textAlign: "center",
   },
   addButton: {
     backgroundColor: "#78350f",
@@ -948,12 +995,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
   },
 
-  // Floating Cart Styles
+  // Floating Cart Styles - Fixed positioning
   floatingCart: {
     position: "absolute",
     bottom: 30,
     left: 20,
     right: 20,
+    zIndex: 1000,
   },
   floatingCartContent: {
     backgroundColor: "#78350f",
@@ -988,44 +1036,5 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255,255,255,0.2)",
     alignItems: "center",
     justifyContent: "center",
-  },
-  sortContainer: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  sortLabel: {
-    fontSize: 14,
-    color: '#64748b',
-    fontWeight: '600',
-    marginRight: 12,
-  },
-  sortOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    backgroundColor: '#f8fafc',
-    marginRight: 8,
-    gap: 4,
-    borderWidth: 1,
-    borderColor: '#e2e8f0',
-  },
-  sortOptionActive: {
-    backgroundColor: '#78350f',
-    borderColor: 'transparent',
-  },
-  sortOptionText: {
-    fontSize: 12,
-    color: '#78350f',
-    fontWeight: '500',
-  },
-  sortOptionTextActive: {
-    color: '#fff',
   },
 });

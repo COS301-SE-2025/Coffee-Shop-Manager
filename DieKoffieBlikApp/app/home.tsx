@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   View, 
   Text, 
@@ -35,14 +35,18 @@ const CARD_WIDTH = (width - 60) / 2;
 
 export default function HomeScreen() {
   const router = useRouter();
-  const [fadeAnim] = useState(new Animated.Value(0));
-  const [slideAnim] = useState(new Animated.Value(50));
+  // Initialize animations with stable values
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const slideAnim = useRef(new Animated.Value(50)).current;
+  const factFadeAnim = useRef(new Animated.Value(1)).current;
+  
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
   const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   const API_BASE_URL = "https://api.diekoffieblik.co.za"
 
@@ -52,87 +56,98 @@ export default function HomeScreen() {
     "Espresso yourself! 💫",
     "Coffee is my love language ❤️"
   ];
-
   
-const coffeeFacts = [
-  "The word 'coffee' comes from the Arabic word 'qahwa' 🌍",
-  "Espresso has less caffeine than drip coffee per cup! ⚡",
-  "Coffee was first discovered by goats in Ethiopia 🐐",
-  "Finland consumes the most coffee per capita globally 🇫🇮",
-  "Coffee beans are actually seeds, not beans! 🌱",
-  "The most expensive coffee comes from elephant dung 🐘",
-  "Brazil is the largest producer of coffee in the world 🇧🇷",
-  "Decaf coffee still contains small amounts of caffeine ☕",
-  "Coffee is the second most traded commodity after oil 🛢️",
-  "Cold brew coffee is less acidic than hot brewed coffee ❄️",
-  "Adding milk to coffee can slow down the effects of caffeine 🥛",
-  "Instant coffee was invented in 1901 by Japanese scientist Satori Kato ⏱️",
-  "A typical coffee tree can live up to 100 years 🌳",
-  "There are two main coffee species: Arabica and Robusta 🌿",
-  "Drinking coffee may help improve memory and alertness 🧠",
-  "Turkey has one of the oldest coffee brewing methods: Turkish coffee 🇹🇷",
-  "The world’s largest cup of coffee was over 22,000 liters in South Korea ☕",
-  "Coffee cherries turn bright red when they are ripe for picking 🍒",
-  "The first webcam was invented at Cambridge University to monitor a coffee pot 🎥",
-  "Beethoven was obsessed with coffee and counted 60 beans per cup he drank 🎼",
-  "Coffee was banned in Mecca in the 16th century because of its stimulating effect 🚫",
-  "New Yorkers drink seven times more coffee than people in other U.S. cities 🗽",
-  "The word 'cappuccino' comes from the brown robes worn by Capuchin monks 🤎",
-  "Coffee was originally chewed, not sipped, by mixing ground beans with fat 🥩",
-  "Italy has over 150,000 coffee bars across the country 🇮🇹",
-  "Luwak coffee, made from civet droppings, is one of the priciest coffees 🐾",
-  "Coffee plants can grow up to 30 feet tall in the wild 🌴",
-  "The Boston Tea Party helped popularize coffee in the United States 🇺🇸",
-  "Dark roast coffee has less caffeine than light roast coffee due to roasting 🔥",
-  "Coffee houses were called 'penny universities' in 17th century England 🎓",
-  "Coffee grounds can be used as natural fertilizer and insect repellent 🌾",
-  "Hawaii is the only U.S. state that grows coffee commercially 🌺",
-  "Coffee was first brought to Europe through Venice in the 1600s 🚢",
-  "A single coffee tree yields about one pound of roasted coffee per year 📦",
-  "Norway ranks among the highest consumers of coffee per capita in the world 🇳🇴",
-  "Caffeine is a natural pesticide produced by the coffee plant 🐛",
-  "The Americano was created by soldiers in WWII diluting espresso with water 💧",
-  "In Japan, there are coffee spas where you can literally bathe in coffee 🛁",
-  "Coffee is believed to have originated around the 9th century in Ethiopia ⏳",
-  "The average barista makes about 200 cups of coffee per day ☕",
-  "Coffee drinkers tend to live longer according to several studies ⌛",
-  "The largest coffee-producing continent is South America 🌎",
-  "Coffee foam (crema) is a sign of freshness and quality in espresso 💨",
-  "Coffee can enhance physical performance by increasing adrenaline levels 🏃‍♂️",
-  "Black coffee contains almost zero calories, making it diet-friendly 🥤",
-  "The smell of coffee alone can help reduce stress and improve alertness 😌",
-  "Vietnam is the world’s second-largest coffee producer 🇻🇳",
-  "Coffee beans are roasted at temperatures between 370°F and 540°F (188°C–282°C) 🌡️",
-  "There are over 25 million coffee farmers around the world 🌍"
-];
+  const coffeeFacts = [
+    "The word 'coffee' comes from the Arabic word 'qahwa' 🌍",
+    "Espresso has less caffeine than drip coffee per cup! ⚡",
+    "Coffee was first discovered by goats in Ethiopia 🐐",
+    "Finland consumes the most coffee per capita globally 🇫🇮",
+    "Coffee beans are actually seeds, not beans! 🌱",
+    "The most expensive coffee comes from elephant dung 🐘",
+    "Brazil is the largest producer of coffee in the world 🇧🇷",
+    "Decaf coffee still contains small amounts of caffeine ☕",
+    "Coffee is the second most traded commodity after oil 🛢️",
+    "Cold brew coffee is less acidic than hot brewed coffee ❄️",
+    "Adding milk to coffee can slow down the effects of caffeine 🥛",
+    "Instant coffee was invented in 1901 by Japanese scientist Satori Kato ⏱️",
+    "A typical coffee tree can live up to 100 years 🌳",
+    "There are two main coffee species: Arabica and Robusta 🌿",
+    "Drinking coffee may help improve memory and alertness 🧠",
+    "Turkey has one of the oldest coffee brewing methods: Turkish coffee 🇹🇷",
+    "The world's largest cup of coffee was over 22,000 liters in South Korea ☕",
+    "Coffee cherries turn bright red when they are ripe for picking 🍒",
+    "The first webcam was invented at Cambridge University to monitor a coffee pot 🎥",
+    "Beethoven was obsessed with coffee and counted 60 beans per cup he drank 🎼",
+    "Coffee was banned in Mecca in the 16th century because of its stimulating effect 🚫",
+    "New Yorkers drink seven times more coffee than people in other U.S. cities 🗽",
+    "The word 'cappuccino' comes from the brown robes worn by Capuchin monks 🤎",
+    "Coffee was originally chewed, not sipped, by mixing ground beans with fat 🥩",
+    "Italy has over 150,000 coffee bars across the country 🇮🇹",
+    "Luwak coffee, made from civet droppings, is one of the priciest coffees 🐾",
+    "Coffee plants can grow up to 30 feet tall in the wild 🌴",
+    "The Boston Tea Party helped popularize coffee in the United States 🇺🇸",
+    "Dark roast coffee has less caffeine than light roast coffee due to roasting 🔥",
+    "Coffee houses were called 'penny universities' in 17th century England 🎓",
+    "Coffee grounds can be used as natural fertilizer and insect repellent 🌾",
+    "Hawaii is the only U.S. state that grows coffee commercially 🌺",
+    "Coffee was first brought to Europe through Venice in the 1600s 🚢",
+    "A single coffee tree yields about one pound of roasted coffee per year 📦",
+    "Norway ranks among the highest consumers of coffee per capita in the world 🇳🇴",
+    "Caffeine is a natural pesticide produced by the coffee plant 🐛",
+    "The Americano was created by soldiers in WWII diluting espresso with water 💧",
+    "In Japan, there are coffee spas where you can literally bathe in coffee 🛁",
+    "Coffee is believed to have originated around the 9th century in Ethiopia ⏳",
+    "The average barista makes about 200 cups of coffee per day ☕",
+    "Coffee drinkers tend to live longer according to several studies ⌛",
+    "The largest coffee-producing continent is South America 🌎",
+    "Coffee foam (crema) is a sign of freshness and quality in espresso 💨",
+    "Coffee can enhance physical performance by increasing adrenaline levels 🏃‍♂️",
+    "Black coffee contains almost zero calories, making it diet-friendly 🥤",
+    "The smell of coffee alone can help reduce stress and improve alertness 😌",
+    "Vietnam is the world's second-largest coffee producer 🇻🇳",
+    "Coffee beans are roasted at temperatures between 370°F and 540°F (188°C–282°C) 🌡️",
+    "There are over 25 million coffee farmers around the world 🌍"
+  ];
 
+  // Memoize the featured items fetch function to prevent unnecessary re-renders
+  const fetchFeaturedItems = useCallback(async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      if (!accessToken) return;
 
-  // const featuredItems = [
-  //   { 
-  //     name: "Signature Cappuccino", 
-  //     price: "R45", 
-  //     icon: "cafe-outline" as const, 
-  //     popular: true
-  //   },
-  //   { 
-  //     name: "Double Espresso", 
-  //     price: "R35", 
-  //     icon: "flash-outline" as const, 
-  //     popular: false
-  //   },
-  //   { 
-  //     name: "Vanilla Latte", 
-  //     price: "R50", 
-  //     icon: "heart-outline" as const, 
-  //     popular: true
-  //   },
-  //   { 
-  //     name: "Iced Americano", 
-  //     price: "R40", 
-  //     icon: "snow-outline" as const, 
-  //     popular: false
-  //   }
-  // ];
+      const response = await fetch(`${API_BASE_URL}/product`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      if (!response.ok) throw new Error("Failed to fetch");
+      const data = await response.json();
+      
+      // Take first 3 items and enhance them
+      const firstThree: FeaturedItem[] = data.slice(0, 3).map((item: any) => ({
+        id: item.id,
+        name: item.name,
+        price: item.price,
+        description: item.description,
+        stock_quantity: item.stock_quantity,
+        icon: item.name.toLowerCase().includes('espresso') ? 'flash-outline' :
+              item.name.toLowerCase().includes('latte') ? 'heart-outline' : 
+              item.name.toLowerCase().includes('cappuccino') ? 'cafe-outline' :
+              item.name.toLowerCase().includes('americano') ? 'snow-outline' : 'cafe-outline',
+        popular: Math.random() > 0.5,
+        rating: (4.2 + Math.random() * 0.6).toFixed(1)
+      }));
+      
+      setFeaturedItems(firstThree);
+    } catch (error) {
+      console.error('Featured items error:', error);
+    } finally {
+      setFeaturedLoading(false);
+    }
+  }, []);
 
   const FeaturedItems = () => (
     <View style={styles.featuredSection}>
@@ -148,42 +163,41 @@ const coffeeFacts = [
           <Text style={styles.loadingText}>Loading...</Text>
         </View>
       ) : (
-      <ScrollView 
-        horizontal 
-        showsHorizontalScrollIndicator={false} 
-        style={styles.featuredScroll}
-        contentContainerStyle={styles.featuredScrollContent}
-      >
-        {featuredItems.map((item, index) => (
-          <Pressable 
-            key={item.id} 
-            style={styles.featuredCard}
-            android_ripple={{ color: '#78350f20' }}
-          >
-            
-            <View style={styles.featuredIconContainer}>
-              <Ionicons name={item.icon as any} size={32} color="#78350f" />
-            </View>
-            
-            <Text style={styles.featuredItemName}>{item.name}</Text>
-            
-            <Text style={styles.featuredItemPrice}>R{item.price}</Text>
-            
+        <ScrollView 
+          horizontal 
+          showsHorizontalScrollIndicator={false} 
+          style={styles.featuredScroll}
+          contentContainerStyle={styles.featuredScrollContent}
+        >
+          {featuredItems.map((item, index) => (
             <Pressable 
-              style={styles.addToCartBtn}
-              android_ripple={{ color: '#ffffff30' }}
+              key={item.id} 
+              style={styles.featuredCard}
+              android_ripple={{ color: '#78350f20' }}
             >
-              <Ionicons name="add" size={16} color="#fff" />
+              <View style={styles.featuredIconContainer}>
+                <Ionicons name={item.icon as any} size={32} color="#78350f" />
+              </View>
+              
+              <Text style={styles.featuredItemName}>{item.name}</Text>
+              
+              <Text style={styles.featuredItemPrice}>R{item.price}</Text>
+              
+              <Pressable 
+                style={styles.addToCartBtn}
+                android_ripple={{ color: '#ffffff30' }}
+              >
+                <Ionicons name="add" size={16} color="#fff" />
+              </Pressable>
             </Pressable>
-          </Pressable>
-        ))}
-      </ScrollView>
+          ))}
+        </ScrollView>
       )}
     </View>
   );
 
-  // Removed profile quick action as requested
-  const quickActions = [
+  // Memoize quick actions to prevent re-renders
+  const quickActions = useRef([
     { 
       title: "Order Coffee", 
       icon: "cart" as const, 
@@ -205,53 +219,98 @@ const coffeeFacts = [
       primary: false,
       description: "Saved items"
     }
-  ];
+  ]).current;
+
+  // Fix animation timing and dependencies
+  useEffect(() => {
+    // Reset animations to initial state
+    fadeAnim.setValue(0);
+    slideAnim.setValue(50);
+    
+    // Initial animation with proper timing
+    const animationTimer = setTimeout(() => {
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(slideAnim, {
+          toValue: 0,
+          duration: 1000,
+          useNativeDriver: true,
+        })
+      ]).start();
+    }, 100); // Small delay to ensure component is mounted
+
+    return () => clearTimeout(animationTimer);
+  }, []); // Remove dependencies that could cause re-animations
 
   useEffect(() => {
-    // Initial animation
-    Animated.parallel([
-      Animated.timing(fadeAnim, {
-        toValue: 1,
-        duration: 1200,
-        useNativeDriver: true,
-      }),
-      Animated.timing(slideAnim, {
-        toValue: 0,
-        duration: 1000,
-        useNativeDriver: true,
-      })
-    ]).start();
-
     // Update time every minute
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
     }, 60000);
 
-    // Rotate coffee facts every 5 seconds
-    const factInterval = setInterval(() => {
-      setCurrentFactIndex((prev) => (prev + 1) % coffeeFacts.length);
-    }, 5000);
-
-    return () => {
-      clearInterval(timeInterval);
-      clearInterval(factInterval);
-    };
+    return () => clearInterval(timeInterval);
   }, []);
 
-  const onRefresh = React.useCallback(() => {
+  // Separate useEffect for coffee facts with better animation
+  useEffect(() => {
+    const factInterval = setInterval(() => {
+      if (isAnimating) return; // Prevent overlapping animations
+      
+      setIsAnimating(true);
+      
+      // Fade out current fact
+      Animated.timing(factFadeAnim, {
+        toValue: 0,
+        duration: 300,
+        useNativeDriver: true,
+      }).start(() => {
+        // Change fact after fade out completes
+        setCurrentFactIndex((prev) => (prev + 1) % coffeeFacts.length);
+        
+        // Small delay before fading in
+        setTimeout(() => {
+          // Fade in new fact
+          Animated.timing(factFadeAnim, {
+            toValue: 1,
+            duration: 300,
+            useNativeDriver: true,
+          }).start(() => {
+            setIsAnimating(false);
+          });
+        }, 50);
+      });
+    }, 10000);
+
+    return () => clearInterval(factInterval);
+  }, [isAnimating, factFadeAnim]);
+
+  useEffect(() => {
+    fetchFeaturedItems();
+  }, [fetchFeaturedItems]);
+
+  const onRefresh = useCallback(() => {
     setRefreshing(true);
+    
+    // Reset animations during refresh
+    fadeAnim.setValue(1);
+    slideAnim.setValue(0);
+    
     setTimeout(() => {
       setRefreshing(false);
       setCurrentFactIndex(Math.floor(Math.random() * coffeeFacts.length));
     }, 2000);
-  }, []);
+  }, [fadeAnim, slideAnim]);
 
-  const getGreeting = () => {
+  const getGreeting = useCallback(() => {
     const hour = currentTime.getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
-  };
+  }, [currentTime]);
 
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 100],
@@ -282,10 +341,8 @@ const coffeeFacts = [
             onPress={() => router.push('/notifications')}
           >
             <Ionicons name="notifications-outline" size={22} color="#78350f" />
-            {/* <View style={styles.notificationBadge} />       only when new notifications */}
           </Pressable>
 
-          {/* Added profile icon as requested */}
           <Pressable 
             style={styles.profileButton} 
             android_ripple={{ color: '#78350f20' }}
@@ -298,50 +355,8 @@ const coffeeFacts = [
     </>
   );
 
-  useEffect(() => {
-    const fetchFeaturedItems = async () => {
-      try {
-        const accessToken = await AsyncStorage.getItem("access_token");
-        if (!accessToken) return;
-
-        const response = await fetch(`${API_BASE_URL}/product`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        });
-
-        if (!response.ok) throw new Error("Failed to fetch");
-        const data = await response.json();
-        
-        // Take first 3 items and enhance them
-        const firstThree: FeaturedItem[] = data.slice(0, 3).map((item: any) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          description: item.description,
-          stock_quantity: item.stock_quantity,
-          icon: item.name.toLowerCase().includes('espresso') ? 'flash-outline' :
-                item.name.toLowerCase().includes('latte') ? 'heart-outline' : 
-                item.name.toLowerCase().includes('cappuccino') ? 'cafe-outline' :
-                item.name.toLowerCase().includes('americano') ? 'snow-outline' : 'cafe-outline',
-          popular: Math.random() > 0.5,
-          rating: (4.2 + Math.random() * 0.6).toFixed(1)
-        }));
-        
-        setFeaturedItems(firstThree);
-      } catch (error) {
-        console.error('Featured items error:', error);
-      } finally {
-        setFeaturedLoading(false);
-      }
-    };
-
-    fetchFeaturedItems();
-  }, []);
-
-  const HeroSection = () => (
+  // Memoized HeroSection to prevent unnecessary re-renders
+  const HeroSection = useCallback(() => (
     <Animated.View 
       style={[
         styles.heroSection,
@@ -393,7 +408,7 @@ const coffeeFacts = [
         </View>
       </LinearGradient>
     </Animated.View>
-  );
+  ), [fadeAnim, slideAnim, getGreeting]);
 
   const QuickActions = () => (
     <View style={styles.quickActionsSection}>
@@ -401,7 +416,7 @@ const coffeeFacts = [
       <View style={styles.quickActionsGrid}>
         {quickActions.map((action, index) => (
           <Pressable 
-            key={index}
+            key={`${action.title}-${index}`} // More stable key
             style={[
               styles.quickActionCard, 
               action.primary && styles.primaryAction
@@ -439,55 +454,8 @@ const coffeeFacts = [
     </View>
   );
 
-  // const FeaturedItems = () => (
-  //   <View style={styles.featuredSection}>
-  //     <View style={styles.sectionHeader}>
-  //       <Text style={styles.sectionTitle}>Featured Items</Text>
-  //       <Pressable 
-  //         onPress={() => router.push('/order')}
-  //         android_ripple={{ color: '#78350f20' }}
-  //       >
-  //         <Text style={styles.seeAllText}>See All</Text>
-  //       </Pressable>
-  //     </View>
-  //     <ScrollView 
-  //       horizontal 
-  //       showsHorizontalScrollIndicator={false} 
-  //       style={styles.featuredScroll}
-  //       contentContainerStyle={styles.featuredScrollContent}
-  //     >
-  //       {featuredItems.map((item, index) => (
-  //         <Pressable 
-  //           key={index} 
-  //           style={styles.featuredCard}
-  //           android_ripple={{ color: '#78350f20' }}
-  //         >
-  //           <View style={styles.featuredIconContainer}>
-  //             <Ionicons name={item.icon} size={32} color="#78350f" />
-  //           </View>
-            
-  //           <Text style={styles.featuredItemName}>{item.name}</Text>
-            
-  //           <View style={styles.ratingContainer}>
-  //             <Ionicons name="star" size={12} color="#f59e0b" />
-  //           </View>
-            
-  //           <Text style={styles.featuredItemPrice}>{item.price}</Text>
-            
-  //           <Pressable 
-  //             style={styles.addToCartBtn}
-  //             android_ripple={{ color: '#ffffff30' }}
-  //           >
-  //             <Ionicons name="add" size={16} color="#fff" />
-  //           </Pressable>
-  //         </Pressable>
-  //       ))}
-  //     </ScrollView>
-  //   </View>
-  // );
-
-  const CoffeeFactCard = () => (
-    <Animated.View style={styles.factCard}>
+  const CoffeeFactCard = useCallback(() => (
+    <View style={styles.factCard}>
       <View style={styles.factHeader}>
         <View style={styles.factIconContainer}>
           <Ionicons name="bulb" size={20} color="#f59e0b" />
@@ -495,25 +463,22 @@ const coffeeFacts = [
         <Text style={styles.factTitle}>Did You Know?</Text>
       </View>
       <Animated.Text 
-        key={currentFactIndex}
-        style={styles.factText}
+        style={[styles.factText, { opacity: factFadeAnim }]}
       >
         {coffeeFacts[currentFactIndex]}
       </Animated.Text>
-    </Animated.View>
-  );
+    </View>
+  ), [currentFactIndex, factFadeAnim]);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={styles.container}>
       <StatusBar 
         barStyle="dark-content" 
         backgroundColor="transparent" 
         translucent 
       />
 
-      {/* Background image or solid color */}
       <CoffeeBackground>
-
         <NavBar />
 
         <Animated.ScrollView 
@@ -632,23 +597,32 @@ const styles = StyleSheet.create({
     backgroundColor: '#ef4444',
   },
   
-  // Hero Section
+  // Hero Section - Fixed styles
   heroSection: {
     marginHorizontal: 20,
     marginTop: 20,
     borderRadius: 24,
     overflow: 'hidden',
-    elevation: 8,
-    shadowColor: '#78350f',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 8 },
-    shadowRadius: 16,
+    minHeight: 180, // Ensure minimum height
+    ...(
+      Platform.OS === "ios"
+        ? {
+            shadowColor: '#78350f',
+            shadowOpacity: 0.3,
+            shadowOffset: { width: 0, height: 8 },
+            shadowRadius: 16,
+          }
+        : {
+            elevation: 8,
+          }
+    ),
   },
   heroGradient: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: 24,
     paddingVertical: 32,
+    minHeight: 180, // Ensure minimum height
   },
   heroContent: {
     flex: 1,
@@ -810,24 +784,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
   },
-  popularBadge: {
-    position: 'absolute',
-    top: -6,
-    left: -6,
-    backgroundColor: '#f59e0b',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    zIndex: 1,
-  },
-  popularText: {
-    color: '#fff',
-    fontSize: 10,
-    fontWeight: '600',
-    marginLeft: 4,
-  },
   featuredIconContainer: {
     width: 56,
     height: 56,
@@ -844,11 +800,6 @@ const styles = StyleSheet.create({
     color: '#78350f',
     textAlign: 'center',
     marginBottom: 6,
-  },
-  ratingContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 8,
   },
   featuredItemPrice: {
     fontSize: 16,
@@ -903,6 +854,17 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
   
+  // Loading
+  loadingContainer: {
+    height: 100,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#78350f',
+    fontSize: 14,
+  },
+  
   // Footer
   footer: {
     alignItems: 'center',
@@ -918,20 +880,5 @@ const styles = StyleSheet.create({
   footerSubtext: {
     fontSize: 12,
     color: '#9ca3af',
-  },
-   loadingContainer: {
-    height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#78350f',
-    fontSize: 14,
-  },
-  ratingText: {
-    fontSize: 11,
-    color: '#f59e0b',
-    fontWeight: '600',
-    marginLeft: 3,
   },
 });
