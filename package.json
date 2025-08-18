@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.2.0",
+    "@react-native-cookies/cookies": "^6.2.1",
     "@supabase/supabase-js": "^2.50.2",
     "autoprefixer": "^10.4.21",
     "cookie-parser": "^1.4.7",

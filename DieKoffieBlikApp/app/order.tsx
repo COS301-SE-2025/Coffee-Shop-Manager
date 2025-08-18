@@ -18,6 +18,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CoffeeBackground from "../assets/coffee-background";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import CoffeeLoading from "../assets/loading";
+
+const API_BASE_URL = "https://api.diekoffieblik.co.za"
 
 const { width, height } = Dimensions.get("window");
 
@@ -28,148 +32,89 @@ const menuCategories = [
   { id: "special", name: "Specials", icon: "star", color: "#7c3aed" },
 ];
 
-const menuItems = [
-  {
-    id: "1",
-    name: "Americano",
-    price: 30,
+// Barebones category defaults
+const categoryDefaults = {
+  hot: {
     category: "hot",
-    description: "Rich espresso with hot water for a smooth, bold taste",
-    rating: 4.5,
-    reviews: 124,
-    popular: false,
     image: "cafe",
-    prepTime: "3-5 min",
-    calories: 10,
-    tags: ["Strong", "Classic"],
-  },
-  {
-    id: "2",
-    name: "Cappuccino",
-    price: 35,
-    category: "hot",
-    description: "Perfect balance of espresso, steamed milk, and foam",
-    rating: 4.8,
-    reviews: 189,
-    popular: true,
-    image: "cafe-outline",
     prepTime: "4-6 min",
-    calories: 120,
-    tags: ["Creamy", "Popular"],
-  },
-  {
-    id: "3",
-    name: "Latte",
-    price: 32,
-    category: "hot",
-    description: "Smooth espresso with perfectly steamed milk",
-    rating: 4.6,
-    reviews: 156,
-    popular: true,
-    image: "heart",
-    prepTime: "4-6 min",
-    calories: 150,
-    tags: ["Smooth", "Mild"],
-  },
-  {
-    id: "4",
-    name: "Mocha",
-    price: 38,
-    category: "hot",
-    description: "Decadent chocolate meets premium coffee",
-    rating: 4.7,
-    reviews: 67,
-    popular: false,
-    image: "heart-outline",
-    prepTime: "5-7 min",
-    calories: 200,
-    tags: ["Sweet", "Chocolate"],
-  },
-  {
-    id: "5",
-    name: "Espresso",
-    price: 28,
-    category: "hot",
-    description: "Pure, concentrated coffee perfection",
-    rating: 4.4,
-    reviews: 203,
-    popular: false,
-    image: "flash",
-    prepTime: "2-3 min",
-    calories: 5,
-    tags: ["Strong", "Quick"],
-  },
-  {
-    id: "6",
-    name: "Iced Coffee",
-    price: 30,
-    category: "cold",
-    description: "Refreshing cold brew served over ice",
-    rating: 4.3,
-    reviews: 78,
-    popular: false,
-    image: "snow-outline",
-    prepTime: "2-3 min",
-    calories: 15,
-    tags: ["Refreshing", "Cold"],
-  },
-  {
-    id: "7",
-    name: "Frappé",
-    price: 42,
-    category: "cold",
-    description: "Blended iced coffee with whipped cream",
-    rating: 4.6,
-    reviews: 92,
-    popular: true,
-    image: "snow",
-    prepTime: "3-4 min",
-    calories: 280,
-    tags: ["Sweet", "Blended"],
-  },
-  {
-    id: "8",
-    name: "Croissant",
-    price: 25,
-    category: "pastry",
-    description: "Buttery, flaky French pastry baked fresh daily",
+    calories: 100,
+    tags: ["Hot", "Fresh"],
     rating: 4.5,
-    reviews: 45,
+    reviews: 120,
     popular: false,
+  },
+  cold: {
+    category: "cold",
+    image: "snow-outline",
+    prepTime: "2-4 min",
+    calories: 80,
+    tags: ["Cold", "Refreshing"],
+    rating: 4.3,
+    reviews: 80,
+    popular: false,
+  },
+  pastry: {
+    category: "pastry",
     image: "restaurant-outline",
     prepTime: "1-2 min",
-    calories: 230,
-    tags: ["Buttery", "Fresh"],
-  },
-  {
-    id: "9",
-    name: "Blueberry Muffin",
-    price: 20,
-    category: "pastry",
-    description: "Soft, moist muffin packed with fresh blueberries",
+    calories: 200,
+    tags: ["Fresh", "Baked"],
     rating: 4.2,
-    reviews: 34,
+    reviews: 40,
     popular: false,
-    image: "restaurant",
-    prepTime: "1-2 min",
-    calories: 180,
-    tags: ["Sweet", "Fruity"],
   },
-  {
-    id: "10",
-    name: "Signature Blend",
-    price: 45,
+  special: {
     category: "special",
-    description: "Our award-winning house special blend",
-    rating: 4.9,
-    reviews: 234,
-    popular: true,
     image: "star",
-    prepTime: "5-7 min",
-    calories: 25,
-    tags: ["Premium", "Award-winning"],
+    prepTime: "5-8 min",
+    calories: 50,
+    tags: ["Premium", "Signature"],
+    rating: 4.8,
+    reviews: 150,
+    popular: true,
   },
-];
+};
+
+// Simple category detection based on name
+const detectCategory = (itemName: string): string => {
+  const name = itemName.toLowerCase();
+  
+  // Cold drinks keywords
+  if (name.includes("iced") || name.includes("cold") || name.includes("frappe")) {
+    return "cold";
+  }
+  
+  // Pastry keywords
+  if (name.includes("muffin") || name.includes("croissant") || name.includes("cake") || name.includes("pastry")) {
+    return "pastry";
+  }
+  
+  // Special keywords
+  if (name.includes("signature") || name.includes("premium") || name.includes("special") || name.includes("blend")) {
+    return "special";
+  }
+  
+  // Default to hot
+  return "hot";
+};
+
+// Enhancement function
+const enhanceMenuItem = (apiItem: any) => {
+  const category = detectCategory(apiItem.name);
+  const defaults = categoryDefaults[category as keyof typeof categoryDefaults];
+  
+  return {
+    ...apiItem,
+    id: apiItem.id,
+    name: apiItem.name,
+    price: apiItem.price,
+    description: apiItem.description,
+    stock: apiItem.stock_quantity,
+    // Add enhanced properties
+    ...defaults,
+  };
+};
 
 interface CartItem {
   [key: string]: number;
@@ -183,10 +128,55 @@ export default function OrderScreen() {
   const [slideAnim] = useState(new Animated.Value(50));
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [sortByPrice, setSortByPrice] = useState('none'); // 'none', 'low-to-high', 'high-to-low'
+  const [sortByPrice, setSortByPrice] = useState('none');
+  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Add flatListRef to control scrolling
   const flatListRef = React.useRef<FlatList>(null);
+
+  useEffect(() => {
+    const fetchMenuItems = async () => {
+      setLoading(true);
+      setError(null);
+
+      const accessToken = await AsyncStorage.getItem("access_token");
+      console.log("Access token: " + accessToken);
+      if (!accessToken) {
+        console.log("No access token found, redirecting to login");
+        router.navigate("/login");
+        setError("Please log in to view the menu");
+        setLoading(false);
+        return;
+      }
+
+      try {
+        const response = await fetch(`${API_BASE_URL}/product`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+
+        console.log(response);
+
+        if (!response.ok) throw new Error("Failed to fetch menu items");
+
+        const data = await response.json();
+        const enhancedItems = data.map(enhanceMenuItem);
+        setMenuItems(enhancedItems);
+      } catch (err) {
+        console.error(err);
+        setError("Failed to load menu items. Please try again.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchMenuItems();
+  }, []);
 
   // Memoized filtered items
   const filteredItems = useMemo(() => {
@@ -197,7 +187,7 @@ export default function OrderScreen() {
         (item) =>
           item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          item.tags.some((tag) =>
+          item.tags.some((tag: string) =>
             tag.toLowerCase().includes(searchQuery.toLowerCase())
           )
       );
@@ -217,7 +207,7 @@ export default function OrderScreen() {
       if (!a.popular && b.popular) return 1;
       return b.rating - a.rating;
     });
-  }, [selectedCategory, searchQuery, sortByPrice]);
+  }, [selectedCategory, searchQuery, sortByPrice, menuItems]);
 
   const cartCount = useMemo(
     () => Object.values(cart).reduce((sum, count) => sum + count, 0),
@@ -230,7 +220,7 @@ export default function OrderScreen() {
         const item = menuItems.find((item) => item.id === itemId);
         return total + (item ? item.price * count : 0);
       }, 0),
-    [cart]
+    [cart, menuItems]
   );
 
   useEffect(() => {
@@ -430,6 +420,15 @@ export default function OrderScreen() {
               </View>
             ))}
           </View>
+
+          {/* <View style={styles.stockContainer}>
+            <Text style={[
+              styles.stockText,
+              item.stock < 5 ? styles.lowStock : styles.inStock
+            ]}>
+              {item.stock > 0 ? `${item.stock} in stock` : 'Out of stock'}
+            </Text>
+          </View> */}
         </View>
 
         <View style={styles.cartControls}>
@@ -446,18 +445,26 @@ export default function OrderScreen() {
               <Text style={styles.quantityText}>{cart[item.id]}</Text>
 
               <TouchableOpacity
-                style={styles.quantityButton}
-                onPress={() => addToCart(item.id)}
-                activeOpacity={0.7}
+                style={[
+                  styles.quantityButton,
+                  item.stock === 0 && styles.disabledButton
+                ]}
+                onPress={() => item.stock > 0 && addToCart(item.id)}
+                activeOpacity={item.stock > 0 ? 0.7 : 0.3}
+                disabled={item.stock === 0}
               >
-                <Ionicons name="add" size={16} color="#78350f" />
+                <Ionicons name="add" size={16} color={item.stock > 0 ? "#78350f" : "#cbd5e1"} />
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity
-              style={styles.addButton}
-              onPress={() => addToCart(item.id)}
-              activeOpacity={0.8}
+              style={[
+                styles.addButton,
+                item.stock === 0 && styles.disabledButton
+              ]}
+              onPress={() => item.stock > 0 && addToCart(item.id)}
+              activeOpacity={item.stock > 0 ? 0.8 : 0.3}
+              disabled={item.stock === 0}
             >
               <Ionicons name="add" size={20} color="#fff" />
             </TouchableOpacity>
@@ -501,6 +508,59 @@ export default function OrderScreen() {
         </TouchableOpacity>
       </Animated.View>
     );
+
+  // Loading and error states
+  if (loading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <CoffeeBackground>
+          <View style={styles.centerContainer}>
+            <CoffeeLoading visible={loading} />
+          </View>
+          <View style={styles.centerContainer}>
+            <Text style={styles.loadingText}>Loading menu...</Text>
+          </View>
+        </CoffeeBackground>
+      </SafeAreaView>
+    );
+  }
+
+  if (error) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <CoffeeBackground>
+          <View style={styles.centerContainer}>
+            <Ionicons name="alert-circle-outline" size={48} color="#ef4444" />
+            <Text style={styles.errorText}>{error}</Text>
+            <TouchableOpacity
+              style={styles.retryButton}
+              onPress={() => {
+                setError(null);
+                // Trigger refetch
+                const fetchMenuItems = async () => {
+                  try {
+                    setLoading(true);
+                    const response = await fetch(`http://${process.env.IP}/product`);
+                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const apiData = await response.json();
+                    const enhancedItems = apiData.map(enhanceMenuItem);
+                    setMenuItems(enhancedItems);
+                  } catch (err) {
+                    setError('Failed to load menu items. Please try again.');
+                  } finally {
+                    setLoading(false);
+                  }
+                };
+                fetchMenuItems();
+              }}
+            >
+              <Text style={styles.retryText}>Retry</Text>
+            </TouchableOpacity>
+          </View>
+        </CoffeeBackground>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
@@ -579,7 +639,6 @@ export default function OrderScreen() {
               <Text style={styles.emptyText}>No items found</Text>
             </View>
           }
-          // Removed getItemLayout to prevent positioning issues with filtered data
           maintainVisibleContentPosition={{
             minIndexForVisible: 0,
             autoscrollToTopThreshold: 10,
@@ -597,6 +656,38 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#f8fafc",
+  },
+
+  // Loading and Error States
+  centerContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    color: "#78350f",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  errorText: {
+    marginTop: 16,
+    color: "#ef4444",
+    fontSize: 16,
+    textAlign: "center",
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: "#78350f",
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 12,
+  },
+  retryText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "600",
   },
 
   // Header Styles
@@ -735,24 +826,6 @@ const styles = StyleSheet.create({
     position: "relative",
     overflow: "hidden",
   },
-  popularBadge: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    backgroundColor: "#ef4444",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    zIndex: 1,
-  },
-  popularText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
-  },
   cardContent: {
     flexDirection: "row",
     padding: 16,
@@ -783,16 +856,6 @@ const styles = StyleSheet.create({
     color: "#1e293b",
     flex: 1,
   },
-  prepTimeContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  prepTimeText: {
-    fontSize: 11,
-    color: "#6b7280",
-    fontWeight: "500",
-  },
   itemDescription: {
     fontSize: 13,
     color: "#64748b",
@@ -815,24 +878,18 @@ const styles = StyleSheet.create({
     color: "#475569",
     fontWeight: "500",
   },
-  ratingPriceContainer: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
+  stockContainer: {
+    marginBottom: 4,
   },
-  ratingContainer: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6,
-  },
-  starsContainer: {
-    flexDirection: "row",
-    gap: 1,
-  },
-  ratingText: {
+  stockText: {
     fontSize: 11,
-    color: "#6b7280",
     fontWeight: "500",
+  },
+  inStock: {
+    color: "#059669",
+  },
+  lowStock: {
+    color: "#dc2626",
   },
   itemPrice: {
     fontSize: 16,
@@ -885,6 +942,10 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
+  },
+  disabledButton: {
+    backgroundColor: "#cbd5e1",
+    shadowOpacity: 0.1,
   },
 
   // Floating Cart Styles

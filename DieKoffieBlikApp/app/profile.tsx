@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -9,7 +9,8 @@ import {
   Platform,
   Pressable,
   Switch,
-  Alert
+  Alert,
+  ActivityIndicator
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -17,27 +18,174 @@ import { LinearGradient } from 'expo-linear-gradient';
 import CoffeeLoading from '../assets/loading';
 import CoffeeBackground from '../assets/coffee-background';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { supabase } from '../lib/supabase'; // Import your supabase client
+
+interface UserProfile {
+  id: string;
+  username: string;
+  email: string;
+  last_name: string;
+  password: string;
+  phone_number: string;
+  date_of_birth: string;
+  created_at: string;
+}
+
+interface UserData {
+  name: string;
+  email: string;
+  phone: string;
+  totalOrders: number;
+  favoriteItems: number;
+  loyaltyPoints: number;
+}
 
 export default function ProfileScreen() {
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [locationEnabled, setLocationEnabled] = useState(false);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
+  
+  // State for user data
+  const [userData, setUserData] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Mock user data
-  const userData = {
-    name: "Phillip Retief",
-    email: "phillip.Retief@example.com",
-    phone: "+27 61 123 4567",
-    memberSince: "August 2025",
-    totalOrders: 50,
-    favoriteItems: 54,
-    loyaltyPoints: 1250
+  // Fetch user data on component mount
+  useEffect(() => {
+    fetchUserData();
+  }, []);
+
+  const fetchUserData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      // Get current user from Supabase Auth
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        throw new Error(`Auth error: ${authError.message}`);
+      }
+
+      if (!user) {
+        // User is not logged in, redirect to login
+        router.replace('/login');
+        return;
+      }
+
+      // Fetch user profile data from your users table
+      const { data: userProfile, error: profileError } = await supabase
+        .from('users')
+        .select('*')
+        .eq('email', user.email)
+        .single();
+
+      if (profileError) {
+        throw new Error(`Profile error: ${profileError.message}`);
+      }
+
+      // Fetch additional data based on your actual tables
+      const [ordersResult, stockResult] = await Promise.all([
+        // Fetch total orders count from orders table
+        supabase
+          .from('orders')
+          .select('id', { count: 'exact' })
+          .eq('user_id', userProfile.id), 
+        
+
+        supabase
+          .from('products')
+          .select('id', { count: 'exact' })
+          .limit(10),
+          
+        // Fetch user profile data
+        supabase
+          .from('user_profiles')
+          .select('*')
+          .eq('user_id', userProfile.id)
+            ]);
+
+      // Format the data for your component
+      const formattedUserData: UserData = {
+        name: `${userProfile.username} ${userProfile.last_name}`,
+        email: userProfile.email,
+        phone: userProfile.phone_number || 'Not provided',
+        
+        totalOrders: ordersResult.count || 0,
+        favoriteItems: stockResult.count || 0, // You can change this to actual favorites later
+        loyaltyPoints: 0
+      };
+
+      setUserData(formattedUserData);
+    } catch (err: any) {
+      console.error('Error fetching user data:', err);
+      setError(err.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
+  // const handleLogout = async () => {
+  //   Alert.alert(
+  //     "Logout",
+  //     "Are you sure you want to logout?",
+  //     [
+  //       { text: "Cancel", style: "cancel" },
+  //       { 
+  //         text: "Logout", 
+  //         style: "destructive",
+  //         onPress: async () => {
+  //           try {
+  //             const { error } = await supabase.auth.signOut();
+  //             if (error) {
+  //               console.error('Logout error:', error);
+  //               Alert.alert('Error', 'Failed to logout');
+  //               return;
+  //             }
+  //             router.replace('/login');
+  //           } catch (err) {
+  //             console.error('Unexpected logout error:', err);
+  //             Alert.alert('Error', 'An unexpected error occurred');
+  //           }
+  //         }
+  //       }
+  //     ]
+  //   );
+  // };
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <CoffeeBackground>
+          <View style={styles.centerContainer}>
+            <CoffeeLoading visible={isLoading} />
+          </View>
+          <View style={styles.centerContainer}>
+            <Text style={styles.loadingText}>Loading profile...</Text>
+          </View>
+        </CoffeeBackground>
+      </SafeAreaView>
+    );
+  }
+
+  // Error state
+  if (error || !userData) {
+    return (
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <Ionicons name="alert-circle" size={48} color="#ef4444" />
+        <Text style={styles.errorText}>
+          {error || 'Failed to load profile data'}
+        </Text>
+        <Pressable style={styles.retryButton} onPress={fetchUserData}>
+          <Text style={styles.retryButtonText}>Try Again</Text>
+        </Pressable>
+      </SafeAreaView>
+    );
+  }
+
   const profileMenuItems = [
-    
     {
       title: "Order History",
       icon: "time" as const,
@@ -47,7 +195,7 @@ export default function ProfileScreen() {
     {
       title: 'Account Settings',
       icon: "settings" as const,
-      route: 'settings',
+      route: '/settings',
       description: 'Your account settings'
     },
     {
@@ -67,7 +215,7 @@ export default function ProfileScreen() {
   const statsData = [
     { label: "Total Orders", value: userData.totalOrders.toString(), icon: "receipt" as const },
     { label: "Favorites", value: userData.favoriteItems.toString(), icon: "heart" as const },
-    { label: "Loyalty Points", value: userData.loyaltyPoints.toString(), icon: "star" as const }
+    { label: "Loyalty Points", value: userData.loyaltyPoints, icon: "star" as const }
   ];
 
   const handleLogout = async () => {
@@ -105,7 +253,6 @@ export default function ProfileScreen() {
       { cancelable: false }
     );
   };
-
   const NavBar = () => (
     <View style={styles.navbar}>
       <View style={styles.navLeft}>
@@ -118,6 +265,9 @@ export default function ProfileScreen() {
         </Pressable>
         <Text style={styles.navTitle}>Profile</Text>
       </View>
+      <Pressable onPress={fetchUserData}>
+        <Ionicons name="refresh" size={24} color="#78350f" />
+      </Pressable>
     </View>
   );
 
@@ -141,7 +291,6 @@ export default function ProfileScreen() {
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{userData.name}</Text>
           <Text style={styles.profileEmail}>{userData.email}</Text>
-          <Text style={styles.memberSince}>Member since {userData.memberSince}</Text>
         </View>
       </LinearGradient>
     </View>
@@ -208,24 +357,6 @@ export default function ProfileScreen() {
         />
       </View>
 
-      {/* <View style={styles.settingItem}>
-        <View style={styles.settingLeft}>
-          <View style={styles.settingIconContainer}>
-            <Ionicons name="location" size={20} color="#78350f" />
-          </View>
-          <View>
-            <Text style={styles.settingTitle}>Location Services</Text>
-            <Text style={styles.settingDescription}>Find nearby stores</Text>
-          </View>
-        </View>
-        <Switch
-          value={locationEnabled}
-          onValueChange={setLocationEnabled}
-          trackColor={{ false: '#e5e7eb', true: '#78350f' }}
-          thumbColor={locationEnabled ? '#fff' : '#f3f4f6'}
-        />
-      </View> */}
-
       <View style={styles.settingItem}>
         <View style={styles.settingLeft}>
           <View style={styles.settingIconContainer}>
@@ -248,14 +379,6 @@ export default function ProfileScreen() {
 
   const ActionButtons = () => (
     <View style={styles.actionButtonsSection}>
-      {/* <Pressable 
-        style={styles.editProfileBtn}
-        android_ripple={{ color: '#78350f20' }}
-      >
-        <Ionicons name="create" size={20} color="#78350f" />
-        <Text style={styles.editProfileBtnText}>Edit Profile</Text>
-      </Pressable> */}
-      
       <Pressable 
         style={styles.logoutBtn}
         onPress={handleLogout}
@@ -303,6 +426,34 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#fafafa',
   },
+  centerContent: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  loadingText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#78350f',
+  },
+  errorText: {
+    marginTop: 16,
+    fontSize: 16,
+    color: '#ef4444',
+    textAlign: 'center',
+    marginBottom: 20,
+  },
+  retryButton: {
+    backgroundColor: '#78350f',
+    paddingHorizontal: 24,
+    paddingVertical: 12,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
   scrollContent: {
     paddingBottom: 20,
   },
@@ -311,6 +462,7 @@ const styles = StyleSheet.create({
   navbar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 20,
     paddingTop: Platform.OS === 'ios' ? 50 : 30,
     paddingBottom: 15,
@@ -544,24 +696,6 @@ const styles = StyleSheet.create({
     marginTop: 32,
     gap: 12,
   },
-  editProfileBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#fff',
-    paddingVertical: 16,
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: '#78350f',
-    elevation: 2,
-  },
-  editProfileBtnText: {
-    color: '#78350f',
-    fontSize: 16,
-    fontWeight: '600',
-    marginLeft: 8,
-  },
   logoutBtn: {
     flex: 1,
     flexDirection: 'row',
@@ -594,5 +728,11 @@ const styles = StyleSheet.create({
   footerSubtext: {
     fontSize: 12,
     color: '#9ca3af',
+  },
+  centerContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 20,
   },
 });

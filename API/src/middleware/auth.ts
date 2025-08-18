@@ -6,6 +6,14 @@ export async function authMiddleware(req: Request, res: Response, next: NextFunc
   let accessToken = req.cookies?.access_token;
   const refreshToken = req.cookies?.refresh_token;
 
+  //For mobile
+  if (!accessToken && req.headers.authorization) {
+    const parts = req.headers.authorization.split(' ');
+    if (parts.length === 2 && parts[0] === 'Bearer') {
+      accessToken = parts[1];
+    }
+  }
+
   if (!accessToken && !refreshToken) {
     return res.status(401).json({ error: 'Missing token' });
   }
