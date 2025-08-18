@@ -18,11 +18,13 @@ export default function DashboardLayout({
     <div className="relative h-screen flex flex-col">
       {/* Background image layer */}
       <div
-        className="absolute inset-0 bg-[url('/assets/close-up-view-dark-fresh-roasted-coffee-beans-coffee-beans-background.jpg')] bg-cover bg-center bg-fixed bg-no-repeat -z-10"
+        className="absolute inset-0 -z-10"
+        style={{ backgroundColor: 'var(--primary-4)' }}
       />
 
+
       {/* Optional overlay */}
-      <div className="absolute inset-0 bg-black/60 -z-10" />
+      {/* <div className="absolute inset-0 bg-black/60 -z-10" /> */}
 
       {/* Foreground content */}
       <Navbar />

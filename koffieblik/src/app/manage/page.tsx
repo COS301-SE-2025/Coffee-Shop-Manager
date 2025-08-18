@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { Router } from 'express';
 
 interface OrderProduct {
   product_id: string;
@@ -26,7 +28,14 @@ interface Order {
 export default function ManageOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+  const router = useRouter();
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if (role !== 'admin') {
+      router.replace('/login');
+    }
+  }, [router]);
 
   const updateOrderStatus = async (
     orderId: string,
@@ -104,13 +113,12 @@ export default function ManageOrdersPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className={`rounded-xl shadow p-6 relative ${
-                order.status === 'completed'
-                  ? 'bg-green-100'
-                  : order.status === 'cancelled'
+              className={`rounded-xl shadow p-6 relative ${order.status === 'completed'
+                ? 'bg-green-100'
+                : order.status === 'cancelled'
                   ? 'bg-red-100'
                   : 'bg-white'
-              }`}
+                }`}
             >
               <h2 className="text-xl font-semibold mb-2">Order #{order.number}</h2>
               <p className="text-sm text-gray-500 mb-3">
@@ -119,13 +127,12 @@ export default function ManageOrdersPage() {
               <p className="mb-3 text-sm">
                 Status:{' '}
                 <span
-                  className={`font-bold ${
-                    order.status === 'pending'
-                      ? 'text-yellow-600'
-                      : order.status === 'completed'
+                  className={`font-bold ${order.status === 'pending'
+                    ? 'text-yellow-600'
+                    : order.status === 'completed'
                       ? 'text-green-600'
                       : 'text-red-600'
-                  }`}
+                    }`}
                 >
                   {order.status.toUpperCase()}
                 </span>

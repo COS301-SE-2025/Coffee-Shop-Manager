@@ -44,7 +44,7 @@ export default function DashboardPage() {
         }
     }, [router]);
 
-    const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+    const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
     async function fetchOrders() {
         setLoading(true);
@@ -138,8 +138,8 @@ export default function DashboardPage() {
                                 setShowOrders(true);
                                 fetchOrders();
                             }}
-                            className="select-none w-full sm:w-auto px-6 py-4 bg-black/45 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-4)] text-left flex items-center gap-4 text-[var(--primary-2)]"
-
+                            className="select-none w-full sm:w-auto px-6 py-4 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-4)] text-left flex items-center gap-4 text-[var(--primary-2)]"
+                            style={{ backgroundColor: 'var(--primary-3)' }}
                         >
                             <div className="text-3xl">📋</div>
                             <div>
@@ -149,7 +149,8 @@ export default function DashboardPage() {
                         </button>
 
                         <button
-                            className="select-none w-full sm:w-auto px-6 py-4 bg-black/45 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-4)] text-left flex items-center gap-4 text-[var(--primary-2)]"
+                            className="select-none w-full sm:w-auto px-6 py-4 backdrop-blur-sm rounded-2xl shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all border border-[var(--primary-4)] text-left flex items-center gap-4 text-[var(--primary-2)]"
+                            style={{ backgroundColor: 'var(--primary-3)' }}
                             onClick={() => {
                                 setShowPoints(true);
                             }}>
@@ -163,10 +164,11 @@ export default function DashboardPage() {
                     </div>
 
                     {/* Spacer Content */}
-                    <div className="mt-12 text-center flex flex-col items-center gap-4 opacity-80">
-                        <p className="text-lg italic text-white max-w-md">
+                    <div className="mt-12 text-center flex flex-col items-center gap-4">
+                        <p className="text-lg italic max-w-md" style={{ color: 'var(--primary-3)' }}>
                             “Good coffee is a pleasure. Good friends are a treasure.”
                         </p>
+
 
                         {/* <img
                             src="/assets/close-up-view-dark-fresh-roasted-coffee-beans-coffee-beans-background.jpg"
@@ -189,7 +191,8 @@ export default function DashboardPage() {
                     ) : (
                         <>
                             <button
-                                className="select-none backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+                                className="select-none backdrop-blur-sm border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+                                style={{ backgroundColor: 'var(--primary-3)' }}
                                 onClick={() => setShowOrders(false)}
                             >
                                 ←
@@ -201,22 +204,24 @@ export default function DashboardPage() {
 
                             {/* Orders Section */}
                             <section
-                                className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl"
+                                className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
+                                style={{ backgroundColor: 'var(--primary-3)' }}
                             >
-
-
+                                {/* Heading */}
                                 <div
-                                    className="p-6 border-b"
-                                    style={{ borderColor: 'var(--primary-3)' }}
+                                    className="p-6 border-b-2"
+                                    style={{
+                                        borderColor: 'var(--primary-4)', // more contrast
+                                        backgroundColor: 'var(--primary-3)',
+                                    }}
                                 >
-
                                     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                                         <div className="flex items-center gap-3">
                                             <div
                                                 className="w-8 h-8 rounded-lg flex items-center justify-center"
-                                                style={{ backgroundColor: 'var(--primary-3)' }}
+                                                style={{ backgroundColor: 'var(--primary-4)' }}
                                             >
-                                                <span className="text-sm" style={{ color: 'var(--primary-3)' }}>📋</span>
+                                                <span className="text-sm" style={{ color: 'var(--primary-2)' }}>📋</span>
                                             </div>
 
                                             <h2
@@ -225,33 +230,35 @@ export default function DashboardPage() {
                                             >
                                                 Recent Orders
                                             </h2>
-
                                         </div>
+
+                                        {/* Filter */}
                                         <div className="flex flex-wrap gap-3">
                                             <select
-                                                className={`${dateInputStyle} backdrop-blur-md text-[var(--primary-2)]`}
+                                                className={`${dateInputStyle} text-[var(--primary-2)]`}
                                                 style={{
                                                     backgroundColor: 'var(--primary-3)',
-                                                    borderColor: 'var(--primary-3)',
+                                                    borderColor: 'var(--primary-4)',
                                                     boxShadow: '0 0 0 0 transparent',
                                                 }}
                                                 value={filter}
                                                 onChange={(e) => setFilter(e.target.value)}
                                             >
-
                                                 <option>Today</option>
                                                 <option>This Week</option>
                                                 <option>This Month</option>
                                                 <option>Custom Range</option>
                                             </select>
+
                                             {filter === 'Custom Range' && (
                                                 <>
                                                     <input
                                                         type="date"
                                                         className={dateInputStyle}
                                                         value={startDate}
-                                                        onChange={e => setStartDate(e.target.value)}
+                                                        onChange={(e) => setStartDate(e.target.value)}
                                                         style={{
+                                                            backgroundColor: 'var(--primary-3)',
                                                             borderColor: 'var(--primary-4)',
                                                             color: 'var(--primary-2)',
                                                             boxShadow: '0 0 0 0 transparent',
@@ -267,27 +274,32 @@ export default function DashboardPage() {
                                                         type="date"
                                                         className={dateInputStyle}
                                                         value={endDate}
-                                                        onChange={e => setEndDate(e.target.value)}
+                                                        onChange={(e) => setEndDate(e.target.value)}
                                                         style={{
+                                                            backgroundColor: 'var(--primary-3)',
                                                             borderColor: 'var(--primary-4)',
                                                             color: 'var(--primary-2)',
                                                             boxShadow: '0 0 0 0 transparent',
                                                         }}
                                                     />
                                                 </>
-
                                             )}
-
                                         </div>
                                     </div>
                                 </div>
 
+                                {/* Table */}
                                 <div className="overflow-x-auto">
                                     <table className="min-w-full text-sm">
-                                        <thead style={{ backgroundColor: 'var(--primary-3)' }}>
+                                        <thead
+                                            className="border-b"
+                                            style={{
+                                                backgroundColor: 'var(--primary-3)',
+                                                borderColor: 'var(--primary-2)'
+                                            }}
+                                        >
                                             <tr>
                                                 <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Order #</th>
-                                                {/* <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Customer</th> */}
                                                 <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Items</th>
                                                 <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Total</th>
                                                 <th className="text-left px-6 py-4 font-semibold" style={{ color: 'var(--primary-2)' }}>Status</th>
@@ -295,12 +307,11 @@ export default function DashboardPage() {
                                             </tr>
                                         </thead>
 
-                                        <tbody className="divide-y text-[var(--primary-2)]" style={{ borderColor: 'var(--primary-3)' }}>
-                                            {filteredOrders.map((order) => (
 
+                                        <tbody className="divide-y text-[var(--primary-3)]" style={{ backgroundColor: 'var(--primary-2)', borderColor: 'var(--primary-3)' }}>
+                                            {filteredOrders.map((order) => (
                                                 <tr key={order.id}>
                                                     <td className="px-6 py-4 font-medium">{order.number}</td>
-                                                    {/* <td className="px-6 py-4">Customer</td> */}
                                                     <td className="px-6 py-4">
                                                         {order.order_products.map(p => `${p.products.name} x${p.quantity}`).join(', ')}
                                                     </td>
@@ -315,9 +326,9 @@ export default function DashboardPage() {
                                             ))}
                                         </tbody>
                                     </table>
-
                                 </div>
                             </section>
+
                         </>
                     )}
 
@@ -328,17 +339,18 @@ export default function DashboardPage() {
             {showPoints && (
                 <div className="p-8">
                     <button
-                        className="select-none backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+                        className="select-none backdrop-blur-sm border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+                        style={{ backgroundColor: 'var(--primary-3)' }}
                         onClick={() => setShowPoints(false)}
                     >
                         ←
                     </button>
 
-                    <div className="backdrop-blur-sm bg-black/45 border border-[var(--primary-4)] rounded-2xl shadow-xl p-6 space-y-6 text-[var(--primary-2)]">
+                    <div className="backdrop-blur-sm border border-[var(--primary-4)] rounded-2xl shadow-xl p-6 space-y-6 text-[var(--primary-2)]" style={{ backgroundColor: 'var(--primary-3)' }}>
 
                         {/* Header */}
                         <div className="flex justify-between items-center">
-                            <h2 className="text-xl font-bold text-[var(--primary-4)]">🎯 Your Loyalty Points</h2>
+                            <h2 className="text-xl font-bold text-[var(--primary-2)]">🎯 Your Loyalty Points</h2>
 
                         </div>
 
@@ -363,7 +375,7 @@ export default function DashboardPage() {
 
                         {/* Recent Activity */}
                         <div>
-                            <h3 className="text-lg font-semibold text-[var(--primary-4)] mb-3">📅 Recent Activity</h3>
+                            <h3 className="text-lg font-semibold text-[var(--primary-2)] mb-3">📅 Recent Activity</h3>
                             <ul className="space-y-2 text-lg">
                                 <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
                                     <span>+100 points — Latte Purchase</span>

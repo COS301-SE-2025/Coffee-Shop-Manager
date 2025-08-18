@@ -27,20 +27,27 @@ export async function updateOrderStatusHandler(req: Request, res: Response): Pro
       .update({ status })
       .eq('id', order_id)
       .select('*')
-      .single();
+      .maybeSingle();
 
-    if (error) throw error;
+    if (error) {
+      console.error('Supabase update error:', error);
+      res.status(500).json({ success: false, message: error.message });
+      return;
+    }
 
+    if (!data) {
+      res.status(404).json({ success: false, message: 'Order not found' });
+      return;
+    }
+
+    // Success response
     res.status(200).json({
       success: true,
       message: `Order ${order_id} updated to ${status}`,
       order: data,
     });
   } catch (err: any) {
-    console.error('❌ Error updating order status:', err);
-    res.status(500).json({
-      success: false,
-      message: err.message || 'Internal server error',
-    });
+    console.error('Unexpected error updating order status:', err);
+    res.status(500).json({ success: false, message: 'Internal server error' });
   }
 }

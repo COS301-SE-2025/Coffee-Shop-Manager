@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface InventoryItem {
   id: string;
@@ -21,8 +22,9 @@ export default function InventoryPage() {
   const [items, setItems] = useState<InventoryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
+  const router = useRouter();
   const [isUpdating, setIsUpdating] = useState(false);
-  const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const [formData, setFormData] = useState({
     item: '',
     quantity: '',
@@ -30,6 +32,13 @@ export default function InventoryPage() {
     max_capacity: '',
     reserved_quantity: '',
   });
+
+  useEffect(() => {
+    const role = localStorage.getItem('role');
+    if (role !== 'admin') {
+      router.replace('/login');
+    }
+  }, [router]);
 
   useEffect(() => {
     const fetchStock = async () => {
@@ -165,20 +174,20 @@ export default function InventoryPage() {
                   {field.replace('_', ' ')}
                 </label>
                 <input
-  id={field}
-  name={field}
-  type={field.includes('quantity') || field === 'max_capacity' ? 'number' : 'text'}
-  value={(formData as any)[field]}
-  onChange={(e) =>
-    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
-  }
-  className="w-full border rounded-lg px-3 py-2 mt-1"
-  style={{
-    borderColor: 'var(--primary-3)',
-    color: 'var(--primary-3)',
-    caretColor: 'var(--primary-3)',
-  }}
-/>
+                  id={field}
+                  name={field}
+                  type={field.includes('quantity') || field === 'max_capacity' ? 'number' : 'text'}
+                  value={(formData as any)[field]}
+                  onChange={(e) =>
+                    setFormData((prev) => ({ ...prev, [field]: e.target.value }))
+                  }
+                  className="w-full border rounded-lg px-3 py-2 mt-1"
+                  style={{
+                    borderColor: 'var(--primary-3)',
+                    color: 'var(--primary-3)',
+                    caretColor: 'var(--primary-3)',
+                  }}
+                />
 
               </div>
             ))}

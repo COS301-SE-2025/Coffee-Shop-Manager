@@ -43,10 +43,10 @@ export default function Navbar() {
   const [date, setDate] = useState('');
   const [time, setTime] = useState('');
 
-   const API_BASE_URL = process.env.NEXT_PUBLIC_FE_URL;
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
 
-    fetch( `${API_BASE_URL}/check-token`, {
+    fetch(`${API_BASE_URL}/check-token`, {
       credentials: 'include',
     })
       .then(res => {
@@ -180,7 +180,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0 z-50 backdrop-blur-sm border-b border-[var(--primary-4)] bg-transparent shadow-lg"
+      className="sticky top-0  border-b border-[var(--primary-1)]" style={{ backgroundColor: 'var(--primary-4)' }}
     >
 
 
@@ -190,7 +190,7 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: 'var(--primary-2)' }}
+              style={{ backgroundColor: 'var(--primary-3)' }}
             >
               <span className="text-white font-bold text-lg">☕</span>
             </div>
@@ -198,13 +198,13 @@ export default function Navbar() {
             <div>
               <h1
                 className="text-xl font-bold"
-                style={{ color: 'var(--primary-2)' }}
+                style={{ color: 'var(--primary-3)' }}
               >
                 Coffee Shop Dashboard
               </h1>
               <p
                 className="text-sm"
-                style={{ color: 'var(--primary-2)' }}
+                style={{ color: 'var(--primary-3)' }}
               >
                 Welcome back, {username}
               </p>
@@ -214,13 +214,13 @@ export default function Navbar() {
           <div className="text-right">
             <p
               className="text-sm font-medium"
-              style={{ color: 'var(--primary-2)' }}
+              style={{ color: 'var(--primary-3)' }}
             >
               {date}
             </p>
             <p
               className="text-xs"
-              style={{ color: 'var(--primary-2)' }}
+              style={{ color: 'var(--primary-3)' }}
             >
               {time}
             </p>
@@ -251,7 +251,9 @@ export default function Navbar() {
               }
             };
 
-            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${isActive ? 'bg-white/10 text-white' : 'text-[var(--primary-2)] '
+            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${isActive
+              ? 'bg-white/10 text-white'
+              : 'text-[var(--primary-3)]'
               }`;
 
             if (isLogout) {
