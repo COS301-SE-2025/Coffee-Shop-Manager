@@ -180,7 +180,7 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0  border-b border-[var(--primary-1)]" style={{ backgroundColor: 'var(--primary-4)' }}
+      className="sticky top-0 z-50 border-b border-[var(--primary-1)]" style={{ backgroundColor: 'var(--primary-4)' }}
     >
 
 

@@ -16,9 +16,12 @@ testint:
 teste2e:
 #  	npx playwright test tests/signup.spec.ts && \
 	
-	npx playwright test tests/loginAdmin.spec.ts && \
+# 	npx playwright test tests/login.spec.ts && \
 	npx playwright test tests/getTestAdmin.spec.ts &&\
-	npx playwright test tests/postTestAdmin.spec.ts
+	npx playwright test tests/postTestAdmin.spec.ts && \
+	npx playwright test tests/getTestUser.spec.ts && \
+	
+	npx playwright test tests/postTestUser.spec.ts
 
 test:
 	make testint
