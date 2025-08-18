@@ -118,27 +118,85 @@ test('clicks and orders multiple products, then checks them on the dashboard', a
     await expect(page.getByRole('table')).toContainText(secondProduct, { timeout: 15000 });
 
 });
-test('marks a pending order as completed', async ({ page }) => {
+
+test('marks the first pending order as COMPLETED', async ({ page }) => {
     await login(page);
 
-    await page.getByRole('link', { name: /Manage/ }).click();
+    await page.getByRole('link', { name: /Manage/i }).click();
     await page.waitForURL('**/manage', { timeout: 10000 });
-   
-    const pendingOrder = page.locator('div', { hasText: 'PENDING' }).first();
-    await expect(pendingOrder).toBeVisible({ timeout: 10000 });
 
-    await pendingOrder
-        .getByRole('button', { name: '✅ Mark as Completed' })
-        .first()
-        .click();
-   
-    const statusSpan = pendingOrder.locator('span.font-bold.text-green-600');
+    const firstPendingCard = page
+        .locator('div.rounded-xl', {
+            has: page.locator('span.font-bold.text-yellow-600', { hasText: 'PENDING' }),
+        })
+        .first();
+
+    await expect(firstPendingCard).toBeVisible({ timeout: 10000 });
+
+    await firstPendingCard.getByRole('button', { name: /Mark as Completed/i }).click();
+
+    const firstCompletedCard = page
+        .locator('div.rounded-xl', {
+            has: page.locator('span.font-bold.text-green-600', { hasText: 'COMPLETED' }),
+        })
+        .first();
+
+    await expect(firstCompletedCard).toBeVisible({ timeout: 10000 });
+    const statusSpan = firstCompletedCard.locator('span.font-bold.text-green-600');
     await expect(statusSpan).toHaveText('COMPLETED', { timeout: 10000 });
 });
 
+test('marks the first COMPLETED order as PENDING', async ({ page }) => {
+    await login(page);
 
+    await page.getByRole('link', { name: /Manage/i }).click();
+    await page.waitForURL('**/manage', { timeout: 10000 });
 
+    const firstCompletedCard = page
+        .locator('div.rounded-xl', {
+            has: page.locator('span.font-bold.text-green-600', { hasText: 'COMPLETED' }),
+        })
+        .first();
 
+    await expect(firstCompletedCard).toBeVisible({ timeout: 10000 });
 
+    await firstCompletedCard.getByRole('button', { name: /Revert to Pending/i }).click();
 
+    const firstPendingCard = page
+        .locator('div.rounded-xl', {
+            has: page.locator('span.font-bold.text-yellow-600', { hasText: 'PENDING' }),
+        })
+        .first();
+
+    await expect(firstPendingCard).toBeVisible({ timeout: 10000 });
+    const statusSpan = firstPendingCard.locator('span.font-bold.text-yellow-600');
+    await expect(statusSpan).toHaveText('PENDING', { timeout: 10000 });
+});
+
+test('marks the first PENDING order as CANCELLED', async ({ page }) => {
+    await login(page);
+
+    await page.getByRole('link', { name: /Manage/i }).click();
+    await page.waitForURL('**/manage', { timeout: 10000 });
+
+    const firstPendingCard = page
+        .locator('div.rounded-xl', {
+            has: page.locator('span.font-bold.text-yellow-600', { hasText: 'PENDING' }),
+        })
+        .first();
+
+    await expect(firstPendingCard).toBeVisible({ timeout: 10000 });
+
+    await firstPendingCard.getByRole('button', { name: /Cancel Order/i }).click();
+
+    const firstCancelledCard = page
+        .locator('div.rounded-xl', {
+            has: page.locator('span.font-bold.text-red-600', { hasText: 'CANCELLED' }),
+        })
+        .first();
+
+    await expect(firstCancelledCard).toBeVisible({ timeout: 10000 });
+    const statusSpan = firstCancelledCard.locator('span.font-bold.text-red-600');
+    await expect(statusSpan).toHaveText('CANCELLED', { timeout: 10000 });
+});
 
