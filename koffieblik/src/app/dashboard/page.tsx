@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { getTabs } from '@/constants/tabs';
-
+import Loader from '../loaders/loader';
 
 
 
@@ -35,6 +35,7 @@ export default function DashboardPage() {
     const [orders, setOrders] = useState<Order[]>([]);
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const role = localStorage.getItem('role');
@@ -46,6 +47,7 @@ export default function DashboardPage() {
     const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
     useEffect(() => {
         async function fetchOrders() {
+            setLoading(true);
             try {
                 const response = await fetch(`${API_BASE_URL}/get_orders`, {
                     method: 'GET',
@@ -66,6 +68,9 @@ export default function DashboardPage() {
                 }
             } catch (error) {
                 console.error('❌ Network or server error:', error);
+            }
+            finally {
+                setLoading(false);
             }
         }
 
@@ -265,10 +270,14 @@ export default function DashboardPage() {
                                     >
                                         {metric.label}
                                     </h2>
+                                    {loading ? (
+                                        <Loader />
+                                    ) : (
+                                        <><p className="text-3xl font-bold" style={{ color: metric.color }}>
+                                            {metric.value}
+                                        </p></>
+                                    )}
 
-                                    <p className="text-3xl font-bold" style={{ color: metric.color }}>
-                                        {metric.value}
-                                    </p>
 
                                     <div
                                         className="mt-3 h-1 rounded-full"
@@ -280,7 +289,12 @@ export default function DashboardPage() {
 
 
                         {/* Orders Section */}
-                           <section
+
+
+                        {loading ? (
+                            <Loader />
+                        ) : (
+                            <> <section
                                 className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
                                 style={{ backgroundColor: 'var(--primary-3)' }}
                             >
@@ -404,7 +418,8 @@ export default function DashboardPage() {
                                         </tbody>
                                     </table>
                                 </div>
-                            </section>
+                            </section></>
+                        )}
                     </>
                 )}
 
