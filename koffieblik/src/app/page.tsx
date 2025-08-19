@@ -18,7 +18,7 @@ export default function Home() {
               className="text-white"
             />
           </div>
-          <span className="text-2xl font-bold text-stone-800">DieKoffieBlik</span>
+          <span className="text-2xl font-bold text-stone-800">KoffieBlik</span>
         </div>
         <div className="flex gap-4">
           <Link href="/login">

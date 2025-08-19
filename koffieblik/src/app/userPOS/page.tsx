@@ -124,9 +124,6 @@ export default function OrderPage() {
     };
   };
 
-
-
-
   const handlePlaceOrder = async () => {
     if (cart.length === 0) {
       setMessage("Please add items to your cart first.");
@@ -198,8 +195,6 @@ export default function OrderPage() {
           </p>
           {message && <p className="text-green-600 mb-4">{message}</p>}
           <div className="space-y-3">
-
-
             <button
               onClick={() => router.push("/userdashboard")}
               className="btn bg-blue-500 hover:bg-blue-600"
@@ -218,9 +213,13 @@ export default function OrderPage() {
       style={{ backgroundColor: "var(--primary-4)" }}
     >
       {/* Header */}
-
-      <header className="sticky top-0 z-20 border-b" style={{ backgroundColor: 'var(--primary-4)', borderColor: 'var(--primary-4)' }}>
-
+      <header
+        className="sticky top-0 z-50 border-b"
+        style={{
+          backgroundColor: "var(--primary-4)",
+          borderColor: "var(--primary-4)",
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1
