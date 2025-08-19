@@ -1,3 +1,4 @@
+
 import React from 'react';
 import Navbar from '@/app/components/Navbar';
 
@@ -8,6 +9,7 @@ export const metadata = {
     icon: '/favicon.ico',
   }
 };
+
 
 interface OrderLayoutProps {
   children: React.ReactNode;
@@ -20,12 +22,9 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
       {/* Navigation home / order online */}
       <Navbar />
 
-      {/* Main Content */}
-      <main className="flex-1">
-        {children}
-      </main>
 
-     
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

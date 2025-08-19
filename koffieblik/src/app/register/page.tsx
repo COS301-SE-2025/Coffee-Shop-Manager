@@ -1,18 +1,18 @@
 "use client";
-import { useRouter } from 'next/navigation';
+import { useRouter } from "next/navigation";
 
-import HydrationFix from '../hydrationFix';
-import { Comfortaa } from 'next/font/google';
-import Link from 'next/link';
-import { useState, FormEvent } from 'react';
-import { validatePassword } from '@/lib/validators/passwordValidator';
-import { validateEmail } from '@/lib/validators/emailValidator';
+import HydrationFix from "../hydrationFix";
+import { Comfortaa } from "next/font/google";
+import Link from "next/link";
+import { useState, FormEvent } from "react";
+import { validatePassword } from "@/lib/validators/passwordValidator";
+import { validateEmail } from "@/lib/validators/emailValidator";
 
 const comfortaa = Comfortaa({
-  subsets: ['latin'],
-  weight: ['300', '400', '500', '600', '700'],
-  display: 'swap',
-})
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  display: "swap",
+});
 
 export default function RegisterPage() {
   const [currentStep, setCurrentStep] = useState(1);
@@ -20,28 +20,27 @@ export default function RegisterPage() {
   const [confirmPasswordVisible, setConfirmPasswordVisible] = useState(false);
   const router = useRouter();
 
-
   // Form validation states
-  const [email, setEmail] = useState('');
-  const [email2, setEmail2] = useState('');
-  const [password, setPassword] = useState('');
-  const [password2, setPassword2] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [emailError2, setEmailError2] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [passwordError2, setPasswordError2] = useState('');
+  const [email, setEmail] = useState("");
+  const [email2, setEmail2] = useState("");
+  const [password, setPassword] = useState("");
+  const [password2, setPassword2] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [emailError2, setEmailError2] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [passwordError2, setPasswordError2] = useState("");
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // Step 2 - Details form states
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
-  const [dateOfBirth, setDateOfBirth] = useState('');
-  const [firstNameError, setFirstNameError] = useState('');
-  const [lastNameError, setLastNameError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [dobError, setDobError] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [dateOfBirth, setDateOfBirth] = useState("");
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [dobError, setDobError] = useState("");
 
   // Step 3 - Confirmation states
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -49,10 +48,10 @@ export default function RegisterPage() {
 
   const isStep1Valid = () => {
     return (
-      email !== '' &&
-      email2 !== '' &&
-      password !== '' &&
-      password2 !== '' &&
+      email !== "" &&
+      email2 !== "" &&
+      password !== "" &&
+      password2 !== "" &&
       email === email2 &&
       password === password2 &&
       !emailError &&
@@ -64,10 +63,10 @@ export default function RegisterPage() {
 
   const isStep2Valid = () => {
     return (
-      firstName.trim() !== '' &&
-      lastName.trim() !== '' &&
-      phoneNumber.trim() !== '' &&
-      dateOfBirth !== '' &&
+      firstName.trim() !== "" &&
+      lastName.trim() !== "" &&
+      phoneNumber.trim() !== "" &&
+      dateOfBirth !== "" &&
       !firstNameError &&
       !lastNameError &&
       !phoneError &&
@@ -87,15 +86,15 @@ export default function RegisterPage() {
     if (!/^[a-zA-Z\s'-]+$/.test(name)) {
       return `${field} can only contain letters, spaces, hyphens, and apostrophes`;
     }
-    return '';
+    return "";
   };
 
   const validatePhone = (phone: string) => {
     const phoneRegex = /^\d{10}$/;
-    if (!phoneRegex.test(phone.replace(/[\s()-]/g, ''))) {
-      return 'Please enter a valid phone number';
+    if (!phoneRegex.test(phone.replace(/[\s()-]/g, ""))) {
+      return "Please enter a valid phone number";
     }
-    return '';
+    return "";
   };
 
   const validateDateOfBirth = (dob: string) => {
@@ -104,12 +103,12 @@ export default function RegisterPage() {
     const age = today.getFullYear() - birthDate.getFullYear();
 
     if (age < 13) {
-      return 'You must be at least 13 years old to register';
+      return "You must be at least 13 years old to register";
     }
     if (age > 120) {
-      return 'Please enter a valid date of birth';
+      return "Please enter a valid date of birth";
     }
-    return '';
+    return "";
   };
 
   const handleNextStep = () => {
@@ -135,7 +134,7 @@ export default function RegisterPage() {
       setFormSubmitted(true);
 
       const emailValidationResult = validateEmail(email);
-      setEmailError(emailValidationResult ?? '');
+      setEmailError(emailValidationResult ?? "");
       const isEmailValid = !emailValidationResult;
 
       if (email !== email2) {
@@ -144,7 +143,7 @@ export default function RegisterPage() {
       }
 
       const passwordValidationResult = validatePassword(password);
-      setPasswordError(passwordValidationResult ?? '');
+      setPasswordError(passwordValidationResult ?? "");
       const isPasswordValid = !passwordValidationResult;
 
       if (password !== password2) {
@@ -157,8 +156,8 @@ export default function RegisterPage() {
       }
     } else if (currentStep === 2) {
       // Validate step 2
-      const firstNameValidation = validateName(firstName, 'First name');
-      const lastNameValidation = validateName(lastName, 'Last name');
+      const firstNameValidation = validateName(firstName, "First name");
+      const lastNameValidation = validateName(lastName, "Last name");
       const phoneValidation = validatePhone(phoneNumber);
       const dobValidation = validateDateOfBirth(dateOfBirth);
 
@@ -167,7 +166,12 @@ export default function RegisterPage() {
       setPhoneError(phoneValidation);
       setDobError(dobValidation);
 
-      if (!firstNameValidation && !lastNameValidation && !phoneValidation && !dobValidation) {
+      if (
+        !firstNameValidation &&
+        !lastNameValidation &&
+        !phoneValidation &&
+        !dobValidation
+      ) {
         handleNextStep();
       }
     } else if (currentStep === 3) {
@@ -179,13 +183,13 @@ export default function RegisterPage() {
       setIsLoading(true);
 
       try {
-        const response = await fetch('/api/API', {
-          method: 'POST',
+        const response = await fetch("/api/API", {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            action: 'register',
+            action: "register",
             username: firstName, // or combine firstName + lastName if desired
             email,
             password,
@@ -196,49 +200,49 @@ export default function RegisterPage() {
         });
 
         try {
-        await new Promise(resolve => setTimeout(resolve, 1000));
+          await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        console.log('Registration successful', {
-          email,
-          firstName,
-          lastName,
-          phoneNumber,
-          dateOfBirth,
-          // agreedToMarketing,
-          password: password
-        });
-
-      } catch (error) {
-        console.error('Registration failed', error);
-      } finally {
-        setIsLoading(false);
-      }
+          console.log("Registration successful", {
+            email,
+            firstName,
+            lastName,
+            phoneNumber,
+            dateOfBirth,
+            // agreedToMarketing,
+            password: password,
+          });
+        } catch (error) {
+          console.error("Registration failed", error);
+        } finally {
+          setIsLoading(false);
+        }
 
         const result = await response.json();
 
         if (result.success) {
-          console.log('[REGISTER SUCCESS]', result.user);
-          router.push('/login');
+          console.log("[REGISTER SUCCESS]", result.user);
+          router.push("/login");
         } else {
-          console.warn('[REGISTER FAILED]', result.message);
+          console.warn("[REGISTER FAILED]", result.message);
         }
       } catch (error) {
-        console.error('[REGISTER ERROR]', error);
+        console.error("[REGISTER ERROR]", error);
       } finally {
         setIsLoading(false);
       }
-
-
-      
     }
   };
 
   const getStepTitle = () => {
     switch (currentStep) {
-      case 1: return "Create your account";
-      case 2: return "Tell us about yourself";
-      case 3: return "Almost done!";
-      default: return "Create your account";
+      case 1:
+        return "Create your account";
+      case 2:
+        return "Tell us about yourself";
+      case 3:
+        return "Almost done!";
+      default:
+        return "Create your account";
     }
   };
 
@@ -246,7 +250,10 @@ export default function RegisterPage() {
     <>
       {/* Email section */}
       <div>
-        <label htmlFor="email-primary" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+        <label
+          htmlFor="email-primary"
+          className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+        >
           Email
         </label>
         <input
@@ -259,27 +266,35 @@ export default function RegisterPage() {
             setEmail(value);
             if (formSubmitted) {
               const error = validateEmail(value);
-              setEmailError(error ?? '');
+              setEmailError(error ?? "");
             }
           }}
           onBlur={() => {
             const error = validateEmail(email);
-            setEmailError(error ?? '');
+            setEmailError(error ?? "");
           }}
-          className={`w-full px-4 py-2.5 border ${emailError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+          className={`w-full px-4 py-2.5 border ${emailError ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
           aria-invalid={emailError ? "true" : "false"}
           aria-describedby={emailError ? "email-error" : undefined}
         />
-        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">We&apos;ll send a verification link to this address</p>
+        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+          We&apos;ll send a verification link to this address
+        </p>
         {emailError && (
-          <p id="email-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+          <p
+            id="email-error"
+            className="mt-1 text-sm text-red-500 dark:text-red-400"
+          >
             {emailError}
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="email-confirm" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+        <label
+          htmlFor="email-confirm"
+          className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+        >
           Confirm Email
         </label>
         <input
@@ -297,12 +312,15 @@ export default function RegisterPage() {
           onBlur={() => {
             setEmailError2(email !== email2 ? "Emails do not match" : "");
           }}
-          className={`w-full px-4 py-2.5 border ${emailError2 ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError2 ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+          className={`w-full px-4 py-2.5 border ${emailError2 ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${emailError2 ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
           aria-invalid={emailError2 ? "true" : "false"}
           aria-describedby={emailError2 ? "email-confirm-error" : undefined}
         />
         {emailError2 && (
-          <p id="email-confirm-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+          <p
+            id="email-confirm-error"
+            className="mt-1 text-sm text-red-500 dark:text-red-400"
+          >
             {emailError2}
           </p>
         )}
@@ -310,7 +328,10 @@ export default function RegisterPage() {
 
       {/* Password section */}
       <div>
-        <label htmlFor="password-primary" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+        <label
+          htmlFor="password-primary"
+          className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+        >
           Password
         </label>
         <div className="relative">
@@ -324,14 +345,14 @@ export default function RegisterPage() {
               setPassword(value);
               if (formSubmitted) {
                 const error = validatePassword(value);
-                setPasswordError(error ?? '');
+                setPasswordError(error ?? "");
               }
             }}
             onBlur={() => {
               const error = validatePassword(password);
-              setPasswordError(error ?? '');
+              setPasswordError(error ?? "");
             }}
-            className={`w-full px-4 py-2.5 border ${passwordError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+            className={`w-full px-4 py-2.5 border ${passwordError ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
             aria-invalid={passwordError ? "true" : "false"}
             aria-describedby={passwordError ? "password-error" : undefined}
           />
@@ -341,26 +362,45 @@ export default function RegisterPage() {
             onClick={() => setPasswordVisible(!passwordVisible)}
           >
             {passwordVisible ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5"
+              >
                 <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5"
+              >
                 <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
               </svg>
             )}
           </button>
         </div>
-        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">Must be at least 8 characters, contain an uppercase and a special character</p>
+        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+          Must be at least 8 characters, contain an uppercase and a special
+          character
+        </p>
         {passwordError && (
-          <p id="password-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+          <p
+            id="password-error"
+            className="mt-1 text-sm text-red-500 dark:text-red-400"
+          >
             {passwordError}
           </p>
         )}
       </div>
 
       <div>
-        <label htmlFor="password-confirm" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+        <label
+          htmlFor="password-confirm"
+          className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+        >
           Confirm Password
         </label>
         <div className="relative">
@@ -373,15 +413,21 @@ export default function RegisterPage() {
               const value = e.target.value;
               setPassword2(value);
               if (formSubmitted) {
-                setPasswordError2(password !== value ? "Passwords do not match" : "");
+                setPasswordError2(
+                  password !== value ? "Passwords do not match" : "",
+                );
               }
             }}
             onBlur={() => {
-              setPasswordError2(password !== password2 ? "Passwords do not match" : "");
+              setPasswordError2(
+                password !== password2 ? "Passwords do not match" : "",
+              );
             }}
-            className={`w-full px-4 py-2.5 border ${passwordError2 ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError2 ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+            className={`w-full px-4 py-2.5 border ${passwordError2 ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${passwordError2 ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
             aria-invalid={passwordError2 ? "true" : "false"}
-            aria-describedby={passwordError2 ? "password-confirm-error" : undefined}
+            aria-describedby={
+              passwordError2 ? "password-confirm-error" : undefined
+            }
           />
           <button
             type="button"
@@ -389,18 +435,31 @@ export default function RegisterPage() {
             onClick={() => setConfirmPasswordVisible(!confirmPasswordVisible)}
           >
             {confirmPasswordVisible ? (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5"
+              >
                 <path d="M12 4.5C7 4.5 2.73 7.61 1 12c1.73 4.39 6 7.5 11 7.5s9.27-3.11 11-7.5c-1.73-4.39-6-7.5-11-7.5zM12 17c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5zm0-8c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z" />
               </svg>
             ) : (
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+                className="w-5 h-5"
+              >
                 <path d="M12 7c2.76 0 5 2.24 5 5 0 .65-.13 1.26-.36 1.83l2.92 2.92c1.51-1.26 2.7-2.89 3.43-4.75-1.73-4.39-6-7.5-11-7.5-1.4 0-2.74.25-3.98.7l2.16 2.16C10.74 7.13 11.35 7 12 7zM2 4.27l2.28 2.28.46.46C3.08 8.3 1.78 10.02 1 12c1.73 4.39 6 7.5 11 7.5 1.55 0 3.03-.3 4.38-.84l.42.42L19.73 22 21 20.73 3.27 3 2 4.27zM7.53 9.8l1.55 1.55c-.05.21-.08.43-.08.65 0 1.66 1.34 3 3 3 .22 0 .44-.03.65-.08l1.55 1.55c-.67.33-1.41.53-2.2.53-2.76 0-5-2.24-5-5 0-.79.2-1.53.53-2.2zm4.31-.78l3.15 3.15.02-.16c0-1.66-1.34-3-3-3l-.17.01z" />
               </svg>
             )}
           </button>
         </div>
         {passwordError2 && (
-          <p id="password-confirm-error" className="mt-1 text-sm text-red-500 dark:text-red-400">
+          <p
+            id="password-confirm-error"
+            className="mt-1 text-sm text-red-500 dark:text-red-400"
+          >
             {passwordError2}
           </p>
         )}
@@ -412,7 +471,10 @@ export default function RegisterPage() {
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <label htmlFor="firstName" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+          <label
+            htmlFor="firstName"
+            className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+          >
             First Name
           </label>
           <input
@@ -423,10 +485,10 @@ export default function RegisterPage() {
             onChange={(e) => {
               const value = e.target.value;
               setFirstName(value);
-              const error = validateName(value, 'First name');
+              const error = validateName(value, "First name");
               setFirstNameError(error);
             }}
-            className={`w-full px-4 py-2.5 border ${firstNameError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${firstNameError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+            className={`w-full px-4 py-2.5 border ${firstNameError ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${firstNameError ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
           />
           {firstNameError && (
             <p className="mt-1 text-sm text-red-500 dark:text-red-400">
@@ -436,7 +498,10 @@ export default function RegisterPage() {
         </div>
 
         <div>
-          <label htmlFor="lastName" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+          <label
+            htmlFor="lastName"
+            className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+          >
             Last Name
           </label>
           <input
@@ -447,10 +512,10 @@ export default function RegisterPage() {
             onChange={(e) => {
               const value = e.target.value;
               setLastName(value);
-              const error = validateName(value, 'Last name');
+              const error = validateName(value, "Last name");
               setLastNameError(error);
             }}
-            className={`w-full px-4 py-2.5 border ${lastNameError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${lastNameError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+            className={`w-full px-4 py-2.5 border ${lastNameError ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${lastNameError ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
           />
           {lastNameError && (
             <p className="mt-1 text-sm text-red-500 dark:text-red-400">
@@ -461,7 +526,10 @@ export default function RegisterPage() {
       </div>
 
       <div>
-        <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+        <label
+          htmlFor="phoneNumber"
+          className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+        >
           Phone Number
         </label>
         <input
@@ -475,7 +543,7 @@ export default function RegisterPage() {
             const error = validatePhone(value);
             setPhoneError(error);
           }}
-          className={`w-full px-4 py-2.5 border ${phoneError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${phoneError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+          className={`w-full px-4 py-2.5 border ${phoneError ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 placeholder:text-amber-400 dark:placeholder:text-amber-700 focus:outline-none focus:ring-2 ${phoneError ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
         />
         {phoneError && (
           <p className="mt-1 text-sm text-red-500 dark:text-red-400">
@@ -485,7 +553,10 @@ export default function RegisterPage() {
       </div>
 
       <div>
-        <label htmlFor="dateOfBirth" className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5">
+        <label
+          htmlFor="dateOfBirth"
+          className="block text-sm font-medium text-gray-700 dark:text-amber-100 mb-1.5"
+        >
           Date of Birth
         </label>
         <input
@@ -498,9 +569,11 @@ export default function RegisterPage() {
             const error = validateDateOfBirth(value);
             setDobError(error);
           }}
-          className={`w-full px-4 py-2.5 border ${dobError ? 'border-red-400 dark:border-red-600' : 'border-amber-200 dark:border-amber-900'} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 focus:outline-none focus:ring-2 ${dobError ? 'focus:ring-red-400' : 'focus:ring-amber-600'}`}
+          className={`w-full px-4 py-2.5 border ${dobError ? "border-red-400 dark:border-red-600" : "border-amber-200 dark:border-amber-900"} rounded-lg bg-amber-50 dark:bg-amber-900/30 text-brown-800 dark:text-amber-100 focus:outline-none focus:ring-2 ${dobError ? "focus:ring-red-400" : "focus:ring-amber-600"}`}
         />
-        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">You must be at least 13 years old to register</p>
+        <p className="text-xs text-amber-700 dark:text-amber-400 mt-1">
+          You must be at least 13 years old to register
+        </p>
         {dobError && (
           <p className="mt-1 text-sm text-red-500 dark:text-red-400">
             {dobError}
@@ -514,12 +587,22 @@ export default function RegisterPage() {
     <>
       <div className="space-y-6">
         <div className="bg-amber-50 dark:bg-amber-900/20 p-4 rounded-lg">
-          <h3 className="font-medium text-amber-900 dark:text-amber-100 mb-2">Review Your Information</h3>
+          <h3 className="font-medium text-amber-900 dark:text-amber-100 mb-2">
+            Review Your Information
+          </h3>
           <div className="text-sm text-amber-800 dark:text-amber-200 space-y-1">
-            <p><span className="font-medium">Email:</span> {email}</p>
-            <p><span className="font-medium">Name:</span> {firstName} {lastName}</p>
-            <p><span className="font-medium">Phone:</span> {phoneNumber}</p>
-            <p><span className="font-medium">Date of Birth:</span> {dateOfBirth}</p>
+            <p>
+              <span className="font-medium">Email:</span> {email}
+            </p>
+            <p>
+              <span className="font-medium">Name:</span> {firstName} {lastName}
+            </p>
+            <p>
+              <span className="font-medium">Phone:</span> {phoneNumber}
+            </p>
+            <p>
+              <span className="font-medium">Date of Birth:</span> {dateOfBirth}
+            </p>
           </div>
         </div>
 
@@ -539,23 +622,32 @@ export default function RegisterPage() {
     </>
   );
 
-
   return (
     <HydrationFix>
-      <main className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-8 px-4 ${comfortaa.className}`}>
+      <main
+        className={`min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 to-amber-100 py-8 px-4 ${comfortaa.className}`}
+      >
         <div className="w-full max-w-md p-6 md:p-8 bg-white dark:bg-[#1a1310] rounded-xl shadow-lg border border-amber-200 dark:border-amber-900 relative">
-
           {/* Logo & Header section */}
           <div className="mb-6">
             <div className="flex justify-center mb-4">
               <div className="w-16 h-16 rounded-full bg-amber-700 flex items-center justify-center shadow-md">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 text-white">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                  className="w-10 h-10 text-white"
+                >
                   <path d="M2 21h18v-2H2v2zm6-4h10c2.21 0 4-1.79 4-4v-3c0-2.21-1.79-4-4-4H8v14h4v-3zm10-10c1.1 0 2 .9 2 2v3c0 1.1-.9 2-2 2H10V7h8z" />
                 </svg>
               </div>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">DieKoffieBlik</h2>
-            <p className="text-center text-amber-800 dark:text-amber-300 font-medium text-sm mb-2">{getStepTitle()}</p>
+            <h2 className="text-2xl md:text-3xl font-bold text-center mb-1 text-brown-800 dark:text-amber-100">
+              DieKoffieBlik
+            </h2>
+            <p className="text-center text-amber-800 dark:text-amber-300 font-medium text-sm mb-2">
+              {getStepTitle()}
+            </p>
           </div>
 
           <form className="space-y-5" onSubmit={handleSubmit}>
@@ -568,9 +660,21 @@ export default function RegisterPage() {
                 ></div>
               </div>
               <div className="flex justify-between text-xs mt-1 text-amber-700 dark:text-amber-400">
-                <span className={currentStep >= 1 ? 'font-medium' : 'opacity-50'}>Account</span>
-                <span className={currentStep >= 2 ? 'font-medium' : 'opacity-50'}>Details</span>
-                <span className={currentStep >= 3 ? 'font-medium' : 'opacity-50'}>Confirm</span>
+                <span
+                  className={currentStep >= 1 ? "font-medium" : "opacity-50"}
+                >
+                  Account
+                </span>
+                <span
+                  className={currentStep >= 2 ? "font-medium" : "opacity-50"}
+                >
+                  Details
+                </span>
+                <span
+                  className={currentStep >= 3 ? "font-medium" : "opacity-50"}
+                >
+                  Confirm
+                </span>
               </div>
             </div>
 
@@ -587,7 +691,12 @@ export default function RegisterPage() {
                   onClick={handlePrevStep}
                   className="flex-1 py-3 px-4 rounded-lg border border-amber-300 dark:border-amber-700 bg-transparent text-amber-700 dark:text-amber-300 font-medium hover:bg-amber-50 dark:hover:bg-amber-900/20 transition duration-200 flex items-center justify-center"
                 >
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 mr-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-5 h-5 mr-2"
+                  >
                     <path d="M12 20l1.41-1.41L7.83 13H20v-2H7.83l5.58-5.59L12 4l-8 8z" />
                   </svg>
                   Back
@@ -601,23 +710,30 @@ export default function RegisterPage() {
                   (currentStep === 2 && !isStep2Valid()) ||
                   (currentStep === 3 && (!isStep3Valid() || isLoading))
                 }
-                className={`${currentStep > 1 ? 'flex-1' : 'w-full'} py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md flex items-center justify-center 
-                  ${(currentStep === 1 && !isStep1Valid()) ||
+                className={`${currentStep > 1 ? "flex-1" : "w-full"} py-3 px-4 rounded-lg transition duration-200 font-medium shadow-md flex items-center justify-center 
+                  ${
+                    (currentStep === 1 && !isStep1Valid()) ||
                     (currentStep === 2 && !isStep2Valid()) ||
                     (currentStep === 3 && (!isStep3Valid() || isLoading))
-                    ? 'bg-amber-400 cursor-not-allowed opacity-50'
-                    : 'bg-amber-700 hover:bg-amber-800 hover:shadow-lg'
+                      ? "bg-amber-400 cursor-not-allowed opacity-50"
+                      : "bg-amber-700 hover:bg-amber-800 hover:shadow-lg"
                   }
                   text-white`}
               >
                 <span>
                   {currentStep === 3
-                    ? (isLoading ? 'Creating Account...' : 'Create Account')
-                    : 'Next'
-                  }
+                    ? isLoading
+                      ? "Creating Account..."
+                      : "Create Account"
+                    : "Next"}
                 </span>
                 {!isLoading && (
-                  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-5 h-5 ml-2">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                    className="w-5 h-5 ml-2"
+                  >
                     <path d="M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z" />
                   </svg>
                 )}
@@ -625,8 +741,12 @@ export default function RegisterPage() {
             </div>
 
             <div className="text-sm text-center text-gray-600 dark:text-amber-300/70 mt-6">
-              <Link href="/login" className="hover:text-amber-800 dark:hover:text-amber-200 transition-colors">
-                Already have an account? <span className="font-medium">Login</span>
+              <Link
+                href="/login"
+                className="hover:text-amber-800 dark:hover:text-amber-200 transition-colors"
+              >
+                Already have an account?{" "}
+                <span className="font-medium">Login</span>
               </Link>
             </div>
           </form>

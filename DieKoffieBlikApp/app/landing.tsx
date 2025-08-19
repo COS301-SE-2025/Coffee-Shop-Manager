@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   View,
   Text,
@@ -6,11 +6,13 @@ import {
   TouchableOpacity,
   SafeAreaView,
   StatusBar,
-} from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import NotificationService from '../services/NotificationService';
+} from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import NotificationService from "../services/NotificationService";
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
 
 export default function LandingScreen() {
   const router = useRouter();
@@ -19,7 +21,7 @@ export default function LandingScreen() {
     <SafeAreaView style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#78350f" />
       <LinearGradient
-        colors={['#78350f', '#b45309']}
+        colors={["#78350f", "#b45309"]}
         start={{ x: 0.1, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.gradient}
@@ -46,13 +48,13 @@ export default function LandingScreen() {
             <ActionButton
               text="Login"
               icon="arrow-forward"
-              onPress={() => router.push('/login')}
+              onPress={() => router.push("/login")}
               variant="light"
             />
             <ActionButton
               text="Create Account"
               icon="arrow-forward"
-              onPress={() => router.push('/register')}
+              onPress={() => router.push("/register")}
               variant="dark"
             />
           </View>
@@ -62,7 +64,7 @@ export default function LandingScreen() {
             style={styles.guestButton}
             onPress={() => {
               NotificationService.showNotification("You are a guest!!");
-              router.push('/home');
+              router.push("/home");
             }}
           >
             <Text style={styles.guestButtonText}>Continue as Guest</Text>
@@ -73,7 +75,7 @@ export default function LandingScreen() {
   );
 }
 
-const Feature = ({ icon, label }: { icon: any; label: string }) => (
+const Feature = ({ icon, label }: { icon: IoniconName; label: string }) => (
   <View style={styles.featureItem}>
     <Ionicons name={icon} size={26} color="#fed7aa" />
     <Text style={styles.featureText}>{label}</Text>
@@ -84,14 +86,14 @@ const ActionButton = ({
   text,
   icon,
   onPress,
-  variant = 'dark',
+  variant = "dark",
 }: {
   text: string;
-  icon: any;
+  icon: IoniconName;
   onPress: () => void;
-  variant: 'light' | 'dark';
+  variant: "light" | "dark";
 }) => {
-  const isLight = variant === 'light';
+  const isLight = variant === "light";
   return (
     <TouchableOpacity
       style={[
@@ -111,7 +113,7 @@ const ActionButton = ({
       <Ionicons
         name={icon}
         size={20}
-        color={isLight ? '#b45309' : '#fff'}
+        color={isLight ? "#b45309" : "#fff"}
         style={{ marginLeft: 6 }}
       />
     </TouchableOpacity>
@@ -121,97 +123,97 @@ const ActionButton = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff7ed',
+    backgroundColor: "#fff7ed",
   },
   gradient: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   content: {
     flex: 1,
     paddingHorizontal: 24,
     paddingVertical: 36,
-    justifyContent: 'space-between',
+    justifyContent: "space-between",
   },
   headerSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 40,
   },
   logoContainer: {
     width: 110,
     height: 110,
-    backgroundColor: '#b45309',
+    backgroundColor: "#b45309",
     borderRadius: 55,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
     marginBottom: 20,
     elevation: 6,
   },
   title: {
     fontSize: 38,
-    fontWeight: 'bold',
-    color: '#fffbeb',
+    fontWeight: "bold",
+    color: "#fffbeb",
     marginBottom: 6,
-    textShadowColor: 'rgba(0,0,0,0.25)',
+    textShadowColor: "rgba(0,0,0,0.25)",
     textShadowOffset: { width: 0, height: 2 },
     textShadowRadius: 3,
   },
   subtitle: {
     fontSize: 16,
-    color: '#fed7aa',
-    fontStyle: 'italic',
+    color: "#fed7aa",
+    fontStyle: "italic",
   },
   featureSection: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginVertical: 30,
   },
   featureItem: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 12,
     borderRadius: 10,
-    backgroundColor: 'rgba(255,255,255,0.07)',
-    width: '30%',
+    backgroundColor: "rgba(255,255,255,0.07)",
+    width: "30%",
   },
   featureText: {
-    color: '#fed7aa',
+    color: "#fed7aa",
     fontSize: 12,
     marginTop: 6,
-    textAlign: 'center',
+    textAlign: "center",
   },
   buttonSection: {
     gap: 14,
   },
   actionButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     padding: 14,
     borderRadius: 12,
   },
   lightButton: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: "#fffbeb",
   },
   darkButton: {
-    backgroundColor: '#b45309',
+    backgroundColor: "#b45309",
   },
   actionButtonText: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   lightText: {
-    color: '#b45309',
+    color: "#b45309",
   },
   darkText: {
-    color: '#fff',
+    color: "#fff",
   },
   guestButton: {
     paddingVertical: 14,
-    alignItems: 'center',
+    alignItems: "center",
   },
   guestButtonText: {
-    color: '#fed7aa',
+    color: "#fed7aa",
     fontSize: 14,
-    textDecorationLine: 'underline',
+    textDecorationLine: "underline",
   },
 });

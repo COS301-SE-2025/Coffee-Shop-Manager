@@ -1,17 +1,21 @@
-import { Request, Response } from 'express';
-import { supabase } from '../supabase/client';
+import { Request, Response } from "express";
+import { supabase } from "../supabase/client";
 
-export async function getOrdersHandler(req: Request, res: Response): Promise<void> {
+export async function getOrdersHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     const userId = (req as any).user?.id;
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     const { data: orders, error: ordersError } = await supabase
-      .from('orders')
-      .select(`
+      .from("orders")
+      .select(
+        `
         id,
         status,
         total_price,
@@ -35,9 +39,10 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
           transaction_id,
           created_at
         )
-      `)
+      `,
+      )
       // .eq('user_id', userId)
-      .order('created_at', { ascending: true });
+      .order("created_at", { ascending: true });
 
     if (ordersError) {
       throw ordersError;
@@ -50,7 +55,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 
     res.status(200).json({ success: true, orders: numberedOrders });
   } catch (error: any) {
-    console.error('Get orders error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    console.error("Get orders error:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 }

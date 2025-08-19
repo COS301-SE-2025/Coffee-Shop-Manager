@@ -1,12 +1,15 @@
-import { Request, Response } from 'express';
-import { supabase } from '../supabase/client';
+import { Request, Response } from "express";
+import { supabase } from "../supabase/client";
 
-export async function checkTokenHandler(req: Request, res: Response): Promise<void> {
+export async function checkTokenHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
-    const token = req.cookies?.token;
+    const token = req.cookies?.access_token;
 
     if (!token) {
-      res.status(401).json({ valid: false, message: 'Missing token' });
+      res.status(401).json({ valid: false, message: "Missing token" });
       return;
     }
 
@@ -14,14 +17,16 @@ export async function checkTokenHandler(req: Request, res: Response): Promise<vo
     const { data, error } = await supabase.auth.getUser(token);
 
     if (error || !data.user) {
-      res.status(401).json({ valid: false, message: error?.message || 'Invalid token' });
+      res
+        .status(401)
+        .json({ valid: false, message: error?.message || "Invalid token" });
       return;
     }
 
     // Token is valid
     res.status(200).json({ valid: true, user: data.user });
   } catch (err) {
-    console.error('Token check error:', err);
-    res.status(500).json({ valid: false, message: 'Server error' });
+    console.error("Token check error:", err);
+    res.status(500).json({ valid: false, message: "Server error" });
   }
 }

@@ -1,5 +1,5 @@
-'use client';
-import './loader.css'; // You'll create this next
+"use client";
+import "./loader.css"; // You'll create this next
 
 export default function Loader() {
   return (

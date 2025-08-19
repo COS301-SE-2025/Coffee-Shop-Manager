@@ -1,15 +1,19 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
-export function logoutHandler(req: Request, res: Response): void {
-  const cookies = req.cookies;
+export function logoutHandler(req: Request, res: Response) {
+  res.cookie("access_token", "", {
+    httpOnly: true,
+    secure: true,
+    maxAge: 0,
+    path: "/",
+  });
 
-  if (cookies) {
-    const clearedCookies = Object.keys(cookies).map((cookieName) => {
-      return `${cookieName}=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0`;
-    });
+  res.cookie("refresh_token", "", {
+    httpOnly: true,
+    secure: true,
+    maxAge: 0,
+    path: "/",
+  });
 
-    res.setHeader('Set-Cookie', clearedCookies);
-  }
-
-  res.status(200).json({ success: true, message: 'Logged out' });
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 }

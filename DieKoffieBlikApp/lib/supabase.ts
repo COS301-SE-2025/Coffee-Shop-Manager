@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import Constants from 'expo-constants';
+import { createClient } from "@supabase/supabase-js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import Constants from "expo-constants";
 
 const supabaseUrl = Constants.expoConfig?.extra?.SUPABASE_PUBLIC_URL!;
 const supabaseKey = Constants.expoConfig?.extra?.SERVICE_ROLE_KEY!;

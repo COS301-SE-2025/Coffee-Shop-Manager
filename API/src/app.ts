@@ -1,14 +1,31 @@
-import express from 'express';
-import cors from 'cors';
-import cookieParser from 'cookie-parser';
-import routes from './routes';
+import express from "express";
+import cors from "cors";
+import cookieParser from "cookie-parser";
+import routes from "./routes";
 
 const app = express();
 
-app.use(cors({
-  origin: 'http://localhost:3000',
-  credentials: true
-}));
+const origins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+
+// Enable CORS
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (!origin) {
+        // Allow no origins
+        return callback(null, true);
+      } else if (origins.includes(origin)) {
+        // Allowed origins
+        callback(null, true);
+      } else {
+        // Deny origin
+        console.warn(`CORS denied for origin: ${origin}`);
+        callback(new Error("Denied by CORS"));
+      }
+    },
+    credentials: true
+  })
+);
 
 app.use(cookieParser());
 app.use(express.json());
