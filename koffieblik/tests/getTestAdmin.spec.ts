@@ -69,14 +69,9 @@ test("fetches and displays Products from /getProducts on POS", async ({
   expect(count).toBeGreaterThan(0);
 });
 
-
-
-
-
-
-
-test('fetches and displays Inventory from /get_stock on Inventory page', async ({ page }) => {
-
+test("fetches and displays Inventory from /get_stock on Inventory page", async ({
+  page,
+}) => {
   await login(page);
 
   await page.locator("text=Inventory").click();
@@ -89,4 +84,3 @@ test('fetches and displays Inventory from /get_stock on Inventory page', async (
   const count = await inventoryRows.count();
   expect(count).toBeGreaterThan(0);
 });
-

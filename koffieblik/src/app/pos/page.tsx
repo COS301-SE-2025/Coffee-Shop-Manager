@@ -1,10 +1,7 @@
 "use client";
 
-
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Loader from '../loaders/loader';
-
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface MenuItem {
   id: string;
@@ -25,7 +22,6 @@ export default function POSPage() {
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
   const router = useRouter();
-  const [loading, setLoading] = useState(true);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -36,7 +32,6 @@ export default function POSPage() {
 
   useEffect(() => {
     const fetchProducts = async () => {
-      setLoading(true);
       try {
         const res = await fetch(`${API_BASE_URL}/getProducts`, {
           credentials: "include",
@@ -48,10 +43,8 @@ export default function POSPage() {
           console.error("Failed to load products:", data.error);
         }
       } catch (err) {
-
-        console.error('Error fetching products:', err);
-      } finally { setLoading(false) }
-
+        console.error("Error fetching products:", err);
+      }
     };
 
     fetchProducts();
@@ -87,7 +80,7 @@ export default function POSPage() {
         quantity: item.quantity,
       })),
     };
-    // setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE_URL}/create_order`, {
         method: "POST",
@@ -152,30 +145,21 @@ export default function POSPage() {
       </div> */}
 
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-
-        {loading ? (
-          <div className="col-span-2 md:col-span-3 lg:col-span-4 flex justify-center items-center py-10">
-            <Loader />
-          </div>
-        ) : (
-          <>{menu.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => addToCart(item)}
-              className="rounded-xl p-4 hover:shadow-md"
-              style={{
-                backgroundColor: 'var(--primary-2)',
-                border: '1px solid var(--primary-3)',
-                color: 'var(--primary-3)',
-              }}
-            >
-              <h2 className="font-semibold text-lg">{item.name}</h2>
-              <p>R{item.price}</p>
-            </button>
-          ))}</>
-        )}
-
-
+        {menu.map((item) => (
+          <button
+            key={item.id}
+            onClick={() => addToCart(item)}
+            className="rounded-xl p-4 hover:shadow-md"
+            style={{
+              backgroundColor: "var(--primary-2)",
+              border: "1px solid var(--primary-3)",
+              color: "var(--primary-3)",
+            }}
+          >
+            <h2 className="font-semibold text-lg">{item.name}</h2>
+            <p>R{item.price}</p>
+          </button>
+        ))}
       </div>
 
       <div
