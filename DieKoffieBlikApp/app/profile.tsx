@@ -10,22 +10,20 @@ import {
   Pressable,
   Switch,
   Alert,
-  ActivityIndicator,
-} from "react-native";
-import { useRouter } from "expo-router";
-import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
-import CoffeeLoading from "../assets/loading";
-import CoffeeBackground from "../assets/coffee-background";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { supabase } from "../lib/supabase"; // Import your supabase client
+  ActivityIndicator
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface UserProfile {
   id: string;
   username: string;
   email: string;
   last_name: string;
-  password: string;
   phone_number: string;
   date_of_birth: string;
   created_at: string;
@@ -61,59 +59,79 @@ export default function ProfileScreen() {
       setIsLoading(true);
       setError(null);
 
-      // Get current user from Supabase Auth
-      const {
-        data: { user },
-        error: authError,
-      } = await supabase.auth.getUser();
-
-      if (authError) {
-        throw new Error(`Auth error: ${authError.message}`);
-      }
-
-      if (!user) {
+      // Check if user is logged in using AsyncStorage
+      const accessToken = await AsyncStorage.getItem('access_token');
+      const userEmail = await AsyncStorage.getItem('email');
+      const sessionData = await AsyncStorage.getItem('user_session');
+      
+      if (!accessToken || !userEmail) {
         // User is not logged in, redirect to login
         router.replace("/login");
         return;
       }
 
-      // Fetch user profile data from your users table
-      const { data: userProfile, error: profileError } = await supabase
-        .from("users")
-        .select("*")
-        .eq("email", user.email)
-        .single();
-
-      if (profileError) {
-        throw new Error(`Profile error: ${profileError.message}`);
+      // Try to use stored session data first
+      let userProfile = null;
+      if (sessionData) {
+        try {
+          const parsedSession = JSON.parse(sessionData);
+          userProfile = parsedSession.user;
+          console.log('Using stored session data:', userProfile);
+        } catch (parseError) {
+          console.error('Error parsing session data:', parseError);
+        }
       }
 
-      // Fetch additional data based on your actual tables
-      const [ordersResult, stockResult] = await Promise.all([
-        // Fetch total orders count from orders table
-        supabase
-          .from("orders")
-          .select("id", { count: "exact" })
-          .eq("user_id", userProfile.id),
+      // If no stored session, try to fetch from API (adjust endpoint as needed)
+      if (!userProfile) {
+        console.log('No stored session, trying to fetch user data...');
+        
+        // Try different possible endpoints
+        const possibleEndpoints = [
+          `${API_BASE_URL}/user`,
+          `${API_BASE_URL}/profile`, 
+          `${API_BASE_URL}/me`,
+          `${API_BASE_URL}/user/profile`
+        ];
 
-        supabase.from("products").select("id", { count: "exact" }).limit(10),
+        let response = null;
+        for (const endpoint of possibleEndpoints) {
+          try {
+            console.log(`Trying endpoint: ${endpoint}`);
+            response = await fetch(endpoint, {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${accessToken}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            
+            if (response.ok) {
+              userProfile = await response.json();
+              console.log(`Success with endpoint: ${endpoint}`, userProfile);
+              break;
+            } else {
+              console.log(`Failed with ${endpoint}: ${response.status}`);
+            }
+          } catch (fetchError) {
+            console.log(`Error with ${endpoint}:`, fetchError);
+            continue;
+          }
+        }
 
-        // Fetch user profile data
-        supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("user_id", userProfile.id),
-      ]);
+        if (!userProfile) {
+          throw new Error('Unable to fetch user profile from any endpoint');
+        }
+      }
 
       // Format the data for your component
       const formattedUserData: UserData = {
-        name: `${userProfile.username} ${userProfile.last_name}`,
-        email: userProfile.email,
-        phone: userProfile.phone_number || "Not provided",
-
-        totalOrders: ordersResult.count || 0,
-        favoriteItems: stockResult.count || 0, // You can change this to actual favorites later
-        loyaltyPoints: 0,
+        name: userProfile.username || userProfile.name || 'User',
+        email: userProfile.email || userEmail,
+        phone: userProfile.phone_number || userProfile.phone || 'Not provided',
+        totalOrders: 0, // Will be updated when you have the correct endpoint
+        favoriteItems: 0, // Will be updated when you have the correct endpoint
+        loyaltyPoints: userProfile.loyalty_points || 0
       };
 
       setUserData(formattedUserData);
@@ -125,46 +143,76 @@ export default function ProfileScreen() {
     }
   };
 
-  // const handleLogout = async () => {
-  //   Alert.alert(
-  //     "Logout",
-  //     "Are you sure you want to logout?",
-  //     [
-  //       { text: "Cancel", style: "cancel" },
-  //       {
-  //         text: "Logout",
-  //         style: "destructive",
-  //         onPress: async () => {
-  //           try {
-  //             const { error } = await supabase.auth.signOut();
-  //             if (error) {
-  //               console.error('Logout error:', error);
-  //               Alert.alert('Error', 'Failed to logout');
-  //               return;
-  //             }
-  //             router.replace('/login');
-  //           } catch (err) {
-  //             console.error('Unexpected logout error:', err);
-  //             Alert.alert('Error', 'An unexpected error occurred');
-  //           }
-  //         }
-  //       }
-  //     ]
-  //   );
-  // };
+  const handleTokenExpiry = async () => {
+    try {
+      const refreshToken = await AsyncStorage.getItem('refresh_token');
+      
+      if (!refreshToken) {
+        // No refresh token, redirect to login
+        await clearStorageAndRedirect();
+        return;
+      }
+
+      // Try to refresh the token
+      const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ refreshToken }),
+      });
+
+      if (!response.ok) {
+        // Refresh failed, redirect to login
+        await clearStorageAndRedirect();
+        return;
+      }
+
+      const { accessToken: newAccessToken } = await response.json();
+      await AsyncStorage.setItem('access_token', newAccessToken);
+      
+      // Retry fetching user data
+      fetchUserData();
+    } catch (error) {
+      console.error('Token refresh error:', error);
+      await clearStorageAndRedirect();
+    }
+  };
+
+  const clearStorageAndRedirect = async () => {
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'email', 'user_session']);
+    router.replace('/login');
+  };
+
+  const handleLogout = async () => {
+    Alert.alert(
+      "Logout",
+      "Are you sure you want to logout?",
+      [
+        { text: "Cancel", style: "cancel" },
+        { 
+          text: "Logout", 
+          style: "destructive",
+          onPress: async () => {
+            try {
+              // Clear all stored data
+              await clearStorageAndRedirect();
+            } catch (err) {
+              console.error('Unexpected logout error:', err);
+              Alert.alert('Error', 'An unexpected error occurred');
+            }
+          }
+        }
+      ]
+    );
+  };
 
   // Loading state
   if (isLoading) {
     return (
-      <SafeAreaView style={styles.container}>
-        <CoffeeBackground>
-          <View style={styles.centerContainer}>
-            <CoffeeLoading visible={isLoading} />
-          </View>
-          <View style={styles.centerContainer}>
-            <Text style={styles.loadingText}>Loading profile...</Text>
-          </View>
-        </CoffeeBackground>
+      <SafeAreaView style={[styles.container, styles.centerContent]}>
+        <ActivityIndicator size="large" color="#78350f" />
+        <Text style={styles.loadingText}>Loading profile...</Text>
       </SafeAreaView>
     );
   }
@@ -212,58 +260,11 @@ export default function ProfileScreen() {
   ];
 
   const statsData = [
-    {
-      label: "Total Orders",
-      value: userData.totalOrders.toString(),
-      icon: "receipt" as const,
-    },
-    {
-      label: "Favorites",
-      value: userData.favoriteItems.toString(),
-      icon: "heart" as const,
-    },
-    {
-      label: "Loyalty Points",
-      value: userData.loyaltyPoints,
-      icon: "star" as const,
-    },
+    { label: "Total Orders", value: userData.totalOrders.toString(), icon: "receipt" as const },
+    { label: "Favorites", value: userData.favoriteItems.toString(), icon: "heart" as const },
+    { label: "Loyalty Points", value: userData.loyaltyPoints.toString(), icon: "star" as const }
   ];
 
-  const handleLogout = async () => {
-    setIsLoading(true); // show loader immediately
-
-    try {
-      await AsyncStorage.removeItem("user_session");
-      console.log("Session removed successfully");
-    } catch (error) {
-      console.error("Error removing session:", error);
-      Alert.alert("Error", "Failed to clear session.");
-      setIsLoading(false);
-      return;
-    }
-
-    // Show confirmation alert
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel",
-          onPress: () => setIsLoading(false), // hide loader if cancelled
-        },
-        {
-          text: "Logout",
-          style: "destructive",
-          onPress: () => {
-            setIsLoading(false); // hide loader before navigation
-            router.push("/login");
-          },
-        },
-      ],
-      { cancelable: false },
-    );
-  };
   const NavBar = () => (
     <View style={styles.navbar}>
       <View style={styles.navLeft}>
@@ -405,31 +406,28 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      <CoffeeBackground>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent
-        />
-        <CoffeeLoading visible={isLoading} />
-        <NavBar />
-        <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
-        >
-          <ProfileHeader />
-          <StatsSection />
-          <MenuSection />
-          <SettingsSection />
-          <ActionButtons />
-
-          {/* Footer */}
-          <View style={styles.footer}>
-            <Text style={styles.footerText}>DieKoffieBlik</Text>
-            <Text style={styles.footerSubtext}>Version 1.0.0</Text>
-          </View>
-        </ScrollView>
-      </CoffeeBackground>
+      <StatusBar 
+        barStyle="dark-content" 
+        backgroundColor="transparent" 
+        translucent 
+      />
+      <NavBar />
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <ProfileHeader />
+        <StatsSection />
+        <MenuSection />
+        <SettingsSection />
+        <ActionButtons />
+        
+        {/* Footer */}
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>DieKoffieBlik</Text>
+          <Text style={styles.footerSubtext}>Version 1.0.0</Text>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
@@ -741,11 +739,5 @@ const styles = StyleSheet.create({
   footerSubtext: {
     fontSize: 12,
     color: "#9ca3af",
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 20,
   },
 });
