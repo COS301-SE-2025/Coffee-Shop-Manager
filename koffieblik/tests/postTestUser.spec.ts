@@ -29,47 +29,100 @@ async function login(page: Page) {
         throw new Error('Login failed: Invalid credentials');
     }
 
-    await page.waitForSelector('h1:text("Dashboard")', { timeout: 10000 }); //Confirm dashboard is loaded
+    await page.waitForSelector('h1:text("Dashboard")', { timeout: 10000 });
 }
 
 
 test('clicks and orders a product, then checks it on the dashboard', async ({ page }) => {
     await login(page);
 
-    // Go to POS
     await page.locator('text=Order Here').click();
     await page.waitForURL('**/userPOS', { timeout: 10000 });
 
-    // Product cards: each has a <h3> with product name
     const productCards = page.locator('div.bg-white >> h3');
     await expect(productCards.first()).toBeVisible({ timeout: 10000 });
     expect(await productCards.count()).toBeGreaterThan(0);
 
-    // Click "Add to Cart" on the first product
     const firstAddButton = page.locator('button:has-text("Add to Cart")').first();
     await firstAddButton.click();
 
-    // Check that the cart badge increased
     const cartBadge = page.locator('header .relative span').nth(1);
     await expect(cartBadge).toHaveText('1');
 
-    // Place the order
     await page.locator('button:has-text("Place Order")').click();
 
-    // Confirm success message
     await expect(page.locator('text=Order Placed Successfully!')).toBeVisible({ timeout: 10000 });
 
-    // Navigate to dashboard
     await page.locator('button:has-text("View Dashboard")').click();
     await page.waitForURL('**/userdashboard', { timeout: 10000 });
 
     await page.locator('text=View Orders').click();
 
-    // Verify order appears in dashboard (simplified — adjust for your UI)
     const orderRow = page.locator('table tbody tr').first();
     await expect(orderRow).toContainText(/pending/i);
 
 
 });
+
+test('clicks and orders multiple products, then checks them on the dashboard', async ({ page }) => {
+    await login(page);
+
+
+    await page.locator('text=Order Here').click();
+    await page.waitForURL('**/userPOS', { timeout: 10000 });
+
+    // get all product cards
+    const productCards = page.locator('div.bg-white');
+    await expect(productCards.first()).toBeVisible({ timeout: 10000 });
+    expect(await productCards.count()).toBeGreaterThan(1);
+
+
+
+    // First product
+    const firstCard = productCards.nth(0);
+    const firstHeading = await firstCard.locator('h3').innerText();
+    await firstCard.locator('button:has-text("Add to Cart")').click();
+
+    // Second product
+    const secondCard = productCards.nth(1);
+    const secondHeading = await secondCard.locator('h3').innerText();
+    await secondCard.locator('button:has-text("Add to Cart")').click();
+
+
+
+    const cartBadge = page.locator('header .relative span').nth(1);
+    await expect(cartBadge).toHaveText('2');
+
+    await page.locator('button:has-text("Place Order")').click();
+
+    await expect(page.locator('text=Order Placed Successfully!')).toBeVisible({ timeout: 10000 });
+
+    await page.locator('button:has-text("View Dashboard")').click();
+    await page.waitForURL('**/userdashboard', { timeout: 10000 });
+
+    await page.locator('text=View Orders').click();
+    
+
+    const orderRows = page.locator('table tbody tr');
+    await expect(orderRows.first()).toBeVisible({ timeout: 10000 });
+    const rowCount = await orderRows.count();
+
+    let found = false;
+    const expectedOrderText = `${firstHeading} x1, ${secondHeading} x1`;
+    // console.log(expectedOrderText);
+    // console.log(rowCount);
+    for (let i = 0; i < rowCount; i++) {
+        const itemsCell = orderRows.nth(i).locator('td').nth(1);
+        const cellText = await itemsCell.innerText();
+        // console.log("Celltext: "+cellText);
+        if (cellText.includes(expectedOrderText)) {
+            found = true;
+            break;
+        }
+    }
+
+    expect(found).toBe(true);
+});
+
 
 

@@ -2,12 +2,14 @@ import { test, expect, request } from '@playwright/test';
 
 test.describe('Login API', () => {
     const BASE_URL = 'http://localhost:5000';
+    const testEmail = 'user9@coffee.com';
+    const testPassword = 'P@ssword123';
 
     test('POST /login to pass', async ({ request }) => {
         const response = await request.post(`${BASE_URL}/login`, {
             data: {
-                email: 'test0@example.com',
-                password: 'P@ssword123',
+                email: testEmail,
+                password: testPassword,
             },
         });
 
@@ -65,17 +67,17 @@ test.describe('Login API', () => {
     });
 
     test('POST /login sets token cookie on success', async ({ request }) => {
-    const response = await request.post(`${BASE_URL}/login`, {
-        data: {
-            email: 'test0@example.com',
-            password: 'P@ssword123',
-        },
-    });
+        const response = await request.post(`${BASE_URL}/login`, {
+            data: {
+                email: testEmail,
+                password: testPassword,
+            },
+        });
 
-    expect(response.status()).toBe(200);
-    const setCookie = response.headers()['set-cookie'];
-    expect(setCookie).toBeDefined();
-    expect(setCookie).toContain('token=');
-});
+        expect(response.status()).toBe(200);
+        const setCookie = response.headers()['set-cookie'];
+        expect(setCookie).toBeDefined();
+        expect(setCookie).toContain('token=');
+    });
 
 });
