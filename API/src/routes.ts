@@ -7,6 +7,8 @@ import { loginHandler } from "./endpoint/login";
 import { signupHandler } from "./endpoint/signup";
 import { logoutHandler } from "./endpoint/logout";
 import { deleteUserHandler } from "./endpoint/deleteUser";
+import { getUserProfileHandler } from "./endpoint/getUser";
+import { updateUserProfileHandler } from "./endpoint/updateUser";
 
 // STOCK
 import { getStockHandler } from "./endpoint/getStock";
@@ -40,11 +42,13 @@ router.get("/", (req, res) => {
 });
 
 // USERS
+router.get("/user/:id", getUserProfileHandler);
 router.post("/login", loginHandler);
 router.post("/signup", signupHandler);
 router.post("/logout", logoutHandler);
 router.delete("/user/:id", deleteUserHandler);
 router.delete("/user", deleteUserHandler);
+router.put("/user/:id", updateUserProfileHandler);
 
 // STOCK
 router.get("/stock", authMiddleware, getStockHandler);

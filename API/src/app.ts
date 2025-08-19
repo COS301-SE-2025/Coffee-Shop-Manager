@@ -19,11 +19,12 @@ app.use(
         callback(null, true);
       } else {
         // Deny origin
+        console.warn(`CORS denied for origin: ${origin}`);
         callback(new Error("Denied by CORS"));
       }
     },
-    credentials: true,
-  }),
+    credentials: true
+  })
 );
 
 app.use(cookieParser());
