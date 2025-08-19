@@ -27,14 +27,15 @@ jobs:
       - name: Install dependencies
         run: npm ci --legacy-peer-deps
 
-      - name: Lint (optional)
+      - name: Lint
         run: npm run lint || true
 
       - name: Build the app
         run: npm run build
 
-      - name: Install Playwright Browsers
-        run: npx playwright install --with-deps
+      - name: Install Newman
+        run: npm install -g newman
 
-      - name: Run Playwright Tests
-        run: npx playwright test
+      - name: Run API Tests
+        run: |
+          newman run API/tests/Testing.postman_collection.json --global-var "URL=https://api.diekoffieblik.co.za/" --verbose
