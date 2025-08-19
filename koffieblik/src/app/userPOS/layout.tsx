@@ -20,12 +20,9 @@ export default function OrderLayout({ children }: OrderLayoutProps) {
       {/* Navigation home / order online */}
       <Navbar />
 
-      {/* Main Content */}
-      <main className="flex-1">
-        {children}
-      </main>
 
-     
+      {/* Main Content */}
+      <main className="flex-1">{children}</main>
     </div>
   );
 }

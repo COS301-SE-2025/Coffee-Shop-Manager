@@ -1,8 +1,9 @@
-import React from 'react';
-import { View, StyleSheet, Dimensions, Modal } from 'react-native';
-import LottieView from 'lottie-react-native';
+import React from "react";
+import { View, StyleSheet, Dimensions, Modal } from "react-native";
+import LottieView from "lottie-react-native";
+import CoffeeLoadingJSON from "./coffee-loading.json";
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get("window");
 
 type CoffeeLoadingProps = {
   visible: boolean;
@@ -13,7 +14,7 @@ export default function CoffeeLoading({ visible }: CoffeeLoadingProps) {
     <Modal visible={visible} transparent animationType="fade">
       <View style={styles.overlay}>
         <LottieView
-          source={require('../assets/coffee-loading.json')}
+          source={CoffeeLoadingJSON}
           autoPlay
           loop
           style={styles.animation}
@@ -26,9 +27,9 @@ export default function CoffeeLoading({ visible }: CoffeeLoadingProps) {
 const styles = StyleSheet.create({
   overlay: {
     flex: 1,
-    backgroundColor: 'rgba(255, 166, 94, 0.04)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    backgroundColor: "rgba(255, 166, 94, 0.04)",
+    justifyContent: "center",
+    alignItems: "center",
   },
   animation: {
     width: width * 0.5,
