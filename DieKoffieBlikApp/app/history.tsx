@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -9,85 +9,135 @@ import {
   Platform,
   Pressable,
   FlatList,
+  Alert,
+  RefreshControl,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
+
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
+
+interface Order {
+  id: string;
+  number: number;
+  status: string;
+  total_price: number;
+  created_at: string;
+  order_products: {
+    quantity: number;
+    price: number;
+    products: {
+      name: string;
+      price: number;
+      description: string;
+    };
+  }[];
+}
 
 export interface OrderItem {
   id: string;
   date: string;
-  status: "completed" | "cancelled" | "delivered" | string; // add "delivered" since you're filtering by it
+  status: "completed" | "cancelled" | "pending" | string;
   items: number;
-  total: string; // it's stored like "R 145.50"
+  total: string;
   restaurant: string;
   items_detail: string[];
+  orderNumber: number;
 }
 
 export default function OrderHistoryScreen() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState("all");
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Mock order data
-  const orderData = [
-    {
-      id: "ORD-2024-001",
-      date: "2024-07-28",
-      status: "completed",
-      items: 3,
-      total: "R 145.50",
+  // Fetch orders from API using the same logic as the website
+  const fetchOrders = async (isRefresh = false) => {
+    if (isRefresh) {
+      setRefreshing(true);
+    } else {
+      setLoading(true);
+    }
+
+    try {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      
+      if (!accessToken) {
+        Alert.alert("Session Expired", "Please log in again");
+        router.replace("/login");
+        return;
+      }
+
+      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.orders) {
+        setOrders(data.orders);
+        console.log("Fetched orders:", data.orders.length);
+      } else {
+        console.warn("Failed to fetch orders:", data.error || "Unknown error");
+        Alert.alert("Error", "Failed to load orders. Please try again.");
+      }
+    } catch (error) {
+      console.error("Network or server error:", error);
+      Alert.alert("Error", "Failed to connect to server. Please check your internet connection.");
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  // Load orders when component mounts
+  useEffect(() => {
+    fetchOrders();
+  }, []);
+
+  // Convert API order to display format
+  const convertOrderToDisplayFormat = (order: Order): OrderItem => {
+    const itemsDetail = order.order_products.map(
+      (p) => `${p.products.name} x${p.quantity}`
+    );
+    
+    return {
+      id: order.id,
+      date: new Date(order.created_at).toLocaleDateString("en-ZA"),
+      status: order.status.toLowerCase(),
+      items: order.order_products.reduce((sum, p) => sum + p.quantity, 0),
+      total: `R ${order.total_price.toFixed(2)}`,
       restaurant: "Die Koffieblik Café",
-      items_detail: ["Cappuccino x2", "Croissant", "Americano"],
-    },
-    {
-      id: "ORD-2024-002",
-      date: "2024-07-25",
-      status: "completed",
-      items: 2,
-      total: "R 89.00",
-      restaurant: "Die Koffieblik Express",
-      items_detail: ["Latte", "Muffin"],
-    },
-    {
-      id: "ORD-2024-003",
-      date: "2024-07-20",
-      status: "cancelled",
-      items: 1,
-      total: "R 45.00",
-      restaurant: "Die Koffieblik Café",
-      items_detail: ["Espresso"],
-    },
-    {
-      id: "ORD-2024-004",
-      date: "2024-07-15",
-      status: "completed",
-      items: 4,
-      total: "R 220.00",
-      restaurant: "Die Koffieblik Roastery",
-      items_detail: [
-        "Coffee Beans 250g",
-        "French Press",
-        "Cappuccino",
-        "Pastry",
-      ],
-    },
-  ];
+      items_detail: itemsDetail,
+      orderNumber: order.number,
+    };
+  };
 
   const filterOptions = [
     { key: "all", label: "All Orders" },
     { key: "completed", label: "Completed" },
+    { key: "pending", label: "Pending" },
     { key: "cancelled", label: "Cancelled" },
   ];
 
   const getStatusColor = (status: string) => {
-    switch (status) {
+    switch (status.toLowerCase()) {
       case "completed":
         return "#10b981";
       case "cancelled":
         return "#ef4444";
-      default:
+      case "pending":
         return "#f59e0b";
+      default:
+        return "#6b7280";
     }
   };
 
@@ -95,10 +145,21 @@ export default function OrderHistoryScreen() {
     return status.charAt(0).toUpperCase() + status.slice(1);
   };
 
+  // Convert and filter orders
+  const displayOrders = orders.map(convertOrderToDisplayFormat);
   const filteredOrders =
     selectedFilter === "all"
-      ? orderData
-      : orderData.filter((order) => order.status === selectedFilter);
+      ? displayOrders
+      : displayOrders.filter((order) => order.status === selectedFilter);
+
+  // Calculate stats from real data
+  const totalOrders = orders.length;
+  const completedOrders = orders.filter((o) => o.status.toLowerCase() === "completed").length;
+  const totalSpent = orders.reduce((sum, order) => sum + order.total_price, 0);
+
+  const onRefresh = () => {
+    fetchOrders(true);
+  };
 
   const NavBar = () => (
     <View style={styles.navbar}>
@@ -125,28 +186,17 @@ export default function OrderHistoryScreen() {
       >
         <View style={styles.statsContainer}>
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>{orderData.length}</Text>
+            <Text style={styles.statNumber}>{totalOrders}</Text>
             <Text style={styles.statLabel}>Total Orders</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              {orderData.filter((o) => o.status === "delivered").length}
-            </Text>
-            <Text style={styles.statLabel}>Delivered</Text>
+            <Text style={styles.statNumber}>{completedOrders}</Text>
+            <Text style={styles.statLabel}>Completed</Text>
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={styles.statNumber}>
-              R{" "}
-              {orderData
-                .reduce(
-                  (sum, order) =>
-                    sum + parseFloat(order.total.replace("R ", "")),
-                  0,
-                )
-                .toFixed(2)}
-            </Text>
+            <Text style={styles.statNumber}>R {totalSpent.toFixed(2)}</Text>
             <Text style={styles.statLabel}>Total Spent</Text>
           </View>
         </View>
@@ -185,7 +235,7 @@ export default function OrderHistoryScreen() {
     <Pressable style={styles.orderCard} android_ripple={{ color: "#78350f10" }}>
       <View style={styles.orderHeader}>
         <View style={styles.orderLeft}>
-          <Text style={styles.orderId}>{order.id}</Text>
+          <Text style={styles.orderId}>#{order.orderNumber}</Text>
           <Text style={styles.orderDate}>{order.date}</Text>
         </View>
         <View
@@ -226,6 +276,15 @@ export default function OrderHistoryScreen() {
     </Pressable>
   );
 
+  const LoadingState = () => (
+    <View style={styles.loadingContainer}>
+      <View style={styles.loadingSpinner}>
+        <Ionicons name="cafe" size={40} color="#78350f" />
+      </View>
+      <Text style={styles.loadingText}>Loading your orders...</Text>
+    </View>
+  );
+
   return (
     <SafeAreaView style={styles.container}>
       <CoffeeBackground>
@@ -238,24 +297,42 @@ export default function OrderHistoryScreen() {
         <HeaderStats />
         <FilterTabs />
 
-        <FlatList
-          data={filteredOrders}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => <OrderItem order={item} />}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={() => (
-            <View style={styles.emptyState}>
-              <Ionicons name="receipt-outline" size={64} color="#9ca3af" />
-              <Text style={styles.emptyStateTitle}>No orders found</Text>
-              <Text style={styles.emptyStateText}>
-                {selectedFilter === "all"
-                  ? "You haven't made any orders yet"
-                  : `No ${selectedFilter} orders found`}
-              </Text>
-            </View>
-          )}
-        />
+        {loading ? (
+          <LoadingState />
+        ) : (
+          <FlatList
+            data={filteredOrders}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => <OrderItem order={item} />}
+            contentContainerStyle={styles.listContainer}
+            showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+                colors={["#78350f"]}
+                tintColor="#78350f"
+              />
+            }
+            ListEmptyComponent={() => (
+              <View style={styles.emptyState}>
+                <Ionicons name="receipt-outline" size={64} color="#9ca3af" />
+                <Text style={styles.emptyStateTitle}>No orders found</Text>
+                <Text style={styles.emptyStateText}>
+                  {selectedFilter === "all"
+                    ? "You haven't made any orders yet"
+                    : `No ${selectedFilter} orders found`}
+                </Text>
+                <Pressable 
+                  style={styles.refreshButton}
+                  onPress={() => fetchOrders()}
+                >
+                  <Text style={styles.refreshButtonText}>Refresh</Text>
+                </Pressable>
+              </View>
+            )}
+          />
+        )}
       </CoffeeBackground>
     </SafeAreaView>
   );
@@ -367,6 +444,22 @@ const styles = StyleSheet.create({
   },
   filterTabTextActive: {
     color: "#fff",
+  },
+
+  // Loading State
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingVertical: 60,
+  },
+  loadingSpinner: {
+    marginBottom: 16,
+  },
+  loadingText: {
+    fontSize: 16,
+    color: "#78350f",
+    fontWeight: "600",
   },
 
   // Order Items
@@ -487,5 +580,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#9ca3af",
     textAlign: "center",
+    marginBottom: 20,
+  },
+  refreshButton: {
+    backgroundColor: "#78350f",
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 8,
+  },
+  refreshButtonText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
   },
 });
