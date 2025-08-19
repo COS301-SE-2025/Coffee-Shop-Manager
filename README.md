@@ -28,7 +28,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 - **Live Website:** [DieKoffieBlik](https://diekoffieblik.co.za) – Explore the platform, place orders, and see the system in action.
 - **API Endpoint:** [DieKoffieBlik API](https://api.diekoffieblik.co.za) – For backend developers and integration purposes.
 
---
+---
 
 ## 🛠 Technologies Used
 
