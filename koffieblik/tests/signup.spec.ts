@@ -1,8 +1,8 @@
 import { test, expect } from "@playwright/test";
 
-const username = "testuser";
-const email = "test@example.com";
-const password = "P@ssword123";
+const username = 'user9';
+const email = 'user9@coffee.com';
+const password = 'P@ssword123';
 
 test("signs up a new user", async ({ page }) => {
   await page.goto("http://localhost:3000/signup");

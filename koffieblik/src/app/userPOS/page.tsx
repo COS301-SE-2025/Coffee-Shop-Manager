@@ -213,13 +213,7 @@ export default function OrderPage() {
       style={{ backgroundColor: "var(--primary-4)" }}
     >
       {/* Header */}
-      <header
-        className="sticky top-0 z-50 border-b"
-        style={{
-          backgroundColor: "var(--primary-4)",
-          borderColor: "var(--primary-4)",
-        }}
-      >
+      <header className="sticky top-0 z-20 border-b" style={{ backgroundColor: 'var(--primary-4)', borderColor: 'var(--primary-4)' }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <h1

@@ -181,15 +181,14 @@ export default function Navbar() {
 
   return (
     <nav
-      className="sticky top-0  border-b border-[var(--primary-1)]"
-      style={{ backgroundColor: "var(--primary-4)" }}
+      className="sticky top-0 z-50 border-b border-[var(--primary-1)]" style={{ backgroundColor: 'var(--primary-3)' }}
     >
       <div className="px-6 py-4">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
             <div
               className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: "var(--primary-3)" }}
+              style={{ backgroundColor: 'var(--primary-2)' }}
             >
               <span className="text-white font-bold text-lg">☕</span>
             </div>
@@ -197,11 +196,14 @@ export default function Navbar() {
             <div>
               <h1
                 className="text-xl font-bold"
-                style={{ color: "var(--primary-3)" }}
+                style={{ color: 'var(--primary-2)' }}
               >
                 Coffee Shop Dashboard
               </h1>
-              <p className="text-sm" style={{ color: "var(--primary-3)" }}>
+              <p
+                className="text-sm"
+                style={{ color: 'var(--primary-2)' }}
+              >
                 Welcome back, {username}
               </p>
             </div>
@@ -209,11 +211,14 @@ export default function Navbar() {
           <div className="text-right">
             <p
               className="text-sm font-medium"
-              style={{ color: "var(--primary-3)" }}
+              style={{ color: 'var(--primary-2)' }}
             >
               {date}
             </p>
-            <p className="text-xs" style={{ color: "var(--primary-3)" }}>
+            <p
+              className="text-xs"
+              style={{ color: 'var(--primary-2)' }}
+            >
               {time}
             </p>
           </div>
@@ -251,9 +256,10 @@ export default function Navbar() {
               }
             };
 
-            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
-              isActive ? "bg-white/10 text-white" : "text-[var(--primary-3)]"
-            }`;
+            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${isActive
+              ? 'bg-white/10 text-white'
+              : 'text-[var(--primary-2)]'
+              }`;
 
             if (isLogout) {
               return (
