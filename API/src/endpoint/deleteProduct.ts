@@ -1,7 +1,10 @@
 import { Request, Response } from "express";
 import { supabase } from "../supabase/client";
 
-export async function deleteProductHandler(req: Request, res: Response): Promise<void> {
+export async function deleteProductHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   const productId = req.params.id;
 
   if (!productId) {
@@ -36,11 +39,13 @@ export async function deleteProductHandler(req: Request, res: Response): Promise
     res.status(200).json({
       success: true,
       message: `Product ${productId} deleted successfully`,
-      product: deletedProduct
+      product: deletedProduct,
     });
-
   } catch (err: any) {
     console.error("Delete product error:", err);
-    res.status(500).json({ success: false, message: err.message || "Internal server error" });
+    res.status(500).json({
+      success: false,
+      message: err.message || "Internal server error",
+    });
   }
 }

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Router } from 'express';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { Router } from "express";
 
 interface OrderProduct {
   product_id: string;
@@ -18,7 +18,7 @@ interface OrderProduct {
 interface Order {
   id: string;
   number: number;
-  status: 'pending' | 'completed' | 'cancelled';
+  status: "pending" | "completed" | "cancelled";
   total_price: number;
   created_at: string;
   updated_at: string;
@@ -31,23 +31,23 @@ export default function ManageOrdersPage() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const router = useRouter();
   useEffect(() => {
-    const role = localStorage.getItem('role');
-    if (role !== 'admin') {
-      router.replace('/login');
+    const role = localStorage.getItem("role");
+    if (role !== "admin") {
+      router.replace("/login");
     }
   }, [router]);
 
   const updateOrderStatus = async (
     orderId: string,
-    newStatus: 'completed' | 'cancelled' | 'pending'
+    newStatus: "completed" | "cancelled" | "pending",
   ) => {
     try {
       const res = await fetch(`${API_BASE_URL}/update_order_status`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
-        credentials: 'include',
+        credentials: "include",
         body: JSON.stringify({ order_id: orderId, status: newStatus }),
       });
 
@@ -56,14 +56,17 @@ export default function ManageOrdersPage() {
       if (data.success) {
         setOrders((prev) =>
           prev.map((order) =>
-            order.id === orderId ? { ...order, status: newStatus } : order
-          )
+            order.id === orderId ? { ...order, status: newStatus } : order,
+          ),
         );
       } else {
-        console.error('❌ Failed to update order status:', data.message || data.error);
+        console.error(
+          "❌ Failed to update order status:",
+          data.message || data.error,
+        );
       }
     } catch (err) {
-      console.error('❌ Error updating status:', err);
+      console.error("❌ Error updating status:", err);
     }
   };
 
@@ -71,21 +74,24 @@ export default function ManageOrdersPage() {
     const fetchOrders = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/get_orders`, {
-          credentials: 'include',
+          credentials: "include",
         });
         const data = await res.json();
 
         if (data.success) {
           const validated = data.orders.map((order: any) => ({
             ...order,
-            status: order.status || 'pending',
+            status: order.status || "pending",
           }));
           setOrders(validated);
         } else {
-          console.error('❌ Failed to load orders:', data.message || data.error);
+          console.error(
+            "❌ Failed to load orders:",
+            data.message || data.error,
+          );
         }
       } catch (err) {
-        console.error('❌ Error fetching orders:', err);
+        console.error("❌ Error fetching orders:", err);
       } finally {
         setLoading(false);
       }
@@ -98,8 +104,8 @@ export default function ManageOrdersPage() {
     <main
       className="min-h-screen p-8"
       style={{
-        backgroundColor: 'var(--primary-4)',
-        color: 'var(--primary-3)',
+        backgroundColor: "var(--primary-4)",
+        color: "var(--primary-3)",
       }}
     >
       <h1 className="text-4xl font-bold mb-6">📦 Manage Orders</h1>
@@ -113,26 +119,30 @@ export default function ManageOrdersPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className={`rounded-xl shadow p-6 relative ${order.status === 'completed'
-                ? 'bg-green-100'
-                : order.status === 'cancelled'
-                  ? 'bg-red-100'
-                  : 'bg-white'
-                }`}
+              className={`rounded-xl shadow p-6 relative ${
+                order.status === "completed"
+                  ? "bg-green-100"
+                  : order.status === "cancelled"
+                    ? "bg-red-100"
+                    : "bg-white"
+              }`}
             >
-              <h2 className="text-xl font-semibold mb-2">Order #{order.number}</h2>
+              <h2 className="text-xl font-semibold mb-2">
+                Order #{order.number}
+              </h2>
               <p className="text-sm text-gray-500 mb-3">
                 Placed on: {new Date(order.created_at).toLocaleString()}
               </p>
               <p className="mb-3 text-sm">
-                Status:{' '}
+                Status:{" "}
                 <span
-                  className={`font-bold ${order.status === 'pending'
-                    ? 'text-yellow-600'
-                    : order.status === 'completed'
-                      ? 'text-green-600'
-                      : 'text-red-600'
-                    }`}
+                  className={`font-bold ${
+                    order.status === "pending"
+                      ? "text-yellow-600"
+                      : order.status === "completed"
+                        ? "text-green-600"
+                        : "text-red-600"
+                  }`}
                 >
                   {order.status.toUpperCase()}
                 </span>
@@ -152,28 +162,28 @@ export default function ManageOrdersPage() {
               <p className="font-bold mb-4">Total: R{order.total_price}</p>
 
               {/* 🟡 Buttons to update status */}
-              {order.status === 'pending' && (
+              {order.status === "pending" && (
                 <div className="flex gap-4">
                   <button
                     className="btn bg-green-600 text-white hover:bg-green-700"
-                    onClick={() => updateOrderStatus(order.id, 'completed')}
+                    onClick={() => updateOrderStatus(order.id, "completed")}
                   >
                     ✅ Mark as Completed
                   </button>
                   <button
                     className="btn bg-red-600 text-white hover:bg-red-700"
-                    onClick={() => updateOrderStatus(order.id, 'cancelled')}
+                    onClick={() => updateOrderStatus(order.id, "cancelled")}
                   >
                     ❌ Cancel Order
                   </button>
                 </div>
               )}
 
-              {order.status === 'completed' && (
+              {order.status === "completed" && (
                 <div className="mt-4">
                   <button
                     className="btn bg-yellow-600 text-white hover:bg-yellow-700"
-                    onClick={() => updateOrderStatus(order.id, 'pending')}
+                    onClick={() => updateOrderStatus(order.id, "pending")}
                   >
                     🔄 Revert to Pending
                   </button>

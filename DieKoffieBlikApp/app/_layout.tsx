@@ -1,14 +1,13 @@
 // app/_layout.tsx
-import React, { useEffect } from 'react';
-import { Stack } from 'expo-router';
+import React, { useEffect } from "react";
+import { Stack } from "expo-router";
 
 export default function Layout() {
-
   return (
     <Stack
       screenOptions={{
         headerShown: false,
-        animation: 'slide_from_right',
+        animation: "slide_from_right",
       }}
     />
   );

@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { supabase } from '../supabase/client';
+import { Request, Response } from "express";
+import { supabase } from "../supabase/client";
 
 type UpdateEntry = {
   id?: string;
@@ -12,17 +12,20 @@ type UpdateEntry = {
   }>;
 };
 
-export async function batchUpdateStockHandler(req: Request, res: Response): Promise<void> {
+export async function batchUpdateStockHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     const userId = (req as any).user?.id;
     if (!userId) {
-      res.status(401).json({ error: 'Unauthorized' });
+      res.status(401).json({ error: "Unauthorized" });
       return;
     }
 
     const updates: UpdateEntry[] = req.body;
     if (!Array.isArray(updates)) {
-      res.status(400).json({ error: 'Request body must be an array' });
+      res.status(400).json({ error: "Request body must be an array" });
       return;
     }
 
@@ -30,17 +33,21 @@ export async function batchUpdateStockHandler(req: Request, res: Response): Prom
     const failedItems: { idOrItem: string; reason: string }[] = [];
 
     for (const update of updates) {
-      const identifier = update.id ? { id: update.id } : update.item ? { item: update.item } : null;
+      const identifier = update.id
+        ? { id: update.id }
+        : update.item
+          ? { item: update.item }
+          : null;
       if (!identifier) {
-        failedItems.push({ idOrItem: 'unknown', reason: 'Missing id or item' });
+        failedItems.push({ idOrItem: "unknown", reason: "Missing id or item" });
         continue;
       }
 
-      const identifierValue = update.id ?? update.item ?? 'unknown';
+      const identifierValue = update.id ?? update.item ?? "unknown";
 
       const { data: existing, error: fetchError } = await supabase
-        .from('stock')
-        .select('id, item')
+        .from("stock")
+        .select("id, item")
         .match(identifier)
         .single();
 
@@ -53,12 +60,15 @@ export async function batchUpdateStockHandler(req: Request, res: Response): Prom
       }
 
       const { error: updateError } = await supabase
-        .from('stock')
+        .from("stock")
         .update(update.fields)
         .match(identifier);
 
       if (updateError) {
-        failedItems.push({ idOrItem: existing.item, reason: updateError.message });
+        failedItems.push({
+          idOrItem: existing.item,
+          reason: updateError.message,
+        });
         continue;
       }
 
@@ -71,7 +81,7 @@ export async function batchUpdateStockHandler(req: Request, res: Response): Prom
       failedItems: failedItems.length > 0 ? failedItems : undefined,
     });
   } catch (error: any) {
-    console.error('Batch update error:', error);
-    res.status(500).json({ error: error.message || 'Internal server error' });
+    console.error("Batch update error:", error);
+    res.status(500).json({ error: error.message || "Internal server error" });
   }
 }

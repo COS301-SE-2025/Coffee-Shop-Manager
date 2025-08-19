@@ -13,42 +13,48 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import DateTimePicker from '@react-native-community/datetimepicker';
+import DateTimePicker from "@react-native-community/datetimepicker";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "https://api.diekoffieblik.co.za"
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 // Web-compatible DateTimePicker component
-const WebDatePicker = ({ value, onChange, style, textStyle }: {
+const WebDatePicker = ({
+  value,
+  onChange,
+  style,
+  textStyle,
+}: {
   value: Date;
   onChange: (date: Date) => void;
   style?: any;
   textStyle?: any;
 }) => {
-  if (Platform.OS === 'web') {
+  if (Platform.OS === "web") {
     return (
       <input
         type="date"
-        value={value.toISOString().split('T')[0]}
+        value={value.toISOString().split("T")[0]}
         onChange={(e) => {
           const newDate = new Date(e.target.value);
           onChange(newDate);
         }}
         style={{
-          width: '100%',
+          width: "100%",
           padding: 12,
-          border: '1px solid #fed7aa',
+          border: "1px solid #fed7aa",
           borderRadius: 8,
-          backgroundColor: '#fffbeb',
-          color: '#451a03',
+          backgroundColor: "#fffbeb",
+          color: "#451a03",
           fontSize: 16,
-          fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+          fontFamily:
+            '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
           ...style,
         }}
       />
     );
   }
-  
+
   return null; // Return null for non-web platforms as they use the native picker
 };
 
@@ -91,16 +97,16 @@ export default function RegisterScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Step 2 - Details form states
-  const [firstName, setFirstName] = useState('');
-  const [lastName, setLastName] = useState('');
-  const [phoneNumber, setPhoneNumber] = useState('');
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState(new Date(2000, 0, 1)); // Default to a reasonable date
   const [showDatePicker, setShowDatePicker] = useState(false);
-  
-  const [firstNameError, setFirstNameError] = useState('');
-  const [lastNameError, setLastNameError] = useState('');
-  const [phoneError, setPhoneError] = useState('');
-  const [dobError, setDobError] = useState('');
+
+  const [firstNameError, setFirstNameError] = useState("");
+  const [lastNameError, setLastNameError] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [dobError, setDobError] = useState("");
 
   // Step 3 - Confirmation states
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -125,9 +131,9 @@ export default function RegisterScreen() {
 
   const isStep2Valid = () => {
     return (
-      firstName.trim() !== '' &&
-      lastName.trim() !== '' &&
-      phoneNumber.trim() !== '' &&
+      firstName.trim() !== "" &&
+      lastName.trim() !== "" &&
+      phoneNumber.trim() !== "" &&
       dateOfBirth !== null &&
       !firstNameError &&
       !lastNameError &&
@@ -164,18 +170,18 @@ export default function RegisterScreen() {
     const age = today.getFullYear() - dob.getFullYear();
     const monthDiff = today.getMonth() - dob.getMonth();
     const dayDiff = today.getDate() - dob.getDate();
-    
+
     // Calculate exact age
     let exactAge = age;
     if (monthDiff < 0 || (monthDiff === 0 && dayDiff < 0)) {
       exactAge--;
     }
-    
+
     if (exactAge < 13) {
-      return 'You must be at least 13 years old to register';
+      return "You must be at least 13 years old to register";
     }
     if (exactAge > 120) {
-      return 'Please enter a valid date of birth';
+      return "Please enter a valid date of birth";
     }
     return "";
   };
@@ -195,10 +201,10 @@ export default function RegisterScreen() {
   };
 
   const handleDateChange = (event: any, selectedDate?: Date) => {
-    if (Platform.OS === 'android') {
+    if (Platform.OS === "android") {
       setShowDatePicker(false);
     }
-    
+
     if (selectedDate) {
       setDateOfBirth(selectedDate);
       const error = validateDateOfBirth(selectedDate);
@@ -207,10 +213,10 @@ export default function RegisterScreen() {
   };
 
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
+    return date.toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -227,7 +233,7 @@ export default function RegisterScreen() {
         setEmailError2("Emails do not match");
         return;
       } else {
-        setEmailError2('');
+        setEmailError2("");
       }
 
       const passwordValidationResult = validatePassword(password);
@@ -238,10 +244,14 @@ export default function RegisterScreen() {
         setPasswordError2("Passwords do not match");
         return;
       } else {
-        setPasswordError2('');
-      }      
-      if (isEmailValid && isPasswordValid && email === email2 && password === password2) {
-
+        setPasswordError2("");
+      }
+      if (
+        isEmailValid &&
+        isPasswordValid &&
+        email === email2 &&
+        password === password2
+      ) {
         handleNextStep();
       }
     } else if (currentStep === 2) {
@@ -266,14 +276,13 @@ export default function RegisterScreen() {
       }
     } else if (currentStep === 3) {
       if (!agreedToTerms) {
-        Alert.alert('Error', 'Please agree to the terms and conditions');
+        Alert.alert("Error", "Please agree to the terms and conditions");
         return;
       }
 
       setIsLoading(true);
 
       try {
-
         const response = await fetch(`${API_BASE_URL}/signup`, {
           method: "POST",
           headers: {
@@ -292,7 +301,7 @@ export default function RegisterScreen() {
         if (result.success) {
           Alert.alert(
             "Success",
-            result.message || "User registered successfully!"
+            result.message || "User registered successfully!",
           );
           router.replace("/login");
         } else {
@@ -428,13 +437,13 @@ export default function RegisterScreen() {
               setPassword2(value);
               if (formSubmitted) {
                 setPasswordError2(
-                  password !== value ? "Passwords do not match" : ""
+                  password !== value ? "Passwords do not match" : "",
                 );
               }
             }}
             onBlur={() => {
               setPasswordError2(
-                password !== password2 ? "Passwords do not match" : ""
+                password !== password2 ? "Passwords do not match" : "",
               );
             }}
             secureTextEntry={!confirmPasswordVisible}
@@ -516,16 +525,19 @@ export default function RegisterScreen() {
 
       <View style={styles.inputContainer}>
         <Text style={styles.label}>Date of Birth</Text>
-        {Platform.OS === 'web' ? (
+        {Platform.OS === "web" ? (
           <WebDatePicker
             value={dateOfBirth}
             onChange={setDateOfBirth}
-            style={dobError ? { borderColor: '#f87171' } : {}}
+            style={dobError ? { borderColor: "#f87171" } : {}}
           />
         ) : (
           <>
             <TouchableOpacity
-              style={[styles.datePickerButton, dobError ? styles.inputError : null]}
+              style={[
+                styles.datePickerButton,
+                dobError ? styles.inputError : null,
+              ]}
               onPress={() => setShowDatePicker(true)}
             >
               <Text style={styles.datePickerText}>
@@ -533,22 +545,22 @@ export default function RegisterScreen() {
               </Text>
               <Ionicons name="calendar" size={20} color="#b45309" />
             </TouchableOpacity>
-            
+
             {showDatePicker && (
               <DateTimePicker
                 value={dateOfBirth}
                 mode="date"
-                display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+                display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={handleDateChange}
                 maximumDate={new Date()}
                 minimumDate={new Date(1900, 0, 1)}
-                textColor={Platform.OS === 'ios' ? '#451a03' : undefined}
-                style={Platform.OS === 'ios' ? styles.iosDatePicker : undefined}
+                textColor={Platform.OS === "ios" ? "#451a03" : undefined}
+                style={Platform.OS === "ios" ? styles.iosDatePicker : undefined}
               />
             )}
-            
+
             {/* iOS needs a done button for the spinner display */}
-            {showDatePicker && Platform.OS === 'ios' && (
+            {showDatePicker && Platform.OS === "ios" && (
               <View style={styles.iosDatePickerContainer}>
                 <TouchableOpacity
                   style={styles.datePickerDoneButton}
@@ -560,7 +572,9 @@ export default function RegisterScreen() {
             )}
           </>
         )}
-        <Text style={styles.helperText}>You must be at least 13 years old to register</Text>
+        <Text style={styles.helperText}>
+          You must be at least 13 years old to register
+        </Text>
         {dobError && <Text style={styles.errorText}>{dobError}</Text>}
       </View>
     </View>
@@ -571,10 +585,19 @@ export default function RegisterScreen() {
       <View style={styles.reviewContainer}>
         <Text style={styles.reviewTitle}>Review Your Information</Text>
         <View style={styles.reviewContent}>
-          <Text style={styles.reviewItem}><Text style={styles.reviewLabel}>Email:</Text> {email}</Text>
-          <Text style={styles.reviewItem}><Text style={styles.reviewLabel}>Name:</Text> {firstName} {lastName}</Text>
-          <Text style={styles.reviewItem}><Text style={styles.reviewLabel}>Phone:</Text> {phoneNumber}</Text>
-          <Text style={styles.reviewItem}><Text style={styles.reviewLabel}>Date of Birth:</Text> {formatDate(dateOfBirth)}</Text>
+          <Text style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Email:</Text> {email}
+          </Text>
+          <Text style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Name:</Text> {firstName} {lastName}
+          </Text>
+          <Text style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Phone:</Text> {phoneNumber}
+          </Text>
+          <Text style={styles.reviewItem}>
+            <Text style={styles.reviewLabel}>Date of Birth:</Text>{" "}
+            {formatDate(dateOfBirth)}
+          </Text>
         </View>
       </View>
 
@@ -722,12 +745,13 @@ export default function RegisterScreen() {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
+            <TouchableOpacity
               style={styles.loginLink}
-              onPress={() => router.push('/login')}
+              onPress={() => router.push("/login")}
             >
               <Text style={styles.loginLinkText}>
-                Already have an account? <Text style={styles.loginLinkBold}>Login</Text>
+                Already have an account?{" "}
+                <Text style={styles.loginLinkBold}>Login</Text>
               </Text>
             </TouchableOpacity>
           </View>
@@ -879,35 +903,35 @@ const styles = StyleSheet.create({
   },
   datePickerButton: {
     borderWidth: 1,
-    borderColor: '#fed7aa',
+    borderColor: "#fed7aa",
     borderRadius: 8,
     padding: 12,
-    backgroundColor: '#fffbeb',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    backgroundColor: "#fffbeb",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
   },
   datePickerText: {
-    color: '#451a03',
+    color: "#451a03",
     fontSize: 16,
   },
   iosDatePicker: {
-    backgroundColor: '#fffbeb',
+    backgroundColor: "#fffbeb",
     marginTop: 8,
   },
   iosDatePickerContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 8,
   },
   datePickerDoneButton: {
-    backgroundColor: '#b45309',
+    backgroundColor: "#b45309",
     paddingHorizontal: 20,
     paddingVertical: 8,
     borderRadius: 6,
   },
   datePickerDoneText: {
-    color: 'white',
-    fontWeight: '500',
+    color: "white",
+    fontWeight: "500",
   },
   reviewContainer: {
     backgroundColor: "#fffbeb",

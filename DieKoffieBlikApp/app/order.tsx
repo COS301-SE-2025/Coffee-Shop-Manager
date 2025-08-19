@@ -18,10 +18,10 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CoffeeBackground from "../assets/coffee-background";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "https://api.diekoffieblik.co.za"
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 const { width, height } = Dimensions.get("window");
 
@@ -79,22 +79,36 @@ const categoryDefaults = {
 // Simple category detection based on name
 const detectCategory = (itemName: string): string => {
   const name = itemName.toLowerCase();
-  
+
   // Cold drinks keywords
-  if (name.includes("iced") || name.includes("cold") || name.includes("frappe")) {
+  if (
+    name.includes("iced") ||
+    name.includes("cold") ||
+    name.includes("frappe")
+  ) {
     return "cold";
   }
-  
+
   // Pastry keywords
-  if (name.includes("muffin") || name.includes("croissant") || name.includes("cake") || name.includes("pastry")) {
+  if (
+    name.includes("muffin") ||
+    name.includes("croissant") ||
+    name.includes("cake") ||
+    name.includes("pastry")
+  ) {
     return "pastry";
   }
-  
+
   // Special keywords
-  if (name.includes("signature") || name.includes("premium") || name.includes("special") || name.includes("blend")) {
+  if (
+    name.includes("signature") ||
+    name.includes("premium") ||
+    name.includes("special") ||
+    name.includes("blend")
+  ) {
     return "special";
   }
-  
+
   // Default to hot
   return "hot";
 };
@@ -103,7 +117,7 @@ const detectCategory = (itemName: string): string => {
 const enhanceMenuItem = (apiItem: any) => {
   const category = detectCategory(apiItem.name);
   const defaults = categoryDefaults[category as keyof typeof categoryDefaults];
-  
+
   return {
     ...apiItem,
     id: apiItem.id,
@@ -128,7 +142,7 @@ export default function OrderScreen() {
   const [slideAnim] = useState(new Animated.Value(50));
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
-  const [sortByPrice, setSortByPrice] = useState('none');
+  const [sortByPrice, setSortByPrice] = useState("none");
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -188,20 +202,20 @@ export default function OrderScreen() {
           item.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
           item.tags.some((tag: string) =>
-            tag.toLowerCase().includes(searchQuery.toLowerCase())
-          )
+            tag.toLowerCase().includes(searchQuery.toLowerCase()),
+          ),
       );
     }
 
     // Apply sorting
     return items.sort((a, b) => {
       // First sort by price if selected
-      if (sortByPrice === 'low-to-high') {
+      if (sortByPrice === "low-to-high") {
         if (a.price !== b.price) return a.price - b.price;
-      } else if (sortByPrice === 'high-to-low') {
+      } else if (sortByPrice === "high-to-low") {
         if (a.price !== b.price) return b.price - a.price;
       }
-      
+
       // Then by popularity and rating (existing logic)
       if (a.popular && !b.popular) return -1;
       if (!a.popular && b.popular) return 1;
@@ -211,7 +225,7 @@ export default function OrderScreen() {
 
   const cartCount = useMemo(
     () => Object.values(cart).reduce((sum, count) => sum + count, 0),
-    [cart]
+    [cart],
   );
 
   const cartTotal = useMemo(
@@ -220,7 +234,7 @@ export default function OrderScreen() {
         const item = menuItems.find((item) => item.id === itemId);
         return total + (item ? item.price * count : 0);
       }, 0),
-    [cart, menuItems]
+    [cart, menuItems],
   );
 
   useEffect(() => {
@@ -273,7 +287,7 @@ export default function OrderScreen() {
       Alert.alert(
         "Empty Cart 🛒",
         "Add some delicious items to your cart first!",
-        [{ text: "Got it!", style: "default" }]
+        [{ text: "Got it!", style: "default" }],
       );
       return;
     }
@@ -336,9 +350,9 @@ export default function OrderScreen() {
       <Text style={styles.sortLabel}>Sort by:</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         {[
-          { key: 'none', label: 'Popular', icon: 'star' as const },
-          { key: 'low-to-high', label: 'Price ↑', icon: 'arrow-up' as const },
-          { key: 'high-to-low', label: 'Price ↓', icon: 'arrow-down' as const },
+          { key: "none", label: "Popular", icon: "star" as const },
+          { key: "low-to-high", label: "Price ↑", icon: "arrow-up" as const },
+          { key: "high-to-low", label: "Price ↓", icon: "arrow-down" as const },
         ].map((option) => (
           <TouchableOpacity
             key={option.key}
@@ -351,7 +365,7 @@ export default function OrderScreen() {
             <Ionicons
               name={option.icon}
               size={14}
-              color={sortByPrice === option.key ? '#fff' : '#78350f'}
+              color={sortByPrice === option.key ? "#fff" : "#78350f"}
             />
             <Text
               style={[
@@ -377,11 +391,11 @@ export default function OrderScreen() {
         stars.push(<Ionicons key={i} name="star" size={12} color="#f59e0b" />);
       } else if (i === fullStars + 1 && hasHalfStar) {
         stars.push(
-          <Ionicons key={i} name="star-half" size={12} color="#f59e0b" />
+          <Ionicons key={i} name="star-half" size={12} color="#f59e0b" />,
         );
       } else {
         stars.push(
-          <Ionicons key={i} name="star-outline" size={12} color="#d1d5db" />
+          <Ionicons key={i} name="star-outline" size={12} color="#d1d5db" />,
         );
       }
     }
@@ -447,20 +461,24 @@ export default function OrderScreen() {
               <TouchableOpacity
                 style={[
                   styles.quantityButton,
-                  item.stock === 0 && styles.disabledButton
+                  item.stock === 0 && styles.disabledButton,
                 ]}
                 onPress={() => item.stock > 0 && addToCart(item.id)}
                 activeOpacity={item.stock > 0 ? 0.7 : 0.3}
                 disabled={item.stock === 0}
               >
-                <Ionicons name="add" size={16} color={item.stock > 0 ? "#78350f" : "#cbd5e1"} />
+                <Ionicons
+                  name="add"
+                  size={16}
+                  color={item.stock > 0 ? "#78350f" : "#cbd5e1"}
+                />
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity
               style={[
                 styles.addButton,
-                item.stock === 0 && styles.disabledButton
+                item.stock === 0 && styles.disabledButton,
               ]}
               onPress={() => item.stock > 0 && addToCart(item.id)}
               activeOpacity={item.stock > 0 ? 0.8 : 0.3}
@@ -540,13 +558,16 @@ export default function OrderScreen() {
                 const fetchMenuItems = async () => {
                   try {
                     setLoading(true);
-                    const response = await fetch(`http://${process.env.IP}/product`);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    const response = await fetch(
+                      `http://${process.env.IP}/product`,
+                    );
+                    if (!response.ok)
+                      throw new Error(`HTTP error! status: ${response.status}`);
                     const apiData = await response.json();
                     const enhancedItems = apiData.map(enhanceMenuItem);
                     setMenuItems(enhancedItems);
                   } catch (err) {
-                    setError('Failed to load menu items. Please try again.');
+                    setError("Failed to load menu items. Please try again.");
                   } finally {
                     setLoading(false);
                   }
@@ -990,42 +1011,42 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   sortContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderBottomColor: "#f1f5f9",
+    flexDirection: "row",
+    alignItems: "center",
   },
   sortLabel: {
     fontSize: 14,
-    color: '#64748b',
-    fontWeight: '600',
+    color: "#64748b",
+    fontWeight: "600",
     marginRight: 12,
   },
   sortOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
     marginRight: 8,
     gap: 4,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: "#e2e8f0",
   },
   sortOptionActive: {
-    backgroundColor: '#78350f',
-    borderColor: 'transparent',
+    backgroundColor: "#78350f",
+    borderColor: "transparent",
   },
   sortOptionText: {
     fontSize: 12,
-    color: '#78350f',
-    fontWeight: '500',
+    color: "#78350f",
+    fontWeight: "500",
   },
   sortOptionTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
 });

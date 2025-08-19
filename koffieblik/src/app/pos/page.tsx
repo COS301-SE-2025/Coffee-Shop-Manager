@@ -1,7 +1,7 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 interface MenuItem {
   id: string;
@@ -18,15 +18,15 @@ interface CartItem extends MenuItem {
 export default function POSPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [customerName, setCustomerName] = useState('');
-  const [userId, setUserId] = useState('');
-  const [message, setMessage] = useState('');
+  const [customerName, setCustomerName] = useState("");
+  const [userId, setUserId] = useState("");
+  const [message, setMessage] = useState("");
   const router = useRouter();
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
-    const role = localStorage.getItem('role');
-    if (role !== 'admin') {
-      router.replace('/login');
+    const role = localStorage.getItem("role");
+    if (role !== "admin") {
+      router.replace("/login");
     }
   }, [router]);
 
@@ -34,16 +34,16 @@ export default function POSPage() {
     const fetchProducts = async () => {
       try {
         const res = await fetch(`${API_BASE_URL}/getProducts`, {
-          credentials: 'include',
+          credentials: "include",
         });
         const data = await res.json();
         if (data.success) {
           setMenu(data.products);
         } else {
-          console.error('Failed to load products:', data.error);
+          console.error("Failed to load products:", data.error);
         }
       } catch (err) {
-        console.error('Error fetching products:', err);
+        console.error("Error fetching products:", err);
       }
     };
 
@@ -55,7 +55,7 @@ export default function POSPage() {
       const existing = prev.find((ci) => ci.id === item.id);
       if (existing) {
         return prev.map((ci) =>
-          ci.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci
+          ci.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci,
         );
       }
       return [...prev, { ...item, quantity: 1 }];
@@ -70,7 +70,7 @@ export default function POSPage() {
 
   const completeOrder = async () => {
     if (cart.length === 0) {
-      setMessage('Please add products to the cart first.');
+      setMessage("Please add products to the cart first.");
       return;
     }
 
@@ -83,9 +83,9 @@ export default function POSPage() {
 
     try {
       const res = await fetch(`${API_BASE_URL}/create_order`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
 
@@ -93,15 +93,17 @@ export default function POSPage() {
 
       if (res.ok && result.success) {
         setCart([]);
-        setCustomerName('');
-        setUserId('');
-        setMessage('✅ Order successfully submitted!');
+        setCustomerName("");
+        setUserId("");
+        setMessage("✅ Order successfully submitted!");
       } else {
-        setMessage(`❌ Failed to create order: ${result.message || 'Unknown error'}`);
+        setMessage(
+          `❌ Failed to create order: ${result.message || "Unknown error"}`,
+        );
       }
     } catch (err) {
-      console.error('Order error:', err);
-      setMessage('❌ Failed to submit order. Please try again.');
+      console.error("Order error:", err);
+      setMessage("❌ Failed to submit order. Please try again.");
     }
   };
 
@@ -109,8 +111,8 @@ export default function POSPage() {
     <main
       className="min-h-screen p-8"
       style={{
-        backgroundColor: 'var(--primary-4)',
-        color: 'var(--primary-3)',
+        backgroundColor: "var(--primary-4)",
+        color: "var(--primary-3)",
       }}
     >
       <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1>
@@ -149,9 +151,9 @@ export default function POSPage() {
             onClick={() => addToCart(item)}
             className="rounded-xl p-4 hover:shadow-md"
             style={{
-              backgroundColor: 'var(--primary-2)',
-              border: '1px solid var(--primary-3)',
-              color: 'var(--primary-3)',
+              backgroundColor: "var(--primary-2)",
+              border: "1px solid var(--primary-3)",
+              color: "var(--primary-3)",
             }}
           >
             <h2 className="font-semibold text-lg">{item.name}</h2>
@@ -163,7 +165,7 @@ export default function POSPage() {
       <div
         className="rounded-xl shadow-md p-6 mb-6"
         style={{
-          backgroundColor: 'var(--primary-2)',
+          backgroundColor: "var(--primary-2)",
         }}
       >
         <h2 className="text-xl font-bold mb-4">🛒 Cart</h2>
@@ -172,12 +174,17 @@ export default function POSPage() {
         ) : (
           <ul>
             {cart.map((item) => (
-              <li key={item.id} className="flex justify-between items-center mb-2">
+              <li
+                key={item.id}
+                className="flex justify-between items-center mb-2"
+              >
                 <span>
                   {item.name} x{item.quantity}
                 </span>
                 <div className="flex items-center gap-3">
-                  <span className="text-amber-700">R{item.price * item.quantity}</span>
+                  <span className="text-amber-700">
+                    R{item.price * item.quantity}
+                  </span>
                   <button
                     onClick={() => removeFromCart(item.id)}
                     className="text-red-500 hover:text-red-700"

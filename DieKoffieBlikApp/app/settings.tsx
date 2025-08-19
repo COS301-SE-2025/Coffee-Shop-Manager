@@ -1,32 +1,36 @@
-import React, { useState } from 'react';
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  SafeAreaView, 
-  StatusBar, 
-  Pressable, 
-  ScrollView, 
-  Switch, 
-  TextInput 
-} from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import CoffeeBackground from '../assets/coffee-background';
+import React, { useState } from "react";
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  StatusBar,
+  Pressable,
+  ScrollView,
+  Switch,
+  TextInput,
+} from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import CoffeeBackground from "../assets/coffee-background";
 
 export default function AccountSettingsScreen() {
   const router = useRouter();
 
-  const [name, setName] = useState('Phillip');
-  const [email, setEmail] = useState('phillip@example.com');
-  const [password, setPassword] = useState('');
+  const [name, setName] = useState("Phillip");
+  const [email, setEmail] = useState("phillip@example.com");
+  const [password, setPassword] = useState("");
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   return (
     <SafeAreaView style={styles.container}>
       <CoffeeBackground>
-        <StatusBar barStyle="dark-content" backgroundColor="transparent" translucent />
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent
+        />
 
         {/* Navbar */}
         <View style={styles.navbar}>
@@ -48,7 +52,7 @@ export default function AccountSettingsScreen() {
           {/* Editable Fields */}
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Personal Information</Text>
-            
+
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Name</Text>
               <TextInput
@@ -111,12 +115,18 @@ export default function AccountSettingsScreen() {
           </View>
 
           {/* Save Button */}
-          <Pressable style={styles.saveButton} android_ripple={{ color: '#ffffff30' }}>
+          <Pressable
+            style={styles.saveButton}
+            android_ripple={{ color: "#ffffff30" }}
+          >
             <Text style={styles.saveButtonText}>Save Changes</Text>
           </Pressable>
 
           {/* Logout */}
-          <Pressable style={styles.logoutButton} android_ripple={{ color: '#78350f20' }}>
+          <Pressable
+            style={styles.logoutButton}
+            android_ripple={{ color: "#78350f20" }}
+          >
             <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
             <Text style={styles.logoutText}>Log Out</Text>
           </Pressable>
@@ -129,18 +139,18 @@ export default function AccountSettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: "#fafafa",
   },
   navbar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     paddingTop: 50,
     paddingHorizontal: 20,
     paddingBottom: 16,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
@@ -149,30 +159,30 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   navTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
   },
   scrollContent: {
     padding: 20,
   },
   profileSection: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 32,
   },
   profileName: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
     marginTop: 8,
   },
   profileEmail: {
     fontSize: 14,
-    color: '#9ca3af',
+    color: "#9ca3af",
     marginTop: 4,
   },
   section: {
@@ -180,8 +190,8 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
     marginBottom: 16,
   },
   inputGroup: {
@@ -189,51 +199,51 @@ const styles = StyleSheet.create({
   },
   inputLabel: {
     fontSize: 14,
-    color: '#b45309',
+    color: "#b45309",
     marginBottom: 6,
   },
   input: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingVertical: 12,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#e5e7eb',
+    borderColor: "#e5e7eb",
     fontSize: 14,
-    color: '#78350f',
+    color: "#78350f",
   },
   preferenceRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 20,
   },
   preferenceText: {
     fontSize: 14,
-    color: '#78350f',
+    color: "#78350f",
   },
   saveButton: {
-    backgroundColor: '#78350f',
+    backgroundColor: "#78350f",
     paddingVertical: 14,
     borderRadius: 12,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 24,
   },
   saveButtonText: {
-    color: '#fff',
+    color: "#fff",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
   },
   logoutButton: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     paddingVertical: 12,
   },
   logoutText: {
-    color: '#b91c1c',
+    color: "#b91c1c",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 6,
   },
 });

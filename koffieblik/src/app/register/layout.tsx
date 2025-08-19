@@ -2,17 +2,18 @@
 // This remains a Server Component (no "use client" directive)
 
 export const metadata = {
-  title: 'Register - DieKoffieBlik',
-  description: 'Create an account for DieKoffieBlik coffee shop management system',
+  title: "Register - DieKoffieBlik",
+  description:
+    "Create an account for DieKoffieBlik coffee shop management system",
   icons: {
-    icon: '/favicon.ico',
-  }
-}
+    icon: "/favicon.ico",
+  },
+};
 
 export default function RegisterLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
   return children;
 }

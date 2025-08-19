@@ -1,7 +1,7 @@
 // api/authService.ts
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
 
 export interface User {
   id: string;
@@ -41,17 +41,19 @@ class AuthService {
   private async makeRequest(endpoint: string, data: any): Promise<any> {
     try {
       const response = await fetch(`${API_BASE_URL}/api/${endpoint}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(data),
       });
 
       const result = await response.json();
-      
+
       if (!response.ok) {
-        throw new Error(result.message || `HTTP error! status: ${response.status}`);
+        throw new Error(
+          result.message || `HTTP error! status: ${response.status}`,
+        );
       }
 
       return result;
@@ -62,8 +64,8 @@ class AuthService {
   }
 
   async login(email: string, password: string): Promise<AuthResponse> {
-    const result = await this.makeRequest('auth', {
-      action: 'login',
+    const result = await this.makeRequest("auth", {
+      action: "login",
       email,
       password,
     });
@@ -76,8 +78,8 @@ class AuthService {
   }
 
   async register(params: RegisterParams): Promise<AuthResponse> {
-    const result = await this.makeRequest('auth', {
-      action: 'register',
+    const result = await this.makeRequest("auth", {
+      action: "register",
       ...params,
     });
 
@@ -88,16 +90,18 @@ class AuthService {
     return result;
   }
 
-  async getUsername(email: string): Promise<{ success: boolean; username?: string; message?: string }> {
-    return await this.makeRequest('auth', {
-      action: 'username',
+  async getUsername(
+    email: string,
+  ): Promise<{ success: boolean; username?: string; message?: string }> {
+    return await this.makeRequest("auth", {
+      action: "username",
       email,
     });
   }
 
   async changeUsername(email: string, username: string): Promise<AuthResponse> {
-    const result = await this.makeRequest('auth', {
-      action: 'change_Username',
+    const result = await this.makeRequest("auth", {
+      action: "change_Username",
       email,
       username,
     });
@@ -111,44 +115,44 @@ class AuthService {
 
   async storeUserData(user: User, profile?: Profile): Promise<void> {
     try {
-      await AsyncStorage.setItem('@user', JSON.stringify(user));
+      await AsyncStorage.setItem("@user", JSON.stringify(user));
       if (profile) {
-        await AsyncStorage.setItem('@profile', JSON.stringify(profile));
+        await AsyncStorage.setItem("@profile", JSON.stringify(profile));
       }
     } catch (error) {
-      console.error('Error storing user data:', error);
+      console.error("Error storing user data:", error);
     }
   }
 
   async getUserData(): Promise<{ user: User | null; profile: Profile | null }> {
     try {
-      const userJson = await AsyncStorage.getItem('@user');
-      const profileJson = await AsyncStorage.getItem('@profile');
-      
+      const userJson = await AsyncStorage.getItem("@user");
+      const profileJson = await AsyncStorage.getItem("@profile");
+
       const user = userJson ? JSON.parse(userJson) : null;
       const profile = profileJson ? JSON.parse(profileJson) : null;
-      
+
       return { user, profile };
     } catch (error) {
-      console.error('Error retrieving user data:', error);
+      console.error("Error retrieving user data:", error);
       return { user: null, profile: null };
     }
   }
 
   async logout(): Promise<void> {
     try {
-      await AsyncStorage.multiRemove(['@user', '@profile']);
+      await AsyncStorage.multiRemove(["@user", "@profile"]);
     } catch (error) {
-      console.error('Error during logout:', error);
+      console.error("Error during logout:", error);
     }
   }
 
   async isLoggedIn(): Promise<boolean> {
     try {
-      const user = await AsyncStorage.getItem('@user');
+      const user = await AsyncStorage.getItem("@user");
       return user !== null;
     } catch (error) {
-      console.error('Error checking login status:', error);
+      console.error("Error checking login status:", error);
       return false;
     }
   }

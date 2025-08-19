@@ -1,12 +1,12 @@
 // layout.tsx - Updated
-import Navbar from '@/app/components/Navbar';
+import Navbar from "@/app/components/Navbar";
 
 export const metadata = {
-  title: 'Dashboard - DieKoffieBlik',
-  description: 'Dashboard overview for managing DieKoffieBlik coffee shop',
+  title: "Dashboard - DieKoffieBlik",
+  description: "Dashboard overview for managing DieKoffieBlik coffee shop",
   icons: {
-    icon: '/favicon.ico',
-  }
+    icon: "/favicon.ico",
+  },
 };
 
 export default function DashboardLayout({
@@ -19,7 +19,7 @@ export default function DashboardLayout({
       {/* Background image layer */}
       <div
         className="absolute inset-0 -z-10"
-        style={{ backgroundColor: 'var(--primary-4)' }}
+        style={{ backgroundColor: "var(--primary-4)" }}
       />
 
       {/* Optional overlay */}
@@ -27,10 +27,7 @@ export default function DashboardLayout({
 
       {/* Foreground content */}
       <Navbar />
-      <div className="flex-1 overflow-auto">
-        {children}
-      </div>
+      <div className="flex-1 overflow-auto">{children}</div>
     </div>
-
   );
 }

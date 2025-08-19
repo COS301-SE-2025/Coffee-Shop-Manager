@@ -1,11 +1,11 @@
-import Navbar from '@/app/components/Navbar';
+import Navbar from "@/app/components/Navbar";
 
 export const metadata = {
-  title: 'Customer Orders - DieKoffieBlik',
-  description: 'Manage and review customer orders at DieKoffieBlik',
+  title: "Customer Orders - DieKoffieBlik",
+  description: "Manage and review customer orders at DieKoffieBlik",
   icons: {
-    icon: '/favicon.ico',
-  }
+    icon: "/favicon.ico",
+  },
 };
 
 export default function CustomerOrdersLayout({
