@@ -410,28 +410,28 @@ export default function ProfileScreen() {
   return (
     <CoffeeBackground>
       <SafeAreaView style={styles.container}>
-          <StatusBar
-            barStyle="dark-content"
-            backgroundColor="transparent"
-            translucent
-          />
-          <NavBar />
-          <ScrollView
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
-          >
-            <ProfileHeader />
-            <StatsSection />
-            <MenuSection />
-            <SettingsSection />
-            <ActionButtons />
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent
+        />
+        <NavBar />
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
+          <ProfileHeader />
+          <StatsSection />
+          <MenuSection />
+          <SettingsSection />
+          <ActionButtons />
 
-            {/* Footer */}
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>DieKoffieBlik</Text>
-              <Text style={styles.footerSubtext}>Version 1.0.0</Text>
-            </View>
-          </ScrollView>
+          {/* Footer */}
+          <View style={styles.footer}>
+            <Text style={styles.footerText}>DieKoffieBlik</Text>
+            <Text style={styles.footerSubtext}>Version 1.0.0</Text>
+          </View>
+        </ScrollView>
       </SafeAreaView>
     </CoffeeBackground>
   );
