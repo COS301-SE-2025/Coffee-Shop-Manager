@@ -181,20 +181,78 @@ export default function CheckoutScreen() {
     }
   };
 
-  const loadEmail = async () => {
+  // UPDATED: Fetch user info from API like in profile screen
+  const loadUserInfo = async () => {
     try {
-      const storedEmail = await AsyncStorage.getItem("email");
-      if (storedEmail) {
-        setCustomerInfo((prev) => ({ ...prev, email: storedEmail }));
+      const accessToken = await AsyncStorage.getItem('access_token');
+      const userEmail = await AsyncStorage.getItem('email');
+      const userId = await AsyncStorage.getItem('user_id');
+      
+      if (!accessToken || !userEmail || !userId) {
+        console.log("Missing auth data, redirecting to login");
+        router.replace("/login");
+        return;
+      }
+
+      // Fetch user profile from API
+      const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired
+          console.log("Token expired, redirecting to login");
+          router.replace("/login");
+          return;
+        }
+        throw new Error(`HTTP ${response.status}: Failed to fetch profile`);
+      }
+
+      const apiResponse = await response.json();
+      
+      if (apiResponse.success && apiResponse.profile) {
+        const profile = apiResponse.profile;
+        
+        // Update customer info with API data
+        setCustomerInfo((prev) => ({
+          ...prev,
+          email: userEmail,
+          name: profile.display_name || "",
+          phone: profile.phone_number || "",
+        }));
+
+        console.log("Loaded user info from API:", { 
+          email: userEmail, 
+          name: profile.display_name,
+          phone: profile.phone_number 
+        });
+      } else {
+        // Fallback to stored email only
+        setCustomerInfo((prev) => ({
+          ...prev,
+          email: userEmail || "",
+        }));
       }
     } catch (error) {
-      console.error("Failed to load email from storage:", error);
+      console.error("Failed to load user info from API:", error);
+      
+      // Fallback to stored email only
+      const storedEmail = await AsyncStorage.getItem("email");
+      setCustomerInfo((prev) => ({
+        ...prev,
+        email: storedEmail || "",
+      }));
     }
   };
 
   useEffect(() => {
-    loadEmail();
-    fetchMenuItems(); // NEW: Fetch menu items when component mounts
+    loadUserInfo(); // UPDATED: Load both email and name
+    fetchMenuItems(); // Fetch menu items when component mounts
   }, []);
 
   useEffect(() => {
@@ -222,7 +280,7 @@ export default function CheckoutScreen() {
     ]).start();
   }, [cartParam]);
 
-  // NEW: Calculate cart items using dynamic menu data
+  // Calculate cart items using dynamic menu data
   const cartItems = Object.entries(cart)
     .map(([itemId, quantity]) => {
       const item = menuItems.find((item) => item.id === itemId);
