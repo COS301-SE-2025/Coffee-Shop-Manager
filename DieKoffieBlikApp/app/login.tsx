@@ -62,7 +62,10 @@ export default function LoginScreen({
     const checkSession = async () => {
       try {
         const sessionData = await AsyncStorage.getItem("user_session");
-        if (sessionData) {
+        const accessToken = await AsyncStorage.getItem("access_token");
+        const userId = await AsyncStorage.getItem("user_id");
+        
+        if (sessionData && accessToken && userId) {
           const { email: storedEmail } = JSON.parse(sessionData);
           setEmail(storedEmail);
           setRememberMe(true);
@@ -71,7 +74,7 @@ export default function LoginScreen({
       } catch (error) {
         console.error("Error checking session:", error);
         // Clear storage if there's an error
-        await AsyncStorage.removeItem("user_session");
+        await AsyncStorage.multiRemove(["user_session", "access_token", "refresh_token", "user_id", "email"]);
       }
     };
 
@@ -124,18 +127,50 @@ export default function LoginScreen({
       const accessToken = response.headers.get("x-access-token");
       const refreshToken = response.headers.get("x-refresh-token");
 
-      await AsyncStorage.setItem("email", email);
+      console.log("✅ Login response data:", data);
+      console.log("✅ Access token:", accessToken);
+      console.log("✅ Refresh token:", refreshToken);
 
-      console.log("✅ Access token" + accessToken);
-      console.log("✅ Refresh token" + refreshToken);
+      // Store basic auth data
+      await AsyncStorage.setItem("email", email);
 
       if (accessToken && refreshToken) {
         await AsyncStorage.setItem("access_token", accessToken);
         await AsyncStorage.setItem("refresh_token", refreshToken);
         console.log("✅ Tokens stored in AsyncStorage");
-
-        await sleep(300);
       }
+
+      // IMPORTANT: Store the user ID - check different possible locations in the response
+      let userId = null;
+      
+      // Try different possible locations for user ID in the response
+      if (data.user?.id) {
+        userId = data.user.id;
+      } else if (data.user?.user_id) {
+        userId = data.user.user_id;
+      } else if (data.id) {
+        userId = data.id;
+      } else if (data.user_id) {
+        userId = data.user_id;
+      } else if (data.userId) {
+        userId = data.userId;
+      }
+
+      if (userId) {
+        await AsyncStorage.setItem("user_id", userId);
+        console.log("✅ User ID stored:", userId);
+      } else {
+        console.error("❌ User ID not found in login response");
+        console.log("Full response data:", JSON.stringify(data, null, 2));
+        
+        // Still proceed but warn about missing user ID
+        Alert.alert(
+          "Warning", 
+          "Login successful but user ID not found. Some features may not work properly."
+        );
+      }
+
+      await sleep(300);
 
       console.log("✅ Login successful:", data);
 
@@ -159,6 +194,7 @@ export default function LoginScreen({
               email: email,
               user: data.user,
               username: data.username,
+              userId: userId, // Include userId in session data
               loginTime: new Date().toISOString(),
             }),
           );

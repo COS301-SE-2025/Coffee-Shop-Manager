@@ -20,13 +20,20 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface UserProfile {
-  id: string;
-  username: string;
-  email: string;
-  last_name: string;
-  phone_number: string;
+  user_id: string;
+  favourite_product_id: string | null;
+  total_orders: number;
+  total_spent: number;
   date_of_birth: string;
-  created_at: string;
+  phone_number: string;
+  loyalty_points: number;
+  role: string;
+  display_name: string;
+}
+
+interface ApiResponse {
+  success: boolean;
+  profile: UserProfile;
 }
 
 interface UserData {
@@ -36,6 +43,9 @@ interface UserData {
   totalOrders: number;
   favoriteItems: number;
   loyaltyPoints: number;
+  totalSpent: number;
+  dateOfBirth: string;
+  userId: string;
 }
 
 export default function ProfileScreen() {
@@ -62,7 +72,7 @@ export default function ProfileScreen() {
       // Check if user is logged in using AsyncStorage
       const accessToken = await AsyncStorage.getItem('access_token');
       const userEmail = await AsyncStorage.getItem('email');
-      const sessionData = await AsyncStorage.getItem('user_session');
+      const userId = await AsyncStorage.getItem('user_id'); // Assuming you store user_id
       
       if (!accessToken || !userEmail) {
         // User is not logged in, redirect to login
@@ -70,74 +80,57 @@ export default function ProfileScreen() {
         return;
       }
 
-      // Try to use stored session data first
-      let userProfile = null;
-      if (sessionData) {
-        try {
-          const parsedSession = JSON.parse(sessionData);
-          userProfile = parsedSession.user;
-          console.log('Using stored session data:', userProfile);
-        } catch (parseError) {
-          console.error('Error parsing session data:', parseError);
-        }
+      // If we don't have userId in storage, we need to get it somehow
+      if (!userId) {
+        throw new Error('User ID not found in storage');
       }
 
-      // If no stored session, try to fetch from API (adjust endpoint as needed)
-      if (!userProfile) {
-        console.log('No stored session, trying to fetch user data...');
-        
-        // Try different possible endpoints
-        const possibleEndpoints = [
-          `${API_BASE_URL}/user`,
-          `${API_BASE_URL}/profile`, 
-          `${API_BASE_URL}/me`,
-          `${API_BASE_URL}/user/profile`
-        ];
-
-        let response = null;
-        for (const endpoint of possibleEndpoints) {
-          try {
-            console.log(`Trying endpoint: ${endpoint}`);
-            response = await fetch(endpoint, {
-              method: 'GET',
-              headers: {
-                'Authorization': `Bearer ${accessToken}`,
-                'Content-Type': 'application/json',
-              },
-            });
-            
-            if (response.ok) {
-              userProfile = await response.json();
-              console.log(`Success with endpoint: ${endpoint}`, userProfile);
-              break;
-            } else {
-              console.log(`Failed with ${endpoint}: ${response.status}`);
-            }
-          } catch (fetchError) {
-            console.log(`Error with ${endpoint}:`, fetchError);
-            continue;
-          }
+      console.log(`Fetching profile for user ID: ${userId}`);
+      
+      // Fetch user profile from the specific endpoint
+      const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        method: 'GET',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          // Token expired, try to refresh
+          await handleTokenExpiry();
+          return;
         }
-
-        if (!userProfile) {
-          throw new Error('Unable to fetch user profile from any endpoint');
-        }
+        throw new Error(`HTTP ${response.status}: Failed to fetch profile`);
       }
+
+      const apiResponse: ApiResponse = await response.json();
+      
+      if (!apiResponse.success || !apiResponse.profile) {
+        throw new Error('Invalid API response format');
+      }
+
+      const profile = apiResponse.profile;
+      console.log('Profile data received:', profile);
 
       // Format the data for your component
       const formattedUserData: UserData = {
-        name: userProfile.username || userProfile.name || 'User',
-        email: userProfile.email || userEmail,
-        phone: userProfile.phone_number || userProfile.phone || 'Not provided',
-        totalOrders: 0, // Will be updated when you have the correct endpoint
-        favoriteItems: 0, // Will be updated when you have the correct endpoint
-        loyaltyPoints: userProfile.loyalty_points || 0
+        name: profile.display_name || 'User',
+        email: userEmail,
+        phone: profile.phone_number || 'Not provided',
+        totalOrders: profile.total_orders || 0,
+        favoriteItems: profile.favourite_product_id ? 1 : 0, // Simple count based on whether there's a favorite
+        loyaltyPoints: profile.loyalty_points || 0,
+        totalSpent: profile.total_spent || 0,
+        dateOfBirth: profile.date_of_birth || 'Not provided',
+        userId: profile.user_id
       };
 
       setUserData(formattedUserData);
     } catch (err: any) {
       console.error("Error fetching user data:", err);
-      setError(err.message);
+      setError(err.message || 'Failed to load profile');
     } finally {
       setIsLoading(false);
     }
@@ -180,7 +173,7 @@ export default function ProfileScreen() {
   };
 
   const clearStorageAndRedirect = async () => {
-    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'email', 'user_session']);
+    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'email', 'user_session', 'user_id']);
     router.replace('/login');
   };
 
@@ -261,7 +254,7 @@ export default function ProfileScreen() {
 
   const statsData = [
     { label: "Total Orders", value: userData.totalOrders.toString(), icon: "receipt" as const },
-    { label: "Favorites", value: userData.favoriteItems.toString(), icon: "heart" as const },
+    { label: "Total Spent", value: `R${userData.totalSpent.toFixed(2)}`, icon: "card" as const },
     { label: "Loyalty Points", value: userData.loyaltyPoints.toString(), icon: "star" as const }
   ];
 
@@ -303,6 +296,7 @@ export default function ProfileScreen() {
         <View style={styles.profileInfo}>
           <Text style={styles.profileName}>{userData.name}</Text>
           <Text style={styles.profileEmail}>{userData.email}</Text>
+          <Text style={styles.profilePhone}>{userData.phone}</Text>
         </View>
       </LinearGradient>
     </View>
@@ -562,7 +556,7 @@ const styles = StyleSheet.create({
     color: "#fed7aa",
     marginBottom: 4,
   },
-  memberSince: {
+  profilePhone: {
     fontSize: 14,
     color: "#fbbf24",
   },
