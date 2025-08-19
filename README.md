@@ -12,10 +12,21 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## 🚀 Demo & Docs
 
+- 📑 [Requirements Specification V3 (SRS)](docs/SRS-Coffee_Shop_Manager_V3.pdf)
 - 📑 [Requirements Specification V2 (SRS)](docs/SRS-Coffee_Shop_Manager_V2.pdf)
 - 📑 [Requirements Specification (SRS)](docs/SRS-Coffee_Shop_Manager.pdf)
 - 📋 [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/119/views/1)
 - 👥 [User Manual V1](docs/User_Manual_V1.pdf)
+- 👥 [User Manual Website V2](docs/User_Manual_V2.pdf)
+- 📱 [User Manual Mobile App](docs/DieKoffieBlikApp_User_Manual.pdf)
+- ✅ [Coding Standards Document](docs/DieKoffieBlik_Coding_Standards.pdf)
+
+---
+
+## 🌐 Website & API
+
+- **Live Website:** [DieKoffieBlik](https://diekoffieblik.co.za) – Explore the platform, place orders, and see the system in action.
+- **API Endpoint:** [DieKoffieBlik API](https://api.diekoffieblik.co.za) – For backend developers and integration purposes.
 
 ---
 

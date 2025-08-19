@@ -1,19 +1,19 @@
-import { Request, Response } from 'express';
+import { Request, Response } from "express";
 
 export function logoutHandler(req: Request, res: Response) {
-  res.cookie('access_token', '', {
+  res.cookie("access_token", "", {
     httpOnly: true,
     secure: true,
     maxAge: 0,
-    path: '/',
+    path: "/",
   });
 
-  res.cookie('refresh_token', '', {
+  res.cookie("refresh_token", "", {
     httpOnly: true,
     secure: true,
     maxAge: 0,
-    path: '/',
+    path: "/",
   });
 
-  res.status(200).json({ success: true, message: 'Logged out successfully' });
+  res.status(200).json({ success: true, message: "Logged out successfully" });
 }

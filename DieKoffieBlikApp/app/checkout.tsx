@@ -17,7 +17,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import PaymentService from "../backend/service/payment.service";
 import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const { width } = Dimensions.get("window");
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
@@ -121,7 +121,7 @@ const CustomerDetails = memo(
         </View>
       </Animated.View>
     );
-  }
+  },
 );
 
 export default function CheckoutScreen() {
@@ -183,9 +183,9 @@ export default function CheckoutScreen() {
 
   const loadEmail = async () => {
     try {
-      const storedEmail = await AsyncStorage.getItem('email');
+      const storedEmail = await AsyncStorage.getItem("email");
       if (storedEmail) {
-        setCustomerInfo(prev => ({ ...prev, email: storedEmail }));
+        setCustomerInfo((prev) => ({ ...prev, email: storedEmail }));
       }
     } catch (error) {
       console.error("Failed to load email from storage:", error);
@@ -242,21 +242,17 @@ export default function CheckoutScreen() {
 
   const handlePlaceOrder = async () => {
     if (!customerInfo.name || !customerInfo.email) {
-      Alert.alert(
-        "Missing Information",
-        "Please fill in your name and email"
-      );
+      Alert.alert("Missing Information", "Please fill in your name and email");
       return;
     }
 
     if (
       customerInfo.phone !== "" &&
-      (customerInfo.phone.length !== 10 ||
-      !customerInfo.phone.startsWith("0"))
+      (customerInfo.phone.length !== 10 || !customerInfo.phone.startsWith("0"))
     ) {
       Alert.alert(
         "Invalid Phone Number",
-        "Please enter a valid 10-digit phone number starting with 0"
+        "Please enter a valid 10-digit phone number starting with 0",
       );
       return;
     }
@@ -285,7 +281,7 @@ export default function CheckoutScreen() {
         const res = await PaymentService.initiatePayment(
           generatedOrderNumber,
           total,
-          customerInfo
+          customerInfo,
         );
 
         setIsProcessing(false);
@@ -300,7 +296,7 @@ export default function CheckoutScreen() {
         } else {
           Alert.alert(
             "Payment Error",
-            res.message || "Could not start payment."
+            res.message || "Could not start payment.",
           );
         }
       } catch (err) {
@@ -308,7 +304,7 @@ export default function CheckoutScreen() {
         setIsProcessing(false);
         Alert.alert(
           "Error",
-          "Something went wrong while starting the payment."
+          "Something went wrong while starting the payment.",
         );
       }
     }
@@ -463,15 +459,15 @@ export default function CheckoutScreen() {
       "Are you sure you want to cancel this order? All items will be removed from your cart.",
       [
         { text: "Keep Order", style: "cancel" },
-        { 
-          text: "Cancel Order", 
+        {
+          text: "Cancel Order",
           style: "destructive",
           onPress: () => {
             // Clear cart and go back to home/menu
             router.push("/home");
-          }
-        }
-      ]
+          },
+        },
+      ],
     );
   };
 
@@ -488,9 +484,9 @@ export default function CheckoutScreen() {
           >
             <Ionicons name="arrow-back" size={24} color="#fff7ed" />
           </TouchableOpacity>
-          
+
           <Text style={styles.headerTitle}>Checkout</Text>
-          
+
           <TouchableOpacity
             onPress={handleCancelOrder}
             style={styles.cancelButton}
@@ -918,11 +914,11 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
     borderRadius: 8,
     borderWidth: 1,
-    borderColor: '#fff7ed',
+    borderColor: "#fff7ed",
   },
   cancelButtonText: {
-    color: '#fff7ed',
+    color: "#fff7ed",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

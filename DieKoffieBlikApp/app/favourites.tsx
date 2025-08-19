@@ -97,7 +97,7 @@ export default function FavoritesScreen() {
             setFavorites((prev) => prev.filter((item) => item.id !== id));
           },
         },
-      ]
+      ],
     );
   };
 

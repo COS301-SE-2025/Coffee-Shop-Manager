@@ -1,12 +1,18 @@
-import { Request, Response } from 'express';
-import { supabase } from '../supabase/client';
+import { Request, Response } from "express";
+import { supabase } from "../supabase/client";
 
-export async function signupHandler(req: Request, res: Response): Promise<void> {
+export async function signupHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     const { email, password, username } = req.body;
 
     if (!email || !password || !username) {
-      res.status(400).json({ success: false, message: 'Email, password and username are required' });
+      res.status(400).json({
+        success: false,
+        message: "Email, password and username are required",
+      });
       return;
     }
 
@@ -15,10 +21,10 @@ export async function signupHandler(req: Request, res: Response): Promise<void> 
       password,
       options: {
         data: {
-          role: 'user',
+          role: "user",
           display_name: username,
-        }
-      }
+        },
+      },
     });
 
     if (error) {
@@ -28,13 +34,13 @@ export async function signupHandler(req: Request, res: Response): Promise<void> 
 
     res.status(201).json({
       success: true,
-      message: 'User registered successfully.',
+      message: "User registered successfully.",
       user: data.user,
     });
     return;
   } catch (err) {
-    console.error('Signup error:', err);
-    res.status(500).json({ success: false, message: 'Internal server error' });
+    console.error("Signup error:", err);
+    res.status(500).json({ success: false, message: "Internal server error" });
     return;
   }
 }

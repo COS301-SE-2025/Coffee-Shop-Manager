@@ -1,12 +1,11 @@
-import app from './app';
+import app from "./app";
 
 // Logging for env vars
-const requiredEnvVars = 
-[
-  'ALLOWED_ORIGINS',
-  'NEXT_PUBLIC_API_URL',
-  'SUPABASE_PUBLIC_URL',
-  'SUPABASE_PRIVATE_KEY'
+const requiredEnvVars = [
+  "ALLOWED_ORIGINS",
+  "NEXT_PUBLIC_API_URL",
+  "SUPABASE_PUBLIC_URL",
+  "SUPABASE_PRIVATE_KEY",
 ];
 
 requiredEnvVars.forEach((key) => {

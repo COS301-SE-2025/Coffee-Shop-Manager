@@ -1,8 +1,12 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
-export default function HydrationFix({ children }: { children: React.ReactNode }) {
+export default function HydrationFix({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -10,6 +14,6 @@ export default function HydrationFix({ children }: { children: React.ReactNode }
   }, []);
 
   if (!mounted) return null;
-  
+
   return <>{children}</>;
 }

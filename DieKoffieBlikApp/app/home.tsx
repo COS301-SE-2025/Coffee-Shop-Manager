@@ -3,21 +3,21 @@ import {
   View, 
   Text, 
   StyleSheet,
-  ScrollView, 
+  ScrollView,
   Animated,
   Dimensions,
   StatusBar,
   SafeAreaView,
   Platform,
   RefreshControl,
-  Pressable
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
+  Pressable,
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import CoffeeLoading from '../assets/loading';
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CoffeeLoading from "../assets/loading";
 
 interface FeaturedItem {
   id: string;
@@ -30,7 +30,7 @@ interface FeaturedItem {
   rating: string;
 }
 
-const { width, height } = Dimensions.get('window');
+const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = (width - 60) / 2;
 
 export default function HomeScreen() {
@@ -48,15 +48,15 @@ export default function HomeScreen() {
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const API_BASE_URL = "https://api.diekoffieblik.co.za"
+  const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
   const coffeeQuotes = [
     "Life begins after coffee ☕",
     "But first, coffee ✨",
     "Espresso yourself! 💫",
-    "Coffee is my love language ❤️"
+    "Coffee is my love language ❤️",
   ];
-  
+
   const coffeeFacts = [
     "The word 'coffee' comes from the Arabic word 'qahwa' 🌍",
     "Espresso has less caffeine than drip coffee per cup! ⚡",
@@ -153,11 +153,11 @@ export default function HomeScreen() {
     <View style={styles.featuredSection}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Featured Items</Text>
-        <Pressable onPress={() => router.push('/order')}>
+        <Pressable onPress={() => router.push("/order")}>
           <Text style={styles.seeAllText}>See All</Text>
         </Pressable>
       </View>
-      
+
       {featuredLoading ? (
         <View style={styles.loadingContainer}>
           <Text style={styles.loadingText}>Loading...</Text>
@@ -203,19 +203,19 @@ export default function HomeScreen() {
       icon: "cart" as const, 
       route: "/order", 
       primary: true,
-      description: "Browse menu & order"
+      description: "Browse menu & order",
     },
-    { 
-      title: "Order History", 
-      icon: "time" as const, 
-      route: "/history", 
+    {
+      title: "Order History",
+      icon: "time" as const,
+      route: "/history",
       primary: false,
-      description: "View past orders"
+      description: "View past orders",
     },
-    { 
-      title: "Favourites", 
-      icon: "heart" as const, 
-      route: "/favourites", 
+    {
+      title: "Favourites",
+      icon: "heart" as const,
+      route: "/favourites",
       primary: false,
       description: "Saved items"
     }
@@ -315,12 +315,14 @@ export default function HomeScreen() {
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 100],
     outputRange: [0, 1],
-    extrapolate: 'clamp',
+    extrapolate: "clamp",
   });
 
   const NavBar = () => (
     <>
-      <Animated.View style={[styles.navbarBackground, { opacity: headerOpacity }]} />
+      <Animated.View
+        style={[styles.navbarBackground, { opacity: headerOpacity }]}
+      />
       <View style={styles.navbar}>
         <View style={styles.navLeft}>
           <View style={styles.logoContainer}>
@@ -332,13 +334,16 @@ export default function HomeScreen() {
           </View>
         </View>
         <View style={styles.navRight}>
-          <Pressable style={styles.navButton} android_ripple={{ color: '#78350f20' }}>
+          <Pressable
+            style={styles.navButton}
+            android_ripple={{ color: "#78350f20" }}
+          >
             <Ionicons name="search" size={22} color="#78350f" />
           </Pressable>
-          <Pressable 
-            style={styles.navButton} 
-            android_ripple={{ color: '#78350f20' }}
-            onPress={() => router.push('/notifications')}
+          <Pressable
+            style={styles.navButton}
+            android_ripple={{ color: "#78350f20" }}
+            onPress={() => router.push("/notifications")}
           >
             <Ionicons name="notifications-outline" size={22} color="#78350f" />
           </Pressable>
@@ -362,12 +367,12 @@ export default function HomeScreen() {
         styles.heroSection,
         {
           opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }]
-        }
+          transform: [{ translateY: slideAnim }],
+        },
       ]}
     >
       <LinearGradient
-        colors={['#78350f', '#92400e']}
+        colors={["#78350f", "#92400e"]}
         style={styles.heroGradient}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
@@ -378,10 +383,10 @@ export default function HomeScreen() {
           <Text style={styles.heroSubtitle}>
             {coffeeQuotes[Math.floor(Math.random() * coffeeQuotes.length)]}
           </Text>
-          <Pressable 
+          <Pressable
             style={styles.ctaButton}
-            onPress={() => router.push('/order')}
-            android_ripple={{ color: '#ffffff30' }}
+            onPress={() => router.push("/order")}
+            android_ripple={{ color: "#ffffff30" }}
           >
             <Ionicons name="cafe" size={20} color="#78350f" />
             <Text style={styles.ctaButtonText}>Order Now</Text>
@@ -389,17 +394,19 @@ export default function HomeScreen() {
         </View>
         <View style={styles.heroImageContainer}>
           <View style={styles.coffeeCupContainer}>
-            <Animated.View 
+            <Animated.View
               style={[
                 styles.coffeeCupPlaceholder,
                 {
-                  transform: [{
-                    rotate: slideAnim.interpolate({
-                      inputRange: [0, 50],
-                      outputRange: ['0deg', '5deg'],
-                    })
-                  }]
-                }
+                  transform: [
+                    {
+                      rotate: slideAnim.interpolate({
+                        inputRange: [0, 50],
+                        outputRange: ["0deg", "5deg"],
+                      }),
+                    },
+                  ],
+                },
               ]}
             >
               <Ionicons name="cafe" size={60} color="#78350f" />
@@ -418,34 +425,40 @@ export default function HomeScreen() {
           <Pressable 
             key={`${action.title}-${index}`} // More stable key
             style={[
-              styles.quickActionCard, 
-              action.primary && styles.primaryAction
+              styles.quickActionCard,
+              action.primary && styles.primaryAction,
             ]}
             onPress={() => router.push(action.route)}
-            android_ripple={{ 
-              color: action.primary ? '#ffffff30' : '#78350f20' 
+            android_ripple={{
+              color: action.primary ? "#ffffff30" : "#78350f20",
             }}
           >
-            <View style={[
-              styles.actionIconContainer,
-              action.primary && styles.primaryIconContainer
-            ]}>
-              <Ionicons 
-                name={action.icon} 
-                size={24} 
-                color={action.primary ? "#fff" : "#78350f"} 
+            <View
+              style={[
+                styles.actionIconContainer,
+                action.primary && styles.primaryIconContainer,
+              ]}
+            >
+              <Ionicons
+                name={action.icon}
+                size={24}
+                color={action.primary ? "#fff" : "#78350f"}
               />
             </View>
-            <Text style={[
-              styles.quickActionText,
-              action.primary && styles.quickActionTextPrimary
-            ]}>
+            <Text
+              style={[
+                styles.quickActionText,
+                action.primary && styles.quickActionTextPrimary,
+              ]}
+            >
               {action.title}
             </Text>
-            <Text style={[
-              styles.quickActionDescription,
-              action.primary && styles.quickActionDescriptionPrimary
-            ]}>
+            <Text
+              style={[
+                styles.quickActionDescription,
+                action.primary && styles.quickActionDescriptionPrimary,
+              ]}
+            >
               {action.description}
             </Text>
           </Pressable>
@@ -481,7 +494,7 @@ export default function HomeScreen() {
       <CoffeeBackground>
         <NavBar />
 
-        <Animated.ScrollView 
+        <Animated.ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
@@ -489,7 +502,7 @@ export default function HomeScreen() {
           }
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
-            { useNativeDriver: false }
+            { useNativeDriver: false },
           )}
           scrollEventThrottle={16}
         >
@@ -497,7 +510,7 @@ export default function HomeScreen() {
           <QuickActions />
           <FeaturedItems />
           <CoffeeFactCard />
-          
+
           {/* Footer */}
           <View style={styles.footer}>
             <Text style={styles.footerText}>Made with ❤️ and lots of ☕</Text>
@@ -512,89 +525,89 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fafafa',
+    backgroundColor: "#fafafa",
   },
   scrollContent: {
     paddingBottom: 20,
   },
-  
+
   // Navigation Bar
   navbarBackground: {
-    position: 'absolute',
+    position: "absolute",
     top: 0,
     left: 0,
     right: 0,
-    height: Platform.OS === 'ios' ? 100 : 80,
-    backgroundColor: '#fff',
+    height: Platform.OS === "ios" ? 100 : 80,
+    backgroundColor: "#fff",
     zIndex: 1,
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 2 },
     shadowRadius: 4,
   },
   navbar: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     paddingHorizontal: 20,
-    paddingTop: Platform.OS === 'ios' ? 50 : 30,
+    paddingTop: Platform.OS === "ios" ? 50 : 30,
     paddingBottom: 15,
     zIndex: 2,
   },
   navLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   logoContainer: {
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: '#fff7ed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff7ed",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   navTitle: {
     fontSize: 18,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
   },
   navSubtitle: {
     fontSize: 12,
-    color: '#b45309',
+    color: "#b45309",
     marginTop: 2,
   },
   navRight: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   navButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 8,
-    position: 'relative',
+    position: "relative",
   },
   profileButton: {
     width: 44,
     height: 44,
     borderRadius: 22,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     marginLeft: 8,
-    backgroundColor: '#fff7ed',
+    backgroundColor: "#fff7ed",
   },
   notificationBadge: {
-    position: 'absolute',
+    position: "absolute",
     top: 8,
     right: 8,
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: '#ef4444',
+    backgroundColor: "#ef4444",
   },
   
   // Hero Section - Fixed styles
@@ -618,8 +631,8 @@ const styles = StyleSheet.create({
     ),
   },
   heroGradient: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 24,
     paddingVertical: 32,
     minHeight: 180, // Ensure minimum height
@@ -629,59 +642,59 @@ const styles = StyleSheet.create({
   },
   heroGreeting: {
     fontSize: 14,
-    color: '#fbbf24',
+    color: "#fbbf24",
     marginBottom: 4,
-    fontWeight: '500',
+    fontWeight: "500",
   },
   heroMainTitle: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#fff',
+    fontWeight: "bold",
+    color: "#fff",
     marginBottom: 8,
   },
   heroSubtitle: {
     fontSize: 14,
-    color: '#fed7aa',
+    color: "#fed7aa",
     marginBottom: 20,
     lineHeight: 20,
   },
   ctaButton: {
-    backgroundColor: '#fff',
-    flexDirection: 'row',
-    alignItems: 'center',
+    backgroundColor: "#fff",
+    flexDirection: "row",
+    alignItems: "center",
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 25,
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     elevation: 2,
   },
   ctaButtonText: {
-    color: '#78350f',
+    color: "#78350f",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     marginLeft: 8,
   },
   heroImageContainer: {
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   coffeeCupContainer: {
-    position: 'relative',
+    position: "relative",
   },
   coffeeCupPlaceholder: {
     width: 100,
     height: 100,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     borderRadius: 50,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
     elevation: 4,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.2,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
   },
-  
+
   // Quick Actions
   quickActionsSection: {
     paddingHorizontal: 20,
@@ -689,73 +702,73 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 20,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
     marginBottom: 16,
   },
   sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
     marginBottom: 16,
   },
   seeAllText: {
     fontSize: 14,
-    color: '#78350f',
-    fontWeight: '600',
+    color: "#78350f",
+    fontWeight: "600",
   },
   quickActionsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    justifyContent: 'space-between',
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
   },
   quickActionCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     width: CARD_WIDTH,
     padding: 20,
     borderRadius: 16,
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 16,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
   },
   primaryAction: {
-    backgroundColor: '#78350f',
+    backgroundColor: "#78350f",
   },
   actionIconContainer: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: '#fff7ed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff7ed",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 12,
   },
   primaryIconContainer: {
-    backgroundColor: '#92400e',
+    backgroundColor: "#92400e",
   },
   quickActionText: {
     fontSize: 14,
-    color: '#78350f',
-    fontWeight: '600',
-    textAlign: 'center',
+    color: "#78350f",
+    fontWeight: "600",
+    textAlign: "center",
     marginBottom: 4,
   },
   quickActionTextPrimary: {
-    color: '#fff',
+    color: "#fff",
   },
   quickActionDescription: {
     fontSize: 12,
-    color: '#9ca3af',
-    textAlign: 'center',
+    color: "#9ca3af",
+    textAlign: "center",
   },
   quickActionDescriptionPrimary: {
-    color: '#fed7aa',
+    color: "#fed7aa",
   },
-  
+
   // Featured Items
   featuredSection: {
     paddingLeft: 20,
@@ -764,22 +777,22 @@ const styles = StyleSheet.create({
   },
   featuredScroll: {
     paddingRight: 20,
-    overflow: 'visible',
+    overflow: "visible",
   },
   featuredScrollContent: {
     paddingRight: 20,
   },
   featuredCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     width: 160,
     padding: 16,
     paddingBottom: 24,
     borderRadius: 16,
     marginRight: 16,
-    alignItems: 'center',
-    position: 'relative',
+    alignItems: "center",
+    position: "relative",
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
@@ -788,69 +801,69 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: 28,
-    backgroundColor: '#fff7ed',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fff7ed",
+    alignItems: "center",
+    justifyContent: "center",
     marginBottom: 12,
     marginTop: 8,
   },
   featuredItemName: {
     fontSize: 14,
-    fontWeight: '600',
-    color: '#78350f',
-    textAlign: 'center',
+    fontWeight: "600",
+    color: "#78350f",
+    textAlign: "center",
     marginBottom: 6,
   },
   featuredItemPrice: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
     marginBottom: 12,
   },
   addToCartBtn: {
-    backgroundColor: '#78350f',
+    backgroundColor: "#78350f",
     width: 32,
     height: 32,
     borderRadius: 16,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
-  
+
   // Coffee Fact Card
   factCard: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     marginHorizontal: 20,
     marginTop: 32,
     padding: 20,
     borderRadius: 16,
     elevation: 3,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
   },
   factHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 12,
   },
   factIconContainer: {
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: '#fef3c7',
-    alignItems: 'center',
-    justifyContent: 'center',
+    backgroundColor: "#fef3c7",
+    alignItems: "center",
+    justifyContent: "center",
     marginRight: 12,
   },
   factTitle: {
     fontSize: 16,
-    fontWeight: 'bold',
-    color: '#78350f',
+    fontWeight: "bold",
+    color: "#78350f",
   },
   factText: {
     fontSize: 14,
-    color: '#6b7280',
+    color: "#6b7280",
     lineHeight: 20,
   },
   
@@ -864,21 +877,20 @@ const styles = StyleSheet.create({
     color: '#78350f',
     fontSize: 14,
   },
-  
   // Footer
   footer: {
-    alignItems: 'center',
+    alignItems: "center",
     padding: 32,
     marginTop: 20,
   },
   footerText: {
     fontSize: 14,
-    color: '#b45309',
-    fontStyle: 'italic',
+    color: "#b45309",
+    fontStyle: "italic",
     marginBottom: 4,
   },
   footerSubtext: {
     fontSize: 12,
-    color: '#9ca3af',
+    color: "#9ca3af",
   },
 });
