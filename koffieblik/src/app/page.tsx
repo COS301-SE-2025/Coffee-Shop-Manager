@@ -13,7 +13,7 @@ export default function Home() {
           <div className="w-10 h-10 rounded-lg flex items-center justify-center">
             <Image src="/icon.svg" alt="KoffieBlik Logo" width={24} height={24} className="text-white" />
           </div>
-          <span className="text-2xl font-bold text-stone-800">KoffieBlik</span>
+          <span className="text-2xl font-bold text-stone-800">DieKoffieBlik</span>
         </div>
         <div className="flex gap-4">
           <Link href="/login">
