@@ -1,15 +1,18 @@
-import { Request, Response } from 'express';
-import { supabase } from '../supabase/client';
+import { Request, Response } from "express";
+import { supabase } from "../supabase/client";
 
-export async function updateUserProfileHandler(req: Request, res: Response): Promise<void> {
+export async function updateUserProfileHandler(
+  req: Request,
+  res: Response,
+): Promise<void> {
   try {
     const userId = req.params.id;
     if (!userId) {
-      res.status(400).json({ success: false, message: 'User ID is required' });
+      res.status(400).json({ success: false, message: "User ID is required" });
       return;
     }
 
-    const allowedFields = ['display_name', 'date_of_birth', 'phone_number'];
+    const allowedFields = ["display_name", "date_of_birth", "phone_number"];
     const updates: Record<string, any> = {};
 
     for (const field of allowedFields) {
@@ -19,15 +22,17 @@ export async function updateUserProfileHandler(req: Request, res: Response): Pro
     }
 
     if (Object.keys(updates).length === 0) {
-      res.status(400).json({ success: false, message: 'No valid fields to update' });
+      res
+        .status(400)
+        .json({ success: false, message: "No valid fields to update" });
       return;
     }
 
     const { data: updatedProfile, error } = await supabase
-      .from('user_profiles')
+      .from("user_profiles")
       .update(updates)
-      .eq('user_id', userId)
-      .select('*')
+      .eq("user_id", userId)
+      .select("*")
       .maybeSingle();
 
     if (error) {
@@ -35,18 +40,22 @@ export async function updateUserProfileHandler(req: Request, res: Response): Pro
     }
 
     if (!updatedProfile) {
-      res.status(404).json({ success: false, message: 'User profile not found' });
+      res
+        .status(404)
+        .json({ success: false, message: "User profile not found" });
       return;
     }
 
     res.status(200).json({
       success: true,
-      message: 'Profile updated successfully',
+      message: "Profile updated successfully",
       profile: updatedProfile,
     });
-
   } catch (err: any) {
-    console.error('Update profile error:', err);
-    res.status(500).json({ success: false, message: err.message || 'Internal server error' });
+    console.error("Update profile error:", err);
+    res.status(500).json({
+      success: false,
+      message: err.message || "Internal server error",
+    });
   }
 }

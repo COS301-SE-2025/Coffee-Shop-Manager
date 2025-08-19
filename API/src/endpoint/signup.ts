@@ -28,7 +28,9 @@ export async function signupHandler(
     });
 
     if (error || !data.user) {
-      res.status(400).json({ success: false, message: error?.message || 'Signup failed' });
+      res
+        .status(400)
+        .json({ success: false, message: error?.message || "Signup failed" });
       return;
     }
 
@@ -36,20 +38,22 @@ export async function signupHandler(
 
     // Insert entry in user_profiles
     const { error: profileError } = await supabase
-      .from('user_profiles')
+      .from("user_profiles")
       .insert([
         {
           user_id: userId,
           display_name: username,
-          role: 'user',
-        }
+          role: "user",
+        },
       ])
       .select()
       .maybeSingle();
 
     if (profileError) {
-      console.error('Error creating user profile:', profileError);
-      res.status(500).json({ success: false, message: 'Failed to create user profile' });
+      console.error("Error creating user profile:", profileError);
+      res
+        .status(500)
+        .json({ success: false, message: "Failed to create user profile" });
       return;
     }
 

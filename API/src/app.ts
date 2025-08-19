@@ -23,8 +23,8 @@ app.use(
         callback(new Error("Denied by CORS"));
       }
     },
-    credentials: true
-  })
+    credentials: true,
+  }),
 );
 
 app.use(cookieParser());

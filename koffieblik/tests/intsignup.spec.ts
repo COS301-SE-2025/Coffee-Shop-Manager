@@ -21,7 +21,6 @@ test.describe("Signup API", () => {
     expect(body.message).toMatch(/registered/i);
   });
 
-
   test("fails to register duplicate user", async ({ request }) => {
     const response = await request.post(`${BASE_URL}/signup`, {
       data: {

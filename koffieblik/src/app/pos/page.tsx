@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import Loader from '../loaders/loader';
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import Loader from "../loaders/loader";
 
 interface MenuItem {
   id: string;
@@ -46,8 +46,10 @@ export default function POSPage() {
           console.error("Failed to load products:", data.error);
         }
       } catch (err) {
-        console.error('Error fetching products:', err);
-      } finally { setLoading(false) }
+        console.error("Error fetching products:", err);
+      } finally {
+        setLoading(false);
+      }
     };
 
     fetchProducts();
@@ -153,23 +155,24 @@ export default function POSPage() {
             <Loader />
           </div>
         ) : (
-          <>{menu.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => addToCart(item)}
-              className="rounded-xl p-4 hover:shadow-md"
-              style={{
-                backgroundColor: 'var(--primary-2)',
-                border: '1px solid var(--primary-3)',
-                color: 'var(--primary-3)',
-              }}
-            >
-              <h2 className="font-semibold text-lg">{item.name}</h2>
-              <p>R{item.price}</p>
-            </button>
-          ))}</>
+          <>
+            {menu.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => addToCart(item)}
+                className="rounded-xl p-4 hover:shadow-md"
+                style={{
+                  backgroundColor: "var(--primary-2)",
+                  border: "1px solid var(--primary-3)",
+                  color: "var(--primary-3)",
+                }}
+              >
+                <h2 className="font-semibold text-lg">{item.name}</h2>
+                <p>R{item.price}</p>
+              </button>
+            ))}
+          </>
         )}
-
       </div>
 
       <div
