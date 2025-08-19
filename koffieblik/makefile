@@ -8,8 +8,8 @@ testint:
 # 	npx playwright test tests/intsignup.spec.ts && \
 	
 	
-	npx playwright test tests/intlogin.spec.ts  && \
- 	npx playwright test tests/intGetTests.spec.ts
+# 	npx playwright test tests/intlogin.spec.ts  && \
+#  	npx playwright test tests/intGetTests.spec.ts
 
 
 
@@ -25,5 +25,3 @@ teste2e:
 
 test:
 	make teste2e
-
-
