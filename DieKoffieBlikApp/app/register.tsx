@@ -13,7 +13,9 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import DateTimePicker, {
+  DateTimePickerEvent,
+} from "@react-native-community/datetimepicker";
 import CoffeeLoading from "../assets/loading";
 
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
@@ -23,12 +25,11 @@ const WebDatePicker = ({
   value,
   onChange,
   style,
-  textStyle,
 }: {
   value: Date;
   onChange: (date: Date) => void;
-  style?: any;
-  textStyle?: any;
+  style?: React.CSSProperties;
+  textStyle?: React.CSSProperties;
 }) => {
   if (Platform.OS === "web") {
     return (
@@ -200,7 +201,10 @@ export default function RegisterScreen() {
     }
   };
 
-  const handleDateChange = (event: any, selectedDate?: Date) => {
+  const handleDateChange = (
+    event: DateTimePickerEvent,
+    selectedDate?: Date,
+  ) => {
     if (Platform.OS === "android") {
       setShowDatePicker(false);
     }
@@ -291,7 +295,7 @@ export default function RegisterScreen() {
           body: JSON.stringify({
             email: email.trim().toLowerCase(),
             password,
-            username: firstName, // Your backend expects 'username', so sending firstName
+            username: firstName,
           }),
           credentials: "include",
         });
@@ -307,9 +311,15 @@ export default function RegisterScreen() {
         } else {
           Alert.alert("Error", result.message || "Registration failed");
         }
-      } catch (error: any) {
-        console.error("Registration failed", error);
-        Alert.alert("Error", "Could not connect to the server.");
+      } catch (error: unknown) {
+        // Narrow the type safely
+        if (error instanceof Error) {
+          console.error("Registration failed", error);
+          Alert.alert("Error", error.message);
+        } else {
+          console.error("Registration failed", error);
+          Alert.alert("Error", "Could not connect to the server.");
+        }
       } finally {
         setIsLoading(false);
       }

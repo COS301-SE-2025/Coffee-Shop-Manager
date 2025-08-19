@@ -10,7 +10,6 @@ import {
   Animated,
   TextInput,
   Modal,
-  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -19,7 +18,6 @@ import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const { width } = Dimensions.get("window");
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 type CustomerInfo = {
@@ -29,11 +27,21 @@ type CustomerInfo = {
   notes: string;
 };
 
+export interface MenuItem {
+  id: string;
+  name: string;
+  description: string;
+  price: number;
+  stock_quantity: number;
+}
+
 type CustomerDetailsProps = {
   customerInfo: CustomerInfo;
   setCustomerInfo: React.Dispatch<React.SetStateAction<CustomerInfo>>;
   slideAnim: Animated.Value;
 };
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
 
 const paymentMethods = [
   { id: "card", name: "Credit/Debit Card", icon: "card" },
@@ -140,9 +148,10 @@ export default function CheckoutScreen() {
     email: "",
     notes: "",
   });
-  
+
   // NEW: State for dynamic menu items
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+
+  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
 
   // NEW: Fetch menu items from API
@@ -150,7 +159,7 @@ export default function CheckoutScreen() {
     try {
       setLoadingItems(true);
       const accessToken = await AsyncStorage.getItem("access_token");
-      
+
       if (!accessToken) {
         console.log("No access token found");
         Alert.alert("Session Expired", "Please log in again");
@@ -184,10 +193,10 @@ export default function CheckoutScreen() {
   // UPDATED: Fetch user info from API like in profile screen
   const loadUserInfo = async () => {
     try {
-      const accessToken = await AsyncStorage.getItem('access_token');
-      const userEmail = await AsyncStorage.getItem('email');
-      const userId = await AsyncStorage.getItem('user_id');
-      
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const userEmail = await AsyncStorage.getItem("email");
+      const userId = await AsyncStorage.getItem("user_id");
+
       if (!accessToken || !userEmail || !userId) {
         console.log("Missing auth data, redirecting to login");
         router.replace("/login");
@@ -196,13 +205,13 @@ export default function CheckoutScreen() {
 
       // Fetch user profile from API
       const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           // Token expired
@@ -214,10 +223,10 @@ export default function CheckoutScreen() {
       }
 
       const apiResponse = await response.json();
-      
+
       if (apiResponse.success && apiResponse.profile) {
         const profile = apiResponse.profile;
-        
+
         // Update customer info with API data
         setCustomerInfo((prev) => ({
           ...prev,
@@ -226,10 +235,10 @@ export default function CheckoutScreen() {
           phone: profile.phone_number || "",
         }));
 
-        console.log("Loaded user info from API:", { 
-          email: userEmail, 
+        console.log("Loaded user info from API:", {
+          email: userEmail,
           name: profile.display_name,
-          phone: profile.phone_number 
+          phone: profile.phone_number,
         });
       } else {
         // Fallback to stored email only
@@ -240,7 +249,7 @@ export default function CheckoutScreen() {
       }
     } catch (error) {
       console.error("Failed to load user info from API:", error);
-      
+
       // Fallback to stored email only
       const storedEmail = await AsyncStorage.getItem("email");
       setCustomerInfo((prev) => ({
@@ -293,8 +302,8 @@ export default function CheckoutScreen() {
     .filter(Boolean);
 
   const subtotal = cartItems.reduce(
-    (total, item) => total + (item!.price * item!.quantity),
-    0
+    (total, item) => total + item!.price * item!.quantity,
+    0,
   );
   const total = subtotal;
 
@@ -315,7 +324,7 @@ export default function CheckoutScreen() {
       return;
     }
 
-    const generatedOrderNumber = generateOrderNumber(customerInfo.phone);
+    const generatedOrderNumber = generateOrderNumber();
     setOrderNumber(generatedOrderNumber);
 
     if (selectedPayment === "cash") {
@@ -368,7 +377,7 @@ export default function CheckoutScreen() {
     }
   };
 
-  function generateOrderNumber(phoneNumber?: string) {
+  function generateOrderNumber() {
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const random = Math.floor(1000 + Math.random() * 9000);
     return `ORD-${timestamp}-${random}`;
@@ -442,7 +451,7 @@ export default function CheckoutScreen() {
           <View style={styles.paymentLeft}>
             <View style={styles.paymentIcon}>
               <Ionicons
-                name={method.icon as any}
+                name={method.icon as IoniconName}
                 size={24}
                 color={selectedPayment === method.id ? "#78350f" : "#6b7280"}
               />
@@ -484,32 +493,32 @@ export default function CheckoutScreen() {
     </Modal>
   );
 
-  const ProcessingModal = () => (
-    <Modal visible={isProcessing} transparent animationType="fade">
-      <View style={styles.modalOverlay}>
-        <View style={styles.processingModal}>
-          <Animated.View
-            style={[
-              styles.processingSpinner,
-              {
-                transform: [
-                  {
-                    rotate: fadeAnim.interpolate({
-                      inputRange: [0, 1],
-                      outputRange: ["0deg", "360deg"],
-                    }),
-                  },
-                ],
-              },
-            ]}
-          >
-            <Ionicons name="hourglass" size={40} color="#78350f" />
-          </Animated.View>
-          <Text style={styles.processingText}>Processing your order...</Text>
-        </View>
-      </View>
-    </Modal>
-  );
+  // const ProcessingModal = () => (
+  //   <Modal visible={isProcessing} transparent animationType="fade">
+  //     <View style={styles.modalOverlay}>
+  //       <View style={styles.processingModal}>
+  //         <Animated.View
+  //           style={[
+  //             styles.processingSpinner,
+  //             {
+  //               transform: [
+  //                 {
+  //                   rotate: fadeAnim.interpolate({
+  //                     inputRange: [0, 1],
+  //                     outputRange: ["0deg", "360deg"],
+  //                   }),
+  //                 },
+  //               ],
+  //             },
+  //           ]}
+  //         >
+  //           <Ionicons name="hourglass" size={40} color="#78350f" />
+  //         </Animated.View>
+  //         <Text style={styles.processingText}>Processing your order...</Text>
+  //       </View>
+  //     </View>
+  //   </Modal>
+  // );
 
   const handleCancelOrder = () => {
     Alert.alert(
@@ -572,7 +581,8 @@ export default function CheckoutScreen() {
           <TouchableOpacity
             style={[
               styles.placeOrderButton,
-              (loadingItems || cartItems.length === 0) && styles.placeOrderButtonDisabled
+              (loadingItems || cartItems.length === 0) &&
+                styles.placeOrderButtonDisabled,
             ]}
             onPress={handlePlaceOrder}
             disabled={loadingItems || cartItems.length === 0}
@@ -653,18 +663,18 @@ const styles = StyleSheet.create({
   // Loading and Empty States
   loadingContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   loadingText: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 16,
   },
   emptyCartContainer: {
     padding: 20,
-    alignItems: 'center',
+    alignItems: "center",
   },
   emptyCartText: {
-    color: '#6b7280',
+    color: "#6b7280",
     fontSize: 16,
     marginTop: 8,
   },

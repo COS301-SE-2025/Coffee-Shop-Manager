@@ -44,7 +44,6 @@ interface LoginScreenProps {
 export default function LoginScreen({
   onLogin,
   onForgotPassword,
-  onCreateAccount,
 }: LoginScreenProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
@@ -64,7 +63,7 @@ export default function LoginScreen({
         const sessionData = await AsyncStorage.getItem("user_session");
         const accessToken = await AsyncStorage.getItem("access_token");
         const userId = await AsyncStorage.getItem("user_id");
-        
+
         if (sessionData && accessToken && userId) {
           const { email: storedEmail } = JSON.parse(sessionData);
           setEmail(storedEmail);
@@ -74,7 +73,13 @@ export default function LoginScreen({
       } catch (error) {
         console.error("Error checking session:", error);
         // Clear storage if there's an error
-        await AsyncStorage.multiRemove(["user_session", "access_token", "refresh_token", "user_id", "email"]);
+        await AsyncStorage.multiRemove([
+          "user_session",
+          "access_token",
+          "refresh_token",
+          "user_id",
+          "email",
+        ]);
       }
     };
 
@@ -142,7 +147,7 @@ export default function LoginScreen({
 
       // IMPORTANT: Store the user ID - check different possible locations in the response
       let userId = null;
-      
+
       // Try different possible locations for user ID in the response
       if (data.user?.id) {
         userId = data.user.id;
@@ -162,11 +167,11 @@ export default function LoginScreen({
       } else {
         console.error("❌ User ID not found in login response");
         console.log("Full response data:", JSON.stringify(data, null, 2));
-        
+
         // Still proceed but warn about missing user ID
         Alert.alert(
-          "Warning", 
-          "Login successful but user ID not found. Some features may not work properly."
+          "Warning",
+          "Login successful but user ID not found. Some features may not work properly.",
         );
       }
 
@@ -213,19 +218,34 @@ export default function LoginScreen({
 
       // Navigate to home AFTER everything is done
       router.replace("/home");
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Unexpected login error:", err);
 
-      // Handle network errors specifically
-      if (
-        err.message === "Network request failed" ||
-        err.code === "ECONNREFUSED"
-      ) {
-        Alert.alert(
-          "Connection Error",
-          "Unable to connect to the server. Please check your internet connection and try again.",
-        );
+      if (err instanceof Error) {
+        if (err.message === "Network request failed") {
+          Alert.alert(
+            "Connection Error",
+            "Unable to connect to the server. Please check your internet connection and try again.",
+          );
+        } else {
+          Alert.alert("Error", err.message);
+        }
+      } else if (typeof err === "object" && err !== null && "code" in err) {
+        // Handle objects with a code property
+        const maybeErr = err as { code?: string };
+        if (maybeErr.code === "ECONNREFUSED") {
+          Alert.alert(
+            "Connection Error",
+            "Unable to connect to the server. Please check your internet connection and try again.",
+          );
+        } else {
+          Alert.alert(
+            "Error",
+            "An unexpected error occurred. Please try again.",
+          );
+        }
       } else {
+        // Fallback for everything else
         Alert.alert("Error", "An unexpected error occurred. Please try again.");
       }
     } finally {

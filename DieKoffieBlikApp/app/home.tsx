@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { 
-  View, 
-  Text, 
+import React, { useState, useEffect, useRef, useCallback } from "react";
+import {
+  View,
+  Text,
   StyleSheet,
   ScrollView,
   Animated,
@@ -30,7 +30,17 @@ interface FeaturedItem {
   rating: string;
 }
 
-const { width, height } = Dimensions.get("window");
+interface ApiProduct {
+  id: string;
+  name: string;
+  price: number;
+  description?: string;
+  stock_quantity?: number;
+}
+
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+const { width } = Dimensions.get("window");
 const CARD_WIDTH = (width - 60) / 2;
 
 export default function HomeScreen() {
@@ -39,7 +49,7 @@ export default function HomeScreen() {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const factFadeAnim = useRef(new Animated.Value(1)).current;
-  
+
   const [currentFactIndex, setCurrentFactIndex] = useState(0);
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -106,7 +116,7 @@ export default function HomeScreen() {
     "The smell of coffee alone can help reduce stress and improve alertness 😌",
     "Vietnam is the world's second-largest coffee producer 🇻🇳",
     "Coffee beans are roasted at temperatures between 370°F and 540°F (188°C–282°C) 🌡️",
-    "There are over 25 million coffee farmers around the world 🌍"
+    "There are over 25 million coffee farmers around the world 🌍",
   ];
 
   // Memoize the featured items fetch function to prevent unnecessary re-renders
@@ -125,25 +135,32 @@ export default function HomeScreen() {
 
       if (!response.ok) throw new Error("Failed to fetch");
       const data = await response.json();
-      
+
       // Take first 3 items and enhance them
-      const firstThree: FeaturedItem[] = data.slice(0, 3).map((item: any) => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        description: item.description,
-        stock_quantity: item.stock_quantity,
-        icon: item.name.toLowerCase().includes('espresso') ? 'flash-outline' :
-              item.name.toLowerCase().includes('latte') ? 'heart-outline' : 
-              item.name.toLowerCase().includes('cappuccino') ? 'cafe-outline' :
-              item.name.toLowerCase().includes('americano') ? 'snow-outline' : 'cafe-outline',
-        popular: Math.random() > 0.5,
-        rating: (4.2 + Math.random() * 0.6).toFixed(1)
-      }));
-      
+      const firstThree: FeaturedItem[] = data
+        .slice(0, 3)
+        .map((item: ApiProduct) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          stock_quantity: item.stock_quantity,
+          icon: item.name.toLowerCase().includes("espresso")
+            ? "flash-outline"
+            : item.name.toLowerCase().includes("latte")
+              ? "heart-outline"
+              : item.name.toLowerCase().includes("cappuccino")
+                ? "cafe-outline"
+                : item.name.toLowerCase().includes("americano")
+                  ? "snow-outline"
+                  : "cafe-outline",
+          popular: Math.random() > 0.5,
+          rating: (4.2 + Math.random() * 0.6).toFixed(1),
+        }));
+
       setFeaturedItems(firstThree);
     } catch (error) {
-      console.error('Featured items error:', error);
+      console.error("Featured items error:", error);
     } finally {
       setFeaturedLoading(false);
     }
@@ -159,33 +176,35 @@ export default function HomeScreen() {
       </View>
 
       {featuredLoading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>Loading...</Text>
-        </View>
+        <CoffeeLoading visible={featuredLoading} />
       ) : (
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false} 
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
           style={styles.featuredScroll}
           contentContainerStyle={styles.featuredScrollContent}
         >
-          {featuredItems.map((item, index) => (
-            <Pressable 
-              key={item.id} 
+          {featuredItems.map((item) => (
+            <Pressable
+              key={item.id}
               style={styles.featuredCard}
-              android_ripple={{ color: '#78350f20' }}
+              android_ripple={{ color: "#78350f20" }}
             >
               <View style={styles.featuredIconContainer}>
-                <Ionicons name={item.icon as any} size={32} color="#78350f" />
+                <Ionicons
+                  name={item.icon as IoniconName}
+                  size={32}
+                  color="#78350f"
+                />
               </View>
-              
+
               <Text style={styles.featuredItemName}>{item.name}</Text>
-              
+
               <Text style={styles.featuredItemPrice}>R{item.price}</Text>
-              
-              <Pressable 
+
+              <Pressable
                 style={styles.addToCartBtn}
-                android_ripple={{ color: '#ffffff30' }}
+                android_ripple={{ color: "#ffffff30" }}
               >
                 <Ionicons name="add" size={16} color="#fff" />
               </Pressable>
@@ -198,10 +217,10 @@ export default function HomeScreen() {
 
   // Memoize quick actions to prevent re-renders
   const quickActions = useRef([
-    { 
-      title: "Order Coffee", 
-      icon: "cart" as const, 
-      route: "/order", 
+    {
+      title: "Order Coffee",
+      icon: "cart" as const,
+      route: "/order",
       primary: true,
       description: "Browse menu & order",
     },
@@ -217,8 +236,8 @@ export default function HomeScreen() {
       icon: "heart" as const,
       route: "/favourites",
       primary: false,
-      description: "Saved items"
-    }
+      description: "Saved items",
+    },
   ]).current;
 
   // Fix animation timing and dependencies
@@ -226,7 +245,7 @@ export default function HomeScreen() {
     // Reset animations to initial state
     fadeAnim.setValue(0);
     slideAnim.setValue(50);
-    
+
     // Initial animation with proper timing
     const animationTimer = setTimeout(() => {
       Animated.parallel([
@@ -239,7 +258,7 @@ export default function HomeScreen() {
           toValue: 0,
           duration: 1000,
           useNativeDriver: true,
-        })
+        }),
       ]).start();
     }, 100); // Small delay to ensure component is mounted
 
@@ -259,9 +278,9 @@ export default function HomeScreen() {
   useEffect(() => {
     const factInterval = setInterval(() => {
       if (isAnimating) return; // Prevent overlapping animations
-      
+
       setIsAnimating(true);
-      
+
       // Fade out current fact
       Animated.timing(factFadeAnim, {
         toValue: 0,
@@ -270,7 +289,7 @@ export default function HomeScreen() {
       }).start(() => {
         // Change fact after fade out completes
         setCurrentFactIndex((prev) => (prev + 1) % coffeeFacts.length);
-        
+
         // Small delay before fading in
         setTimeout(() => {
           // Fade in new fact
@@ -294,11 +313,11 @@ export default function HomeScreen() {
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    
+
     // Reset animations during refresh
     fadeAnim.setValue(1);
     slideAnim.setValue(0);
-    
+
     setTimeout(() => {
       setRefreshing(false);
       setCurrentFactIndex(Math.floor(Math.random() * coffeeFacts.length));
@@ -348,10 +367,10 @@ export default function HomeScreen() {
             <Ionicons name="notifications-outline" size={22} color="#78350f" />
           </Pressable>
 
-          <Pressable 
-            style={styles.profileButton} 
-            android_ripple={{ color: '#78350f20' }}
-            onPress={() => router.push('/profile')}
+          <Pressable
+            style={styles.profileButton}
+            android_ripple={{ color: "#78350f20" }}
+            onPress={() => router.push("/profile")}
           >
             <Ionicons name="person-circle" size={28} color="#78350f" />
           </Pressable>
@@ -361,68 +380,71 @@ export default function HomeScreen() {
   );
 
   // Memoized HeroSection to prevent unnecessary re-renders
-  const HeroSection = useCallback(() => (
-    <Animated.View 
-      style={[
-        styles.heroSection,
-        {
-          opacity: fadeAnim,
-          transform: [{ translateY: slideAnim }],
-        },
-      ]}
-    >
-      <LinearGradient
-        colors={["#78350f", "#92400e"]}
-        style={styles.heroGradient}
-        start={{ x: 0, y: 0 }}
-        end={{ x: 1, y: 1 }}
+  const HeroSection = useCallback(
+    () => (
+      <Animated.View
+        style={[
+          styles.heroSection,
+          {
+            opacity: fadeAnim,
+            transform: [{ translateY: slideAnim }],
+          },
+        ]}
       >
-        <View style={styles.heroContent}>
-          <Text style={styles.heroGreeting}>{getGreeting()}</Text>
-          <Text style={styles.heroMainTitle}>Ready for some coffee?</Text>
-          <Text style={styles.heroSubtitle}>
-            {coffeeQuotes[Math.floor(Math.random() * coffeeQuotes.length)]}
-          </Text>
-          <Pressable
-            style={styles.ctaButton}
-            onPress={() => router.push("/order")}
-            android_ripple={{ color: "#ffffff30" }}
-          >
-            <Ionicons name="cafe" size={20} color="#78350f" />
-            <Text style={styles.ctaButtonText}>Order Now</Text>
-          </Pressable>
-        </View>
-        <View style={styles.heroImageContainer}>
-          <View style={styles.coffeeCupContainer}>
-            <Animated.View
-              style={[
-                styles.coffeeCupPlaceholder,
-                {
-                  transform: [
-                    {
-                      rotate: slideAnim.interpolate({
-                        inputRange: [0, 50],
-                        outputRange: ["0deg", "5deg"],
-                      }),
-                    },
-                  ],
-                },
-              ]}
+        <LinearGradient
+          colors={["#78350f", "#92400e"]}
+          style={styles.heroGradient}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+        >
+          <View style={styles.heroContent}>
+            <Text style={styles.heroGreeting}>{getGreeting()}</Text>
+            <Text style={styles.heroMainTitle}>Ready for some coffee?</Text>
+            <Text style={styles.heroSubtitle}>
+              {coffeeQuotes[Math.floor(Math.random() * coffeeQuotes.length)]}
+            </Text>
+            <Pressable
+              style={styles.ctaButton}
+              onPress={() => router.push("/order")}
+              android_ripple={{ color: "#ffffff30" }}
             >
-              <Ionicons name="cafe" size={60} color="#78350f" />
-            </Animated.View>
+              <Ionicons name="cafe" size={20} color="#78350f" />
+              <Text style={styles.ctaButtonText}>Order Now</Text>
+            </Pressable>
           </View>
-        </View>
-      </LinearGradient>
-    </Animated.View>
-  ), [fadeAnim, slideAnim, getGreeting]);
+          <View style={styles.heroImageContainer}>
+            <View style={styles.coffeeCupContainer}>
+              <Animated.View
+                style={[
+                  styles.coffeeCupPlaceholder,
+                  {
+                    transform: [
+                      {
+                        rotate: slideAnim.interpolate({
+                          inputRange: [0, 50],
+                          outputRange: ["0deg", "5deg"],
+                        }),
+                      },
+                    ],
+                  },
+                ]}
+              >
+                <Ionicons name="cafe" size={60} color="#78350f" />
+              </Animated.View>
+            </View>
+          </View>
+        </LinearGradient>
+      </Animated.View>
+    ),
+    [fadeAnim, slideAnim, getGreeting],
+  );
 
   const QuickActions = () => (
     <View style={styles.quickActionsSection}>
       <Text style={styles.sectionTitle}>Quick Actions</Text>
       <View style={styles.quickActionsGrid}>
         {quickActions.map((action, index) => (
-          <Pressable 
+          <Pressable
             key={`${action.title}-${index}`} // More stable key
             style={[
               styles.quickActionCard,
@@ -467,28 +489,29 @@ export default function HomeScreen() {
     </View>
   );
 
-  const CoffeeFactCard = useCallback(() => (
-    <View style={styles.factCard}>
-      <View style={styles.factHeader}>
-        <View style={styles.factIconContainer}>
-          <Ionicons name="bulb" size={20} color="#f59e0b" />
+  const CoffeeFactCard = useCallback(
+    () => (
+      <View style={styles.factCard}>
+        <View style={styles.factHeader}>
+          <View style={styles.factIconContainer}>
+            <Ionicons name="bulb" size={20} color="#f59e0b" />
+          </View>
+          <Text style={styles.factTitle}>Did You Know?</Text>
         </View>
-        <Text style={styles.factTitle}>Did You Know?</Text>
+        <Animated.Text style={[styles.factText, { opacity: factFadeAnim }]}>
+          {coffeeFacts[currentFactIndex]}
+        </Animated.Text>
       </View>
-      <Animated.Text 
-        style={[styles.factText, { opacity: factFadeAnim }]}
-      >
-        {coffeeFacts[currentFactIndex]}
-      </Animated.Text>
-    </View>
-  ), [currentFactIndex, factFadeAnim]);
+    ),
+    [currentFactIndex, factFadeAnim],
+  );
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent 
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
       />
 
       <CoffeeBackground>
@@ -609,26 +632,24 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     backgroundColor: "#ef4444",
   },
-  
+
   // Hero Section - Fixed styles
   heroSection: {
     marginHorizontal: 20,
     marginTop: 20,
     borderRadius: 24,
-    overflow: 'hidden',
+    overflow: "hidden",
     minHeight: 180, // Ensure minimum height
-    ...(
-      Platform.OS === "ios"
-        ? {
-            shadowColor: '#78350f',
-            shadowOpacity: 0.3,
-            shadowOffset: { width: 0, height: 8 },
-            shadowRadius: 16,
-          }
-        : {
-            elevation: 8,
-          }
-    ),
+    ...(Platform.OS === "ios"
+      ? {
+          shadowColor: "#78350f",
+          shadowOpacity: 0.3,
+          shadowOffset: { width: 0, height: 8 },
+          shadowRadius: 16,
+        }
+      : {
+          elevation: 8,
+        }),
   },
   heroGradient: {
     flexDirection: "row",
@@ -866,15 +887,15 @@ const styles = StyleSheet.create({
     color: "#6b7280",
     lineHeight: 20,
   },
-  
+
   // Loading
   loadingContainer: {
     height: 100,
-    justifyContent: 'center',
-    alignItems: 'center',
+    justifyContent: "center",
+    alignItems: "center",
   },
   loadingText: {
-    color: '#78350f',
+    color: "#78350f",
     fontSize: 14,
   },
   // Footer

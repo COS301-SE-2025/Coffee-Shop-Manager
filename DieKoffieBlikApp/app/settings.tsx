@@ -15,9 +15,17 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CoffeeBackground from "../assets/coffee-background";
+import CoffeeLoading from "../assets/loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
+
+interface UpdateProfileData {
+  display_name: string;
+  phone_number: string;
+  password?: string;
+  date_of_birth?: string;
+}
 
 interface UserProfile {
   user_id: string;
@@ -45,11 +53,11 @@ export default function AccountSettingsScreen() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [dateOfBirth, setDateOfBirth] = useState("");
-  
+
   // Preference states
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
-  
+
   // Loading and error states
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -65,25 +73,25 @@ export default function AccountSettingsScreen() {
       setIsLoading(true);
       setError(null);
 
-      const accessToken = await AsyncStorage.getItem('access_token');
-      const userEmail = await AsyncStorage.getItem('email');
-      const userId = await AsyncStorage.getItem('user_id');
-      
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const userEmail = await AsyncStorage.getItem("email");
+      const userId = await AsyncStorage.getItem("user_id");
+
       if (!accessToken || !userEmail || !userId) {
         router.replace("/login");
         return;
       }
 
       console.log(`Fetching profile for user ID: ${userId}`);
-      
+
       const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
           await clearStorageAndRedirect();
@@ -93,31 +101,41 @@ export default function AccountSettingsScreen() {
       }
 
       const apiResponse: ApiResponse = await response.json();
-      
+
       if (!apiResponse.success || !apiResponse.profile) {
-        throw new Error('Invalid API response format');
+        throw new Error("Invalid API response format");
       }
 
       const profile = apiResponse.profile;
-      console.log('Profile data received:', profile);
+      console.log("Profile data received:", profile);
 
       // Set the form fields with fetched data
-      setName(profile.display_name || '');
+      setName(profile.display_name || "");
       setEmail(userEmail);
-      setPhone(profile.phone_number || '');
-      setDateOfBirth(profile.date_of_birth || '');
-
-    } catch (err: any) {
-      console.error("Error fetching user data:", err);
-      setError(err.message || 'Failed to load profile');
+      setPhone(profile.phone_number || "");
+      setDateOfBirth(profile.date_of_birth || "");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Error fetching user data:", err);
+        setError(err.message);
+      } else {
+        console.error("Unknown error fetching user data:", err);
+        setError("Failed to load profile");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   const clearStorageAndRedirect = async () => {
-    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'email', 'user_session', 'user_id']);
-    router.replace('/login');
+    await AsyncStorage.multiRemove([
+      "access_token",
+      "refresh_token",
+      "email",
+      "user_session",
+      "user_id",
+    ]);
+    router.replace("/login");
   };
 
   const handleSaveChanges = async () => {
@@ -142,7 +160,7 @@ export default function AccountSettingsScreen() {
     if (phone && (phone.length !== 10 || !phone.startsWith("0"))) {
       Alert.alert(
         "Validation Error",
-        "Phone number must be 10 digits and start with 0"
+        "Phone number must be 10 digits and start with 0",
       );
       return;
     }
@@ -150,16 +168,16 @@ export default function AccountSettingsScreen() {
     try {
       setIsSaving(true);
 
-      const accessToken = await AsyncStorage.getItem('access_token');
-      const userId = await AsyncStorage.getItem('user_id');
-      
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const userId = await AsyncStorage.getItem("user_id");
+
       if (!accessToken || !userId) {
         router.replace("/login");
         return;
       }
 
       // Prepare update data
-      const updateData: any = {
+      const updateData: UpdateProfileData = {
         display_name: name.trim(),
         phone_number: phone.trim(),
       };
@@ -167,7 +185,10 @@ export default function AccountSettingsScreen() {
       // Only include password if it's been entered
       if (password.trim()) {
         if (password.length < 8) {
-          Alert.alert("Validation Error", "Password must be at least 8 characters");
+          Alert.alert(
+            "Validation Error",
+            "Password must be at least 8 characters",
+          );
           setIsSaving(false);
           return;
         }
@@ -179,13 +200,13 @@ export default function AccountSettingsScreen() {
         updateData.date_of_birth = dateOfBirth.trim();
       }
 
-      console.log('Updating user profile with:', updateData);
+      console.log("Updating user profile with:", updateData);
 
       const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: 'PUT',
+        method: "PUT",
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(updateData),
       });
@@ -193,17 +214,19 @@ export default function AccountSettingsScreen() {
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.message || `HTTP ${response.status}: Failed to update profile`);
+        throw new Error(
+          result.message || `HTTP ${response.status}: Failed to update profile`,
+        );
       }
 
-      console.log('Profile updated successfully:', result);
+      console.log("Profile updated successfully:", result);
 
       // Update stored email if it changed
-      await AsyncStorage.setItem('email', email);
+      await AsyncStorage.setItem("email", email);
 
       // Update session data if it exists
       try {
-        const sessionData = await AsyncStorage.getItem('user_session');
+        const sessionData = await AsyncStorage.getItem("user_session");
         if (sessionData) {
           const parsedSession = JSON.parse(sessionData);
           parsedSession.email = email;
@@ -211,45 +234,48 @@ export default function AccountSettingsScreen() {
             parsedSession.user.name = name;
             parsedSession.user.display_name = name;
           }
-          await AsyncStorage.setItem('user_session', JSON.stringify(parsedSession));
+          await AsyncStorage.setItem(
+            "user_session",
+            JSON.stringify(parsedSession),
+          );
         }
       } catch (sessionError) {
-        console.error('Error updating session data:', sessionError);
+        console.error("Error updating session data:", sessionError);
       }
 
       Alert.alert("Success", "Your profile has been updated successfully");
-      
+
       // Clear password field after successful save
       setPassword("");
-
-    } catch (err: any) {
-      console.error("Error saving changes:", err);
-      Alert.alert("Error", err.message || "Failed to save changes. Please try again.");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        console.error("Error saving changes:", err);
+        Alert.alert("Error", err.message);
+      } else {
+        console.error("Unknown error saving changes:", err);
+        Alert.alert("Error", "Failed to save changes. Please try again.");
+      }
     } finally {
       setIsSaving(false);
     }
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Logout", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              await clearStorageAndRedirect();
-            } catch (err) {
-              console.error('Logout error:', err);
-              router.replace('/login'); // Fallback
-            }
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            await clearStorageAndRedirect();
+          } catch (err) {
+            console.error("Logout error:", err);
+            router.replace("/login"); // Fallback
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   const validatePhoneNumber = (text: string) => {
@@ -268,10 +294,7 @@ export default function AccountSettingsScreen() {
   if (isLoading) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <CoffeeBackground>
-          <ActivityIndicator size="large" color="#78350f" />
-          <Text style={styles.loadingText}>Loading profile...</Text>
-        </CoffeeBackground>
+        <CoffeeLoading visible={isLoading}/>
       </SafeAreaView>
     );
   }
@@ -280,169 +303,171 @@ export default function AccountSettingsScreen() {
   if (error) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <CoffeeBackground>
-          <Ionicons name="alert-circle" size={48} color="#ef4444" />
-          <Text style={styles.errorText}>{error}</Text>
-          <Pressable style={styles.retryButton} onPress={fetchUserData}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
-          </Pressable>
-        </CoffeeBackground>
+          <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+            <Ionicons name="alert-circle" size={48} color="#ef4444" />
+            <Text style={styles.errorText}>{error ?? "An error occurred"}</Text>
+            <Pressable style={styles.retryButton} onPress={fetchUserData}>
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </Pressable>
+          </View>
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <CoffeeBackground>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent
-        />
+      <SafeAreaView style={styles.container}>
+          <StatusBar
+            barStyle="dark-content"
+            backgroundColor="transparent"
+            translucent
+          />
 
-        {/* Navbar */}
-        <View style={styles.navbar}>
-          <Pressable onPress={() => router.back()} style={styles.navButton}>
-            <Ionicons name="arrow-back" size={24} color="#78350f" />
-          </Pressable>
-          <Text style={styles.navTitle}>Account Settings</Text>
-          <View style={{ width: 24 }} /> {/* Spacer for alignment */}
-        </View>
-
-        <ScrollView contentContainerStyle={styles.scrollContent}>
-          {/* Profile Section */}
-          <View style={styles.profileSection}>
-            <Ionicons name="person-circle" size={80} color="#78350f" />
-            <Text style={styles.profileName}>{name}</Text>
-            <Text style={styles.profileEmail}>{email}</Text>
+          {/* Navbar */}
+          <View style={styles.navbar}>
+            <Pressable onPress={() => router.back()} style={styles.navButton}>
+              <Ionicons name="arrow-back" size={24} color="#78350f" />
+            </Pressable>
+            <Text style={styles.navTitle}>Account Settings</Text>
+            <View style={{ width: 24 }}></View> {/* Spacer for alignment */}
           </View>
 
-          {/* Editable Fields */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Information</Text>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Name</Text>
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
-                placeholderTextColor="#9ca3af"
-              />
+          <ScrollView contentContainerStyle={styles.scrollContent}>
+            {/* Profile Section */}
+            <View style={styles.profileSection}>
+              <Ionicons name="person-circle" size={80} color="#78350f" />
+              <Text style={styles.profileName}>{name ?? ""}</Text>
+              <Text style={styles.profileEmail}>{email ?? ""}</Text>
             </View>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                placeholder="Enter your email"
-                placeholderTextColor="#9ca3af"
-                autoCapitalize="none"
-              />
-            </View>
+            {/* Editable Fields */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Personal Information</Text>
 
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Phone Number</Text>
-              <TextInput
-                style={styles.input}
-                value={phone}
-                onChangeText={validatePhoneNumber}
-                keyboardType="phone-pad"
-                placeholder="10-digit phone number"
-                placeholderTextColor="#9ca3af"
-                maxLength={10}
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Date of Birth</Text>
-              <TextInput
-                style={styles.input}
-                value={dateOfBirth}
-                onChangeText={setDateOfBirth}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor="#9ca3af"
-              />
-            </View>
-
-            <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>New Password (Optional)</Text>
-              <TextInput
-                style={styles.input}
-                value={password}
-                onChangeText={setPassword}
-                placeholder="Enter new password (min 8 characters)"
-                placeholderTextColor="#9ca3af"
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-          </View>
-
-          {/* Preferences Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferences</Text>
-
-            <View style={styles.preferenceRow}>
-              <View style={styles.preferenceLeft}>
-                <Text style={styles.preferenceText}>Enable Notifications</Text>
-                <Text style={styles.preferenceSubtext}>Get updates about your orders</Text>
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Name</Text>
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your name"
+                  placeholderTextColor="#9ca3af"
+                />
               </View>
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
-                thumbColor={notificationsEnabled ? "#78350f" : "#f4f3f4"}
-              />
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Email</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  keyboardType="email-address"
+                  placeholder="Enter your email"
+                  placeholderTextColor="#9ca3af"
+                  autoCapitalize="none"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Phone Number</Text>
+                <TextInput
+                  style={styles.input}
+                  value={phone}
+                  onChangeText={validatePhoneNumber}
+                  keyboardType="phone-pad"
+                  placeholder="10-digit phone number"
+                  placeholderTextColor="#9ca3af"
+                  maxLength={10}
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>Date of Birth</Text>
+                <TextInput
+                  style={styles.input}
+                  value={dateOfBirth}
+                  onChangeText={setDateOfBirth}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor="#9ca3af"
+                />
+              </View>
+
+              <View style={styles.inputGroup}>
+                <Text style={styles.inputLabel}>New Password (Optional)</Text>
+                <TextInput
+                  style={styles.input}
+                  value={password}
+                  onChangeText={setPassword}
+                  placeholder="Enter new password (min 8 characters)"
+                  placeholderTextColor="#9ca3af"
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
             </View>
 
-            <View style={styles.preferenceRow}>
-              <View style={styles.preferenceLeft}>
-                <Text style={styles.preferenceText}>Dark Mode</Text>
-                <Text style={styles.preferenceSubtext}>Switch to dark theme</Text>
+            {/* Preferences Section */}
+            <View style={styles.section}>
+              <Text style={styles.sectionTitle}>Preferences</Text>
+
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceLeft}>
+                  <Text style={styles.preferenceText}>Enable Notifications</Text>
+                  <Text style={styles.preferenceSubtext}>
+                    Get updates about your orders
+                  </Text>
+                </View>
+                <Switch
+                  value={notificationsEnabled}
+                  onValueChange={setNotificationsEnabled}
+                  trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
+                  thumbColor={notificationsEnabled ? "#78350f" : "#f4f3f4"}
+                />
               </View>
-              <Switch
-                value={darkModeEnabled}
-                onValueChange={setDarkModeEnabled}
-                trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
-                thumbColor={darkModeEnabled ? "#78350f" : "#f4f3f4"}
-              />
+
+              <View style={styles.preferenceRow}>
+                <View style={styles.preferenceLeft}>
+                  <Text style={styles.preferenceText}>Dark Mode</Text>
+                  <Text style={styles.preferenceSubtext}>
+                    Switch to dark theme
+                  </Text>
+                </View>
+                <Switch
+                  value={darkModeEnabled}
+                  onValueChange={setDarkModeEnabled}
+                  trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
+                  thumbColor={darkModeEnabled ? "#78350f" : "#f4f3f4"}
+                />
+              </View>
             </View>
-          </View>
 
-          {/* Save Button */}
-          <Pressable
-            style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
-            onPress={handleSaveChanges}
-            disabled={isSaving}
-            android_ripple={{ color: "#ffffff30" }}
-          >
-            {isSaving ? (
-              <View style={styles.savingContainer}>
-                <ActivityIndicator size="small" color="#fff" />
-                <Text style={styles.saveButtonText}>Saving...</Text>
-              </View>
-            ) : (
-              <Text style={styles.saveButtonText}>Save Changes</Text>
-            )}
-          </Pressable>
+            {/* Save Button */}
+            <Pressable
+              style={[styles.saveButton, isSaving && styles.saveButtonDisabled]}
+              onPress={handleSaveChanges}
+              disabled={isSaving}
+              android_ripple={{ color: "#ffffff30" }}
+            >
+              {isSaving ? (
+                <View style={styles.savingContainer}>
+                  <ActivityIndicator size="small" color="#fff" />
+                  <Text style={styles.saveButtonText}>Saving...</Text>
+                </View>
+              ) : (
+                <Text style={styles.saveButtonText}>Save Changes</Text>
+              )}
+            </Pressable>
 
-          {/* Logout */}
-          <Pressable
-            style={styles.logoutButton}
-            onPress={handleLogout}
-            android_ripple={{ color: "#78350f20" }}
-          >
-            <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
-            <Text style={styles.logoutText}>Log Out</Text>
-          </Pressable>
-        </ScrollView>
-      </CoffeeBackground>
-    </SafeAreaView>
+            {/* Logout */}
+            <Pressable
+              style={styles.logoutButton}
+              onPress={handleLogout}
+              android_ripple={{ color: "#78350f20" }}
+            >
+              <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
+              <Text style={styles.logoutText}>Log Out</Text>
+            </Pressable>
+          </ScrollView>
+      </SafeAreaView>
   );
 }
 

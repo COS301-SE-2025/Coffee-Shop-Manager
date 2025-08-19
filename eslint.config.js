@@ -5,7 +5,14 @@ import prettier from "eslint-plugin-prettier";
 
 export default [
   {
-    ignores: ["node_modules", "dist", "build"],
+    ignores: [
+      "**/node_modules/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/.next/**",
+      "**/DieKoffieBlikApp/declarations.d.ts",
+      "**/DieKoffieBlikApp/lib/supabase.ts",
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -1,5 +1,5 @@
 // app/_layout.tsx
-import React, { useEffect } from "react";
+import React from "react";
 import { Stack } from "expo-router";
 
 export default function Layout() {

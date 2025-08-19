@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   View,
   Text,
@@ -15,9 +15,19 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
 
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+interface ContactMethod {
+  id: string;
+  title: string;
+  subtitle: string;
+  description: string;
+  icon: string;
+  action: () => void;
+}
+
 export default function HelpSupportScreen() {
   const router = useRouter();
-  const [expandedFAQ, setExpandedFAQ] = useState<string | null>(null);
 
   const contactMethods = [
     {
@@ -102,10 +112,6 @@ export default function HelpSupportScreen() {
     platform: Platform.OS === "ios" ? "iOS" : "Android",
   };
 
-  const toggleFAQ = (id: string) => {
-    setExpandedFAQ(expandedFAQ === id ? null : id);
-  };
-
   const NavBar = () => (
     <View style={styles.navbar}>
       <View style={styles.navLeft}>
@@ -142,14 +148,14 @@ export default function HelpSupportScreen() {
     </View>
   );
 
-  const ContactMethodCard = ({ method }: { method: any }) => (
+  const ContactMethodCard = ({ method }: { method: ContactMethod }) => (
     <Pressable
       style={styles.contactCard}
       onPress={method.action}
       android_ripple={{ color: "#78350f10" }}
     >
       <View style={styles.contactIconContainer}>
-        <Ionicons name={method.icon} size={24} color="#78350f" />
+        <Ionicons name={method.icon as IoniconName} size={24} color="#78350f" />
       </View>
       <View style={styles.contactInfo}>
         <Text style={styles.contactTitle}>{method.title}</Text>
@@ -157,49 +163,6 @@ export default function HelpSupportScreen() {
       </View>
       <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
     </Pressable>
-  );
-
-  const QuickActionCard = ({ action }: { action: any }) => (
-    <Pressable
-      style={styles.quickActionCard}
-      onPress={() => router.push(action.route)}
-      android_ripple={{ color: "#78350f10" }}
-    >
-      <View style={styles.quickActionLeft}>
-        <View style={styles.quickActionIcon}>
-          <Ionicons name={action.icon} size={20} color="#78350f" />
-        </View>
-        <View>
-          <Text style={styles.quickActionTitle}>{action.title}</Text>
-          <Text style={styles.quickActionDescription}>
-            {action.description}
-          </Text>
-        </View>
-      </View>
-      <Ionicons name="chevron-forward" size={20} color="#9ca3af" />
-    </Pressable>
-  );
-
-  const FAQItem = ({ item }: { item: any }) => (
-    <View style={styles.faqItem}>
-      <Pressable
-        style={styles.faqQuestion}
-        onPress={() => toggleFAQ(item.id)}
-        android_ripple={{ color: "#78350f10" }}
-      >
-        <Text style={styles.faqQuestionText}>{item.question}</Text>
-        <Ionicons
-          name={expandedFAQ === item.id ? "chevron-up" : "chevron-down"}
-          size={20}
-          color="#78350f"
-        />
-      </Pressable>
-      {expandedFAQ === item.id && (
-        <View style={styles.faqAnswer}>
-          <Text style={styles.faqAnswerText}>{item.answer}</Text>
-        </View>
-      )}
-    </View>
   );
 
   return (

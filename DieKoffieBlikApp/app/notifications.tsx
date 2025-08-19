@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import CoffeeBackground from "../assets/coffee-background";
 
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
 export default function NotificationsScreen() {
   const router = useRouter();
 
@@ -64,7 +66,11 @@ export default function NotificationsScreen() {
       {data.map((item) => (
         <View key={item.id} style={styles.card}>
           <View style={styles.iconContainer}>
-            <Ionicons name={item.icon as any} size={22} color="#78350f" />
+            <Ionicons
+              name={item.icon as IoniconName}
+              size={22}
+              color="#78350f"
+            />
           </View>
           <View style={styles.textContainer}>
             <Text style={styles.message}>{item.message}</Text>

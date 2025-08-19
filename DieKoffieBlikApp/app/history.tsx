@@ -15,6 +15,16 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
 
+export interface OrderItem {
+  id: string;
+  date: string;
+  status: "completed" | "cancelled" | "delivered" | string; // add "delivered" since you're filtering by it
+  items: number;
+  total: string; // it's stored like "R 145.50"
+  restaurant: string;
+  items_detail: string[];
+}
+
 export default function OrderHistoryScreen() {
   const router = useRouter();
   const [selectedFilter, setSelectedFilter] = useState("all");
@@ -171,7 +181,7 @@ export default function OrderHistoryScreen() {
     </View>
   );
 
-  const OrderItem = ({ order }: { order: any }) => (
+  const OrderItem = ({ order }: { order: OrderItem }) => (
     <Pressable style={styles.orderCard} android_ripple={{ color: "#78350f10" }}>
       <View style={styles.orderHeader}>
         <View style={styles.orderLeft}>

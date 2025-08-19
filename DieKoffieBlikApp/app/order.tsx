@@ -8,7 +8,6 @@ import {
   StatusBar,
   Animated,
   ScrollView,
-  Dimensions,
   Alert,
   SafeAreaView,
   Platform,
@@ -23,7 +22,35 @@ import CoffeeLoading from "../assets/loading";
 
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
-const { width, height } = Dimensions.get("window");
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+interface MenuItem {
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+  stock_quantity: number;
+  category?: "hot" | "cold" | "pastry" | "special";
+  image?: string;
+  prepTime?: string;
+  calories?: number;
+  tags?: string[];
+  rating?: number;
+  reviews?: number;
+  popular?: boolean;
+}
+
+interface EnhancedMenuItem extends MenuItem {
+  stock: number; // This comes from stock_quantity
+  category: "hot" | "cold" | "pastry" | "special"; // Required after enhancement
+  image: string; // Required after enhancement
+  prepTime: string; // Required after enhancement
+  calories: number; // Required after enhancement
+  tags: string[]; // Required after enhancement
+  rating: number; // Required after enhancement
+  reviews: number; // Required after enhancement
+  popular: boolean; // Required after enhancement
+}
 
 const menuCategories = [
   { id: "hot", name: "Hot Coffee", icon: "cafe", color: "#dc2626" },
@@ -114,19 +141,16 @@ const detectCategory = (itemName: string): string => {
 };
 
 // Enhancement function
-const enhanceMenuItem = (apiItem: any) => {
-  const category = detectCategory(apiItem.name);
-  const defaults = categoryDefaults[category as keyof typeof categoryDefaults];
+const enhanceMenuItem = (apiItem: MenuItem): EnhancedMenuItem => {
+  const detectedCategory = detectCategory(apiItem.name);
+  const defaults =
+    categoryDefaults[detectedCategory as keyof typeof categoryDefaults];
 
   return {
     ...apiItem,
-    id: apiItem.id,
-    name: apiItem.name,
-    price: apiItem.price,
-    description: apiItem.description,
-    stock: apiItem.stock_quantity,
-    // Add enhanced properties
+    stock: apiItem.stock_quantity, // Map stock_quantity to stock
     ...defaults,
+    category: detectedCategory as "hot" | "cold" | "pastry" | "special", // Override with detected category
   };
 };
 
@@ -143,7 +167,7 @@ export default function OrderScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearch, setShowSearch] = useState(false);
   const [sortByPrice, setSortByPrice] = useState("none");
-  const [menuItems, setMenuItems] = useState<any[]>([]);
+  const [menuItems, setMenuItems] = useState<EnhancedMenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -328,7 +352,7 @@ export default function OrderScreen() {
               ]}
             >
               <Ionicons
-                name={category.icon as any}
+                name={category.icon as IoniconName}
                 size={18}
                 color={selectedCategory === category.id ? "#fff" : "#78350f"}
               />
@@ -383,37 +407,22 @@ export default function OrderScreen() {
     </View>
   ));
 
-  const renderStars = useCallback((rating: number) => {
-    const stars = [];
-    const fullStars = Math.floor(rating);
-    const hasHalfStar = rating % 1 !== 0;
-
-    for (let i = 1; i <= 5; i++) {
-      if (i <= fullStars) {
-        stars.push(<Ionicons key={i} name="star" size={12} color="#f59e0b" />);
-      } else if (i === fullStars + 1 && hasHalfStar) {
-        stars.push(
-          <Ionicons key={i} name="star-half" size={12} color="#f59e0b" />,
-        );
-      } else {
-        stars.push(
-          <Ionicons key={i} name="star-outline" size={12} color="#d1d5db" />,
-        );
-      }
-    }
-    return stars;
-  }, []);
-
-  const MenuItem = React.memo(({ item }: { item: any }) => (
+  const MenuItem = React.memo(({ item }: { item: EnhancedMenuItem }) => (
     <View style={styles.card}>
       <View style={styles.cardContent}>
         <View style={styles.itemImageContainer}>
-          <Ionicons name={item.image as any} size={32} color="#78350f" />
+          <Ionicons
+            name={item.image as IoniconName}
+            size={32}
+            color="#78350f"
+          />
         </View>
 
         <View style={styles.itemDetails}>
           <View style={styles.itemHeader}>
-            <Text style={styles.itemName} numberOfLines={2}>{item.name}</Text>
+            <Text style={styles.itemName} numberOfLines={2}>
+              {item.name}
+            </Text>
             <Text style={styles.itemPrice}>R {item.price}</Text>
           </View>
 
@@ -529,14 +538,18 @@ export default function OrderScreen() {
                 const fetchMenuItems = async () => {
                   try {
                     setLoading(true);
-                    console.log(process.env.IP)
-                    const response = await fetch(`http://${process.env.IP}/product`);
-                    if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                    console.log(process.env.IP);
+                    const response = await fetch(
+                      `http://${process.env.IP}/product`,
+                    );
+                    if (!response.ok)
+                      throw new Error(`HTTP error! status: ${response.status}`);
                     const apiData = await response.json();
                     const enhancedItems = apiData.map(enhanceMenuItem);
                     setMenuItems(enhancedItems);
                   } catch (err) {
                     setError("Failed to load menu items. Please try again.");
+                    console.log(err);
                   } finally {
                     setLoading(false);
                   }
@@ -619,7 +632,7 @@ export default function OrderScreen() {
             keyExtractor={(item) => item.id}
             contentContainerStyle={[
               styles.list,
-              filteredItems.length === 0 && styles.emptyList
+              filteredItems.length === 0 && styles.emptyList,
             ]}
             showsVerticalScrollIndicator={false}
             renderItem={({ item }) => <MenuItem item={item} />}
@@ -805,45 +818,45 @@ const styles = StyleSheet.create({
 
   // Sort Styles - Fixed positioning
   sortContainer: {
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
     paddingHorizontal: 20,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#f1f5f9',
-    flexDirection: 'row',
-    alignItems: 'center',
+    borderBottomColor: "#f1f5f9",
+    flexDirection: "row",
+    alignItems: "center",
     position: "relative",
     zIndex: 997,
   },
   sortLabel: {
     fontSize: 14,
-    color: '#64748b',
-    fontWeight: '600',
+    color: "#64748b",
+    fontWeight: "600",
     marginRight: 12,
   },
   sortOption: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 16,
-    backgroundColor: '#f8fafc',
+    backgroundColor: "#f8fafc",
     marginRight: 8,
     borderWidth: 1,
-    borderColor: '#e2e8f0',
+    borderColor: "#e2e8f0",
   },
   sortOptionActive: {
-    backgroundColor: '#78350f',
-    borderColor: 'transparent',
+    backgroundColor: "#78350f",
+    borderColor: "transparent",
   },
   sortOptionText: {
     fontSize: 12,
-    color: '#78350f',
-    fontWeight: '500',
+    color: "#78350f",
+    fontWeight: "500",
     marginLeft: 4,
   },
   sortOptionTextActive: {
-    color: '#fff',
+    color: "#fff",
   },
 
   // Content Area - Flexible space for list
@@ -1056,4 +1069,3 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
 });
-

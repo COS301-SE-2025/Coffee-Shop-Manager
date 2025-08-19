@@ -12,6 +12,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import NotificationService from "../services/NotificationService";
 
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
 export default function LandingScreen() {
   const router = useRouter();
 
@@ -73,7 +75,7 @@ export default function LandingScreen() {
   );
 }
 
-const Feature = ({ icon, label }: { icon: any; label: string }) => (
+const Feature = ({ icon, label }: { icon: IoniconName; label: string }) => (
   <View style={styles.featureItem}>
     <Ionicons name={icon} size={26} color="#fed7aa" />
     <Text style={styles.featureText}>{label}</Text>
@@ -87,7 +89,7 @@ const ActionButton = ({
   variant = "dark",
 }: {
   text: string;
-  icon: any;
+  icon: IoniconName;
   onPress: () => void;
   variant: "light" | "dark";
 }) => {

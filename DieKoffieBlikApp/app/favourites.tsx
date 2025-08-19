@@ -16,6 +16,17 @@ import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
 
+export interface FavoriteItem {
+  id: string;
+  name: string;
+  category: "coffee" | "pastries" | "beans" | string; // string fallback if you add more
+  price: string; // note: it's `"R 45.00"` not a number
+  restaurant: string;
+  description: string;
+  rating: number;
+  isFavorite: boolean;
+}
+
 export default function FavoritesScreen() {
   const router = useRouter();
   const [selectedCategory, setSelectedCategory] = useState("all");
@@ -178,7 +189,7 @@ export default function FavoritesScreen() {
     </View>
   );
 
-  const FavoriteItem = ({ item }: { item: any }) => (
+  const FavoriteItem = ({ item }: { item: FavoriteItem }) => (
     <View style={styles.favoriteCard}>
       <View style={styles.favoriteHeader}>
         <View style={styles.favoriteInfo}>

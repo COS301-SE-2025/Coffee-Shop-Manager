@@ -10,6 +10,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "reset-cache": "expo start --clear --tunnel",
+    "clear": "expo start --clear",
     "tunnel": "cross-env NODE_OPTIONS=--max-old-space-size=8192 expo start --clear --tunnel"
   },
   "dependencies": {

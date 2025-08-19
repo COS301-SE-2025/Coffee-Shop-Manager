@@ -10,12 +10,13 @@ import {
   Pressable,
   Switch,
   Alert,
-  ActivityIndicator
-} from 'react-native';
-import { useRouter } from 'expo-router';
-import { Ionicons } from '@expo/vector-icons';
-import { LinearGradient } from 'expo-linear-gradient';
-import AsyncStorage from '@react-native-async-storage/async-storage';
+} from "react-native";
+import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import CoffeeBackground from "../assets/coffee-background";
+import CoffeeLoading from "../assets/loading";
 
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
@@ -51,7 +52,6 @@ interface UserData {
 export default function ProfileScreen() {
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [locationEnabled, setLocationEnabled] = useState(false);
   const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   // State for user data
@@ -69,36 +69,31 @@ export default function ProfileScreen() {
       setIsLoading(true);
       setError(null);
 
-      // Check if user is logged in using AsyncStorage
-      const accessToken = await AsyncStorage.getItem('access_token');
-      const userEmail = await AsyncStorage.getItem('email');
-      const userId = await AsyncStorage.getItem('user_id'); // Assuming you store user_id
-      
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const userEmail = await AsyncStorage.getItem("email");
+      const userId = await AsyncStorage.getItem("user_id");
+
       if (!accessToken || !userEmail) {
-        // User is not logged in, redirect to login
         router.replace("/login");
         return;
       }
 
-      // If we don't have userId in storage, we need to get it somehow
       if (!userId) {
-        throw new Error('User ID not found in storage');
+        throw new Error("User ID not found in storage");
       }
 
       console.log(`Fetching profile for user ID: ${userId}`);
-      
-      // Fetch user profile from the specific endpoint
+
       const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: 'GET',
+        method: "GET",
         headers: {
-          'Authorization': `Bearer ${accessToken}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
         },
       });
-      
+
       if (!response.ok) {
         if (response.status === 401) {
-          // Token expired, try to refresh
           await handleTokenExpiry();
           return;
         }
@@ -106,31 +101,36 @@ export default function ProfileScreen() {
       }
 
       const apiResponse: ApiResponse = await response.json();
-      
+
       if (!apiResponse.success || !apiResponse.profile) {
-        throw new Error('Invalid API response format');
+        throw new Error("Invalid API response format");
       }
 
       const profile = apiResponse.profile;
-      console.log('Profile data received:', profile);
+      console.log("Profile data received:", profile);
 
-      // Format the data for your component
       const formattedUserData: UserData = {
-        name: profile.display_name || 'User',
+        name: profile.display_name || "User",
         email: userEmail,
-        phone: profile.phone_number || 'Not provided',
+        phone: profile.phone_number || "Not provided",
         totalOrders: profile.total_orders || 0,
-        favoriteItems: profile.favourite_product_id ? 1 : 0, // Simple count based on whether there's a favorite
+        favoriteItems: profile.favourite_product_id ? 1 : 0,
         loyaltyPoints: profile.loyalty_points || 0,
         totalSpent: profile.total_spent || 0,
-        dateOfBirth: profile.date_of_birth || 'Not provided',
-        userId: profile.user_id
+        dateOfBirth: profile.date_of_birth || "Not provided",
+        userId: profile.user_id,
       };
 
       setUserData(formattedUserData);
-    } catch (err: any) {
-      console.error("Error fetching user data:", err);
-      setError(err.message || 'Failed to load profile');
+    } catch (err: unknown) {
+      // Narrow the type safely
+      if (err instanceof Error) {
+        console.error("Error fetching user data:", err);
+        setError(err.message);
+      } else {
+        console.error("Unknown error fetching user data:", err);
+        setError("Failed to load profile");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -138,8 +138,8 @@ export default function ProfileScreen() {
 
   const handleTokenExpiry = async () => {
     try {
-      const refreshToken = await AsyncStorage.getItem('refresh_token');
-      
+      const refreshToken = await AsyncStorage.getItem("refresh_token");
+
       if (!refreshToken) {
         // No refresh token, redirect to login
         await clearStorageAndRedirect();
@@ -148,9 +148,9 @@ export default function ProfileScreen() {
 
       // Try to refresh the token
       const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ refreshToken }),
       });
@@ -162,52 +162,49 @@ export default function ProfileScreen() {
       }
 
       const { accessToken: newAccessToken } = await response.json();
-      await AsyncStorage.setItem('access_token', newAccessToken);
-      
+      await AsyncStorage.setItem("access_token", newAccessToken);
+
       // Retry fetching user data
       fetchUserData();
     } catch (error) {
-      console.error('Token refresh error:', error);
+      console.error("Token refresh error:", error);
       await clearStorageAndRedirect();
     }
   };
 
   const clearStorageAndRedirect = async () => {
-    await AsyncStorage.multiRemove(['access_token', 'refresh_token', 'email', 'user_session', 'user_id']);
-    router.replace('/login');
+    await AsyncStorage.multiRemove([
+      "access_token",
+      "refresh_token",
+      "email",
+      "user_session",
+      "user_id",
+    ]);
+    router.replace("/login");
   };
 
   const handleLogout = async () => {
-    Alert.alert(
-      "Logout",
-      "Are you sure you want to logout?",
-      [
-        { text: "Cancel", style: "cancel" },
-        { 
-          text: "Logout", 
-          style: "destructive",
-          onPress: async () => {
-            try {
-              // Clear all stored data
-              await clearStorageAndRedirect();
-            } catch (err) {
-              console.error('Unexpected logout error:', err);
-              Alert.alert('Error', 'An unexpected error occurred');
-            }
+    Alert.alert("Logout", "Are you sure you want to logout?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            // Clear all stored data
+            await clearStorageAndRedirect();
+          } catch (err) {
+            console.error("Unexpected logout error:", err);
+            Alert.alert("Error", "An unexpected error occurred");
           }
-        }
-      ]
-    );
+        },
+      },
+    ]);
   };
 
   // Loading state
   if (isLoading) {
-    return (
-      <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <ActivityIndicator size="large" color="#78350f" />
-        <Text style={styles.loadingText}>Loading profile...</Text>
-      </SafeAreaView>
-    );
+    return <CoffeeLoading visible={isLoading} />;
   }
 
   // Error state
@@ -253,9 +250,21 @@ export default function ProfileScreen() {
   ];
 
   const statsData = [
-    { label: "Total Orders", value: userData.totalOrders.toString(), icon: "receipt" as const },
-    { label: "Total Spent", value: `R${userData.totalSpent.toFixed(2)}`, icon: "card" as const },
-    { label: "Loyalty Points", value: userData.loyaltyPoints.toString(), icon: "star" as const }
+    {
+      label: "Total Orders",
+      value: userData.totalOrders.toString(),
+      icon: "receipt" as const,
+    },
+    {
+      label: "Total Spent",
+      value: `R${userData.totalSpent.toFixed(2)}`,
+      icon: "card" as const,
+    },
+    {
+      label: "Loyalty Points",
+      value: userData.loyaltyPoints.toString(),
+      icon: "star" as const,
+    },
   ];
 
   const NavBar = () => (
@@ -399,30 +408,32 @@ export default function ProfileScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar 
-        barStyle="dark-content" 
-        backgroundColor="transparent" 
-        translucent 
-      />
-      <NavBar />
-      <ScrollView 
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        <ProfileHeader />
-        <StatsSection />
-        <MenuSection />
-        <SettingsSection />
-        <ActionButtons />
-        
-        {/* Footer */}
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>DieKoffieBlik</Text>
-          <Text style={styles.footerSubtext}>Version 1.0.0</Text>
-        </View>
-      </ScrollView>
-    </SafeAreaView>
+    <CoffeeBackground>
+      <SafeAreaView style={styles.container}>
+          <StatusBar
+            barStyle="dark-content"
+            backgroundColor="transparent"
+            translucent
+          />
+          <NavBar />
+          <ScrollView
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
+          >
+            <ProfileHeader />
+            <StatsSection />
+            <MenuSection />
+            <SettingsSection />
+            <ActionButtons />
+
+            {/* Footer */}
+            <View style={styles.footer}>
+              <Text style={styles.footerText}>DieKoffieBlik</Text>
+              <Text style={styles.footerSubtext}>Version 1.0.0</Text>
+            </View>
+          </ScrollView>
+      </SafeAreaView>
+    </CoffeeBackground>
   );
 }
 
