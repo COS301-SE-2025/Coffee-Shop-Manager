@@ -27,8 +27,29 @@ export async function signupHandler(
       },
     });
 
-    if (error) {
-      res.status(400).json({ success: false, message: error.message });
+    if (error || !data.user) {
+      res.status(400).json({ success: false, message: error?.message || 'Signup failed' });
+      return;
+    }
+
+    const userId = data.user.id;
+
+    // Insert entry in user_profiles
+    const { error: profileError } = await supabase
+      .from('user_profiles')
+      .insert([
+        {
+          user_id: userId,
+          display_name: username,
+          role: 'user',
+        }
+      ])
+      .select()
+      .maybeSingle();
+
+    if (profileError) {
+      console.error('Error creating user profile:', profileError);
+      res.status(500).json({ success: false, message: 'Failed to create user profile' });
       return;
     }
 
