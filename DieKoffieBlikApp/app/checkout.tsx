@@ -10,6 +10,7 @@ import {
   Animated,
   TextInput,
   Modal,
+  Dimensions,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -18,6 +19,7 @@ import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
+const { width } = Dimensions.get("window");
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 type CustomerInfo = {
@@ -27,21 +29,11 @@ type CustomerInfo = {
   notes: string;
 };
 
-export interface MenuItem {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  stock_quantity: number;
-}
-
 type CustomerDetailsProps = {
   customerInfo: CustomerInfo;
   setCustomerInfo: React.Dispatch<React.SetStateAction<CustomerInfo>>;
   slideAnim: Animated.Value;
 };
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
 
 const paymentMethods = [
   { id: "card", name: "Credit/Debit Card", icon: "card" },
@@ -148,18 +140,17 @@ export default function CheckoutScreen() {
     email: "",
     notes: "",
   });
-
-  // NEW: State for dynamic menu items
-
-  const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
+  
+  // State for dynamic menu items
+  const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
 
-  // NEW: Fetch menu items from API
+  // Fetch menu items from API
   const fetchMenuItems = async () => {
     try {
       setLoadingItems(true);
       const accessToken = await AsyncStorage.getItem("access_token");
-
+      
       if (!accessToken) {
         console.log("No access token found");
         Alert.alert("Session Expired", "Please log in again");
@@ -190,13 +181,13 @@ export default function CheckoutScreen() {
     }
   };
 
-  // UPDATED: Fetch user info from API like in profile screen
+  // Load user info from API like in profile screen
   const loadUserInfo = async () => {
     try {
-      const accessToken = await AsyncStorage.getItem("access_token");
-      const userEmail = await AsyncStorage.getItem("email");
-      const userId = await AsyncStorage.getItem("user_id");
-
+      const accessToken = await AsyncStorage.getItem('access_token');
+      const userEmail = await AsyncStorage.getItem('email');
+      const userId = await AsyncStorage.getItem('user_id');
+      
       if (!accessToken || !userEmail || !userId) {
         console.log("Missing auth data, redirecting to login");
         router.replace("/login");
@@ -205,13 +196,13 @@ export default function CheckoutScreen() {
 
       // Fetch user profile from API
       const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: "GET",
+        method: 'GET',
         headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json',
         },
       });
-
+      
       if (!response.ok) {
         if (response.status === 401) {
           // Token expired
@@ -223,10 +214,10 @@ export default function CheckoutScreen() {
       }
 
       const apiResponse = await response.json();
-
+      
       if (apiResponse.success && apiResponse.profile) {
         const profile = apiResponse.profile;
-
+        
         // Update customer info with API data
         setCustomerInfo((prev) => ({
           ...prev,
@@ -235,10 +226,10 @@ export default function CheckoutScreen() {
           phone: profile.phone_number || "",
         }));
 
-        console.log("Loaded user info from API:", {
-          email: userEmail,
+        console.log("Loaded user info from API:", { 
+          email: userEmail, 
           name: profile.display_name,
-          phone: profile.phone_number,
+          phone: profile.phone_number 
         });
       } else {
         // Fallback to stored email only
@@ -249,7 +240,7 @@ export default function CheckoutScreen() {
       }
     } catch (error) {
       console.error("Failed to load user info from API:", error);
-
+      
       // Fallback to stored email only
       const storedEmail = await AsyncStorage.getItem("email");
       setCustomerInfo((prev) => ({
@@ -260,8 +251,8 @@ export default function CheckoutScreen() {
   };
 
   useEffect(() => {
-    loadUserInfo(); // UPDATED: Load both email and name
-    fetchMenuItems(); // Fetch menu items when component mounts
+    loadUserInfo();
+    fetchMenuItems();
   }, []);
 
   useEffect(() => {
@@ -302,8 +293,8 @@ export default function CheckoutScreen() {
     .filter(Boolean);
 
   const subtotal = cartItems.reduce(
-    (total, item) => total + item!.price * item!.quantity,
-    0,
+    (total, item) => total + (item!.price * item!.quantity),
+    0
   );
   const total = subtotal;
 
@@ -321,63 +312,113 @@ export default function CheckoutScreen() {
         "Invalid Phone Number",
         "Please enter a valid 10-digit phone number starting with 0",
       );
+    }
+
+    if (cartItems.length === 0) {
+      Alert.alert("Empty Cart", "Please add items to your cart first.");
       return;
     }
 
-    const generatedOrderNumber = generateOrderNumber();
-    setOrderNumber(generatedOrderNumber);
+    setIsProcessing(true);
+    
+    try {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      
+      if (!accessToken) {
+        Alert.alert("Session Expired", "Please log in again");
+        router.replace("/login");
+        return;
+      }
 
-    if (selectedPayment === "cash") {
-      setIsProcessing(true);
-      setTimeout(() => {
-        setIsProcessing(false);
-        setShowSuccess(true);
-        setTimeout(() => {
-          setShowSuccess(false);
-          router.push("/home");
-        }, 3000);
-      }, 2000);
-      return;
-    }
+      // Create the payload in the same format as the website
+      const payload = {
+        products: cartItems.map((item) => ({
+          product: item!.name,
+          quantity: item!.quantity,
+        })),
+      };
 
-    // If card, integrate PayFast
-    if (selectedPayment === "card") {
-      try {
-        setIsProcessing(true);
+      console.log("Placing order with payload:", payload);
 
-        const res = await PaymentService.initiatePayment(
-          generatedOrderNumber,
-          total,
-          customerInfo,
-        );
+      // Make the same API call as the website
+      const response = await fetch(`${API_BASE_URL}/create_order`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
 
-        setIsProcessing(false);
+      const result = await response.json();
 
-        if (res.success && res.paymentUrl) {
-          console.log("Opening PayFast payment page...");
-
-          router.push({
-            pathname: "/payment-webview",
-            params: { url: encodeURIComponent(res.paymentUrl) },
-          });
-        } else {
-          Alert.alert(
-            "Payment Error",
-            res.message || "Could not start payment.",
-          );
+      if (response.ok && result.success) {
+        // Order placed successfully
+        const generatedOrderNumber = generateOrderNumber(customerInfo.phone);
+        setOrderNumber(generatedOrderNumber);
+        
+        // If cash payment, show success immediately
+        if (selectedPayment === "cash") {
+          setIsProcessing(false);
+          setShowSuccess(true);
+          setTimeout(() => {
+            setShowSuccess(false);
+            router.push("/home");
+          }, 3000);
+          return;
         }
-      } catch (err) {
-        console.error("Payment error:", err);
+
+        // If card payment, proceed with PayFast integration
+        if (selectedPayment === "card") {
+          try {
+            const paymentRes = await PaymentService.initiatePayment(
+              generatedOrderNumber,
+              total,
+              customerInfo,
+            );
+
+            setIsProcessing(false);
+
+            if (paymentRes.success && paymentRes.paymentUrl) {
+              console.log("Opening PayFast payment page...");
+              router.push({
+                pathname: "/payment-webview",
+                params: { url: encodeURIComponent(paymentRes.paymentUrl) },
+              });
+            } else {
+              Alert.alert(
+                "Payment Error",
+                paymentRes.message || "Could not start payment.",
+              );
+            }
+          } catch (paymentErr) {
+            console.error("Payment error:", paymentErr);
+            setIsProcessing(false);
+            Alert.alert(
+              "Error",
+              "Something went wrong while starting the payment.",
+            );
+          }
+        }
+      } else {
+        // Order creation failed
         setIsProcessing(false);
         Alert.alert(
-          "Error",
-          "Something went wrong while starting the payment.",
+          "Order Failed",
+          result.message || "Failed to create order. Please try again.",
         );
       }
+    } catch (error) {
+      console.error("Order creation error:", error);
+      setIsProcessing(false);
+      Alert.alert(
+        "Error",
+        "Failed to submit order. Please check your connection and try again.",
+      );
     }
   };
 
-  function generateOrderNumber() {
+  function generateOrderNumber(phoneNumber?: string) {
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, "");
     const random = Math.floor(1000 + Math.random() * 9000);
     return `ORD-${timestamp}-${random}`;
@@ -451,7 +492,7 @@ export default function CheckoutScreen() {
           <View style={styles.paymentLeft}>
             <View style={styles.paymentIcon}>
               <Ionicons
-                name={method.icon as IoniconName}
+                name={method.icon as any}
                 size={24}
                 color={selectedPayment === method.id ? "#78350f" : "#6b7280"}
               />
@@ -493,32 +534,32 @@ export default function CheckoutScreen() {
     </Modal>
   );
 
-  // const ProcessingModal = () => (
-  //   <Modal visible={isProcessing} transparent animationType="fade">
-  //     <View style={styles.modalOverlay}>
-  //       <View style={styles.processingModal}>
-  //         <Animated.View
-  //           style={[
-  //             styles.processingSpinner,
-  //             {
-  //               transform: [
-  //                 {
-  //                   rotate: fadeAnim.interpolate({
-  //                     inputRange: [0, 1],
-  //                     outputRange: ["0deg", "360deg"],
-  //                   }),
-  //                 },
-  //               ],
-  //             },
-  //           ]}
-  //         >
-  //           <Ionicons name="hourglass" size={40} color="#78350f" />
-  //         </Animated.View>
-  //         <Text style={styles.processingText}>Processing your order...</Text>
-  //       </View>
-  //     </View>
-  //   </Modal>
-  // );
+  const ProcessingModal = () => (
+    <Modal visible={isProcessing} transparent animationType="fade">
+      <View style={styles.modalOverlay}>
+        <View style={styles.processingModal}>
+          <Animated.View
+            style={[
+              styles.processingSpinner,
+              {
+                transform: [
+                  {
+                    rotate: fadeAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ["0deg", "360deg"],
+                    }),
+                  },
+                ],
+              },
+            ]}
+          >
+            <Ionicons name="hourglass" size={40} color="#78350f" />
+          </Animated.View>
+          <Text style={styles.processingText}>Processing your order...</Text>
+        </View>
+      </View>
+    </Modal>
+  );
 
   const handleCancelOrder = () => {
     Alert.alert(
@@ -581,8 +622,7 @@ export default function CheckoutScreen() {
           <TouchableOpacity
             style={[
               styles.placeOrderButton,
-              (loadingItems || cartItems.length === 0) &&
-                styles.placeOrderButtonDisabled,
+              (loadingItems || cartItems.length === 0) && styles.placeOrderButtonDisabled
             ]}
             onPress={handlePlaceOrder}
             disabled={loadingItems || cartItems.length === 0}
@@ -663,18 +703,18 @@ const styles = StyleSheet.create({
   // Loading and Empty States
   loadingContainer: {
     padding: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   loadingText: {
-    color: "#6b7280",
+    color: '#6b7280',
     fontSize: 16,
   },
   emptyCartContainer: {
     padding: 20,
-    alignItems: "center",
+    alignItems: 'center',
   },
   emptyCartText: {
-    color: "#6b7280",
+    color: '#6b7280',
     fontSize: 16,
     marginTop: 8,
   },
@@ -746,56 +786,6 @@ const styles = StyleSheet.create({
     color: "#78350f",
   },
 
-  // Delivery Options
-  optionCard: {
-    flexDirection: "row",
-    alignItems: "center",
-    padding: 16,
-    borderRadius: 12,
-    backgroundColor: "#f9fafb",
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: "transparent",
-  },
-  optionCardSelected: {
-    backgroundColor: "#fff7ed",
-    borderColor: "#78350f",
-  },
-  optionIcon: {
-    width: 48,
-    height: 48,
-    backgroundColor: "#fff",
-    borderRadius: 24,
-    alignItems: "center",
-    justifyContent: "center",
-    marginRight: 16,
-  },
-  optionContent: {
-    flex: 1,
-  },
-  optionTitle: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#1f2937",
-    marginBottom: 4,
-  },
-  optionTitleSelected: {
-    color: "#78350f",
-  },
-  optionSubtitle: {
-    fontSize: 14,
-    color: "#6b7280",
-  },
-  optionRight: {
-    alignItems: "flex-end",
-    gap: 4,
-  },
-  optionPrice: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#78350f",
-  },
-
   // Payment Methods
   paymentCard: {
     flexDirection: "row",
@@ -839,17 +829,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
-  },
-  popularTag: {
-    backgroundColor: "#ef4444",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  popularTagText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
   },
 
   // Customer Details
