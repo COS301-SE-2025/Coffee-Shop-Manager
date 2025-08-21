@@ -175,8 +175,6 @@ export default function LoginScreen({
         );
       }
 
-      await sleep(300);
-
       console.log("✅ Login successful:", data);
 
       // Call optional onLogin callback
