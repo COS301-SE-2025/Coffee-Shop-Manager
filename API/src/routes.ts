@@ -16,6 +16,10 @@ import { createStockHandler } from "./endpoint/createStock";
 import { updateStockByIdHandler } from "./endpoint/updateStockId";
 import { updateStockByIdOrNameHandler } from "./endpoint/updateStockItem";
 import { batchUpdateStockHandler } from "./endpoint/updateStockBatch";
+import { startStockTakeHandler } from "./endpoint/startStockTake";
+import { saveStockTakeItemsHandler } from "./endpoint/saveStockTakeItems";
+import { completeStockTakeHandler } from "./endpoint/completeStockTake";
+import { getStockAdjustmentsHandler } from "./endpoint/getStockAdjustments";
 
 // ORDERS
 import { getOrdersHandler } from "./endpoint/getOrders";
@@ -51,8 +55,13 @@ router.delete("/user", deleteUserHandler);
 router.put("/user/:id", updateUserProfileHandler);
 
 // STOCK
+router.get("/stock/log", authMiddleware, getStockAdjustmentsHandler);
 router.get("/stock", authMiddleware, getStockHandler);
+router.get("/stock/:id", authMiddleware, getStockHandler);
 router.post("/stock", authMiddleware, createStockHandler);
+router.post("/stock/take", authMiddleware, startStockTakeHandler);
+router.put("/stock/take", authMiddleware, saveStockTakeItemsHandler);
+router.post("/stock/take/complete", authMiddleware, completeStockTakeHandler);
 router.put("/stock", authMiddleware, updateStockByIdOrNameHandler);
 router.put("/stock/batch", authMiddleware, batchUpdateStockHandler);
 router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
