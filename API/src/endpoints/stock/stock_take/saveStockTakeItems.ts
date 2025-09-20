@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabase } from "../supabase/client";
+import { supabase } from "../../../supabase/client";
 
 type StockItemInput = {
 	item: string; // can be name or id

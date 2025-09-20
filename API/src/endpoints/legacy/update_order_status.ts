@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabase } from "../supabase/client";
+import { supabase } from "../../supabase/client";
 
 export async function updateOrderStatusHandler(
   req: Request,

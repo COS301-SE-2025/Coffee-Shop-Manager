@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabase } from "../supabase/client";
+import { supabase } from "../../supabase/client";
 
 export async function updateStockByIdOrNameHandler(
   req: Request,
@@ -12,11 +12,8 @@ export async function updateStockByIdOrNameHandler(
       return;
     }
 
-    const { id } = req.body;
-    const { item } = req.body;
+    const { id, item, reference, ...fields } = req.body;
 
-    const fields = { ...req.body };
-    // Remove the identifier field from the update fields so it doesnt get overwritten
     if (!id && item) {
       delete fields.item;
     }
@@ -32,7 +29,7 @@ export async function updateStockByIdOrNameHandler(
     }
 
     // Query for existing item
-    let query: any = supabase.from("stock").select("id, item");
+    let query: any = supabase.from("stock").select("id, item, quantity");
 
     if (id) {
       query = query.eq("id", id).single();
@@ -59,6 +56,24 @@ export async function updateStockByIdOrNameHandler(
     const { error: updateError } = await updateQuery;
 
     if (updateError) throw updateError;
+
+    if (fields.quantity !== undefined && fields.quantity !== existing.quantity) {
+      const adjustmentQty = fields.quantity - existing.quantity;
+
+      const { error: logError } = await supabase
+        .from("stock_adjustments")
+        .insert({
+          stock_id: existing.id,
+          adjustment_qty: adjustmentQty,
+          reference,
+          reference_type: "user",
+          reference_id: userId,
+        });
+
+      if (logError) {
+        console.error("Adjustment log failed:", logError.message);
+      }
+    }
 
     res.status(200).json({ success: true, updatedItem: existing.item });
   } catch (error: any) {
