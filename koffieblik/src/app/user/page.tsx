@@ -3,6 +3,11 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import firstBadge from "../badges/first.png";
+import threeDayBadge from "../badges/first.png";
+import sevenDayBadge from "../badges/first.png";
+
+
+
 
 export default function UserPage() {
   const [username, setUsername] = useState("Guest");
@@ -20,12 +25,13 @@ export default function UserPage() {
     }
   }, []);
 
-  // Mock badges data - you'll replace this with real data later
+ 
   const badges = [
     { id: 1, name: "First Sip", description: "Made your first order", earned: true, color: "bg-yellow-500", image: firstBadge },
     { id: 2, name: "Coffee Lover", description: "Ordered 5 coffees", earned: true, color: "bg-blue-500" },
     { id: 3, name: "Regular", description: "Ordered 10 coffees", earned: false, color: "bg-gray-400" },
-    { id: 4, name: "Daily Grind", description: "3 day streak", earned: true, color: "bg-green-500" },
+    { id: 4, name: "Daily Grind", description: "3 day streak", earned: true, color: "bg-green-500", image: threeDayBadge },
+    { id: 5, name: "Weekly Warrior", description: "7 day streak", earned: false, color: "bg-purple-500", image: sevenDayBadge },
   ];
 
   return (
