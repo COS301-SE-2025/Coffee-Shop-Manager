@@ -23,6 +23,7 @@ export default function UserPage() {
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setUsername(storedUsername);
+     // console.log("Username set to:", storedUsername);
     }
   }, []);
 
