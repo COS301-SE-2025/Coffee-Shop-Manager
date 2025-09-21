@@ -120,13 +120,13 @@ export default function Navbar() {
       case "Logout":
         return "🚪";
       default:
-        return "👤";
+        return "👤"; // User profile icon
     }
   };
 
   let tabs = [""];
 
-  // Show only based on rol
+  // Show only based on role
   if (role === "user") {
     tabs = ["Dashboard", "Order Here", "Help", username, "Logout"];
   } else {
@@ -144,40 +144,6 @@ export default function Navbar() {
       "Logout",
     ];
   }
-
-  // const handleTabNavigation = (tab: string) => {
-  //   setSelectedTab(tab);
-
-  //   switch (tab) {
-  //     case 'Dashboard':
-  //       if (role === 'user') {
-  //         router.push('/userdashboard');
-  //       } else {
-  //         router.push('/dashboard');
-  //       }
-  //       break;
-  //     case 'Inventory':
-  //       router.push('/inventory');
-  //       break;
-  //     case 'Order Here':
-  //       router.push('/userPOS');
-  //       break;
-  //     case 'Reports':
-  //       router.push('/reports');
-  //       break;
-  //     case 'pos':
-  //       router.push('/pos');
-  //       break;
-  //     case 'manage':
-  //       router.push('/manage');
-  //       break;
-  //     case 'Help':
-  //       router.push('/help');
-  //       break;
-  //     default:
-  //       break;
-  //   }
-  // };
 
   return (
     <nav
@@ -223,6 +189,7 @@ export default function Navbar() {
           {tabs.map((tab) => {
             const isActive = selectedTab === tab;
             const isLogout = tab === "Logout";
+            const isUsername = tab === username; // Check if this tab is the username
 
             const getHref = () => {
               if (role === "user") {
@@ -251,6 +218,14 @@ export default function Navbar() {
               }
             };
 
+            // Special handling for username - redirect to user profile
+            const getUserHref = () => {
+              if (isUsername) {
+                return "/user"; // This will take them to the user profile page
+              }
+              return getHref();
+            };
+
             const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
               isActive ? "bg-white/10 text-white" : "text-[var(--primary-2)]"
             }`;
@@ -268,11 +243,16 @@ export default function Navbar() {
               );
             }
 
+            // Special styling for username tab to make it look clickable
+            const usernameClass = isUsername 
+              ? `${baseClass} hover:bg-white/10 hover:text-white cursor-pointer`
+              : baseClass;
+
             return (
               <a
                 key={tab}
-                href={getHref()}
-                className={baseClass}
+                href={getUserHref()}
+                className={usernameClass}
                 onClick={() => setSelectedTab(tab)}
               >
                 <span className="text-lg">{getTabIcon(tab)}</span>
