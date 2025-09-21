@@ -3,9 +3,10 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import firstBadge from "../badges/first.png";
-import threeDayBadge from "../badges/first.png";
-import sevenDayBadge from "../badges/first.png";
-
+import threeDayBadge from "../badges/3dayStreak.png";
+import sevenDayBadge from "../badges/7dayStreak.png";
+import fiveOrdersBadge from "../badges/5orders.png";
+import tenOrdersBadge from "../badges/10orders.png";
 
 
 
@@ -28,10 +29,10 @@ export default function UserPage() {
  
   const badges = [
     { id: 1, name: "First Sip", description: "Made your first order", earned: true, color: "bg-yellow-500", image: firstBadge },
-    { id: 2, name: "Coffee Lover", description: "Ordered 5 coffees", earned: true, color: "bg-blue-500" },
-    { id: 3, name: "Regular", description: "Ordered 10 coffees", earned: false, color: "bg-gray-400" },
-    { id: 4, name: "Daily Grind", description: "3 day streak", earned: true, color: "bg-green-500", image: threeDayBadge },
-    { id: 5, name: "Weekly Warrior", description: "7 day streak", earned: false, color: "bg-purple-500", image: sevenDayBadge },
+    { id: 2, name: "Coffee Lover", description: "Ordered 5 coffees", earned: false, color: "bg-blue-500", image:fiveOrdersBadge},
+    { id: 3, name: "Regular", description: "Ordered 10 coffees", earned: false, color: "bg-gray-400",image: tenOrdersBadge },
+    { id: 4, name: "Daily", description: "3 day streak", earned: false, color: "bg-green-500", image: threeDayBadge },
+    { id: 5, name: "Weekly", description: "7 day streak", earned: false, color: "bg-purple-500", image: sevenDayBadge },
   ];
 
   return (
@@ -50,7 +51,7 @@ export default function UserPage() {
         </div>
       </div>
 
-      {/* Stats Grid */}
+      {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-white rounded-lg shadow-md p-6 text-center">
           <div className="text-3xl font-bold text-blue-600 mb-2">
@@ -70,7 +71,7 @@ export default function UserPage() {
           <div className="text-lg font-bold text-purple-600 mb-2">
             {userStats.favoritedrink}
           </div>
-          <div className="text-gray-600">Favorite Drink</div>
+          <div className="text-gray-600">Favourite Drink</div>
         </div>
       </div>
 
@@ -118,21 +119,7 @@ export default function UserPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow-md p-6">
-        <h3 className="text-xl font-bold text-gray-900 mb-4">Quick Actions</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button className="flex items-center justify-center p-4 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors duration-200">
-            <span className="text-2xl mr-3"></span>
-            <span className="font-medium text-blue-700">Order Coffee</span>
-          </button>
-          
-          <button className="flex items-center justify-center p-4 bg-green-50 hover:bg-green-100 rounded-lg transition-colors duration-200">
-            <span className="text-2xl mr-3"></span>
-            <span className="font-medium text-green-700">View History</span>
-          </button>
-        </div>
-      </div>
+      
     </div>
   );
 }
