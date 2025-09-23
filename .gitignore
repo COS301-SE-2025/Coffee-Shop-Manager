@@ -22,3 +22,6 @@ coverage/
 # supabase
 # IGNORE ACTUAL DATA
 supabase/volumes/db/data
+
+# venv
+venv
