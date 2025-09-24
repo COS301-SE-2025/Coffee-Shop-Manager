@@ -4,7 +4,7 @@ import Navbar from "@/app/components/Navbar";
 
 export const metadata = {
   title: "Profile - DieKoffieBlik",
-  description: "Manage your profile and view badges",
+  description: "Manage your profile",
   icons: {
     icon: "/favicon.ico",
   },
