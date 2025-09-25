@@ -1,10 +1,7 @@
 import { Request, Response } from "express";
 import { supabase } from "../../supabase/client";
 
-export async function getOrdersHandler(
-  req: Request,
-  res: Response,
-): Promise<void> {
+export async function getOrdersHandler(req: Request, res: Response): Promise<void> {
   try {
     const userId = (req as any).user?.id;
     if (!userId) {
@@ -12,48 +9,30 @@ export async function getOrdersHandler(
       return;
     }
 
-    const { data: orders, error: ordersError } = await supabase
-      .from("orders")
-      .select(
-        `
-        id,
-        status,
-        total_price,
-        created_at,
-        updated_at,
-        order_products (
-          quantity,
-          price,
-          product_id,
-          products:product_id (
-            name,
-            description,
-            price
-          )
-        ),
-        payments (
-          id,
-          method,
-          amount,
-          status,
-          transaction_id,
-          created_at
-        )
-      `,
-      )
-      // .eq('user_id', userId)
-      .order("created_at", { ascending: true });
+    const { filters, orderBy, orderDirection } = req.body || {};
 
-    if (ordersError) {
-      throw ordersError;
+    // Base query
+    let query = supabase.from("orders").select("*");
+
+    // Apply filters if provided
+    if (filters && typeof filters === "object") {
+      for (const [key, value] of Object.entries(filters)) {
+        if (value !== undefined && value !== null) {
+          query = query.eq(key, value);
+        }
+      }
     }
 
-    const numberedOrders = orders.map((order, index) => ({
-      ...order,
-      number: index + 1,
-    }));
+    // Apply ordering if provided
+    if (orderBy) {
+      query = query.order(orderBy, { ascending: orderDirection !== "desc" });
+    }
 
-    res.status(200).json({ success: true, orders: numberedOrders });
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    res.status(200).json(data);
   } catch (error: any) {
     console.error("Get orders error:", error);
     res.status(500).json({ error: error.message || "Internal server error" });
