@@ -9,10 +9,9 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			return;
 		}
 
-		const { filters, orderBy, orderDirection } = req.body || {};
+		const { filters, orderBy, orderDirection, offset, limit } = req.body || {};
 
 		// Base query
-		// let query = supabase.from("orders").select("*");
 		let query = supabase.from("orders").select(
 		`id,
 		status,
@@ -52,6 +51,12 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			query = query.order(orderBy, { ascending: orderDirection !== "desc" });
 		} else {
 			query = query.order("created_at", { ascending: true });
+		}
+
+		if (typeof limit === "number" || typeof offset === "number") {
+			const defaultOffset = offset ?? 0;
+			const defaultLimit = limit ?? 10;
+			query = query.range(defaultOffset, defaultOffset + defaultLimit - 1);
 		}
 
 		const { data, error } = await query;
