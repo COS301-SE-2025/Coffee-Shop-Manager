@@ -4,7 +4,7 @@ import Navbar from "@/app/components/Navbar";
 
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative min-h-screen flex flex-col">
+    <div className="relative h-screen flex flex-col">
       {/* Background image layer */}
       <div className="fixed inset-0 -z-10">
         <CoffeeBackground />

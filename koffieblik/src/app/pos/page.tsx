@@ -110,19 +110,19 @@ export default function POSPage() {
     }
   };
 
-   // 🔄 run once on mount (or whenever API_BASE_URL changes)
+  // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
     fetchOrders();
   }, [API_BASE_URL]);
 
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
-  fetchOrders();
-}, [offSetStart, statusFilter]); // run when either changes
+    fetchOrders();
+  }, [offSetStart, statusFilter]); // run when either changes
 
 
 
- 
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -238,7 +238,7 @@ export default function POSPage() {
 
   return (
     <main
-      className="min-h-screen p-8"
+      className="relative min-h-full bg-transparent overflow-x-hidden p-8"
       style={{
         // backgroundColor: "var(--primary-4)",
         color: "var(--primary-3)",
