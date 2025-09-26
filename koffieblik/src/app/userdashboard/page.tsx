@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { getTabs } from "@/constants/tabs";
+import CoffeeLoading from "assets/loading";
 import Loader from "../loaders/loader";
 
 interface Order {
@@ -181,7 +181,7 @@ export default function DashboardPage() {
       {showOrder && (
         <div className="p-8">
           {loading ? (
-            <Loader />
+            <CoffeeLoading visible={loading} />
           ) : (
             <>
               <button
