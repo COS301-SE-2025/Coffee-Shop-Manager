@@ -2,6 +2,11 @@ import { Router } from "express";
 
 import { authMiddleware } from "./middleware/auth";
 
+// GAMIFICATION
+import { getUserStatsHandler } from "./endpoints/gamification/getUserStats";
+import { getUserBadgesHandler } from "./endpoints/gamification/getUserBadges";
+import { getLeaderboardHandler } from "./endpoints/gamification/getLeaderboard";
+
 // USERS
 import { loginHandler } from "./endpoints/user/login";
 import { signupHandler } from "./endpoints/user/signup";
@@ -44,6 +49,11 @@ const router = Router();
 router.get("/", (req, res) => {
   res.status(200).json({ message: "API is live" });
 });
+
+// GAMIFICATION
+router.get("/user/stats", authMiddleware, getUserStatsHandler);
+router.get("/user/badges", authMiddleware, getUserBadgesHandler);
+router.get("/leaderboard", authMiddleware, getLeaderboardHandler); 
 
 // USERS
 router.get("/user/:id", getUserProfileHandler);
