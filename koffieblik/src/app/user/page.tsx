@@ -212,8 +212,29 @@ export default function UserPage() {
         <>
          
 
-         
+          {/* Your Position */}
+          {/* User Info Card */}
+          <div className="bg-white rounded-lg shadow-md p-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-2xl text-white">👤</span>
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
+                  <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <div className={`text-2xl font-bold ${getRankColor(getCurrentUserRank())}`}>
+                  {getRankIcon(getCurrentUserRank())}
+                </div>
+                <div className="text-sm text-gray-500">Current Rank</div>
+              </div>
+            </div>
+          </div>
 
+         
          
         </>
       )}
