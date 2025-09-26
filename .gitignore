@@ -25,3 +25,5 @@ supabase/volumes/db/data
 
 # venv
 venv
+API/package-lock.json
+koffieblik/package-lock.json

@@ -21,15 +21,15 @@
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
-    "ts-node": "^10.9.2",
     "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/cookie-parser": "^1.4.9",
     "@types/cors": "^2.8.19",
     "@types/jsonwebtoken": "^9.0.10",
-    "@types/node": "^24.2.1",
+    "@types/node": "^24.5.2",
+    "ts-node": "^10.9.2",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.8.3"
+    "typescript": "^5.9.2"
   }
 }

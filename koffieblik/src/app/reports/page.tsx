@@ -24,7 +24,7 @@ type ProductInfo = {
 type OrderProduct = {
   product_id: string;
   quantity: number;
-  price: number; // unit price for this item at purchase time
+  price: number;
   products: ProductInfo;
 };
 
@@ -33,19 +33,21 @@ type Order = {
   number: number;
   status: "pending" | "completed" | "cancelled";
   total_price: number;
-  created_at: string; // ISO
-  updated_at: string; // ISO
+  created_at: string;
+  updated_at: string;
   order_products: OrderProduct[];
 };
 
 type GetOrdersResponse = {
-  success: boolean;
-  orders: Order[];
+  success?: boolean;
+  sucess?: boolean; // backend typo
+  orders?: Order[];
+  message?: string;
 };
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL?.replace(/\/+$/, "") || "http://localhost:5000";
 
-// Color palette for pie segments
 const PRODUCT_COLORS = ["#D97706", "#F59E0B", "#FBBF24", "#FCD34D", "#FEF3C7"];
 
 function currency(n: number) {
@@ -62,7 +64,6 @@ function endOfDay(d: Date) {
   x.setHours(23, 59, 59, 999);
   return x;
 }
-
 function isSameDay(a: Date, b: Date) {
   return (
     a.getFullYear() === b.getFullYear() &&
@@ -75,11 +76,10 @@ type TimeRange = "day" | "week" | "month" | "year";
 
 function rangeFilter(range: TimeRange) {
   const now = new Date();
-  const to = now;
+  const to = endOfDay(now);
   let from = new Date();
   if (range === "day") from = startOfDay(now);
   if (range === "week") {
-    // last 7 days inclusive
     from = new Date(now);
     from.setDate(from.getDate() - 6);
     from = startOfDay(from);
@@ -102,35 +102,42 @@ export default function QuickReport() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [timeRange, setTimeRange] = useState<TimeRange>("week");
-  const [selectedMetric, setSelectedMetric] = useState<"sales" | "orders" | "profit">("sales");
+  const [selectedMetric, setSelectedMetric] = useState<"sales" | "orders">("sales");
   const [error, setError] = useState<string | null>(null);
 
   // Fetch real data
   useEffect(() => {
-    let cancelled = false;
-    const go = async () => {
+    const ac = new AbortController();
+    (async () => {
       try {
         setLoading(true);
         setError(null);
-        const res = await fetch(`${API_BASE_URL}/get_orders`, {
+
+        const res = await fetch(`${API_BASE_URL}/order`, {
           credentials: "include",
+          signal: ac.signal,
+          headers: { Accept: "application/json" },
         });
+
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
         const data: GetOrdersResponse = await res.json();
-        if (!data.success) {
-          throw new Error((data as any).message || "Failed to load orders");
+        const ok = (typeof data.success === "boolean" ? data.success : data.sucess) ?? false;
+
+        if (!ok || !Array.isArray(data.orders)) {
+          throw new Error(data.message || "Failed to load orders");
         }
-        if (!cancelled) setOrders(data.orders || []);
+
+        setOrders(data.orders);
       } catch (e: any) {
-        if (!cancelled) setError(e?.message || "Unknown error");
+        if (e?.name === "AbortError") return;
         console.error(e);
+        setError(e?.message || "Unknown error");
       } finally {
-        if (!cancelled) setLoading(false);
+        setLoading(false);
       }
-    };
-    go();
-    return () => {
-      cancelled = true;
-    };
+    })();
+    return () => ac.abort();
   }, []);
 
   // Filter orders by time range
@@ -142,11 +149,9 @@ export default function QuickReport() {
     let sum = 0;
     let todayCount = 0;
 
-    // counts per day-of-week
     const dowCounts = new Map<string, number>();
     const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
-    // product counts
     const productCount = new Map<string, number>();
 
     for (const o of filtered) {
@@ -163,7 +168,6 @@ export default function QuickReport() {
       }
     }
 
-    // busiest day
     let bd = "—";
     let bdVal = -1;
     for (const [k, v] of dowCounts) {
@@ -173,7 +177,6 @@ export default function QuickReport() {
       }
     }
 
-    // top product
     let tp = "—";
     let tpVal = -1;
     for (const [k, v] of productCount) {
@@ -191,41 +194,30 @@ export default function QuickReport() {
     };
   }, [filtered]);
 
-  // Weekly performance chart data (Mon..Sun) built from filtered
+  // Weekly chart (only sales & orders)
   const weeklySeries = useMemo(() => {
-    // base buckets Mon..Sun
     const order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const base = new Map(order.map((d) => [d, { day: d, sales: 0, orders: 0, profit: 0 }]));
+    const base = new Map(order.map((d) => [d, { day: d, sales: 0, orders: 0 }]));
 
     for (const o of filtered) {
       const d = new Date(o.created_at);
       const dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()];
-      const key = dow === "Sun" ? "Sun" : dow; // keep names
-      const bucket = base.get(key as any);
+      const bucket = base.get(dow === "Sun" ? "Sun" : dow);
       if (!bucket) continue;
       bucket.sales += o.total_price || 0;
       bucket.orders += 1;
-      // naive gross margin ~30% of sales (no COGS provided)
-      bucket.profit += (o.total_price || 0) * 0.3;
     }
 
     const arr = order.map((d) => base.get(d)!);
-    // Recharts expects a `value` field switchable by metric
-    const data = arr.map((d) => ({
+    return arr.map((d) => ({
       ...d,
-      value:
-        selectedMetric === "orders"
-          ? d.orders
-          : selectedMetric === "profit"
-          ? Math.round(d.profit * 100) / 100
-          : Math.round(d.sales * 100) / 100,
+      value: selectedMetric === "orders" ? d.orders : Math.round(d.sales * 100) / 100,
     }));
-    return data;
   }, [filtered, selectedMetric]);
 
-  const metricLabel = selectedMetric === "orders" ? "Orders" : selectedMetric === "profit" ? "Profit (R)" : "Sales (R)";
+  const metricLabel = selectedMetric === "orders" ? "Orders" : "Sales (R)";
 
-  // Product mix (by quantity). Top 4 + "Others"
+  // Product mix
   const productMix = useMemo(() => {
     const counts = new Map<string, number>();
     for (const o of filtered) {
@@ -255,7 +247,7 @@ export default function QuickReport() {
     return pie;
   }, [filtered]);
 
-  // Hourly trends (2-hour slots across the day, from 06:00 to 22:00)
+  // Hourly trends
   const hourly = useMemo(() => {
     const slots = ["06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"];
     const buckets = new Map(slots.map((s) => [s, { time: s, orders: 0, revenue: 0 }]));
@@ -263,7 +255,6 @@ export default function QuickReport() {
     for (const o of filtered) {
       const t = new Date(o.created_at);
       const hr = t.getHours();
-      // snap to nearest lower even hour >= 6, <= 22; else group to closest within range
       const clamped = Math.min(22, Math.max(6, hr - (hr % 2)));
       const label = `${String(clamped).padStart(2, "0")}:00`;
       const b = buckets.get(label);
@@ -274,7 +265,7 @@ export default function QuickReport() {
     return slots.map((s) => buckets.get(s)!);
   }, [filtered]);
 
-  // Notable orders (largest totals + recent completed)
+  // Highlights
   const highlights = useMemo(() => {
     if (filtered.length === 0) return [];
     const largest = [...filtered].sort((a, b) => b.total_price - a.total_price)[0];
@@ -298,37 +289,12 @@ export default function QuickReport() {
     return Array.from(set.values()).slice(0, 4);
   }, [filtered]);
 
-  // Summary cards from real data
   const summaryCards = useMemo(
     () => [
-      {
-        title: "Top Product",
-        value: topProduct || "—",
-        icon: "☕",
-        trend: "", // could compute WoW later
-        trendColor: "text-amber-700",
-      },
-      {
-        title: "Busiest Day",
-        value: busiestDay || "—",
-        icon: "📈",
-        trend: `${filtered.length} orders`,
-        trendColor: "text-blue-600",
-      },
-      {
-        title: "Total Sales",
-        value: currency(totalSales),
-        icon: "💰",
-        trend: "", // could compute vs previous period
-        trendColor: "text-green-600",
-      },
-      {
-        title: "Orders Today",
-        value: String(ordersToday),
-        icon: "🛒",
-        trend: "",
-        trendColor: "text-green-600",
-      },
+      { title: "Top Product", value: topProduct || "—", icon: "☕", trend: "", trendColor: "text-amber-700" },
+      { title: "Busiest Day", value: busiestDay || "—", icon: "📈", trend: `${filtered.length} orders`, trendColor: "text-blue-600" },
+      { title: "Total Sales", value: currency(totalSales), icon: "💰", trend: "", trendColor: "text-green-600" },
+      { title: "Orders Today", value: String(ordersToday), icon: "🛒", trend: "", trendColor: "text-green-600" },
     ],
     [topProduct, busiestDay, totalSales, ordersToday, filtered.length]
   );
@@ -362,10 +328,11 @@ export default function QuickReport() {
             <button
               className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg"
               onClick={() => {
-                // simple CSV export of filtered orders
-                const header = ["number","status","total_price","created_at"];
-                const rows = filtered.map(o => [o.number, o.status, o.total_price, o.created_at]);
-                const csv = [header, ...rows].map(r => r.map(x => `"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+                const header = ["number", "status", "total_price", "created_at"];
+                const rows = filtered.map((o) => [o.number, o.status, o.total_price, o.created_at]);
+                const csv = [header, ...rows]
+                  .map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(","))
+                  .join("\n");
                 const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement("a");
@@ -402,7 +369,7 @@ export default function QuickReport() {
             </div>
             <h3 className="text-sm font-medium text-amber-700 mb-1">{title}</h3>
             <p className="text-2xl font-bold text-amber-900">{value}</p>
-            <div className="mt-3 h-1 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full opacity-60"></div>
+            <div className="mt-3 h-1 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full opacity-60" />
           </div>
         ))}
       </section>
@@ -416,7 +383,7 @@ export default function QuickReport() {
               <span className="text-2xl">📈</span> Weekly Performance
             </h2>
             <div className="flex gap-2">
-              {(["sales","orders","profit"] as const).map((metric) => (
+              {(["sales", "orders"] as const).map((metric) => (
                 <button
                   key={metric}
                   onClick={() => setSelectedMetric(metric)}
@@ -450,7 +417,7 @@ export default function QuickReport() {
                     boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
                   }}
                   formatter={(value: any) =>
-                    selectedMetric === "sales" || selectedMetric === "profit" ? currency(value) : value
+                    selectedMetric === "sales" ? currency(value) : value
                   }
                   labelFormatter={(l) => `${metricLabel} • ${l}`}
                 />
@@ -519,7 +486,13 @@ export default function QuickReport() {
                   formatter={(v: any, n: any) => (n === "revenue" ? currency(v) : v)}
                   labelFormatter={(l) => `Slot ${l}`}
                 />
-                <Line type="monotone" dataKey="orders" stroke="#F59E0B" strokeWidth={3} dot={{ fill: "#F59E0B", strokeWidth: 2, r: 4 }} />
+                <Line
+                  type="monotone"
+                  dataKey="orders"
+                  stroke="#F59E0B"
+                  strokeWidth={3}
+                  dot={{ fill: "#F59E0B", strokeWidth: 2, r: 4 }}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -564,15 +537,11 @@ export default function QuickReport() {
                   </div>
                 </div>
               ))}
-              {highlights.length === 0 && (
-                <p className="text-amber-700">No notable orders in this range.</p>
-              )}
+              {highlights.length === 0 && <p className="text-amber-700">No notable orders in this range.</p>}
             </div>
           </div>
         </div>
       </section>
-
-      
     </main>
   );
 }
