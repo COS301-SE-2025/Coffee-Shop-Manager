@@ -579,6 +579,16 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- GAMIFICATION --
+CREATE VIEW leaderboard_total_orders AS
+SELECT
+    user_id,
+    COUNT(*) AS total_orders
+FROM orders
+WHERE status = 'completed'
+GROUP BY user_id
+ORDER BY total_orders DESC;
+
 -- SEEDING --
 -- STOCK --
 INSERT INTO stock (item, quantity, unit_type, max_capacity) VALUES
