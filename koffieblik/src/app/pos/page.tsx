@@ -48,6 +48,7 @@ export default function POSPage() {
   const limit = 5; // items per page
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [loadingOrders, setLoadingOrders] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   useEffect(() => {
@@ -71,7 +72,7 @@ export default function POSPage() {
     }
   };
   const fetchOrders = async () => {
-    setLoading(true);
+    setLoadingOrders(true);
     try {
       const response = await fetch(`${API_BASE_URL}/get_orders`, {
         method: "POST",
@@ -104,7 +105,7 @@ export default function POSPage() {
     } catch (error) {
       console.error("❌ Network or server error:", error);
     } finally {
-      setLoading(false);
+      setLoadingOrders(false);
     }
   };
 
@@ -367,7 +368,125 @@ export default function POSPage() {
               </tr>
             </tbody>
           </table> */}
-          {loading ? (
+          <div
+            className="p-6 border-b-2"
+            style={{
+              borderColor: "var(--primary-4)",
+              backgroundColor: "var(--primary-3)",
+            }}
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-4)" }}
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    📋
+                  </span>
+                </div>
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  Recent Orders
+                </h2>
+              </div>
+
+              {/* Pagination controls */}
+              <div className="flex justify-end items-center gap-4 mt-4 px-6">
+                <button
+                  onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
+                  disabled={offSetStart === 0}
+                  className="px-3 py-1 rounded-lg border"
+                  style={{
+                    borderColor: "var(--primary-4)",
+                    color: offSetStart === 0 ? "gray" : "var(--primary-2)",
+                    backgroundColor: "var(--primary-3)",
+                    opacity: offSetStart === 0 ? 0.5 : 1,
+                  }}
+                >
+                  ⬅ Prev
+                </button>
+
+                <span style={{ color: "var(--primary-2)" }}>
+                  Showing {offSetStart + 1} – {offSetStart + limit}
+                </span>
+
+                <button
+                  onClick={() => setOffsetStart((prev) => prev + limit)}
+                  className="px-3 py-1 rounded-lg border"
+                  style={{
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-2)",
+                    backgroundColor: "var(--primary-3)",
+                  }}
+                >
+                  Next ➡
+                </button>
+              </div>
+
+
+
+              {/* Filter */}
+              <div className="flex flex-wrap gap-3">
+                <select
+                  className={`${dateInputStyle} text-[var(--primary-2)]`}
+                  style={{
+                    backgroundColor: "var(--primary-3)",
+                    borderColor: "var(--primary-4)",
+                    boxShadow: "0 0 0 0 transparent",
+                  }}
+                  value={filter}
+                  onChange={(e) => setFilter(e.target.value)}
+                >
+                  <option>Today</option>
+                  <option>This Week</option>
+                  <option>This Month</option>
+                  <option>Custom Range</option>
+                </select>
+
+                {filter === "Custom Range" && (
+                  <>
+                    <input
+                      type="date"
+                      className={dateInputStyle}
+                      value={startDate}
+                      onChange={(e) => setStartDate(e.target.value)}
+                      style={{
+                        backgroundColor: "var(--primary-3)",
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        boxShadow: "0 0 0 0 transparent",
+                      }}
+                    />
+                    <span
+                      className="flex items-center font-medium"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      to
+                    </span>
+                    <input
+                      type="date"
+                      className={dateInputStyle}
+                      value={endDate}
+                      onChange={(e) => setEndDate(e.target.value)}
+                      style={{
+                        backgroundColor: "var(--primary-3)",
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        boxShadow: "0 0 0 0 transparent",
+                      }}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+          {loading || loadingOrders ? (
             <Loader />
           ) : (
             <section
@@ -375,124 +494,7 @@ export default function POSPage() {
               style={{ backgroundColor: "var(--primary-3)" }}
             >
               {/* Heading */}
-              <div
-                className="p-6 border-b-2"
-                style={{
-                  borderColor: "var(--primary-4)",
-                  backgroundColor: "var(--primary-3)",
-                }}
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: "var(--primary-4)" }}
-                    >
-                      <span
-                        className="text-sm"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        📋
-                      </span>
-                    </div>
-                    <h2
-                      className="text-xl font-bold"
-                      style={{ color: "var(--primary-2)" }}
-                    >
-                      Recent Orders
-                    </h2>
-                  </div>
 
-                  {/* Pagination controls */}
-                  <div className="flex justify-end items-center gap-4 mt-4 px-6">
-                    <button
-                      onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
-                      disabled={offSetStart === 0}
-                      className="px-3 py-1 rounded-lg border"
-                      style={{
-                        borderColor: "var(--primary-4)",
-                        color: offSetStart === 0 ? "gray" : "var(--primary-2)",
-                        backgroundColor: "var(--primary-3)",
-                        opacity: offSetStart === 0 ? 0.5 : 1,
-                      }}
-                    >
-                      ⬅ Prev
-                    </button>
-
-                    <span style={{ color: "var(--primary-2)" }}>
-                      Showing {offSetStart + 1} – {offSetStart + limit}
-                    </span>
-
-                    <button
-                      onClick={() => setOffsetStart((prev) => prev + limit)}
-                      className="px-3 py-1 rounded-lg border"
-                      style={{
-                        borderColor: "var(--primary-4)",
-                        color: "var(--primary-2)",
-                        backgroundColor: "var(--primary-3)",
-                      }}
-                    >
-                      Next ➡
-                    </button>
-                  </div>
-
-
-
-                  {/* Filter */}
-                  <div className="flex flex-wrap gap-3">
-                    <select
-                      className={`${dateInputStyle} text-[var(--primary-2)]`}
-                      style={{
-                        backgroundColor: "var(--primary-3)",
-                        borderColor: "var(--primary-4)",
-                        boxShadow: "0 0 0 0 transparent",
-                      }}
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                    >
-                      <option>Today</option>
-                      <option>This Week</option>
-                      <option>This Month</option>
-                      <option>Custom Range</option>
-                    </select>
-
-                    {filter === "Custom Range" && (
-                      <>
-                        <input
-                          type="date"
-                          className={dateInputStyle}
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                          style={{
-                            backgroundColor: "var(--primary-3)",
-                            borderColor: "var(--primary-4)",
-                            color: "var(--primary-2)",
-                            boxShadow: "0 0 0 0 transparent",
-                          }}
-                        />
-                        <span
-                          className="flex items-center font-medium"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          to
-                        </span>
-                        <input
-                          type="date"
-                          className={dateInputStyle}
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          style={{
-                            backgroundColor: "var(--primary-3)",
-                            borderColor: "var(--primary-4)",
-                            color: "var(--primary-2)",
-                            boxShadow: "0 0 0 0 transparent",
-                          }}
-                        />
-                      </>
-                    )}
-                  </div>
-                </div>
-              </div>
 
               {/* Table */}
               <div className="overflow-x-auto">
