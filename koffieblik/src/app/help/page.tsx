@@ -58,59 +58,84 @@ export default function HelpPage() {
         {faqs.map((faq, index) => (
           <div
             key={index}
-            className="rounded-xl shadow transition"
+            className="rounded-xl shadow transition backdrop-blur-sm overflow-hidden"
             style={{
-              border: "1px solid var(--primary-3)",
-              backgroundColor: "var(--primary-2)",
+              border: "1px solid var(--primary-4)",
+              backgroundColor: "var(--primary-3)",
             }}
           >
             <button
               onClick={() => toggleFAQ(index)}
-              className="w-full text-left p-4 font-semibold flex justify-between items-center"
-              style={{ color: "var(--primary-3)" }}
+              className="w-full text-left p-4 font-semibold flex justify-between items-center cursor-pointer"
+              style={{ color: "var(--primary-2)" }}
             >
               {faq.question}
-              <span className="text-2xl" style={{ color: "var(--primary-3)" }}>
+              <span
+                className="text-2xl transition-transform duration-300"
+                style={{
+                  color: "var(--primary-2)",
+                  transform: openIndex === index ? "rotate(0deg)" : "rotate(90deg)",
+                }}
+              >
                 {openIndex === index ? "−" : "+"}
               </span>
             </button>
-            {openIndex === index && (
-              <div className="p-4 pt-0" style={{ color: "var(--primary-3)" }}>
+            <div
+              className="transition-all duration-300 ease-in-out origin-top"
+              style={{
+                maxHeight: openIndex === index ? "500px" : "0",
+                opacity: openIndex === index ? 1 : 0,
+                overflow: "hidden",
+              }}
+            >
+              <div className="p-4 pt-0" style={{ color: "var(--primary-2)" }}>
                 {faq.answer}
               </div>
-            )}
+            </div>
           </div>
         ))}
       </div>
 
       <div
-        className="mt-16 text-center p-8 rounded-2xl shadow-sm border"
+        className="mt-16 text-center p-8 rounded-2xl shadow-sm border backdrop-blur-sm"
         style={{
-          backgroundColor: "var(--primary-2)",
-          borderColor: "var(--primary-3)",
+          backgroundColor: "var(--primary-3)",
+          borderColor: "var(--primary-4)",
         }}
       >
         <h3
           className="text-2xl font-bold mb-4"
-          style={{ color: "var(--primary-1)" }}
+          style={{ color: "var(--primary-2)" }}
         >
           Still need help?
         </h3>
 
         <p
           className="mb-6 max-w-2xl mx-auto"
-          style={{ color: "var(--primary-1)" }}
+          style={{ color: "var(--primary-2)" }}
         >
           Can't find what you're looking for? Contact our support team.
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="btn px-8 py-3 hover:scale-105 transform">
+          <button
+            className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 transform cursor-pointer"
+            style={{
+              backgroundColor: "var(--primary-2)",
+              color: "var(--primary-3)",
+            }}
+          >
             Email Support
           </button>
 
-          <button className="px-8 py-3 border border-gray-300 text-gray-700 rounded-xl font-semibold hover:bg-gray-50 transition-colors duration-200 hover:scale-105 transform">
-            Call support
+          <button
+            className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 transform cursor-pointer"
+            style={{
+              border: "1px solid var(--primary-2)",
+              color: "var(--primary-2)",
+            }}
+          >
+            Call Support
           </button>
         </div>
       </div>
