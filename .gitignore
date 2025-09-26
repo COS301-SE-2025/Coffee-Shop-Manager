@@ -27,3 +27,4 @@ supabase/volumes/db/data
 venv
 API/package-lock.json
 koffieblik/package-lock.json
+docker-compose.yml

@@ -74,7 +74,7 @@ function isSameDay(a: Date, b: Date) {
 
 type TimeRange = "day" | "week" | "month" | "year";
 
-function rangeFilter(range: TimeRange) {
+function getRange(range: TimeRange) {
   const now = new Date();
   const to = endOfDay(now);
   let from = new Date();
@@ -92,6 +92,11 @@ function rangeFilter(range: TimeRange) {
     from = new Date(now);
     from.setFullYear(from.getFullYear() - 1);
   }
+  return { from, to };
+}
+
+function rangeFilter(range: TimeRange) {
+  const { from, to } = getRange(range);
   return (o: Order) => {
     const t = new Date(o.created_at);
     return t >= from && t <= to;
@@ -194,28 +199,73 @@ export default function QuickReport() {
     };
   }, [filtered]);
 
-  // Weekly chart (only sales & orders)
-  const weeklySeries = useMemo(() => {
-    const order = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-    const base = new Map(order.map((d) => [d, { day: d, sales: 0, orders: 0 }]));
+  // Main chart series: adapt to day/week/month/year
+  const chartSeries = useMemo(() => {
+    const { from, to } = getRange(timeRange);
+    const monthShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] as const;
+
+    let labels: string[] = [];
+    let keyOf = (d: Date) => "";
+
+    if (timeRange === "day") {
+      // 24 hourly buckets
+      labels = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, "0")}:00`);
+      keyOf = (d) => `${String(d.getHours()).padStart(2, "0")}:00`;
+    } else if (timeRange === "week") {
+      // Keep Mon..Sun view
+      labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+      const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
+      keyOf = (d) => {
+        const name = dayNames[d.getDay()];
+        return name === "Sun" ? "Sun" : name;
+      };
+    } else if (timeRange === "month") {
+      // Each day between from..to (inclusive)
+      const cur = startOfDay(new Date(from));
+      const end = startOfDay(new Date(to));
+      while (cur <= end) {
+        labels.push(`${String(cur.getDate()).padStart(2,"0")} ${monthShort[cur.getMonth()]}`);
+        cur.setDate(cur.getDate() + 1);
+      }
+      keyOf = (d) => `${String(d.getDate()).padStart(2,"0")} ${monthShort[d.getMonth()]}`;
+    } else {
+      // year → last 12 months (use Month YYYY to avoid collisions across years)
+      const end = new Date(to.getFullYear(), to.getMonth(), 1);
+      const start = new Date(end.getFullYear(), end.getMonth() - 11, 1);
+      const cur = new Date(start);
+      for (let i = 0; i < 12; i++) {
+        labels.push(`${monthShort[cur.getMonth()]} ${cur.getFullYear()}`);
+        cur.setMonth(cur.getMonth() + 1);
+      }
+      keyOf = (d) => `${monthShort[d.getMonth()]} ${d.getFullYear()}`;
+    }
+
+    const base = new Map(labels.map((l) => [l, { label: l, sales: 0, orders: 0 }]));
 
     for (const o of filtered) {
-      const d = new Date(o.created_at);
-      const dow = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"][d.getDay()];
-      const bucket = base.get(dow === "Sun" ? "Sun" : dow);
+      const k = keyOf(new Date(o.created_at));
+      const bucket = base.get(k);
       if (!bucket) continue;
       bucket.sales += o.total_price || 0;
       bucket.orders += 1;
     }
 
-    const arr = order.map((d) => base.get(d)!);
-    return arr.map((d) => ({
-      ...d,
-      value: selectedMetric === "orders" ? d.orders : Math.round(d.sales * 100) / 100,
-    }));
-  }, [filtered, selectedMetric]);
+    return labels.map((l) => {
+      const b = base.get(l)!;
+      return {
+        ...b,
+        value: selectedMetric === "orders" ? b.orders : Math.round(b.sales * 100) / 100,
+      };
+    });
+  }, [filtered, selectedMetric, timeRange]);
 
   const metricLabel = selectedMetric === "orders" ? "Orders" : "Sales (R)";
+  const RANGE_TITLES: Record<TimeRange, string> = {
+    day: "Today",
+    week: "This Week",
+    month: "This Month",
+    year: "This Year",
+  };
 
   // Product mix
   const productMix = useMemo(() => {
@@ -247,7 +297,7 @@ export default function QuickReport() {
     return pie;
   }, [filtered]);
 
-  // Hourly trends
+  // Hourly trends (separate small chart)
   const hourly = useMemo(() => {
     const slots = ["06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"];
     const buckets = new Map(slots.map((s) => [s, { time: s, orders: 0, revenue: 0 }]));
@@ -380,7 +430,7 @@ export default function QuickReport() {
         <div className="lg:col-span-2 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
           <div className="p-6 border-b border-amber-100 flex items-center justify-between">
             <h2 className="text-xl font-bold text-amber-900 flex items-center gap-2">
-              <span className="text-2xl">📈</span> Weekly Performance
+              <span className="text-2xl">📈</span> {RANGE_TITLES[timeRange]} Performance
             </h2>
             <div className="flex gap-2">
               {(["sales", "orders"] as const).map((metric) => (
@@ -400,14 +450,19 @@ export default function QuickReport() {
           </div>
           <div className="p-6">
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={weeklySeries}>
+              <AreaChart data={chartSeries}>
                 <defs>
                   <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
                     <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1} />
                   </linearGradient>
                 </defs>
-                <XAxis dataKey="day" axisLine={false} tickLine={false} />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  interval="preserveStartEnd"
+                />
                 <YAxis axisLine={false} tickLine={false} />
                 <Tooltip
                   contentStyle={{
@@ -421,7 +476,13 @@ export default function QuickReport() {
                   }
                   labelFormatter={(l) => `${metricLabel} • ${l}`}
                 />
-                <Area type="monotone" dataKey="value" stroke="#F59E0B" strokeWidth={3} fill="url(#colorGradient)" />
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke="#F59E0B"
+                  strokeWidth={3}
+                  fill="url(#colorGradient)"
+                />
               </AreaChart>
             </ResponsiveContainer>
           </div>
