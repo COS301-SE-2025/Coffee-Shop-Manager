@@ -40,12 +40,13 @@ export default function POSPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const dateInputStyle =
-    "p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
+    "p-3 border rounded-lg  focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
   const [customerName, setCustomerName] = useState("");
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
   const [offSetStart, setOffsetStart] = useState(0);
   const limit = 5; // items per page
+  const [statusFilter, setStatusFilter] = useState("pending");
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
@@ -86,7 +87,7 @@ export default function POSPage() {
           orderBy: "created_at",
           orderDirection: "desc",
           filters: {
-            status: "pending",
+            status: statusFilter,
           },
         }),
       });
@@ -111,8 +112,9 @@ export default function POSPage() {
 
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
-    fetchOrders();
-  }, [offSetStart]);
+  fetchOrders();
+}, [offSetStart, statusFilter]); // run when either changes
+
 
 
   // 🔄 run once on mount (or whenever API_BASE_URL changes)
@@ -240,7 +242,7 @@ export default function POSPage() {
         color: "var(--primary-3)",
       }}
     >
-      <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1>
+      {/* <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1> */}
 
       {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
         <input
@@ -368,6 +370,8 @@ export default function POSPage() {
               </tr>
             </tbody>
           </table> */}
+
+          {/* Heading */}
           <div
             className="p-6 border-b-2"
             style={{
@@ -375,29 +379,28 @@ export default function POSPage() {
               backgroundColor: "var(--primary-3)",
             }}
           >
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-              <div className="flex items-center gap-3">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "var(--primary-4)" }}
-                >
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    📋
-                  </span>
-                </div>
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: "var(--primary-2)" }}
-                >
-                  Recent Orders
-                </h2>
+            {/* Heading */}
+            <div className="flex items-center gap-3 mb-4">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{ backgroundColor: "var(--primary-4)" }}
+              >
+                <span className="text-sm" style={{ color: "var(--primary-2)" }}>
+                  📋
+                </span>
               </div>
+              <h2
+                className="text-base font-bold"
+                style={{ color: "var(--primary-2)" }}
+              >
+                Orders
+              </h2>
+            </div>
 
+            {/* Top row: Pagination + Filter */}
+            <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-6 text-xs">
               {/* Pagination controls */}
-              <div className="flex justify-end items-center gap-4 mt-4 px-6">
+              <div className="flex items-center gap-3">
                 <button
                   onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
                   disabled={offSetStart === 0}
@@ -409,11 +412,11 @@ export default function POSPage() {
                     opacity: offSetStart === 0 ? 0.5 : 1,
                   }}
                 >
-                  ⬅ Prev
+                  ⬅
                 </button>
 
                 <span style={{ color: "var(--primary-2)" }}>
-                  Showing {offSetStart + 1} – {offSetStart + limit}
+                  {offSetStart + 1} – {offSetStart + limit}
                 </span>
 
                 <button
@@ -425,16 +428,14 @@ export default function POSPage() {
                     backgroundColor: "var(--primary-3)",
                   }}
                 >
-                  Next ➡
+                  ➡
                 </button>
               </div>
-
-
 
               {/* Filter */}
               <div className="flex flex-wrap gap-3">
                 <select
-                  className={`${dateInputStyle} text-[var(--primary-2)]`}
+                  className={`${dateInputStyle} text-xs text-[var(--primary-2)]`}
                   style={{
                     backgroundColor: "var(--primary-3)",
                     borderColor: "var(--primary-4)",
@@ -485,7 +486,56 @@ export default function POSPage() {
                 )}
               </div>
             </div>
+
+            {/* Status Buttons Row */}
+            <div className="flex justify-start gap-3 mt-6">
+              <button
+                className="px-4 py-1 rounded-lg border text-xs font-medium"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+                onClick={() => {
+                  setStatusFilter("pending");
+                  setOffsetStart(0);
+                }}
+              >
+                pending
+              </button>
+              <button
+                className="px-4 py-1 rounded-lg border text-xs font-medium"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+                onClick={() => {
+                  setStatusFilter("completed");
+                  setOffsetStart(0);
+                }}
+              >
+                completed
+              </button>
+              <button
+                className="px-4 py-1 rounded-lg border text-xs font-medium"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+                onClick={() => {
+                  setStatusFilter("cancelled");
+                  setOffsetStart(0);
+                }}
+              >
+                cancelled
+              </button>
+            </div>
           </div>
+
+
+
           {loading || loadingOrders ? (
             <Loader />
           ) : (
@@ -493,12 +543,12 @@ export default function POSPage() {
               className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
               style={{ backgroundColor: "var(--primary-3)" }}
             >
-              {/* Heading */}
+
 
 
               {/* Table */}
               <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
+                <table className="min-w-full text-xs">
                   <thead
                     className="border-b"
                     style={{
