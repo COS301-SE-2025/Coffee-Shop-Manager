@@ -72,11 +72,20 @@ export default function POSPage() {
     setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/get_orders`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
+        body: JSON.stringify({
+          offset: 0,      // starting point (e.g. page 1)
+          limit: 10,      // how many orders to fetch
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            status: "pending", // optional filter example
+          },
+        }),
       });
 
       const data = await response.json();
