@@ -44,6 +44,8 @@ export default function POSPage() {
   const [customerName, setCustomerName] = useState("");
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
+  const [offSetStart, setOffsetStart] = useState(0);
+  const limit = 5; // items per page
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
@@ -78,12 +80,12 @@ export default function POSPage() {
         },
         credentials: "include",
         body: JSON.stringify({
-          offset: 0,      // starting point (e.g. page 1)
-          limit: 10,      // how many orders to fetch
+          offset: offSetStart,
+          limit: limit,
           orderBy: "created_at",
           orderDirection: "desc",
           filters: {
-            status: "pending", // optional filter example
+            status: "pending",
           },
         }),
       });
@@ -91,6 +93,7 @@ export default function POSPage() {
       const data = await response.json();
 
       if (response.ok) {
+        console.log("Fetched data:", data);
         setOrders(data.orders);
       } else {
         console.warn(
@@ -104,6 +107,12 @@ export default function POSPage() {
       setLoading(false);
     }
   };
+
+  //when the offsetStart changes it will refecth the function
+  useEffect(() => {
+    fetchOrders();
+  }, [offSetStart]);
+
 
   // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
@@ -137,32 +146,32 @@ export default function POSPage() {
   const now = new Date();
   let filteredOrders = orders;
 
-  if (filter === "Today") {
-    filteredOrders = orders.filter(
-      (order) =>
-        new Date(order.created_at).toDateString() === now.toDateString(),
-    );
-  } else if (filter === "This Week") {
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    filteredOrders = orders.filter(
-      (order) => new Date(order.created_at) >= startOfWeek,
-    );
-  } else if (filter === "This Month") {
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    filteredOrders = orders.filter(
-      (order) => new Date(order.created_at) >= startOfMonth,
-    );
-  } else if (filter === "Custom Range" && startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+  // if (filter === "Today") {
+  //   filteredOrders = orders.filter(
+  //     (order) =>
+  //       new Date(order.created_at).toDateString() === now.toDateString(),
+  //   );
+  // } else if (filter === "This Week") {
+  //   const startOfWeek = new Date(now);
+  //   startOfWeek.setDate(now.getDate() - now.getDay());
+  //   filteredOrders = orders.filter(
+  //     (order) => new Date(order.created_at) >= startOfWeek,
+  //   );
+  // } else if (filter === "This Month") {
+  //   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  //   filteredOrders = orders.filter(
+  //     (order) => new Date(order.created_at) >= startOfMonth,
+  //   );
+  // } else if (filter === "Custom Range" && startDate && endDate) {
+  //   const start = new Date(startDate);
+  //   const end = new Date(endDate);
+  //   end.setHours(23, 59, 59, 999);
 
-    filteredOrders = orders.filter((order) => {
-      const orderDate = new Date(order.created_at);
-      return orderDate >= start && orderDate <= end;
-    });
-  }
+  //   filteredOrders = orders.filter((order) => {
+  //     const orderDate = new Date(order.created_at);
+  //     return orderDate >= start && orderDate <= end;
+  //   });
+  // }
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -393,6 +402,41 @@ export default function POSPage() {
                       Recent Orders
                     </h2>
                   </div>
+
+                  {/* Pagination controls */}
+                  <div className="flex justify-end items-center gap-4 mt-4 px-6">
+                    <button
+                      onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
+                      disabled={offSetStart === 0}
+                      className="px-3 py-1 rounded-lg border"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: offSetStart === 0 ? "gray" : "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                        opacity: offSetStart === 0 ? 0.5 : 1,
+                      }}
+                    >
+                      ⬅ Prev
+                    </button>
+
+                    <span style={{ color: "var(--primary-2)" }}>
+                      Showing {offSetStart + 1} – {offSetStart + limit}
+                    </span>
+
+                    <button
+                      onClick={() => setOffsetStart((prev) => prev + limit)}
+                      className="px-3 py-1 rounded-lg border"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                      }}
+                    >
+                      Next ➡
+                    </button>
+                  </div>
+
+
 
                   {/* Filter */}
                   <div className="flex flex-wrap gap-3">
