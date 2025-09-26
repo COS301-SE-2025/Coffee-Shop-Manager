@@ -94,8 +94,9 @@ export default function UserPage() {
             onClick={() => setActiveTab("profile")}
             className={`flex-1 py-4 px-6 text-center font-medium ${
               activeTab === "profile"
-                ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+  ? "text-brown-700 border-b-2 border-brown-700"
+  : "text-gray-500 hover:text-gray-700"
+
             }`}
           >
             My Profile
@@ -103,9 +104,10 @@ export default function UserPage() {
           <button
             onClick={() => setActiveTab("leaderboard")}
             className={`flex-1 py-4 px-6 text-center font-medium ${
-              activeTab === "leaderboard"
-                ? "bg-blue-50 text-blue-600 border-b-2 border-blue-600"
-                : "text-gray-500 hover:text-gray-700"
+             activeTab === "leaderboard"
+  ? "text-brown-700 border-b-2 border-brown-700"
+  : "text-gray-500 hover:text-gray-700"
+
             }`}
           >
             Leaderboard 
