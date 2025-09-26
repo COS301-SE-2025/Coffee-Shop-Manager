@@ -234,7 +234,62 @@ export default function UserPage() {
             </div>
           </div>
 
-         
+          {/* Leaderboard */}
+          <div className="bg-white rounded-lg shadow-md">
+            <div className="p-6 border-b">
+              <h3 className="text-xl font-bold text-gray-900">
+                Top users 
+              </h3>
+            </div>
+            <div className="divide-y">
+              {sortedLeaderboard.slice(0, 10).map((user, index) => {
+                const isCurrentUser = user.username === username;
+                const displayRank = index + 1;
+                
+                return (
+                  <div
+                    key={user.id}
+                    className={`p-4 flex items-center justify-between hover:bg-gray-50 ${
+                      isCurrentUser ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                    }`}
+                  >
+                    <div className="flex items-center space-x-4">
+                      <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
+                        {getRankIcon(displayRank)}
+                      </div>
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                        <span className="text-white font-bold">
+                          {user.username.charAt(0).toUpperCase()}
+                        </span>
+                      </div>
+                      <div>
+                        <div className="font-medium text-gray-900">
+                          {user.username}
+                          {isCurrentUser && (
+                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                              You
+                            </span>
+                          )}
+                        </div>
+                        <div className="text-sm text-gray-500">
+                          Loves {user.favoritedrink}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <div className="font-bold text-gray-900">
+                        {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {leaderboardFilter === "orders" ? "orders" : "day streak"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
          
         </>
       )}
