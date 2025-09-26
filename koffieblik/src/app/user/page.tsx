@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useState } from "react";
@@ -9,40 +10,153 @@ import fiveOrdersBadge from "../badges/5orders.png";
 import tenOrdersBadge from "../badges/10orders.png";
 
 //api url
- const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+interface LeaderboardUser {
+  user_id: string;
+  total_orders: number;
+  current_streak?: number;
+  favorite_drink?: string;
+  rank?: number;
+  id: string;
+  username: string;
+  totalOrders: number;
+  currentStreak: number;
+  favoritedrink: string;
+}
 
 export default function UserPage() {
   const [username, setUsername] = useState("Guest");
   const [userStats, setUserStats] = useState({
-    totalOrders: 1,
+    totalOrders: 0,
     currentStreak: 0,
     favoritedrink: "None",
     memberSince: "2025"
   });
   const [activeTab, setActiveTab] = useState("profile");
+  const [isClient, setIsClient] = useState(false);
 
-  // Mock leaderboard data - in a real app, this would come from your backend
-  const [leaderboard, setLeaderboard] = useState([
-    { id: 1, username: "user1", totalOrders: 156, currentStreak: 12, favoritedrink: "Cappuccino", rank: 1 },
-    { id: 2, username: "user2", totalOrders: 143, currentStreak: 8, favoritedrink: "Espresso", rank: 2 },
-    { id: 3, username: "user3", totalOrders: 128, currentStreak: 15, favoritedrink: "Latte", rank: 3 },
-    { id: 4, username: "user4", totalOrders: 112, currentStreak: 5, favoritedrink: "Mocha", rank: 4 },
-    { id: 5, username: "user5", totalOrders: 98, currentStreak: 7, favoritedrink: "Frappuccino", rank: 5 },
-    { id: 6, username: "user6", totalOrders: 87, currentStreak: 3, favoritedrink: "Americano", rank: 6 },
-    { id: 7, username: "user7", totalOrders: 76, currentStreak: 9, favoritedrink: "Macchiato", rank: 7 },
-    { id: 8, username: "user8", totalOrders: 65, currentStreak: 4, favoritedrink: "Cold Brew", rank: 8 },
-    { id: 9, username: "user9", totalOrders: 54, currentStreak: 2, favoritedrink: "Green Tea", rank: 9 },
-    { id: 10, username: "user10", totalOrders: 43, currentStreak: 1, favoritedrink: "Decaf", rank: 10 }
-  ]);
+  // User stats loading state
+  const [statsLoading, setStatsLoading] = useState(false);
+
+  // Real leaderboard data from API
+  const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
+  const [leaderboardLoading, setLeaderboardLoading] = useState(false);
+  const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
   const [leaderboardFilter, setLeaderboardFilter] = useState("orders");
 
   useEffect(() => {
+    // Set client flag to true once component mounts on client
+    setIsClient(true);
+    
+    // Only access localStorage in the browser
     const storedUsername = localStorage.getItem("username");
     if (storedUsername) {
       setUsername(storedUsername);
     }
+
+    // Fetch user stats on mount
+    fetchUserStats();
   }, []);
+
+  // Fetch user stats from API
+  const fetchUserStats = async () => {
+    setStatsLoading(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/stats`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success && data.stats) {
+        // Calculate member since year from account age
+        const currentDate = new Date();
+        const accountCreationDate = new Date();
+        accountCreationDate.setDate(currentDate.getDate() - data.stats.account_age_days);
+       // console.log("age test" + data.stats.account_age_days);
+        const memberSinceYear = accountCreationDate.getFullYear();
+
+        setUserStats({
+          totalOrders: data.stats.total_orders,
+          currentStreak: data.stats.current_streak,
+          favoritedrink: "None", // Keep as mock 
+          memberSince: memberSinceYear.toString()
+        });
+      } else {
+        console.warn(" Failed to fetch user stats:", data.error || "Unknown error");
+      }
+    } catch (error: any) {
+      console.error(" Error fetching user stats:", error);
+    } finally {
+      setStatsLoading(false);
+    }
+  };
+
+  // Fetch leaderboard data from API
+  const fetchLeaderboard = async () => {
+    setLeaderboardLoading(true);
+    setLeaderboardError(null);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/leaderboard`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        if (data.success && data.leaderboard) {
+          // Add rank to each user and map to expected format
+          const leaderboardWithRank = data.leaderboard.map((user: any, index: number) => ({
+            user_id: user.user_id,
+            total_orders: user.total_orders,
+            current_streak: user.current_streak || 0,
+
+            favorite_drink: user.favorite_drink || "Unknown",
+            // Mapped properties for easier access
+            id: user.user_id,
+            username: user.user_id.substring(0, 8), // Use first 8 chars of user_id as display name
+            totalOrders: user.total_orders,
+            currentStreak: user.current_streak || 0,
+            favoritedrink: user.favorite_drink || "Unknown",
+            rank: index + 1
+          }));
+          
+          setLeaderboard(leaderboardWithRank);
+        } else {
+          throw new Error(data.error || "Failed to fetch leaderboard");
+        }
+      } else {
+        console.warn(" Failed to fetch leaderboard:", data.error || "Unknown error");
+        setLeaderboardError(data.error || "Failed to load leaderboard");
+        setLeaderboard([]);
+      }
+    } catch (error: any) {
+      console.error(" Network or server error:", error);
+      setLeaderboardError(error.message || "Failed to load leaderboard");
+      setLeaderboard([]);
+    } finally {
+      setLeaderboardLoading(false);
+    }
+  };
+
+  // Fetch leaderboard when component mounts or when switching to leaderboard tab
+  useEffect(() => {
+    if (activeTab === "leaderboard") {
+      fetchLeaderboard();
+    }
+  }, [activeTab]);
 
   // Sort leaderboard based on selected filter
   const sortedLeaderboard = [...leaderboard].sort((a, b) => {
@@ -56,8 +170,8 @@ export default function UserPage() {
 
   // Find current user's rank
   const getCurrentUserRank = () => {
-    const currentUser = sortedLeaderboard.find(user => user.username === username);
-    if (currentUser) return currentUser.rank;
+    
+    if (!isClient) return 0;
     
     // If user not in leaderboard, calculate based on their stats
     const usersAbove = sortedLeaderboard.filter(user => 
@@ -75,7 +189,6 @@ export default function UserPage() {
   ];
 
   const getRankIcon = (rank: number): string => {
- 
     return `#${rank}`;
   };
 
@@ -95,9 +208,8 @@ export default function UserPage() {
             onClick={() => setActiveTab("profile")}
             className={`flex-1 py-4 px-6 text-center font-medium ${
               activeTab === "profile"
-  ? "text-brown-700 border-b-2 border-brown-700"
-  : "text-gray-500 hover:text-gray-700"
-
+                ? "text-brown-700 border-b-2 border-brown-700"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             My Profile
@@ -105,10 +217,9 @@ export default function UserPage() {
           <button
             onClick={() => setActiveTab("leaderboard")}
             className={`flex-1 py-4 px-6 text-center font-medium ${
-             activeTab === "leaderboard"
-  ? "text-brown-700 border-b-2 border-brown-700"
-  : "text-gray-500 hover:text-gray-700"
-
+              activeTab === "leaderboard"
+                ? "text-brown-700 border-b-2 border-brown-700"
+                : "text-gray-500 hover:text-gray-700"
             }`}
           >
             Leaderboard 
@@ -130,31 +241,42 @@ export default function UserPage() {
                   <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <div className={`text-2xl font-bold ${getRankColor(getCurrentUserRank())}`}>
-                  {getRankIcon(getCurrentUserRank())}
-                </div>
-                <div className="text-sm text-gray-500">Current Rank</div>
-              </div>
+              
             </div>
           </div>
 
           {/* Stats */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="text-3xl font-bold text-blue-600 mb-2">
-                {userStats.totalOrders}
-              </div>
-              <div className="text-gray-600">Total Orders</div>
+              {statsLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-300 rounded w-20 mx-auto"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">
+                    {userStats.totalOrders}
+                  </div>
+                  <div className="text-gray-600">Total Orders</div>
+                </>
+              )}
             </div>
             
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="text-3xl font-bold text-green-600 mb-2">
-                {userStats.currentStreak}
-                
-              </div>
-              <div className="text-gray-600">Current Streak</div>
-              
+              {statsLoading ? (
+                <div className="animate-pulse">
+                  <div className="h-8 bg-gray-300 rounded mb-2"></div>
+                  <div className="h-4 bg-gray-300 rounded w-24 mx-auto"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="text-3xl font-bold text-green-600 mb-2">
+                    {userStats.currentStreak}
+                  </div>
+                  <div className="text-gray-600">Current Streak</div>
+                </>
+              )}
             </div>
             
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
@@ -213,10 +335,7 @@ export default function UserPage() {
 
       {activeTab === "leaderboard" && (
         <>
-         
-
           {/* Your Position */}
-          {/* User Info Card */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -240,60 +359,102 @@ export default function UserPage() {
           {/* Leaderboard */}
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b">
-              <h3 className="text-xl font-bold text-gray-900">
-                Top users 
-              </h3>
-            </div>
-            <div className="divide-y">
-              {sortedLeaderboard.slice(0, 10).map((user, index) => {
-                const isCurrentUser = user.username === username;
-                const displayRank = index + 1;
-                
-                return (
-                  <div
-                    key={user.id}
-                    className={`p-4 flex items-center justify-between hover:bg-gray-50 ${
-                      isCurrentUser ? "bg-blue-50 border-l-4 border-blue-500" : ""
-                    }`}
+              <div className="flex items-center justify-between">
+                <h3 className="text-xl font-bold text-gray-900">
+                  Top Users
+                </h3>
+                {leaderboardLoading && (
+                  <div className="text-sm text-gray-500">Loading...</div>
+                )}
+                {!leaderboardLoading && leaderboard.length > 0 && (
+                  <button
+                    onClick={fetchLeaderboard}
+                    className="text-sm text-blue-600 hover:text-blue-800"
                   >
-                    <div className="flex items-center space-x-4">
-                      <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
-                        {getRankIcon(displayRank)}
-                      </div>
-                      <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                        <span className="text-white font-bold">
-                          {user.username.charAt(0).toUpperCase()}
-                        </span>
-                      </div>
-                      <div>
-                        <div className="font-medium text-gray-900">
-                          {user.username}
-                          {isCurrentUser && (
-                            <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                              You
-                            </span>
-                          )}
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          Loves {user.favoritedrink}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <div className="font-bold text-gray-900">
-                        {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
-                      </div>
-                      <div className="text-xs text-gray-500">
-                        {leaderboardFilter === "orders" ? "orders" : "day streak"}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+                    Refresh
+                  </button>
+                )}
+              </div>
             </div>
-          </div>
+            
+            {leaderboardError && (
+              <div className="p-6 text-center">
+                <div className="text-red-600 mb-2">Error loading leaderboard</div>
+                <div className="text-sm text-gray-500 mb-4">{leaderboardError}</div>
+                <button
+                  onClick={fetchLeaderboard}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Try Again
+                </button>
+              </div>
+            )}
 
-         
+            {leaderboardLoading && (
+              <div className="p-6 text-center">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <div className="mt-2 text-gray-500">Loading leaderboard...</div>
+              </div>
+            )}
+
+            {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
+              <div className="p-6 text-center text-gray-500">
+                No leaderboard data available
+              </div>
+            )}
+
+            {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
+              <div className="divide-y">
+                {sortedLeaderboard.slice(0, 10).map((user, index) => {
+                  // Only check current user after client hydration
+                  const currentUserId = isClient 
+                    ? (localStorage.getItem("userId") || localStorage.getItem("user_id"))
+                    : null;
+                  const isCurrentUser = user.user_id === currentUserId;
+                  const displayRank = index + 1;
+                  
+                  return (
+                    <div
+                      key={user.user_id}
+                      className={`p-4 flex items-center justify-between hover:bg-gray-50 ${
+                        isCurrentUser ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                      }`}
+                    >
+                      <div className="flex items-center space-x-4">
+                        <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
+                          {getRankIcon(displayRank)}
+                        </div>
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                          <span className="text-white font-bold">
+                            {user.username.charAt(0).toUpperCase()}
+                          </span>
+                        </div>
+                        <div>
+                          <div className="font-medium text-gray-900">
+                            {user.username}
+                            {isCurrentUser && (
+                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                You
+                              </span>
+                            )}
+                          </div>
+                          
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold text-gray-900">
+                          {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
+                        </div>
+                        <div className="text-xs text-gray-500">
+                          {leaderboardFilter === "orders" ? "orders" : "day streak"}
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>
