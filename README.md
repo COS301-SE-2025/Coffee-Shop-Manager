@@ -20,6 +20,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 - 👥 [User Manual Website V2](docs/User_Manual_V2.pdf)
 - 📱 [User Manual Mobile App](docs/DieKoffieBlikApp_User_Manual.pdf)
 - ✅ [Coding Standards Document](docs/DieKoffieBlik_Coding_Standards.pdf)
+- 🛠 [Technical Installation](docs/Technical_installation.pdf)
 
 ---
 

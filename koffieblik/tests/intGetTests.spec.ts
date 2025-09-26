@@ -1,7 +1,7 @@
 import { test, expect, request } from "@playwright/test";
 
 const BASE_URL = "http://localhost:5000";
-const email = "test0@example.com";
+const email = "user9@coffee.com";
 const password = "P@ssword123";
 
 let tokenCookie: string = "";

@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { getTabs } from "@/constants/tabs";
+import Loader from "../loaders/loader";
 
 interface Order {
   id: string;
@@ -29,6 +30,7 @@ export default function DashboardPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -38,8 +40,10 @@ export default function DashboardPage() {
   }, [router]);
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
   useEffect(() => {
     async function fetchOrders() {
+      setLoading(true);
       try {
         const response = await fetch(`${API_BASE_URL}/get_orders`, {
           method: "GET",
@@ -52,9 +56,7 @@ export default function DashboardPage() {
         const data = await response.json();
 
         if (response.ok) {
-          // console.log('Orders fetched:', data.orders);
           setOrders(data.orders);
-          // console.log(orders);
         } else {
           console.warn(
             "⚠️ Failed to fetch orders:",
@@ -63,39 +65,25 @@ export default function DashboardPage() {
         }
       } catch (error) {
         console.error("❌ Network or server error:", error);
+      } finally {
+        setLoading(false);
       }
     }
 
     fetchOrders();
-  }, []);
+  }, [API_BASE_URL]);
 
-  // Route to inventory
+  // Route to different pages based on selected tab
   useEffect(() => {
     if (selectedTab === "Inventory") {
       router.push("/inventory");
-    }
-  }, [selectedTab, router]);
-
-  useEffect(() => {
-    if (selectedTab === "pos") {
+    } else if (selectedTab === "pos") {
       router.push("/pos");
-    }
-  }, [selectedTab, router]);
-
-  useEffect(() => {
-    if (selectedTab === "manage") {
+    } else if (selectedTab === "manage") {
       router.push("/manage");
-    }
-  }, [selectedTab, router]);
-
-  useEffect(() => {
-    if (selectedTab === "Reports") {
+    } else if (selectedTab === "Reports") {
       router.push("/reports");
-    }
-  }, [selectedTab, router]);
-
-  useEffect(() => {
-    if (selectedTab === "Help") {
+    } else if (selectedTab === "Help") {
       router.push("/help");
     }
   }, [selectedTab, router]);
@@ -109,6 +97,7 @@ export default function DashboardPage() {
     color?: string;
   };
 
+  // Filter orders based on selected filter
   const now = new Date();
   let filteredOrders = orders;
 
@@ -139,6 +128,7 @@ export default function DashboardPage() {
     });
   }
 
+  // Calculate metrics
   const totalSales = filteredOrders
     .filter((order) => order.status === "completed")
     .reduce((sum, order) => sum + order.total_price, 0);
@@ -157,17 +147,16 @@ export default function DashboardPage() {
       }
     }
 
-    return (
-      Object.entries(productCountMap).sort((a, b) => b[1] - a[1])[0]?.[0] ||
-      "N/A"
+    const sortedProducts = Object.entries(productCountMap).sort(
+      ([, a], [, b]) => b - a,
     );
-  })();
 
-  const stockAlerts = "Milk Low";
+    return sortedProducts.length > 0 ? sortedProducts[0][0] : "N/A";
+  })();
 
   const metrics: Metric[] = [
     {
-      label: "Total Sales Today",
+      label: "Total Sales",
       value: `R${totalSales.toFixed(2)}`,
       color: "var(--primary-2)",
     },
@@ -177,81 +166,30 @@ export default function DashboardPage() {
       color: "var(--primary-2)",
     },
     {
-      label: "Top-Selling Item",
+      label: "Top Selling Product",
       value: topSelling,
       color: "var(--primary-2)",
     },
     {
-      label: "Stock Alerts",
-      value: stockAlerts,
-      color: "#dc2626",
+      label: "Total Orders",
+      value: filteredOrders.length.toString(),
+      color: "var(--primary-2)",
     },
   ];
 
-  // const orders: Order[] = [
-  //     { id: '#1001', customer: 'Thando M.', items: ['Latte x2'], total: 'R70', status: 'Completed', date: '2025-05-26' },
-  //     { id: '#1002', customer: 'Nomsa L.', items: ['Espresso'], total: 'R25', status: 'Pending', date: '2025-05-26' },
-  //     { id: '#1003', customer: 'Sipho D.', items: ['Cappuccino x2'], total: 'R80', status: 'Completed', date: '2025-05-25' },
-  //     { id: '#1004', customer: 'Lerato B.', items: ['Flat White'], total: 'R35', status: 'Cancelled', date: '2025-05-25' },
-  //     { id: '#1005', customer: 'Kabelo T.', items: ['Mocha'], total: 'R40', status: 'Pending', date: '2025-05-24' },
-  //     { id: '#1006', customer: 'Zanele K.', items: ['Americano x2'], total: 'R50', status: 'Completed', date: '2025-05-24' },
-  //     { id: '#1007', customer: 'Nandi R.', items: ['Chai Latte', 'Brownie'], total: 'R60', status: 'Completed', date: '2025-05-24' },
-  //     { id: '#1008', customer: 'Tshepo N.', items: ['Cortado'], total: 'R28', status: 'Cancelled', date: '2025-05-23' },
-  //     { id: '#1009', customer: 'Ayanda S.', items: ['Latte', 'Muffin'], total: 'R55', status: 'Completed', date: '2025-05-23' },
-  //     { id: '#1010', customer: 'Boitumelo J.', items: ['Iced Coffee', 'Croissant'], total: 'R65', status: 'Pending', date: '2025-05-22' },
-  //     { id: '#1011', customer: 'Dineo M.', items: ['Macchiato'], total: 'R29', status: 'Completed', date: '2025-05-22' },
-  //     { id: '#1012', customer: 'Sizwe H.', items: ['Cappuccino x3'], total: 'R120', status: 'Pending', date: '2025-05-21' },
-  //     { id: '#1013', customer: 'Naledi F.', items: ['Mocha', 'Croissant'], total: 'R60', status: 'Completed', date: '2025-05-21' },
-  //     { id: '#1014', customer: 'Bongani P.', items: ['Flat White x2'], total: 'R70', status: 'Cancelled', date: '2025-05-20' },
-  //     { id: '#1015', customer: 'Lelethu D.', items: ['Espresso x2'], total: 'R50', status: 'Completed', date: '2025-05-20' },
-  //     {
-  //         id: '#1000',
-  //         customer: 'Big John',
-  //         items: [
-  //             'Latte', 'Espresso', 'Cappuccino', 'Flat White', 'Mocha',
-  //             'Americano', 'Chai Latte', 'Macchiato', 'Iced Coffee', 'Croissant'
-  //         ],
-  //         total: 'R320',
-  //         status: 'Completed',
-  //         date: '2025-05-26'
-  //     },
-  // ];
-
   const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium";
-      case "Pending":
-        return "text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium";
-      case "Cancelled":
-        return "text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium";
+    const baseClasses = "px-3 py-1 rounded-full text-xs font-semibold";
+    switch (status.toLowerCase()) {
+      case "completed":
+        return `${baseClasses} bg-green-100 text-green-800`;
+      case "pending":
+        return `${baseClasses} bg-yellow-100 text-yellow-800`;
+      case "cancelled":
+        return `${baseClasses} bg-red-100 text-red-800`;
       default:
-        return "text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium";
+        return `${baseClasses} bg-gray-100 text-gray-800`;
     }
   };
-
-  const getTabIcon = (tab: string) => {
-    switch (tab) {
-      case "Dashboard":
-        return "📊";
-      case "Inventory":
-        return "📦";
-      case "Reports":
-        return "📈";
-      case "pos":
-        return "🛒";
-      case "manage":
-        return "⚙️";
-      case "Help":
-        return "❓";
-      case "Logout":
-        return "🚪";
-      default:
-        return "👤";
-    }
-  };
-
-  const tabs = username ? getTabs(username) : [];
 
   return (
     <main className="relative min-h-full bg-transparent">
@@ -270,14 +208,16 @@ export default function DashboardPage() {
                   <h2 className="text-sm mb-2 font-medium text-[var(--primary-2)]">
                     {metric.label}
                   </h2>
-
-                  <p
-                    className="text-3xl font-bold"
-                    style={{ color: metric.color }}
-                  >
-                    {metric.value}
-                  </p>
-
+                  {loading ? (
+                    <Loader />
+                  ) : (
+                    <p
+                      className="text-3xl font-bold"
+                      style={{ color: metric.color }}
+                    >
+                      {metric.value}
+                    </p>
+                  )}
                   <div
                     className="mt-3 h-1 rounded-full"
                     style={{ backgroundColor: "var(--primary-4)" }}
@@ -287,176 +227,178 @@ export default function DashboardPage() {
             </section>
 
             {/* Orders Section */}
-            <section
-              className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
-              style={{ backgroundColor: "var(--primary-3)" }}
-            >
-              {/* Heading */}
-              <div
-                className="p-6 border-b-2"
-                style={{
-                  borderColor: "var(--primary-4)", // more contrast
-                  backgroundColor: "var(--primary-3)",
-                }}
+            {loading ? (
+              <Loader />
+            ) : (
+              <section
+                className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
+                style={{ backgroundColor: "var(--primary-3)" }}
               >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div
-                      className="w-8 h-8 rounded-lg flex items-center justify-center"
-                      style={{ backgroundColor: "var(--primary-4)" }}
-                    >
-                      <span
-                        className="text-sm"
-                        style={{ color: "var(--primary-2)" }}
+                {/* Heading */}
+                <div
+                  className="p-6 border-b-2"
+                  style={{
+                    borderColor: "var(--primary-4)",
+                    backgroundColor: "var(--primary-3)",
+                  }}
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <div
+                        className="w-8 h-8 rounded-lg flex items-center justify-center"
+                        style={{ backgroundColor: "var(--primary-4)" }}
                       >
-                        📋
-                      </span>
-                    </div>
-
-                    <h2
-                      className="text-xl font-bold"
-                      style={{ color: "var(--primary-2)" }}
-                    >
-                      Recent Orders
-                    </h2>
-                  </div>
-
-                  {/* Filter */}
-                  <div className="flex flex-wrap gap-3">
-                    <select
-                      className={`${dateInputStyle} text-[var(--primary-2)]`}
-                      style={{
-                        backgroundColor: "var(--primary-3)",
-                        borderColor: "var(--primary-4)",
-                        boxShadow: "0 0 0 0 transparent",
-                      }}
-                      value={filter}
-                      onChange={(e) => setFilter(e.target.value)}
-                    >
-                      <option>Today</option>
-                      <option>This Week</option>
-                      <option>This Month</option>
-                      <option>Custom Range</option>
-                    </select>
-
-                    {filter === "Custom Range" && (
-                      <>
-                        <input
-                          type="date"
-                          className={dateInputStyle}
-                          value={startDate}
-                          onChange={(e) => setStartDate(e.target.value)}
-                          style={{
-                            backgroundColor: "var(--primary-3)",
-                            borderColor: "var(--primary-4)",
-                            color: "var(--primary-2)",
-                            boxShadow: "0 0 0 0 transparent",
-                          }}
-                        />
                         <span
-                          className="flex items-center font-medium"
+                          className="text-sm"
                           style={{ color: "var(--primary-2)" }}
                         >
-                          to
+                          📋
                         </span>
-                        <input
-                          type="date"
-                          className={dateInputStyle}
-                          value={endDate}
-                          onChange={(e) => setEndDate(e.target.value)}
-                          style={{
-                            backgroundColor: "var(--primary-3)",
-                            borderColor: "var(--primary-4)",
-                            color: "var(--primary-2)",
-                            boxShadow: "0 0 0 0 transparent",
-                          }}
-                        />
-                      </>
-                    )}
+                      </div>
+                      <h2
+                        className="text-xl font-bold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Recent Orders
+                      </h2>
+                    </div>
+
+                    {/* Filter */}
+                    <div className="flex flex-wrap gap-3">
+                      <select
+                        className={`${dateInputStyle} text-[var(--primary-2)]`}
+                        style={{
+                          backgroundColor: "var(--primary-3)",
+                          borderColor: "var(--primary-4)",
+                          boxShadow: "0 0 0 0 transparent",
+                        }}
+                        value={filter}
+                        onChange={(e) => setFilter(e.target.value)}
+                      >
+                        <option>Today</option>
+                        <option>This Week</option>
+                        <option>This Month</option>
+                        <option>Custom Range</option>
+                      </select>
+
+                      {filter === "Custom Range" && (
+                        <>
+                          <input
+                            type="date"
+                            className={dateInputStyle}
+                            value={startDate}
+                            onChange={(e) => setStartDate(e.target.value)}
+                            style={{
+                              backgroundColor: "var(--primary-3)",
+                              borderColor: "var(--primary-4)",
+                              color: "var(--primary-2)",
+                              boxShadow: "0 0 0 0 transparent",
+                            }}
+                          />
+                          <span
+                            className="flex items-center font-medium"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            to
+                          </span>
+                          <input
+                            type="date"
+                            className={dateInputStyle}
+                            value={endDate}
+                            onChange={(e) => setEndDate(e.target.value)}
+                            style={{
+                              backgroundColor: "var(--primary-3)",
+                              borderColor: "var(--primary-4)",
+                              color: "var(--primary-2)",
+                              boxShadow: "0 0 0 0 transparent",
+                            }}
+                          />
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm">
-                  <thead
-                    className="border-b"
-                    style={{
-                      backgroundColor: "var(--primary-3)",
-                      borderColor: "var(--primary-2)",
-                    }}
-                  >
-                    <tr>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Order #
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Items
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Total
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Status
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Date
-                      </th>
-                    </tr>
-                  </thead>
-
-                  <tbody
-                    className="divide-y text-[var(--primary-3)]"
-                    style={{
-                      backgroundColor: "var(--primary-2)",
-                      borderColor: "var(--primary-3)",
-                    }}
-                  >
-                    {filteredOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td className="px-6 py-4 font-medium">
-                          {order.number}
-                        </td>
-                        <td className="px-6 py-4">
-                          {order.order_products
-                            .map((p) => `${p.products.name} x${p.quantity}`)
-                            .join(", ")}
-                        </td>
-                        <td className="px-6 py-4 font-semibold">
-                          R{order.total_price}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={getStatusStyle(order.status)}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {new Date(order.created_at).toLocaleDateString(
-                            "en-ZA",
-                          )}
-                        </td>
+                {/* Table */}
+                <div className="overflow-x-auto">
+                  <table className="min-w-full text-sm">
+                    <thead
+                      className="border-b"
+                      style={{
+                        backgroundColor: "var(--primary-3)",
+                        borderColor: "var(--primary-2)",
+                      }}
+                    >
+                      <tr>
+                        <th
+                          className="text-left px-6 py-4 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Order #
+                        </th>
+                        <th
+                          className="text-left px-6 py-4 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Items
+                        </th>
+                        <th
+                          className="text-left px-6 py-4 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Total
+                        </th>
+                        <th
+                          className="text-left px-6 py-4 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="text-left px-6 py-4 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Date
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
+                    </thead>
+                    <tbody
+                      className="divide-y text-[var(--primary-3)]"
+                      style={{
+                        backgroundColor: "var(--primary-2)",
+                        borderColor: "var(--primary-3)",
+                      }}
+                    >
+                      {filteredOrders.map((order) => (
+                        <tr key={order.id}>
+                          <td className="px-6 py-4 font-medium">
+                            {order.number}
+                          </td>
+                          <td className="px-6 py-4">
+                            {order.order_products
+                              .map((p) => `${p.products.name} x${p.quantity}`)
+                              .join(", ")}
+                          </td>
+                          <td className="px-6 py-4 font-semibold">
+                            R{order.total_price}
+                          </td>
+                          <td className="px-6 py-4">
+                            <span className={getStatusStyle(order.status)}>
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="px-6 py-4">
+                            {new Date(order.created_at).toLocaleDateString(
+                              "en-ZA",
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            )}
           </>
         )}
 

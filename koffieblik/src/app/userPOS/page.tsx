@@ -214,7 +214,7 @@ export default function OrderPage() {
     >
       {/* Header */}
       <header
-        className="sticky top-0 z-50 border-b"
+        className="sticky top-0 z-20 border-b"
         style={{
           backgroundColor: "var(--primary-4)",
           borderColor: "var(--primary-4)",

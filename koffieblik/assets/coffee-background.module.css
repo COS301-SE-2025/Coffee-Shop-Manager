@@ -1,0 +1,18 @@
+.background {
+  position: absolute;
+  inset: 0;
+  background-color: #f9f7f4; /* light beige base */
+  overflow: hidden;
+}
+
+.background::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: url('/coffee-background.jpg');
+  background-size: cover;
+  background-position: center;
+  background-repeat: repeat; /* repeating subtle beans */
+  opacity: 0.2; /* only the image is faint, like RN */
+  pointer-events: none; /* so it doesn’t block clicks */
+}
