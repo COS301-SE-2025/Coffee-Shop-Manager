@@ -1,21 +1,19 @@
+// layout.tsx
+import CoffeeBackground from "assets/coffee-background";
 import Navbar from "@/app/components/Navbar";
-
-export const metadata = {
-  title: "Dashboard - DieKoffieBlik",
-  description: "Dashboard overview for managing DieKoffieBlik coffee shop",
-  icons: {
-    icon: "/favicon.ico",
-  },
-};
 
 export default function POSLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "var(--primary-4)" }}
-    >
+    <div className="relative min-h-screen flex flex-col">
+      {/* Background image layer */}
+      <div className="fixed inset-0 -z-10">
+        <CoffeeBackground />
+        <div className="absolute inset-0 bg-black/30" />
+      </div>
+
+      {/* Foreground content */}
       <Navbar />
-      {children}
+      <div className="flex-1 overflow-auto">{children}</div>
     </div>
   );
 }

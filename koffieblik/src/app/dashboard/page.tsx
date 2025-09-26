@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(true);
+  const [offSetStart, setOffsetStart] = useState(0);
+  const limit = 5; // items per page
+  const [statusFilter, setStatusFilter] = useState("pending");
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -41,35 +44,78 @@ export default function DashboardPage() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  useEffect(() => {
-    async function fetchOrders() {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/get_orders`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
+  // useEffect(() => {
+  //   async function fetchOrders() {
+  //     setLoading(true);
+  //     try {
+  //       const response = await fetch(`${API_BASE_URL}/get_orders`, {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         credentials: "include",
+  //       });
+
+  //       const data = await response.json();
+
+  //       if (response.ok) {
+  //         setOrders(data.orders);
+  //       } else {
+  //         console.warn(
+  //           "⚠️ Failed to fetch orders:",
+  //           data.error || "Unknown error",
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error("❌ Network or server error:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+
+  //   fetchOrders();
+  // }, [API_BASE_URL]);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          offset: offSetStart,
+          limit: limit,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            status: statusFilter,
           },
-          credentials: "include",
-        });
+        }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok) {
-          setOrders(data.orders);
-        } else {
-          console.warn(
-            "⚠️ Failed to fetch orders:",
-            data.error || "Unknown error",
-          );
-        }
-      } catch (error) {
-        console.error("❌ Network or server error:", error);
-      } finally {
-        setLoading(false);
+      if (response.ok) {
+        console.log("Fetched data:", data);
+        setOrders(data.orders);
+      } else {
+        console.warn(
+          "⚠️ Failed to fetch orders:",
+          data.error || "Unknown error",
+        );
       }
+    } catch (error) {
+      console.error("❌ Network or server error:", error);
+    } finally {
+      setLoading(false);
     }
+  };
 
+  // 🔄 run once on mount (or whenever API_BASE_URL changes)
+  useEffect(() => {
     fetchOrders();
   }, [API_BASE_URL]);
 

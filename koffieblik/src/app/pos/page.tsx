@@ -110,6 +110,11 @@ export default function POSPage() {
     }
   };
 
+   // 🔄 run once on mount (or whenever API_BASE_URL changes)
+  useEffect(() => {
+    fetchOrders();
+  }, [API_BASE_URL]);
+
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
   fetchOrders();
@@ -117,10 +122,7 @@ export default function POSPage() {
 
 
 
-  // 🔄 run once on mount (or whenever API_BASE_URL changes)
-  useEffect(() => {
-    fetchOrders();
-  }, [API_BASE_URL]);
+ 
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -238,7 +240,7 @@ export default function POSPage() {
     <main
       className="min-h-screen p-8"
       style={{
-        backgroundColor: "var(--primary-4)",
+        // backgroundColor: "var(--primary-4)",
         color: "var(--primary-3)",
       }}
     >
@@ -302,7 +304,7 @@ export default function POSPage() {
 
           {/* Cart */}
           <div
-            className="rounded-xl shadow-md p-6 mb-6"
+            className="rounded-xl shadow-md p-6 mb-6 "
             style={{
               backgroundColor: "var(--primary-2)",
             }}
