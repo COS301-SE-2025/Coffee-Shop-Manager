@@ -8,6 +8,9 @@ import sevenDayBadge from "../badges/7dayStreak.png";
 import fiveOrdersBadge from "../badges/5orders.png";
 import tenOrdersBadge from "../badges/10orders.png";
 
+//api url
+ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
 export default function UserPage() {
   const [username, setUsername] = useState("Guest");
   const [userStats, setUserStats] = useState({
@@ -72,9 +75,7 @@ export default function UserPage() {
   ];
 
   const getRankIcon = (rank: number): string => {
-    if (rank === 1) return "🥇";
-    if (rank === 2) return "🥈";
-    if (rank === 3) return "🥉";
+ 
     return `#${rank}`;
   };
 
