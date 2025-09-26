@@ -106,6 +106,8 @@ export default function DashboardPage() {
       if (response.ok) {
         console.log("Fetched data:", data);
         setOrders(data.orders);
+        setTotalOrders(data.count);
+        setFilteredOrdersTotal(data.filteredOrders);
       } else {
         console.warn(
           "⚠️ Failed to fetch orders:",
