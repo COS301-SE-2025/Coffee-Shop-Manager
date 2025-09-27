@@ -169,12 +169,12 @@ export default function ManageOrdersPage() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-      body: JSON.stringify({
+        body: JSON.stringify({
           start_Date: startDate,
           end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-         orderBy: "order_number",
+          orderBy: "order_number",
           orderDirection: "asc",
           filters: {
             status: statusFilter,
@@ -505,6 +505,9 @@ export default function ManageOrdersPage() {
                       <tr className="bg-gray-50">
                         <td colSpan={5} className="p-4">
                           <h4 className="font-semibold mb-2">🛒 Items</h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Customer: <span className="font-medium">Test@coffee.com</span>
+                          </p>
                           <ul className="list-disc list-inside space-y-1">
                             {order.order_products.map((item, idx) => (
                               <li key={idx}>
