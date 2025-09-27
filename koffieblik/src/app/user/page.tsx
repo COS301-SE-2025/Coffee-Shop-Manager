@@ -15,6 +15,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface LeaderboardUser {
   user_id: string;
+  display_name: string;
   total_orders: number;
   current_streak?: number;
   favorite_drink?: string;
@@ -204,12 +205,13 @@ export default function UserPage() {
           // Add rank to each user and map to expected format
           const leaderboardWithRank = data.leaderboard.map((user: any, index: number) => ({
             user_id: user.user_id,
+            display_name: user.display_name,
             total_orders: user.total_orders,
             current_streak: user.current_streak || 0,
             favorite_drink: user.favorite_drink || "Unknown",
             // Mapped properties for easier access
             id: user.user_id,
-            username: user.user_id.substring(0, 8), // Use first 8 chars of user_id as display name
+            username: user.display_name || user.user_id.substring(0, 8), // Use display_name, fallback to user_id
             totalOrders: user.total_orders,
             currentStreak: user.current_streak || 0,
             favoritedrink: user.favorite_drink || "Unknown",
