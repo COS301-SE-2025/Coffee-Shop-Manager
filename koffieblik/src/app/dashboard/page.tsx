@@ -28,12 +28,40 @@ export default function DashboardPage() {
   const router = useRouter();
   const [username, setUsername] = useState("Guest");
   const [orders, setOrders] = useState<Order[]>([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
   const [loading, setLoading] = useState(true);
   const [offSetStart, setOffsetStart] = useState(0);
   const limit = 5; // items per page
   const [statusFilter, setStatusFilter] = useState("pending");
+
+  useEffect(() => {
+    const now = new Date();
+
+    if (filter === "Today") {
+      const today = now.toISOString().split("T")[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (filter === "This Week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+      const start = startOfWeek.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "This Month") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = startOfMonth.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "Custom Range") {
+      // do nothing: leave startDate/endDate as manually chosen
+    }
+  }, [filter]);
+
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -92,6 +120,8 @@ export default function DashboardPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          start_Date: startDate,
+          end_Date: endDate,
           offset: offSetStart,
           limit: limit,
           orderBy: "created_at",
@@ -134,7 +164,8 @@ export default function DashboardPage() {
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
     fetchOrders();
-  }, [offSetStart, statusFilter]);
+  }, [offSetStart, statusFilter, startDate, endDate]);
+
 
 
 

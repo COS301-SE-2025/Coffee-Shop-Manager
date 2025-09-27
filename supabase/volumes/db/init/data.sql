@@ -613,7 +613,12 @@ INSERT INTO product_stock (product_id, stock_id, quantity) VALUES
 ((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Milk'), 1);
 
 
-create or replace function get_top_selling_products(limit_count int default 5)
+-- Create new version with date support
+create or replace function get_top_selling_products(
+  limit_count int default 5,
+  start_date date default null,
+  end_date date default null
+)
 returns table (
   product_id uuid,
   name text,
@@ -629,6 +634,9 @@ begin
     sum(op.quantity * op.price) as total_revenue
   from order_products op
   join products p on op.product_id = p.id
+  join orders o on op.order_id = o.id
+  where (start_date is null or o.created_at >= start_date::timestamp)
+    and (end_date is null or o.created_at < (end_date::timestamp + interval '1 day'))
   group by op.product_id, p.name
   order by total_quantity desc
   limit limit_count;
@@ -636,7 +644,12 @@ end;
 $$ language plpgsql stable;
 
 
-create or replace function get_total_sales_by_status(order_status text)
+
+create or replace function get_total_sales_by_status(
+  order_status text,
+  start_date date default null,
+  end_date date default null
+)
 returns numeric as $$
 declare
   total_sales numeric;
@@ -644,9 +657,12 @@ begin
   select coalesce(sum(total_price), 0)
   into total_sales
   from orders
-  where status = order_status;
+  where status = order_status
+    and (start_date is null or created_at >= start_date::timestamp)
+    and (end_date is null or created_at < (end_date::timestamp + interval '1 day'));
 
   return total_sales;
 end;
 $$ language plpgsql stable;
+
 

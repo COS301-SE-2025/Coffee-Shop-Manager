@@ -39,8 +39,10 @@ export default function ManageOrdersPage() {
   const [filter, setFilter] = useState("Today");
 
   const [offSetStart, setOffsetStart] = useState(0);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
   const limit = 5; // items per page
   const [statusFilter, setStatusFilter] = useState("pending");
   const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
@@ -48,6 +50,31 @@ export default function ManageOrdersPage() {
   const toggleExpand = (orderId: string) => {
     setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
   };
+
+  useEffect(() => {
+    const now = new Date();
+
+    if (filter === "Today") {
+      const today = now.toISOString().split("T")[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (filter === "This Week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+      const start = startOfWeek.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "This Month") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = startOfMonth.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "Custom Range") {
+      // do nothing: leave startDate/endDate as manually chosen
+    }
+  }, [filter]);
 
   const router = useRouter();
   const getStatusStyle = (status: string) => {
@@ -141,7 +168,9 @@ export default function ManageOrdersPage() {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({
+      body: JSON.stringify({
+          start_Date: startDate,
+          end_Date: endDate,
           offset: offSetStart,
           limit: limit,
           orderBy: "created_at",
@@ -178,7 +207,7 @@ export default function ManageOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [offSetStart, statusFilter]);
+  }, [offSetStart, statusFilter, startDate, endDate]);
   return (
     <main
       className="relative min-h-full bg-transparent overflow-x-hidden p-8"

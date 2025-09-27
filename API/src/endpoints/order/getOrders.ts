@@ -9,7 +9,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			return;
 		}
 
-		const { filters, orderBy, orderDirection, offset, limit } = req.body || {};
+		const { filters, orderBy, orderDirection, offset, limit, start_Date, end_Date } = req.body || {};
 
 		// Base query
 		let query = supabase.from("orders").select(
@@ -46,6 +46,19 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			}
 		}
 
+		// Apply date range filter
+		if (start_Date && end_Date) {
+			query = query
+				.gte("created_at", new Date(start_Date).toISOString())
+				.lt("created_at", new Date(new Date(end_Date).setDate(new Date(end_Date).getDate() + 1)).toISOString());
+		} else if (start_Date) {
+			query = query.gte("created_at", new Date(start_Date).toISOString());
+		} else if (end_Date) {
+			query = query.lt("created_at", new Date(new Date(end_Date).setDate(new Date(end_Date).getDate() + 1)).toISOString());
+		}
+
+
+
 		// Apply ordering if provided
 		if (orderBy) {
 			query = query.order(orderBy, { ascending: orderDirection !== "desc" });
@@ -80,8 +93,11 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 		if (countError) throw countError;
 
 		//get count orders per filter
-		let filteredCountQuery = supabase.from("orders").select("id", { count: "exact", head: true });
+		let filteredCountQuery = supabase
+			.from("orders")
+			.select("id", { count: "exact", head: true });
 
+		// Apply filters (status, etc.)
 		if (filters && typeof filters === "object") {
 			for (const [key, value] of Object.entries(filters)) {
 				if (value !== undefined && value !== null) {
@@ -90,21 +106,57 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			}
 		}
 
-		const { count: filteredOrders, error: filteredCountError } = await filteredCountQuery;
+		// Apply date range
+		if (start_Date && end_Date) {
+			filteredCountQuery = filteredCountQuery
+				.gte("created_at", new Date(start_Date).toISOString())
+				.lt(
+					"created_at",
+					new Date(
+						new Date(end_Date).setDate(new Date(end_Date).getDate() + 1)
+					).toISOString()
+				);
+		} else if (start_Date) {
+			filteredCountQuery = filteredCountQuery.gte(
+				"created_at",
+				new Date(start_Date).toISOString()
+			);
+		} else if (end_Date) {
+			filteredCountQuery = filteredCountQuery.lt(
+				"created_at",
+				new Date(new Date(end_Date).setDate(new Date(end_Date).getDate() + 1)).toISOString()
+			);
+		}
+
+		const { count: filteredOrders, error: filteredCountError } =
+			await filteredCountQuery;
 		if (filteredCountError) throw filteredCountError;
+
+
+
+		const today = new Date().toISOString().split("T")[0];
+
+
 
 		const { data: topProducts, error: topError } = await supabase.rpc(
 			"get_top_selling_products",
-			{ limit_count: 1 } // top 5 by default
+			{
+				limit_count: 1, start_date: start_Date || today,
+				end_date: end_Date || today,
+			} // top 5 by default
 		);
 		if (topError) throw topError;
 
 		const statusForSum =
 			filters && filters.status ? filters.status : "pending";
 
+
+
 		const { data: sumFiltered, error: sumFilteredError } =
 			await supabase.rpc("get_total_sales_by_status", {
 				order_status: statusForSum,
+				start_date: start_Date || today,
+				end_date: end_Date || today,
 			});
 
 		if (sumFilteredError) throw sumFilteredError;

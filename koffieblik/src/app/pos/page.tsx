@@ -37,8 +37,11 @@ export default function POSPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [filter, setFilter] = useState("Today");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+
   const dateInputStyle =
     "p-3 border rounded-lg  focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
   const [customerName, setCustomerName] = useState("");
@@ -52,6 +55,31 @@ export default function POSPage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    const now = new Date();
+
+    if (filter === "Today") {
+      const today = now.toISOString().split("T")[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (filter === "This Week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+      const start = startOfWeek.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "This Month") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = startOfMonth.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "Custom Range") {
+      // do nothing: leave startDate/endDate as manually chosen
+    }
+  }, [filter]);
 
   const [toast, setToast] = useState<{
     orderId: string;
@@ -90,6 +118,8 @@ export default function POSPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          start_Date: startDate,
+          end_Date: endDate,
           offset: offSetStart,
           limit: limit,
           orderBy: "created_at",
@@ -166,7 +196,7 @@ export default function POSPage() {
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
     fetchOrders();
-  }, [offSetStart, statusFilter]); // run when either changes
+  }, [offSetStart, statusFilter, startDate, endDate]);
 
 
 
