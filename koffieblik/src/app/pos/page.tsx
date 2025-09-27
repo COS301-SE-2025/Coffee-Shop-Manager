@@ -178,7 +178,12 @@ export default function POSPage() {
         setToast({ orderId, prevStatus: prevOrder.status, newStatus });
 
         // Auto-dismiss after 5s
-        setTimeout(() => setToast(null), 5000);
+      
+        setTimeout(() => {
+          setToast(null);
+          fetchOrders();  
+        }, 5000);
+
       } else {
         console.error("❌ Failed to update order status:", data.message || data.error);
       }
