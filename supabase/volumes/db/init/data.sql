@@ -666,3 +666,5 @@ end;
 $$ language plpgsql stable;
 
 
+ALTER TABLE orders 
+ADD COLUMN order_number BIGSERIAL UNIQUE;

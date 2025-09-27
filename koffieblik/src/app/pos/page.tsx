@@ -15,6 +15,7 @@ interface MenuItem {
 interface Order {
   id: string;
   number: number;
+  order_number: number;
   status: string;
   total_price: number;
   created_at: string;
@@ -122,8 +123,8 @@ export default function POSPage() {
           end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-          orderBy: "created_at",
-          orderDirection: "desc",
+          orderBy: "order_number",
+          orderDirection: "asc",
           filters: {
             status: statusFilter,
           },
@@ -178,10 +179,10 @@ export default function POSPage() {
         setToast({ orderId, prevStatus: prevOrder.status, newStatus });
 
         // Auto-dismiss after 5s
-      
+
         setTimeout(() => {
           setToast(null);
-          fetchOrders();  
+          fetchOrders();
         }, 5000);
 
       } else {
@@ -691,7 +692,7 @@ export default function POSPage() {
                     {filteredOrders.map((order) => (
                       <tr key={order.id}>
                         <td className="px-6 py-4 font-medium">
-                          {order.number}
+                          #{order.order_number}
                         </td>
                         <td className="px-6 py-4">
                           {order.order_products

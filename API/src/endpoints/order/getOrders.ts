@@ -18,6 +18,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 		total_price,
 		created_at,
 		updated_at,
+		order_number,
 		order_products (
 			quantity,
 			price,

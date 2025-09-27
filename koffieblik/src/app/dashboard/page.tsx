@@ -8,6 +8,7 @@ import Loader from "../loaders/loader";
 interface Order {
   id: string;
   number: number;
+  order_number: number;
   status: string;
   total_price: number;
   created_at: string;
@@ -124,8 +125,8 @@ export default function DashboardPage() {
           end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-          orderBy: "created_at",
-          orderDirection: "desc",
+          orderBy: "order_number",
+          orderDirection: "asc",
           filters: {
             status: statusFilter,
           },
@@ -549,7 +550,7 @@ export default function DashboardPage() {
                       {filteredOrders.map((order) => (
                         <tr key={order.id}>
                           <td className="px-6 py-4 font-medium">
-                            {order.number}
+                            #{order.order_number}
                           </td>
                           <td className="px-6 py-4">
                             {order.order_products

@@ -21,6 +21,7 @@ interface OrderProduct {
 interface Order {
   id: string;
   number: number;
+  order_number: number;
   status: "pending" | "completed" | "cancelled";
   total_price: number;
   created_at: string;
@@ -173,8 +174,8 @@ export default function ManageOrdersPage() {
           end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-          orderBy: "created_at",
-          orderDirection: "desc",
+         orderBy: "order_number",
+          orderDirection: "asc",
           filters: {
             status: statusFilter,
           },
@@ -454,7 +455,7 @@ export default function ManageOrdersPage() {
                         }`}
                       onClick={() => toggleExpand(order.id)}
                     >
-                      <td className="p-3 font-semibold">{order.id}</td>
+                      <td className="p-3 font-semibold">#{order.order_number}</td>
                       <td className="p-3">
                         <span className={getStatusStyle(order.status)}>{order.status}</span>
                       </td>
