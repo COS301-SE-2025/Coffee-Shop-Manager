@@ -162,39 +162,6 @@ CREATE TABLE IF NOT EXISTS payments (
 	))
 );
 
--- LOYALTY_POINTS_TRANSACTIONS --
-CREATE TABLE loyalty_point_transactions (
-	id UUID NOT NULL PRIMARY KEY DEFAULT gen_random_uuid(),
-	user_id UUID NOT NULL,
-	payment_id UUID NOT NULL,
-	points_change INTEGER NOT NULL,
-	reason VARCHAR(255) NOT NULL,
-	created_at TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
-
-	CONSTRAINT loyalty_point_transactions_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id),
-	CONSTRAINT loyalty_point_transactions_payment_id_fkey FOREIGN KEY (payment_id) REFERENCES payments(id),
-	CHECK (reason IN (
-		'earned',
-		'redeemed',
-		'used'
-	))
-);
-
-CREATE OR REPLACE FUNCTION update_loyalty_points_balance()
-RETURNS TRIGGER AS $$
-BEGIN
-  UPDATE user_profiles
-  SET loyalty_points = loyalty_points + NEW.points_change
-  WHERE user_id = NEW.user_id;
-  RETURN NEW;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE TRIGGER trg_update_loyalty_points
-AFTER INSERT ON loyalty_point_transactions
-FOR EACH ROW
-EXECUTE FUNCTION update_loyalty_points_balance();
-
 -- STOCK --
 CREATE TABLE IF NOT EXISTS stock (
 	id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -582,12 +549,53 @@ $$ LANGUAGE plpgsql;
 -- GAMIFICATION --
 CREATE VIEW leaderboard_total_orders AS
 SELECT
-    user_id,
+    o.user_id,
+    u.display_name,
     COUNT(*) AS total_orders
-FROM orders
-WHERE status = 'completed'
-GROUP BY user_id
+FROM orders o
+JOIN user_profiles u ON o.user_id = u.user_id
+WHERE o.status = 'completed'
+GROUP BY o.user_id, u.display_name
 ORDER BY total_orders DESC;
+
+-- LOYALTY POINTS --
+CREATE TABLE IF NOT EXISTS loyalty_points (
+    id uuid primary key default gen_random_uuid(),
+    user_id uuid not null references auth.users (id) on delete cascade,
+    order_id uuid references orders (id) on delete cascade,
+    points integer not null,
+    type text not null check (type in ('earn', 'redeem', 'bonus')),
+    description text,
+    created_at timestamptz default now()
+);
+
+create or replace function award_loyalty_points()
+returns trigger as $$
+declare
+    earned_points integer;
+begin
+    -- Only act when an order becomes completed
+    if NEW.status = 'completed' and (OLD.status is distinct from 'completed') then
+        -- 1 point for every 10 in total_price
+        earned_points := floor(NEW.total_price / 10);
+
+        -- Insert into loyalty_points
+        insert into loyalty_points (user_id, order_id, points, type, description)
+        values (NEW.user_id, NEW.id, earned_points, 'earn', 'Points from completed order');
+    
+		update user_profiles
+        set loyalty_points = loyalty_points + earned_points
+        where user_id = NEW.user_id;
+	end if;
+
+    return NEW;
+end;
+$$ language plpgsql;
+
+create trigger trigger_award_points_after_order
+after update on orders
+for each row
+execute function award_loyalty_points();
 
 -- SEEDING --
 -- STOCK --

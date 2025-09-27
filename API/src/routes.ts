@@ -14,6 +14,8 @@ import { logoutHandler } from "./endpoints/user/logout";
 import { deleteUserHandler } from "./endpoints/user/deleteUser";
 import { getUserProfileHandler } from "./endpoints/user/getUser";
 import { updateUserProfileHandler } from "./endpoints/user/updateUser";
+import { getUserEmailsHandler } from "./endpoints/user/getUserEmails";
+import { getUserPointsHistoryHandler } from "./endpoints/user/getPointsHistory";
 
 // STOCK
 import { getStockHandler } from "./endpoints/stock/getStock";
@@ -29,6 +31,7 @@ import { getStockAdjustmentsHandler } from "./endpoints/stock/getStockAdjustment
 // ORDERS
 import { getOrdersHandler } from "./endpoints/order/getOrders";
 import { createOrderHandler } from "./endpoints/order/createOrder";
+import { createOrderByEmailHandler } from "./endpoints/order/createOrderByEmail";
 
 // PRODUCTS
 import { createProductHandler } from "./endpoints/product/createProduct";
@@ -56,6 +59,8 @@ router.get("/user/badges", authMiddleware, getUserBadgesHandler);
 router.get("/leaderboard", authMiddleware, getLeaderboardHandler); 
 
 // USERS
+router.get("/user/points", authMiddleware, getUserPointsHistoryHandler);
+router.get("/user/emails", authMiddleware, getUserEmailsHandler);
 router.get("/user/:id", getUserProfileHandler);
 router.post("/login", loginHandler);
 router.post("/signup", signupHandler);
@@ -79,6 +84,7 @@ router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
 // ORDERS
 router.get("/order", authMiddleware, getOrdersHandler);
 router.post("/order", authMiddleware, createOrderHandler);
+router.post("/order/email", authMiddleware, createOrderByEmailHandler);
 
 // PRODUCTS
 router.get("/product/stock", authMiddleware, getProductsWithStockHandler);
