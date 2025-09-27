@@ -274,7 +274,7 @@ export default function UserPage() {
     },
     { 
       id: 2, 
-      apiKey: "5_orders",
+      apiKey: "five_orders",
       name: "Coffee Lover", 
       description: "Ordered 5 coffees", 
       color: "bg-blue-500", 
@@ -282,7 +282,7 @@ export default function UserPage() {
     },
     { 
       id: 3, 
-      apiKey: "10_orders",
+      apiKey: "ten_orders",
       name: "Regular", 
       description: "Ordered 10 coffees", 
       color: "bg-gray-400", 
@@ -290,7 +290,7 @@ export default function UserPage() {
     },
     { 
       id: 4, 
-      apiKey: "3_day_streak",
+      apiKey: "three_day_streak",
       name: "Daily", 
       description: "3 day streak", 
       color: "bg-green-500", 
@@ -298,7 +298,7 @@ export default function UserPage() {
     },
     { 
       id: 5, 
-      apiKey: "7_day_streak",
+      apiKey: "seven_day_streak",
       name: "Weekly", 
       description: "7 day streak", 
       color: "bg-purple-500", 
