@@ -29,6 +29,10 @@ export default function ManageOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  const [offSetStart, setOffsetStart] = useState(0);
+  const limit = 5; // items per page
+  const [statusFilter, setStatusFilter] = useState("pending");
   const router = useRouter();
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -70,36 +74,78 @@ export default function ManageOrdersPage() {
     }
   };
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
-        const res = await fetch(`${API_BASE_URL}/get_orders`, {
-          credentials: "include",
-        });
-        const data = await res.json();
+  // useEffect(() => {
+  //   const fetchOrders = async () => {
+  //     try {
+  //       const res = await fetch(`${API_BASE_URL}/get_orders`, {
+  //         credentials: "include",
+  //       });
+  //       const data = await res.json();
 
-        if (data.success) {
-          const validated = data.orders.map((order: any) => ({
-            ...order,
-            status: order.status || "pending",
-          }));
-          setOrders(validated);
-        } else {
-          console.error(
-            "❌ Failed to load orders:",
-            data.message || data.error,
-          );
-        }
-      } catch (err) {
-        console.error("❌ Error fetching orders:", err);
-      } finally {
-        setLoading(false);
+  //       if (data.success) {
+  //         const validated = data.orders.map((order: any) => ({
+  //           ...order,
+  //           status: order.status || "pending",
+  //         }));
+  //         setOrders(validated);
+  //       } else {
+  //         console.error(
+  //           "❌ Failed to load orders:",
+  //           data.message || data.error,
+  //         );
+  //       }
+  //     } catch (err) {
+  //       console.error("❌ Error fetching orders:", err);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   };
+
+  //   fetchOrders();
+  // }, []);
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          offset: offSetStart,
+          limit: limit,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            status: statusFilter,
+          },
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Fetched data:", data);
+        setOrders(data.orders);
+        // setTotalOrders(data.count);
+        // setFilteredOrdersTotal(data.filteredOrders);
+      } else {
+        console.warn(
+          "⚠️ Failed to fetch orders:",
+          data.error || "Unknown error",
+        );
       }
-    };
-
+    } catch (error) {
+      console.error("❌ Network or server error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  // 🔄 run once on mount (or whenever API_BASE_URL changes)
+  useEffect(() => {
     fetchOrders();
-  }, []);
-
+  }, [API_BASE_URL]);
   return (
     <main
       className="min-h-screen p-8"
@@ -119,13 +165,12 @@ export default function ManageOrdersPage() {
           {orders.map((order) => (
             <div
               key={order.id}
-              className={`rounded-xl shadow p-6 relative ${
-                order.status === "completed"
-                  ? "bg-green-100"
-                  : order.status === "cancelled"
-                    ? "bg-red-100"
-                    : "bg-white"
-              }`}
+              className={`rounded-xl shadow p-6 relative ${order.status === "completed"
+                ? "bg-green-100"
+                : order.status === "cancelled"
+                  ? "bg-red-100"
+                  : "bg-white"
+                }`}
             >
               <h2 className="text-xl font-semibold mb-2">
                 Order #{order.number}
@@ -136,13 +181,12 @@ export default function ManageOrdersPage() {
               <p className="mb-3 text-sm">
                 Status:{" "}
                 <span
-                  className={`font-bold ${
-                    order.status === "pending"
-                      ? "text-yellow-600"
-                      : order.status === "completed"
-                        ? "text-green-600"
-                        : "text-red-600"
-                  }`}
+                  className={`font-bold ${order.status === "pending"
+                    ? "text-yellow-600"
+                    : order.status === "completed"
+                      ? "text-green-600"
+                      : "text-red-600"
+                    }`}
                 >
                   {order.status.toUpperCase()}
                 </span>
