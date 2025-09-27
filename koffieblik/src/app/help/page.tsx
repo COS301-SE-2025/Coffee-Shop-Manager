@@ -57,27 +57,6 @@ export default function HelpPage() {
     setOpenIndex((prev) => (prev === index ? null : index));
   };
 
-  // Get today's date
-  const now = new Date();
-
-  // Filter logic
-  let filteredPointsData = pointsData;
-  if (graphFilter === "day") {
-    filteredPointsData = pointsData.filter(
-      (d) => new Date(d.date).toDateString() === now.toDateString()
-    );
-  } else if (graphFilter === "month") {
-    filteredPointsData = pointsData.filter(
-      (d) =>
-        new Date(d.date).getMonth() === now.getMonth() &&
-        new Date(d.date).getFullYear() === now.getFullYear()
-    );
-  } else if (graphFilter === "year") {
-    filteredPointsData = pointsData.filter(
-      (d) => new Date(d.date).getFullYear() === now.getFullYear()
-    );
-  }
-
   return (
     <div className="max-w-4xl mx-auto p-6">
       {/* Filter UI */}
@@ -110,9 +89,6 @@ export default function HelpPage() {
           Year
         </button>
       </div>
-
-      {/* Your graph component here, pass filteredPointsData */}
-      {/* <YourGraphComponent data={filteredPointsData} /> */}
 
       <h1
         className="text-3xl font-bold mb-6"

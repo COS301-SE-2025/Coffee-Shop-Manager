@@ -2,10 +2,16 @@ import express from "express";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import routes from "./routes";
+import * as dotenv from 'dotenv';
+import path from 'path';
 
 const app = express();
 
 const origins = process.env.ALLOWED_ORIGINS?.split(",") || [];
+
+dotenv.config({
+  path: path.resolve(__dirname, '../../.env.prod')
+});
 
 // Enable CORS
 app.use(

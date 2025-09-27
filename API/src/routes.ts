@@ -46,6 +46,9 @@ import { getProductsHandler_old } from "./endpoints/legacy/getProducts_old";
 import { updateOrderStatusHandler } from "./endpoints/legacy/update_order_status";
 import { updateStockHandler } from "./endpoints/legacy/updateStock";
 
+// PAYMENT
+import { initiatePaymentHandler } from "../src/endpoints/payment/paymentHandler";
+
 const router = Router();
 
 // Default get request
@@ -103,6 +106,9 @@ router.get("/getProducts", authMiddleware, getProductsHandler_old);
 router.put("/update_order_status", authMiddleware, updateOrderStatusHandler);
 router.get("/get_stock", authMiddleware, getStockHandler);
 router.post("/update_stock", authMiddleware, updateStockHandler);
+
+// PAYMENT
+router.post("/initiate-payment", authMiddleware, initiatePaymentHandler);
 
 // Catch for undefined routes
 router.use((req, res) => {

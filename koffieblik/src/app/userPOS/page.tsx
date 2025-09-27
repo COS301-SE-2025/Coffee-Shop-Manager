@@ -35,6 +35,12 @@ export default function OrderPage() {
   const [message, setMessage] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
   const [specialInstructions, setSpecialInstructions] = useState("");
+  const [customerInfo, setCustomerInfo] = useState({
+    name: "",
+    phone: "",
+    email: "",
+    notes: specialInstructions
+  });
   const router = useRouter();
 
   const API_BASE_URL =
@@ -141,6 +147,85 @@ export default function OrderPage() {
   const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
     setSelectedPaymentMethod(paymentMethod);
     
+    if (paymentMethod === "card") {
+      // Validate required fields first
+      if (!customerInfo.name || !customerInfo.email) {
+        setMessage("Please fill in your name and email for card payment");
+        return;
+      }
+
+      setOrderStatus("confirming");
+
+      try {
+        // First create the order
+        const orderPayload = {
+          products: cart.map((item) => ({
+            product: item.name,
+            quantity: item.quantity,
+          })),
+          special_instructions: specialInstructions,
+          payment_method: paymentMethod,
+        };
+
+        const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(orderPayload),
+        });
+
+        const orderResult = await orderRes.json();
+
+        if (!orderRes.ok || !orderResult.success) {
+          throw new Error(orderResult.message || "Failed to create order");
+        }
+
+        console.log("Order created:", orderResult); // Debug log
+
+        // Then initiate PayFast payment
+        const paymentPayload = {
+          orderNumber: orderResult.order_id, // Make sure this matches the backend response
+          total: getOrderSummary().total,
+          customerInfo: {
+            name: customerInfo.name,
+            phone: customerInfo.phone || "",
+            email: customerInfo.email,
+            notes: specialInstructions || ""
+          }
+        };
+
+        console.log("Payment payload:", paymentPayload); // Debug log
+
+        const paymentRes = await fetch(`${API_BASE_URL}/initiate-payment`, {
+          method: "POST",
+          headers: { 
+            "Content-Type": "application/json"
+          },
+          credentials: "include",
+          body: JSON.stringify(paymentPayload),
+        });
+
+        const paymentResult = await paymentRes.json();
+        console.log("Payment result:", paymentResult); // Debug log
+
+        if (!paymentRes.ok || !paymentResult.success) {
+          throw new Error(paymentResult.message || "Failed to initiate payment");
+        }
+
+        // Store order info before redirect
+        localStorage.setItem("pendingOrder", orderResult.order_id);
+
+        // Redirect to PayFast payment page
+        window.location.href = paymentResult.paymentUrl;
+
+      } catch (err) {
+        console.error("Payment error:", err);
+        setOrderStatus("ordering");
+        setMessage("Failed to process payment. Please try again.");
+      }
+      return;
+    }
+
     // For cash payments, just create the order and show success
     if (paymentMethod === 'cash') {
       const payload = {
@@ -176,44 +261,6 @@ export default function OrderPage() {
       }
       return;
     }
-
-    // For card payments, continue with existing flow
-    setOrderStatus("confirming");
-
-    const payload = {
-      products: cart.map((item) => ({
-        product: item.name,
-        quantity: item.quantity,
-      })),
-      special_instructions: specialInstructions,
-      payment_method: paymentMethod,
-    };
-
-    try {
-      const res = await fetch(`${API_BASE_URL}/create_order`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify(payload),
-      });
-
-      const result = await res.json();
-
-      if (res.ok && result.success) {
-        setOrderStatus("placed");
-        setCart([]);
-        setMessage("Order successfully submitted!");
-      } else {
-        setOrderStatus("ordering");
-        setMessage(
-          `Failed to create order: ${result.message || "Unknown error"}`,
-        );
-      }
-    } catch (err) {
-      console.error("Order error:", err);
-      setOrderStatus("ordering");
-      setMessage("Failed to submit order. Please try again.");
-    }
   };
 
   const handleCancelPayment = () => {
@@ -243,7 +290,7 @@ export default function OrderPage() {
           <CoffeeBackground />
         </div>
 
-        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4 top-[250px]">
           <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative z-20">
             <h2
               className="text-2xl font-bold mb-6 text-center"
@@ -254,7 +301,13 @@ export default function OrderPage() {
             
             <div className="space-y-4 mb-6">
               <button
-                onClick={() => handlePaymentMethodSelect("card")}
+                onClick={() => {
+                  if (!customerInfo.name || !customerInfo.email) {
+                    setMessage("Please fill in your details for card payment");
+                    return;
+                  }
+                  handlePaymentMethodSelect("card");
+                }}
                 className="w-full p-4 border-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-3"
                 style={{
                   borderColor: "var(--primary-4)",
@@ -268,21 +321,62 @@ export default function OrderPage() {
                   e.currentTarget.style.backgroundColor = "white";
                 }}
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-                  />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
                 </svg>
                 <span className="text-lg font-semibold">Card Payment</span>
               </button>
+
+              {/* Add payment info form */}
+              <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customerInfo.name}
+                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    style={{ 
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-3)",  // Add this line
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={customerInfo.email}
+                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    style={{ 
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-3)",  // Add this line
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                    Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerInfo.phone}
+                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    style={{ 
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-3)",  // Add this line
+                    }}
+                  />
+                </div>
+              </div>
 
               <button
                 onClick={() => handlePaymentMethodSelect("cash")}
@@ -299,28 +393,15 @@ export default function OrderPage() {
                   e.currentTarget.style.backgroundColor = "white";
                 }}
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                  />
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
                 <span className="text-lg font-semibold">Cash Payment</span>
               </button>
             </div>
 
             <div className="text-center">
-              <p
-                className="text-lg font-semibold mb-4"
-                style={{ color: "var(--primary-3)" }}
-              >
+              <p className="text-lg font-semibold mb-4" style={{ color: "var(--primary-3)" }}>
                 Total: R{getOrderSummary().total.toFixed(2)}
               </p>
               
