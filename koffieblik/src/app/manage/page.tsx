@@ -407,7 +407,7 @@ export default function ManageOrdersPage() {
                     className="text-left px-6 py-4 font-semibold"
                     style={{ color: "var(--primary-2)" }}
                   >
-                    Order id
+                    Order #
                   </th>
                   <th
                     className="text-left px-6 py-4 font-semibold"
