@@ -8,6 +8,7 @@ import sevenDayBadge from "../badges/7dayStreak.png";
 import fiveOrdersBadge from "../badges/5orders.png";
 import tenOrdersBadge from "../badges/10orders.png";
 import yearAccount from "../badges/year_account.png"
+import week_month_account from "../badges/week_account.png"
 
 //api url
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -258,16 +259,17 @@ export default function UserPage() {
       apiKey: "week_member",
       name: "Week Member", 
       description: "Member for a week", 
-      color: "bg-indigo-500", 
-      image: null 
+      color: "bg-emerald-100" ,
+      image: week_month_account 
     },
     { 
       id: 7, 
       apiKey: "month_member",
       name: "Month Member", 
+      color: "bg-emerald-100",
       description: "Member for a month", 
-      color: "bg-pink-500", 
-      image: null 
+      
+      image: week_month_account
     },
     
 
