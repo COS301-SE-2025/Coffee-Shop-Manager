@@ -102,6 +102,99 @@ export default function HomeScreen() {
     "The smell of coffee alone can help reduce stress",
     "Vietnam is the world's second-largest coffee producer",
     "There are over 25 million coffee farmers around the world",
+    "The most expensive coffee comes from elephant dung",
+    "Decaf coffee still contains small amounts of caffeine",
+    "Coffee is the second most traded commodity after oil",
+    "Adding milk to coffee can slow down the effects of caffeine",
+    "Instant coffee was invented in 1901 by Japanese scientist Satori Kato",
+    "Turkey has one of the oldest coffee brewing methods: Turkish coffee",
+    "The world's largest cup of coffee was over 22,000 liters in South Korea",
+    "Coffee cherries turn bright red when they are ripe for picking",
+    "The first webcam was invented at Cambridge University to monitor a coffee pot",
+    "Beethoven was obsessed with coffee and counted 60 beans per cup he drank",
+    "Coffee was banned in Mecca in the 16th century because of its stimulating effect",
+    "New Yorkers drink seven times more coffee than people in other U.S. cities",
+    "The word 'cappuccino' comes from the brown robes worn by Capuchin monks",
+    "Coffee was originally chewed, not sipped, by mixing ground beans with fat",
+    "Italy has over 150,000 coffee bars across the country",
+    "Luwak coffee, made from civet droppings, is one of the priciest coffees",
+    "Coffee plants can grow up to 30 feet tall in the wild",
+    "The Boston Tea Party helped popularize coffee in the United States",
+    "Dark roast coffee has less caffeine than light roast coffee due to roasting",
+    "Coffee houses were called 'penny universities' in 17th century England",
+    "Coffee grounds can be used as natural fertilizer and insect repellent",
+    "Hawaii is the only U.S. state that grows coffee commercially",
+    "Coffee was first brought to Europe through Venice in the 1600s",
+    "A single coffee tree yields about one pound of roasted coffee per year",
+    "Norway ranks among the highest consumers of coffee per capita in the world",
+    "Caffeine is a natural pesticide produced by the coffee plant",
+    "The Americano was created by soldiers in WWII diluting espresso with water",
+    "In Japan, there are coffee spas where you can literally bathe in coffee",
+    "Coffee is believed to have originated around the 9th century in Ethiopia",
+    "The average barista makes about 200 cups of coffee per day",
+    "Coffee drinkers tend to live longer according to several studies",
+    "The largest coffee-producing continent is South America",
+    "Coffee foam (crema) is a sign of freshness and quality in espresso",
+    "Coffee beans are roasted at temperatures between 370°F and 540°F",
+    "There are over 800 known coffee compounds that contribute to its flavor",
+    "The French press was actually invented by an Italian designer in 1929",
+    "Coffee can improve cognitive function and memory retention",
+    "The coffee belt spans between 25 degrees north and 30 degrees south",
+    "Espresso machines were invented in Italy in the early 1900s",
+    "Coffee can help protect against Parkinson's disease",
+    "The term 'coffee break' was first used in the 1950s",
+    "Coffee was once considered a medicine in ancient civilizations",
+    "The coffee plant is actually a flowering shrub",
+    "Coffee can reduce the risk of developing type 2 diabetes",
+    "The espresso shot should be pulled within 30 seconds for optimal taste",
+    "Coffee was first cultivated in Yemen in the 15th century",
+    "The perfect water temperature for brewing coffee is 195-205°F",
+    "Coffee can help boost metabolism by 3-11%",
+    "The coffee industry employs over 100 million people worldwide",
+    "A coffee tree takes 3-5 years to produce its first harvest",
+    "Coffee was once used as currency in some African cultures",
+    "The French drink more coffee than wine on average",
+    "Coffee can help prevent liver disease and cirrhosis",
+    "The ideal grind size varies depending on brewing method",
+    "Coffee beans lose flavor quickly once ground",
+    "The first coffeehouse opened in Mecca in the 1500s",
+    "Coffee can help reduce inflammation in the body",
+    "The coffee cherry contains two seeds (coffee beans)",
+    "Coffee was brought to the Americas by European colonists",
+    "The pH level of coffee is around 5, making it acidic",
+    "Coffee can help improve athletic performance",
+    "The first instant coffee was created in 1901",
+    "Coffee can help reduce the risk of depression",
+    "The coffee plant produces white, jasmine-scented flowers",
+    "Coffee was first sold in cans in 1878",
+    "Coffee can help protect against Alzheimer's disease",
+    "The Mocha port in Yemen gave its name to the coffee variety",
+    "Coffee can help reduce the risk of stroke",
+    "The drip coffee method was invented in 1908",
+    "Coffee can help improve focus and concentration",
+    "The coffee industry is worth over $100 billion globally",
+    "Coffee was first freeze-dried in 1964",
+    "Coffee can help reduce muscle pain after exercise",
+    "The first espresso machine was patented in 1884",
+    "Coffee can help protect against certain types of cancer",
+    "The term 'barista' comes from Italian meaning 'bartender'",
+    "Coffee can help improve mood and reduce anxiety",
+    "The first coffee filter was invented by a German housewife in 1908",
+    "Coffee can help boost antioxidant levels in the body",
+    "The coffee trade routes helped shape global commerce",
+    "Coffee can help improve insulin sensitivity",
+    "The first vacuum-packed coffee was sold in 1900",
+    "Coffee can help reduce the risk of gallstones",
+    "The coffee ceremony is an important cultural tradition in Ethiopia",
+    "Coffee can help improve physical endurance",
+    "The first coffee vending machine was installed in 1946",
+    "Coffee can help protect against gout",
+    "The coffee plant is related to the gardenia family",
+    "Coffee can help improve reaction time",
+    "The first coffee pods were invented in the 1970s",
+    "Coffee can help reduce the risk of kidney stones",
+    "The coffee cupping method is used to evaluate coffee quality",
+    "Coffee can help improve short-term memory",
   ];
 
   // Fetch user data for personalization
@@ -464,7 +557,8 @@ export default function HomeScreen() {
               {coffeeQuotes[Math.floor(Math.random() * coffeeQuotes.length)]}
             </Text>
             
-           
+            
+
             <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
               <Pressable
                 style={styles.ctaButton}
@@ -513,7 +607,7 @@ export default function HomeScreen() {
 
   const StatsSection = () => (
     <View style={styles.statsSection}>
-     
+      
       
       <View style={styles.statCard}>
         <Ionicons name="flame" size={24} color="#f59e0b" />
