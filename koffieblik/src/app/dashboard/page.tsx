@@ -8,6 +8,7 @@ import Loader from "../loaders/loader";
 interface Order {
   id: string;
   number: number;
+  order_number: number;
   status: string;
   total_price: number;
   created_at: string;
@@ -28,12 +29,40 @@ export default function DashboardPage() {
   const router = useRouter();
   const [username, setUsername] = useState("Guest");
   const [orders, setOrders] = useState<Order[]>([]);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
   const [loading, setLoading] = useState(true);
   const [offSetStart, setOffsetStart] = useState(0);
   const limit = 5; // items per page
   const [statusFilter, setStatusFilter] = useState("pending");
+
+  useEffect(() => {
+    const now = new Date();
+
+    if (filter === "Today") {
+      const today = now.toISOString().split("T")[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (filter === "This Week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+      const start = startOfWeek.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "This Month") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = startOfMonth.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "Custom Range") {
+      // do nothing: leave startDate/endDate as manually chosen
+    }
+  }, [filter]);
+
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -76,7 +105,8 @@ export default function DashboardPage() {
   //   fetchOrders();
   // }, [API_BASE_URL]);
 
-  const topSelling = "N/A"
+  const [topSelling, setTopSelling] = useState("N/A");
+
   const [totalAmount, settotalAmount] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const [filteredOrdersTotal, setFilteredOrdersTotal] = useState(0);
@@ -91,10 +121,12 @@ export default function DashboardPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          start_Date: startDate,
+          end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-          orderBy: "created_at",
-          orderDirection: "desc",
+          orderBy: "order_number",
+          orderDirection: "asc",
           filters: {
             status: statusFilter,
           },
@@ -108,6 +140,12 @@ export default function DashboardPage() {
         setOrders(data.orders);
         setTotalOrders(data.count);
         setFilteredOrdersTotal(data.filteredOrders);
+        settotalAmount(data.sumFiltered);
+        if (data.topProducts && data.topProducts.length > 0) {
+          setTopSelling(data.topProducts[0].name); // only 1 top product
+        } else {
+          setTopSelling("N/A");
+        }
       } else {
         console.warn(
           "⚠️ Failed to fetch orders:",
@@ -127,7 +165,8 @@ export default function DashboardPage() {
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
     fetchOrders();
-  }, [offSetStart, statusFilter]);
+  }, [offSetStart, statusFilter, startDate, endDate]);
+
 
 
 
@@ -204,7 +243,7 @@ export default function DashboardPage() {
   const metrics: Metric[] = [
     {
       label: "Total " + `${statusFilter}(R)`,
-      value: `R${totalAmount.toFixed(2)}`,
+      value: `R ${totalAmount.toFixed(2)}`,
       color: "var(--primary-2)",
     },
     {
@@ -511,7 +550,7 @@ export default function DashboardPage() {
                       {filteredOrders.map((order) => (
                         <tr key={order.id}>
                           <td className="px-6 py-4 font-medium">
-                            {order.number}
+                            #{order.order_number}
                           </td>
                           <td className="px-6 py-4">
                             {order.order_products

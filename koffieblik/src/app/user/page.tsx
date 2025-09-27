@@ -44,6 +44,9 @@ export default function UserPage() {
   const [userBadges, setUserBadges] = useState<string[]>([]);
   const [badgesLoading, setBadgesLoading] = useState(false);
 
+  // Favorite drink state
+  const [favoriteDrink, setFavoriteDrink] = useState("None");
+
   // Real leaderboard data from API
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -64,6 +67,7 @@ export default function UserPage() {
     // Fetch user stats and badges on mount
     fetchUserStats();
     fetchUserBadges();
+    fetchFavoriteDrink();
   }, []);
 
   // Fetch user stats from API
@@ -91,7 +95,7 @@ export default function UserPage() {
         setUserStats({
           totalOrders: data.stats.total_orders,
           currentStreak: data.stats.current_streak,
-          favoritedrink: "None", // Keep as mock 
+          favoritedrink: "", // api gaan fill
           memberSince: memberSinceYear.toString()
         });
       } else {
@@ -130,6 +134,52 @@ export default function UserPage() {
       setUserBadges([]);
     } finally {
       setBadgesLoading(false);
+    }
+  };
+
+  // Fetch favorite drink from orders API
+  const fetchFavoriteDrink = async () => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/order`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.sucess && data.orders) {
+        // Calculate most frequent drink
+        const drinkCounts: { [key: string]: number } = {};
+        
+        data.orders.forEach((order: any) => {
+          order.order_products.forEach((orderProduct: any) => {
+            const drinkName = orderProduct.products.name;
+            drinkCounts[drinkName] = (drinkCounts[drinkName] || 0) + orderProduct.quantity;
+          });
+        });
+
+        // Find most frequent drink
+        let maxCount = 0;
+        let mostFrequentDrink = "None";
+        
+        Object.entries(drinkCounts).forEach(([drink, count]) => {
+          if (count > maxCount) {
+            maxCount = count;
+            mostFrequentDrink = drink;
+          }
+        });
+
+        setFavoriteDrink(mostFrequentDrink);
+      } else {
+        console.warn("Failed to fetch orders for favorite drink:", data.error || "Unknown error");
+        setFavoriteDrink("None");
+      }
+    } catch (error: any) {
+      console.error("Error fetching favorite drink:", error);
+      setFavoriteDrink("None");
     }
   };
 
@@ -224,7 +274,7 @@ export default function UserPage() {
     },
     { 
       id: 2, 
-      apiKey: "5_orders",
+      apiKey: "five_orders",
       name: "Coffee Lover", 
       description: "Ordered 5 coffees", 
       color: "bg-blue-500", 
@@ -232,7 +282,7 @@ export default function UserPage() {
     },
     { 
       id: 3, 
-      apiKey: "10_orders",
+      apiKey: "ten_orders",
       name: "Regular", 
       description: "Ordered 10 coffees", 
       color: "bg-gray-400", 
@@ -240,7 +290,7 @@ export default function UserPage() {
     },
     { 
       id: 4, 
-      apiKey: "3_day_streak",
+      apiKey: "three_day_streak",
       name: "Daily", 
       description: "3 day streak", 
       color: "bg-green-500", 
@@ -248,7 +298,7 @@ export default function UserPage() {
     },
     { 
       id: 5, 
-      apiKey: "7_day_streak",
+      apiKey: "seven_day_streak",
       name: "Weekly", 
       description: "7 day streak", 
       color: "bg-purple-500", 
@@ -382,7 +432,7 @@ export default function UserPage() {
             
             <div className="bg-white rounded-lg shadow-md p-6 text-center">
               <div className="text-lg font-bold text-purple-600 mb-2">
-                {userStats.favoritedrink}
+                {favoriteDrink}
               </div>
               <div className="text-gray-600">Favourite Drink</div>
             </div>

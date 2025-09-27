@@ -15,6 +15,7 @@ interface MenuItem {
 interface Order {
   id: string;
   number: number;
+  order_number: number;
   status: string;
   total_price: number;
   created_at: string;
@@ -37,8 +38,11 @@ export default function POSPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
   const [filter, setFilter] = useState("Today");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
+
   const dateInputStyle =
     "p-3 border rounded-lg  focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
   const [customerName, setCustomerName] = useState("");
@@ -52,6 +56,39 @@ export default function POSPage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  useEffect(() => {
+    const now = new Date();
+
+    if (filter === "Today") {
+      const today = now.toISOString().split("T")[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (filter === "This Week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+      const start = startOfWeek.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "This Month") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = startOfMonth.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "Custom Range") {
+      // do nothing: leave startDate/endDate as manually chosen
+    }
+  }, [filter]);
+
+  const [toast, setToast] = useState<{
+    orderId: string;
+    prevStatus: string;
+    newStatus: string;
+  } | null>(null);
+
+
   useEffect(() => {
     const role = localStorage.getItem("role");
     if (role !== "admin") {
@@ -82,10 +119,12 @@ export default function POSPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          start_Date: startDate,
+          end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-          orderBy: "created_at",
-          orderDirection: "desc",
+          orderBy: "order_number",
+          orderDirection: "asc",
           filters: {
             status: statusFilter,
           },
@@ -110,6 +149,51 @@ export default function POSPage() {
     }
   };
 
+  const updateOrderStatus = async (
+    orderId: string,
+    newStatus: "completed" | "cancelled" | "pending",
+  ) => {
+    const prevOrder = orders.find((o) => o.id === orderId);
+    if (!prevOrder) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/update_order_status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === orderId ? { ...order, status: newStatus } : order,
+          ),
+        );
+
+        // 🔔 Show toast with undo option
+        setToast({ orderId, prevStatus: prevOrder.status, newStatus });
+
+        // Auto-dismiss after 5s
+
+        setTimeout(() => {
+          setToast(null);
+          fetchOrders();
+        }, 5000);
+
+      } else {
+        console.error("❌ Failed to update order status:", data.message || data.error);
+      }
+    } catch (err) {
+      console.error("❌ Error updating status:", err);
+    }
+  };
+
+
   // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
     fetchOrders();
@@ -118,7 +202,7 @@ export default function POSPage() {
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
     fetchOrders();
-  }, [offSetStart, statusFilter]); // run when either changes
+  }, [offSetStart, statusFilter, startDate, endDate]);
 
 
 
@@ -589,6 +673,13 @@ export default function POSPage() {
                       >
                         Date
                       </th>
+                      <th
+                        className="text-left px-6 py-4 font-semibold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Actions
+                      </th>
+
                     </tr>
                   </thead>
                   <tbody
@@ -601,7 +692,7 @@ export default function POSPage() {
                     {filteredOrders.map((order) => (
                       <tr key={order.id}>
                         <td className="px-6 py-4 font-medium">
-                          {order.number}
+                          #{order.order_number}
                         </td>
                         <td className="px-6 py-4">
                           {order.order_products
@@ -621,6 +712,41 @@ export default function POSPage() {
                             "en-ZA",
                           )}
                         </td>
+                        <td className="p-3">
+                          {order.status === "pending" && (
+                            <div className="flex gap-2">
+                              <button
+                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // prevent row toggle
+                                  updateOrderStatus(order.id, "completed");
+                                }}
+                              >
+                                ✅ Complete
+                              </button>
+                              <button
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateOrderStatus(order.id, "cancelled");
+                                }}
+                              >
+                                ❌ Cancel
+                              </button>
+                            </div>
+                          )}
+                          {order.status === "completed" && (
+                            <button
+                              className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOrderStatus(order.id, "pending");
+                              }}
+                            >
+                              🔄 Revert
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -629,6 +755,27 @@ export default function POSPage() {
             </section>
           )}
         </div>
+        {toast && (
+          <div
+            className="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3"
+            style={{ zIndex: 1000 }}
+          >
+            <span>
+              ✅ Order <b>{toast.orderId}</b> marked as{" "}
+              <b>{toast.newStatus}</b>.
+            </span>
+            <button
+              className="bg-yellow-500 text-black px-2 py-1 rounded hover:bg-yellow-600"
+              onClick={() => {
+                updateOrderStatus(toast.orderId, toast.prevStatus as any);
+                setToast(null);
+              }}
+            >
+              Undo
+            </button>
+          </div>
+        )}
+
 
       </div>
 

@@ -149,7 +149,7 @@ export default function Navbar() {
     <nav className="sticky top-0 z-50">
       {/* Reduced all padding */}
       <div className="px-2 py-2"> {/* Changed from px-4 */}
-        <div 
+        <div
           className="rounded-xl shadow-sm border border-[var(--primary-1)]"
           style={{ backgroundColor: "var(--primary-3)" }}
         >
@@ -193,16 +193,16 @@ export default function Navbar() {
             {/* Updated tabs section with better highlighting */}
             <div className="flex flex-wrap gap-2"> {/* Reduced gap from 3 to 2 */}
               {tabs.map((tab) => {
-                const isActive = pathname.includes(tab.toLowerCase()) || 
-                               (tab === "Dashboard" && pathname === "/") ||
-                               (tab === selectedTab);
+                const isActive = pathname.includes(tab.toLowerCase()) ||
+                  (tab === "Dashboard" && pathname === "/") ||
+                  (tab === selectedTab);
                 const isLogout = tab === "Logout";
                 const isUsername = tab === username;
 
                 const baseClass = `
                   flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium 
                   transition-all duration-200
-                  ${isActive 
+                  ${isActive
                     ? "bg-[var(--primary-2)]/15 text-[var(--primary-2)] font-semibold shadow-sm" // More subtle highlighting
                     : "hover:bg-[var(--primary-2)]/10 text-[var(--primary-2)]"
                   }
@@ -224,29 +224,30 @@ export default function Navbar() {
                   );
                 }
 
-                const usernameClass = isUsername 
+                const usernameClass = isUsername
                   ? `${baseClass} hover:bg-[var(--primary-2)]/10 cursor-pointer`
                   : baseClass;
 
                 function getUserHref(): string {
                   switch (tab) {
-                  case "Dashboard":
-                    return "/";
-                  case "Inventory":
-                    return "/inventory";
-                  case "Reports":
-                    return "/reports";
-                  case "Order Here":
-                  case "pos":
-                    return "/pos";
-                  case "manage":
-                    return "/manage";
-                  case "Help":
-                    return "/help";
-                  case username:
-                    return "/profile";
-                  default:
-                    return "/";
+                    case "Dashboard":
+                      return "/";
+                    case "Inventory":
+                      return "/inventory";
+                    case "Reports":
+                      return "/reports";
+                    case "Order Here":
+                      return "/userPOS";
+                    case "pos":
+                      return "/pos";
+                    case "manage":
+                      return "/manage";
+                    case "Help":
+                      return "/help";
+                    case username:
+                      return "/user";
+                    default:
+                      return "/";
                   }
                 }
 
