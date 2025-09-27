@@ -19,6 +19,9 @@
   background-color: var(--primary-4);
 }
 
+::-webkit-scrollbar {
+  display: none;
+}
 
 @theme inline {
   --color-background: var(--background);

@@ -6,6 +6,7 @@ import Link from "next/link";
 import { useState, FormEvent, useEffect } from "react";
 import { validateEmail } from "@/lib/validators/emailValidator";
 import { useRouter } from "next/navigation";
+import CoffeeLoading from "assets/loading";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -298,6 +299,7 @@ export default function LoginPage() {
           </form>
         </div>
       </main>
+      <CoffeeLoading visible={isLoading}/>
     </HydrationFix>
   );
 }

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useState, FormEvent } from "react";
 import { validatePassword } from "@/lib/validators/passwordValidator";
 import { validateEmail } from "@/lib/validators/emailValidator";
+import CoffeeLoading from "assets/loading";
 
 const comfortaa = Comfortaa({
   subsets: ["latin"],
@@ -752,6 +753,7 @@ export default function RegisterPage() {
           </form>
         </div>
       </main>
+      <CoffeeLoading visible={isLoading}/>
     </HydrationFix>
   );
 }

@@ -13,7 +13,12 @@ export default function CoffeeLoading({ visible }: CoffeeLoadingProps) {
   return (
     <div style={overlayStyle}>
       <div style={animationWrapperStyle}>
-        <Lottie animationData={CoffeeLoadingJSON} loop={true} autoplay />
+        <Lottie 
+          animationData={CoffeeLoadingJSON} 
+          loop={true}
+          autoplay={true}
+          style={{ width: "100%", height: "100%" }}
+        />
       </div>
     </div>
   );
@@ -26,7 +31,7 @@ const overlayStyle: React.CSSProperties = {
   left: 0,
   width: "100vw",
   height: "100vh",
-  backgroundColor: "rgba(26, 14, 5, 0.7)",
+  backgroundColor: "rgba(241, 211, 188, 0.7)",
   display: "flex",
   justifyContent: "center",
   alignItems: "center",
