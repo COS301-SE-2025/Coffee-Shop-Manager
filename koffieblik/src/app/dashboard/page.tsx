@@ -120,7 +120,7 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
-// 🔄 run once on mount (or whenever API_BASE_URL changes)
+  // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
     fetchOrders();
   }, [API_BASE_URL]);
@@ -130,7 +130,7 @@ export default function DashboardPage() {
   }, [offSetStart, statusFilter]);
 
 
-  
+
 
   // Route to different pages based on selected tab
   useEffect(() => {
@@ -460,7 +460,7 @@ export default function DashboardPage() {
 
                 {/* Table */}
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-xs">
                     <thead
                       className="border-b"
                       style={{
