@@ -252,7 +252,33 @@ export default function UserPage() {
       color: "bg-purple-500", 
       image: sevenDayBadge 
     },
+    { 
+      id: 6, 
+      apiKey: "week_member",
+      name: "Week Member", 
+      description: "Member for a week", 
+      color: "bg-indigo-500", 
+      image: null 
+    },
+    { 
+      id: 7, 
+      apiKey: "month_member",
+      name: "Month Member", 
+      description: "Member for a month", 
+      color: "bg-pink-500", 
+      image: null 
+    },
     
+
+    {
+      id: 8, 
+      apiKey: "year_member",
+      name: "Year Member", 
+      description: "Member for a year", 
+      color: "bg-pink-500", 
+      image: null
+
+    }
   ];
 
   // Create badges array with earned status from API
