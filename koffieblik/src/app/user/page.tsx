@@ -216,7 +216,7 @@ export default function UserPage() {
       id: 1, 
       apiKey: "first_order",
       name: "First Sip", 
-      description: "Made your first order", 
+      description: "Placed your first order", 
       color: "bg-yellow-500", 
       image: firstBadge 
     },
