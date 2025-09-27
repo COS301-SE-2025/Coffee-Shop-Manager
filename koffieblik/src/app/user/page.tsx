@@ -1,4 +1,3 @@
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -39,6 +38,10 @@ export default function UserPage() {
   // User stats loading state
   const [statsLoading, setStatsLoading] = useState(false);
 
+  // Badges state
+  const [userBadges, setUserBadges] = useState<string[]>([]);
+  const [badgesLoading, setBadgesLoading] = useState(false);
+
   // Real leaderboard data from API
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [leaderboardLoading, setLeaderboardLoading] = useState(false);
@@ -56,8 +59,9 @@ export default function UserPage() {
       setUsername(storedUsername);
     }
 
-    // Fetch user stats on mount
+    // Fetch user stats and badges on mount
     fetchUserStats();
+    fetchUserBadges();
   }, []);
 
   // Fetch user stats from API
@@ -80,7 +84,6 @@ export default function UserPage() {
         const currentDate = new Date();
         const accountCreationDate = new Date();
         accountCreationDate.setDate(currentDate.getDate() - data.stats.account_age_days);
-       // console.log("age test" + data.stats.account_age_days);
         const memberSinceYear = accountCreationDate.getFullYear();
 
         setUserStats({
@@ -96,6 +99,35 @@ export default function UserPage() {
       console.error(" Error fetching user stats:", error);
     } finally {
       setStatsLoading(false);
+    }
+  };
+
+  // Fetch user badges from API
+  const fetchUserBadges = async () => {
+    setBadgesLoading(true);
+    
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/badges`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success && data.badges) {
+        setUserBadges(data.badges);
+      } else {
+        console.warn("Failed to fetch user badges:", data.error || "Unknown error");
+        setUserBadges([]);
+      }
+    } catch (error: any) {
+      console.error("Error fetching user badges:", error);
+      setUserBadges([]);
+    } finally {
+      setBadgesLoading(false);
     }
   };
 
@@ -122,7 +154,6 @@ export default function UserPage() {
             user_id: user.user_id,
             total_orders: user.total_orders,
             current_streak: user.current_streak || 0,
-
             favorite_drink: user.favorite_drink || "Unknown",
             // Mapped properties for easier access
             id: user.user_id,
@@ -170,7 +201,6 @@ export default function UserPage() {
 
   // Find current user's rank
   const getCurrentUserRank = () => {
-    
     if (!isClient) return 0;
     
     // If user not in leaderboard, calculate based on their stats
@@ -180,13 +210,56 @@ export default function UserPage() {
     return usersAbove.length + 1;
   };
 
-  const badges = [
-    { id: 1, name: "First Sip", description: "Made your first order", earned: true, color: "bg-yellow-500", image: firstBadge },
-    { id: 2, name: "Coffee Lover", description: "Ordered 5 coffees", earned: false, color: "bg-blue-500", image: fiveOrdersBadge },
-    { id: 3, name: "Regular", description: "Ordered 10 coffees", earned: false, color: "bg-gray-400", image: tenOrdersBadge },
-    { id: 4, name: "Daily", description: "3 day streak", earned: false, color: "bg-green-500", image: threeDayBadge },
-    { id: 5, name: "Weekly", description: "7 day streak", earned: false, color: "bg-purple-500", image: sevenDayBadge },
+  // Define all available badges with their API keys
+  const allBadges = [
+    { 
+      id: 1, 
+      apiKey: "first_order",
+      name: "First Sip", 
+      description: "Made your first order", 
+      color: "bg-yellow-500", 
+      image: firstBadge 
+    },
+    { 
+      id: 2, 
+      apiKey: "5_orders",
+      name: "Coffee Lover", 
+      description: "Ordered 5 coffees", 
+      color: "bg-blue-500", 
+      image: fiveOrdersBadge 
+    },
+    { 
+      id: 3, 
+      apiKey: "10_orders",
+      name: "Regular", 
+      description: "Ordered 10 coffees", 
+      color: "bg-gray-400", 
+      image: tenOrdersBadge 
+    },
+    { 
+      id: 4, 
+      apiKey: "3_day_streak",
+      name: "Daily", 
+      description: "3 day streak", 
+      color: "bg-green-500", 
+      image: threeDayBadge 
+    },
+    { 
+      id: 5, 
+      apiKey: "7_day_streak",
+      name: "Weekly", 
+      description: "7 day streak", 
+      color: "bg-purple-500", 
+      image: sevenDayBadge 
+    },
+    
   ];
+
+  // Create badges array with earned status from API
+  const badges = allBadges.map(badge => ({
+    ...badge,
+    earned: userBadges.includes(badge.apiKey)
+  }));
 
   const getRankIcon = (rank: number): string => {
     return `#${rank}`;
@@ -241,7 +314,6 @@ export default function UserPage() {
                   <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
                 </div>
               </div>
-              
             </div>
           </div>
 
@@ -289,46 +361,80 @@ export default function UserPage() {
 
           {/* Badges Section */}
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h3 className="text-xl font-bold text-gray-900 mb-4">My Badges</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className={`p-4 rounded-lg text-center ${
-                    badge.earned
-                      ? "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-sm"
-                      : "bg-gray-100 opacity-60"
-                  }`}
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-bold text-gray-900">My Badges</h3>
+              {badgesLoading && (
+                <div className="text-sm text-gray-500">Loading badges...</div>
+              )}
+              {!badgesLoading && (
+                <button
+                  onClick={fetchUserBadges}
+                  className="text-sm text-blue-600 hover:text-blue-800"
                 >
+                  Refresh
+                </button>
+              )}
+            </div>
+            
+            {badgesLoading ? (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {[...Array(6)].map((_, index) => (
+                  <div key={index} className="p-4 rounded-lg bg-gray-100 animate-pulse">
+                    <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded mb-1"></div>
+                    <div className="h-3 bg-gray-300 rounded"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {badges.map((badge) => (
                   <div
-                    className={`w-12 h-12 rounded-full ${badge.color} mx-auto mb-2 flex items-center justify-center`}
+                    key={badge.id}
+                    className={`p-4 rounded-lg text-center transition-all duration-200 ${
+                      badge.earned
+                        ? "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-sm hover:shadow-md"
+                        : "bg-gray-100 opacity-60"
+                    }`}
                   >
-                    {badge.image ? (
-                      <Image 
-                        src={badge.image} 
-                        alt={badge.name}
-                        width={32}
-                        height={32}
-                        className="object-contain"
-                      />
-                    ) : (
-                      <span className="text-white text-xl"></span>
+                    <div
+                      className={`w-12 h-12 rounded-full ${badge.color} mx-auto mb-2 flex items-center justify-center ${
+                        badge.earned ? "shadow-sm" : "grayscale"
+                      }`}
+                    >
+                      {badge.image ? (
+                        <Image 
+                          src={badge.image} 
+                          alt={badge.name}
+                          width={32}
+                          height={32}
+                          className={`object-contain ${!badge.earned ? "grayscale opacity-50" : ""}`}
+                        />
+                      ) : (
+                        <span className="text-white text-xl">🏆</span>
+                      )}
+                    </div>
+                    <div className={`font-medium text-sm mb-1 ${
+                      badge.earned ? "text-gray-900" : "text-gray-500"
+                    }`}>
+                      {badge.name}
+                    </div>
+                    <div className={`text-xs ${
+                      badge.earned ? "text-gray-600" : "text-gray-400"
+                    }`}>
+                      {badge.description}
+                    </div>
+                    {badge.earned && (
+                      <div className="mt-2">
+                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                      </div>
                     )}
                   </div>
-                  <div className="font-medium text-gray-900 text-sm mb-1">
-                    {badge.name}
-                  </div>
-                  <div className="text-xs text-gray-600">
-                    {badge.description}
-                  </div>
-                  {badge.earned && (
-                    <div className="mt-2">
-                      <span className="inline-block w-2 h-2 bg-green-500 rounded-full"></span>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
+            
+            
           </div>
         </>
       )}
