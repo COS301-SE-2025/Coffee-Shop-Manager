@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
+import CoffeeBackground from "assets/coffee-background";
 
 interface MenuItem {
   id: string;
@@ -26,12 +27,13 @@ interface OrderSummary {
 export default function OrderPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [searchQuery, setSearchQuery] = useState<string>(""); // Replace activeCategory with searchQuery
   const [orderStatus, setOrderStatus] = useState<
-    "ordering" | "confirming" | "placed"
+    "ordering" | "selecting-payment" | "confirming" | "placed"
   >("ordering");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
   const router = useRouter();
 
   const API_BASE_URL =
@@ -44,14 +46,6 @@ export default function OrderPage() {
     }
   }, [router]);
 
-  // Categories
-  const categories = [
-    { id: "all", name: "All Items" },
-    { id: "coffee", name: "Hot Coffee" },
-    { id: "cold", name: "Cold Drinks" },
-    { id: "food", name: "Food" },
-  ];
-
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -60,13 +54,21 @@ export default function OrderPage() {
           credentials: "include",
         });
         const data = await res.json();
-        if (data.success) {
+        // Update to handle the direct array response from your API
+        if (Array.isArray(data)) {
+          setMenu(data);
+        } else if (data.success && data.products) {
           setMenu(data.products);
         } else {
-          console.error("Failed to load products:", data.error);
+          console.error(
+            "Failed to load products:",
+            data.error || "No products found",
+          );
+          setMenu([]);
         }
       } catch (err) {
         console.error("Error fetching products:", err);
+        setMenu([]);
       } finally {
         setLoading(false);
       }
@@ -130,14 +132,58 @@ export default function OrderPage() {
       return;
     }
 
-    setOrderStatus("confirming");
+    setOrderStatus("selecting-payment");
     setMessage("");
+  };
+
+  // Update the handlePaymentMethodSelect function
+  const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
+    setSelectedPaymentMethod(paymentMethod);
+    
+    // For cash payments, just create the order and show success
+    if (paymentMethod === 'cash') {
+      const payload = {
+        products: cart.map((item) => ({
+          product: item.name,
+          quantity: item.quantity,
+        })),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/create_order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          setOrderStatus("placed");
+          setCart([]);
+          setMessage("Order created! Please proceed to the counter to pay.");
+        } else {
+          setOrderStatus("ordering");
+          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
+        }
+      } catch (err) {
+        console.error("Order error:", err);
+        setOrderStatus("ordering");
+        setMessage("Failed to submit order. Please try again.");
+      }
+      return;
+    }
+
+    // For card payments, continue with existing flow
+    setOrderStatus("confirming");
 
     const payload = {
       products: cart.map((item) => ({
         product: item.name,
         quantity: item.quantity,
       })),
+      payment_method: paymentMethod,
     };
 
     try {
@@ -167,40 +213,187 @@ export default function OrderPage() {
     }
   };
 
-  const filteredItems =
-    activeCategory === "all"
-      ? menu
-      : menu.filter(
-          (item) =>
-            item.category?.toLowerCase() === activeCategory.toLowerCase(),
-        );
+  const handleCancelPayment = () => {
+    setOrderStatus("ordering");
+    setSelectedPaymentMethod(null);
+  };
+
+  // Replace category filtering with search filtering
+  const filteredItems = menu.filter((item) => {
+    if (!searchQuery) return true;
+
+    const query = searchQuery.toLowerCase();
+    return (
+      item.name.toLowerCase().includes(query) ||
+      (item.description && item.description.toLowerCase().includes(query)) ||
+      (item.category && item.category.toLowerCase().includes(query))
+    );
+  });
 
   const orderSummary = getOrderSummary();
 
+  // Payment Method Selection Modal
+  if (orderStatus === "selecting-payment") {
+    return (
+      <div className="min-h-screen w-full">
+        <div className="fixed inset-0 w-full h-full">
+          <CoffeeBackground />
+        </div>
+
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative z-20">
+            <h2
+              className="text-2xl font-bold mb-6 text-center"
+              style={{ color: "var(--primary-3)" }}
+            >
+              Choose Payment Method
+            </h2>
+            
+            <div className="space-y-4 mb-6">
+              <button
+                onClick={() => handlePaymentMethodSelect("card")}
+                className="w-full p-4 border-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-3"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  backgroundColor: "white",
+                  color: "var(--primary-3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--primary-4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "white";
+                }}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+                <span className="text-lg font-semibold">Card Payment</span>
+              </button>
+
+              <button
+                onClick={() => handlePaymentMethodSelect("cash")}
+                className="w-full p-4 border-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-3"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  backgroundColor: "white",
+                  color: "var(--primary-3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--primary-4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "white";
+                }}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <span className="text-lg font-semibold">Cash Payment</span>
+              </button>
+            </div>
+
+            <div className="text-center">
+              <p
+                className="text-lg font-semibold mb-4"
+                style={{ color: "var(--primary-3)" }}
+              >
+                Total: R{getOrderSummary().total.toFixed(2)}
+              </p>
+              
+              <button
+                onClick={handleCancelPayment}
+                className="text-gray-500 hover:text-gray-700 underline"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Processing state
+  if (orderStatus === "confirming") {
+    return (
+      <div className="min-h-screen relative">
+        <div className="fixed inset-0 z-0 h-screen">
+          <CoffeeBackground />
+        </div>
+
+        <div className="min-h-screen flex justify-center items-center relative z-10">
+          <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: "var(--primary-3)" }}></div>
+            <h2
+              className="text-2xl font-bold mb-2"
+              style={{ color: "var(--primary-3)" }}
+            >
+              Processing Your Order
+            </h2>
+            <p className="text-gray-600">
+              Payment method: {selectedPaymentMethod === "card" ? "Card" : "Cash"}
+            </p>
+            <p className="text-gray-600">Please wait...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (orderStatus === "placed") {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg">
-          <div className="mb-4">
-            <span className="text-6xl">✓</span>
-          </div>
-          <h2
-            className="text-2xl font-bold mb-2"
-            style={{ color: "var(--primary-3)" }}
-          >
-            Order Placed Successfully!
-          </h2>
-          <p className="text-gray-600 mb-4">
-            Your order is being prepared. You can track it in your dashboard.
-          </p>
-          {message && <p className="text-green-600 mb-4">{message}</p>}
-          <div className="space-y-3">
-            <button
-              onClick={() => router.push("/userdashboard")}
-              className="btn bg-blue-500 hover:bg-blue-600"
+      <div className="min-h-screen relative">
+        <div className="fixed inset-0 z-0 h-screen">
+          <CoffeeBackground />
+        </div>
+
+        <div className="min-h-screen flex justify-center relative z-10 pt-20">
+          <div className="text-center p-8 bg-white rounded-lg shadow-lg h-fit">
+            <div className="mb-4">
+              <span className="text-6xl">✓</span>
+            </div>
+            <h2
+              className="text-2xl font-bold mb-2"
+              style={{ color: "var(--primary-3)" }}
             >
-              View Dashboard
-            </button>
+              Order Placed Successfully!
+            </h2>
+            <p className="text-gray-600 mb-2">
+              Your order is being prepared. You can track it in your dashboard.
+            </p>
+            <p className="text-gray-500 mb-4">
+              Payment method: {selectedPaymentMethod === "card" ? "Card" : "Cash"}
+            </p>
+            {message && <p className="text-green-600 mb-4">{message}</p>}
+            <div className="space-y-3">
+              <button
+                onClick={() => router.push("/userdashboard")}
+                className="btn bg-blue-500 hover:bg-blue-600"
+              >
+                View Dashboard
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -208,280 +401,275 @@ export default function OrderPage() {
   }
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: "var(--primary-4)" }}
-    >
-      {/* Header */}
-      <header
-        className="sticky top-0 z-20 border-b"
-        style={{
-          backgroundColor: "var(--primary-4)",
-          borderColor: "var(--primary-4)",
-        }}
-      >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <h1
-              className="text-2xl font-bold"
-              style={{ color: "var(--primary-3)" }}
+    <div className="min-h-screen relative">
+      <div className="fixed inset-0 z-0 h-screen">
+        <CoffeeBackground />
+      </div>
+
+      <div className="relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          {message && (
+            <div
+              className={`mb-4 p-3 rounded-lg ${
+                message.includes("Failed") || message.includes("error")
+                  ? "bg-red-100 text-red-700"
+                  : "bg-green-100 text-green-700"
+              }`}
             >
-              Order Online
-            </h1>
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <span className="text-2xl">🛒</span>
-                {cart.length > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs">
-                    {cart.reduce((sum, item) => sum + item.quantity, 0)}
-                  </span>
-                )}
+              {message}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="text-xl" style={{ color: "var(--primary-3)" }}>
+                Loading menu...
               </div>
             </div>
-          </div>
-        </div>
-      </header>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Message Display */}
-        {message && (
-          <div
-            className={`mb-4 p-3 rounded-lg ${message.includes("Failed") || message.includes("error") ? "bg-red-100 text-red-700" : "bg-green-100 text-green-700"}`}
-          >
-            {message}
-          </div>
-        )}
-
-        {loading ? (
-          <div className="flex justify-center items-center h-64">
-            <div className="text-xl" style={{ color: "var(--primary-3)" }}>
-              Loading menu...
-            </div>
-          </div>
-        ) : (
-          <div className="lg:grid lg:grid-cols-3 lg:gap-8">
-            {/* Menu Section */}
-            <div className="lg:col-span-2">
-              {/* Category Tabs */}
-              <div className="mb-8">
-                <nav
-                  className="flex space-x-1 rounded-lg p-1"
-                  style={{ backgroundColor: "var(--primary-4)" }}
-                >
-                  {categories.map((category) => {
-                    return (
+          ) : (
+            <div className="lg:grid lg:grid-cols-3 lg:gap-8">
+              <div className="lg:col-span-2">
+                <div className="mb-8">
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Search for items..."
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full px-4 py-3 pl-10 rounded-lg border-2"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        backgroundColor: "white",
+                        color: "var(--primary-3)",
+                      }}
+                    />
+                    <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                      <svg
+                        className="w-5 h-5 text-gray-400"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                        />
+                      </svg>
+                    </div>
+                    {searchQuery && (
                       <button
-                        key={category.id}
-                        onClick={() => setActiveCategory(category.id)}
-                        className={`flex items-center px-4 py-2 rounded-md font-medium transition-colors ${
-                          activeCategory === category.id
-                            ? "text-white"
-                            : "tr-hover"
-                        }`}
-                        style={
-                          activeCategory === category.id
-                            ? { backgroundColor: "var(--primary-3)" }
-                            : {}
-                        }
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
                       >
-                        {category.name}
+                        <svg
+                          className="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M6 18L18 6M6 6l12 12"
+                          />
+                        </svg>
                       </button>
-                    );
-                  })}
-                </nav>
-              </div>
-
-              {/* Menu Items */}
-              {filteredItems.length === 0 ? (
-                <div className="text-center py-8">
-                  <p className="text-gray-500">
-                    No items available in this category.
-                  </p>
+                    )}
+                  </div>
+                  {searchQuery && (
+                    <p className="mt-2 text-sm text-gray-600">
+                      {filteredItems.length} item
+                      {filteredItems.length !== 1 ? "s" : ""} found for "
+                      {searchQuery}"
+                    </p>
+                  )}
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {filteredItems.map((item) => {
-                    const quantity = getCartItemQuantity(item.id);
-                    return (
-                      <div
-                        key={item.id}
-                        className="bg-white rounded-lg shadow-md overflow-hidden border"
-                        style={{ borderColor: "var(--primary-4)" }}
-                      >
-                        <div className="p-6">
-                          <div className="flex justify-between items-start mb-3">
-                            <h3
-                              className="text-xl font-semibold"
-                              style={{ color: "var(--primary-3)" }}
-                            >
-                              {item.name}
-                            </h3>
-                            <div
-                              className="flex items-center"
-                              style={{ color: "var(--primary-3)" }}
-                            >
-                              <span className="text-lg font-bold">
-                                R{item.price.toFixed(2)}
-                              </span>
-                            </div>
-                          </div>
-                          {item.description && (
-                            <p className="text-gray-600 mb-4">
-                              {item.description}
-                            </p>
-                          )}
-                          {item.stock_quantity !== undefined && (
-                            <p className="text-sm text-gray-500 mb-4">
-                              Stock: {item.stock_quantity}
-                            </p>
-                          )}
 
-                          {/* Add to Cart Controls */}
-                          <div className="flex items-center justify-between">
-                            {quantity === 0 ? (
-                              <button
-                                onClick={() => addToCart(item)}
-                                className="btn flex-1"
-                                disabled={item.stock_quantity === 0}
+                {/* Menu Items */}
+                {filteredItems.length === 0 ? (
+                  <div className="text-center py-8">
+                    <p className="text-gray-500">
+                      {searchQuery
+                        ? `No items found matching "${searchQuery}"`
+                        : "No items available."}
+                    </p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {filteredItems.map((item) => {
+                      const quantity = getCartItemQuantity(item.id);
+                      return (
+                        <div
+                          key={item.id}
+                          className="bg-white rounded-lg shadow-md overflow-hidden border"
+                          style={{ borderColor: "var(--primary-4)" }}
+                        >
+                          <div className="p-6">
+                            <div className="flex justify-between items-start mb-3">
+                              <h3
+                                className="text-xl font-semibold"
+                                style={{ color: "var(--primary-3)" }}
                               >
-                                <span className="mr-2">+</span>
-                                {item.stock_quantity === 0
-                                  ? "Out of Stock"
-                                  : "Add to Cart"}
-                              </button>
-                            ) : (
-                              <div className="flex items-center space-x-3 flex-1">
-                                <button
-                                  onClick={() => removeFromCart(item.id)}
-                                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: "var(--primary-4)",
-                                    color: "var(--primary-3)",
-                                  }}
-                                >
-                                  <span className="text-lg font-bold">−</span>
-                                </button>
-                                <span
-                                  className="font-semibold text-lg min-w-[2rem] text-center"
-                                  style={{ color: "var(--primary-3)" }}
-                                >
-                                  {quantity}
+                                {item.name}
+                              </h3>
+                              <div
+                                className="flex items-center"
+                                style={{ color: "var(--primary-3)" }}
+                              >
+                                <span className="text-lg font-bold">
+                                  R{item.price.toFixed(2)}
                                 </span>
+                              </div>
+                            </div>
+                            {item.description && (
+                              <p className="text-gray-600 mb-4">
+                                {item.description}
+                              </p>
+                            )}
+
+                            <div className="flex items-center justify-between">
+                              {quantity === 0 ? (
                                 <button
                                   onClick={() => addToCart(item)}
-                                  className="w-8 h-8 rounded-full flex items-center justify-center"
-                                  style={{
-                                    backgroundColor: "var(--primary-3)",
-                                    color: "var(--primary-2)",
-                                  }}
-                                  disabled={
-                                    item.stock_quantity !== undefined &&
-                                    quantity >= item.stock_quantity
-                                  }
+                                  className="btn flex-1"
+                                  disabled={item.stock_quantity === 0}
                                 >
-                                  <span className="text-lg font-bold">+</span>
+                                  <span className="mr-2">+</span>
+                                  {item.stock_quantity === 0
+                                    ? "Out of Stock"
+                                    : "Add to Cart"}
                                 </button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* Cart/Order Summary */}
-            <div className="lg:col-span-1 mt-8 lg:mt-0">
-              <div className="sticky top-24">
-                <div
-                  className="bg-white rounded-lg shadow-lg border"
-                  style={{ borderColor: "var(--primary-4)" }}
-                >
-                  <div className="p-6">
-                    <h3
-                      className="text-xl font-semibold mb-4"
-                      style={{ color: "var(--primary-3)" }}
-                    >
-                      Your Order{" "}
-                      {cart.length > 0 &&
-                        `(${cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
-                    </h3>
-
-                    {cart.length === 0 ? (
-                      <p className="text-gray-500 text-center py-8">
-                        Your cart is empty
-                      </p>
-                    ) : (
-                      <>
-                        {/* Cart Items */}
-                        <div className="space-y-3 mb-6">
-                          {cart.map((item) => (
-                            <div
-                              key={item.id}
-                              className="flex justify-between items-center py-2 border-b"
-                              style={{ borderColor: "var(--primary-4)" }}
-                            >
-                              <div className="flex-1">
-                                <h4
-                                  className="font-medium"
-                                  style={{ color: "var(--primary-3)" }}
-                                >
-                                  {item.name}
-                                </h4>
-                                <p className="text-sm text-gray-600">
-                                  Qty: {item.quantity}
-                                </p>
-                              </div>
-                              <div className="text-right">
-                                <p
-                                  className="font-semibold"
-                                  style={{ color: "var(--primary-3)" }}
-                                >
-                                  R{(item.price * item.quantity).toFixed(2)}
-                                </p>
-                              </div>
+                              ) : (
+                                <div className="flex items-center space-x-3 flex-1">
+                                  <button
+                                    onClick={() => removeFromCart(item.id)}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                                    style={{
+                                      backgroundColor: "var(--primary-4)",
+                                      color: "var(--primary-3)",
+                                    }}
+                                  >
+                                    <span className="text-lg font-bold">−</span>
+                                  </button>
+                                  <span
+                                    className="font-semibold text-lg min-w-[2rem] text-center"
+                                    style={{ color: "var(--primary-3)" }}
+                                  >
+                                    {quantity}
+                                  </span>
+                                  <button
+                                    onClick={() => addToCart(item)}
+                                    className="w-8 h-8 rounded-full flex items-center justify-center"
+                                    style={{
+                                      backgroundColor: "var(--primary-3)",
+                                      color: "var(--primary-2)",
+                                    }}
+                                    disabled={
+                                      item.stock_quantity !== undefined &&
+                                      quantity >= item.stock_quantity
+                                    }
+                                  >
+                                    <span className="text-lg font-bold">+</span>
+                                  </button>
+                                </div>
+                              )}
                             </div>
-                          ))}
-                        </div>
-
-                        {/* Order Summary */}
-                        <div className="space-y-2 mb-6">
-                          <div className="flex justify-between">
-                            <span>Subtotal:</span>
-                            <span>R{orderSummary.subtotal.toFixed(2)}</span>
                           </div>
-                          <div
-                            className="flex justify-between font-bold text-lg border-t pt-2"
-                            style={{
-                              borderColor: "var(--primary-4)",
-                              color: "var(--primary-3)",
-                            }}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              {/* Cart/Order Summary */}
+              <div className="lg:col-span-1 mt-8 lg:mt-0">
+                <div className="sticky top-[150px]">
+                  <div
+                    className="bg-white rounded-lg shadow-lg border"
+                    style={{ borderColor: "var(--primary-4)" }}
+                  >
+                    <div className="p-6">
+                      <h3
+                        className="text-xl font-semibold mb-4"
+                        style={{ color: "var(--primary-3)" }}
+                      >
+                        Your Order{" "}
+                        {cart.length > 0 &&
+                          `(${cart.reduce((sum, item) => sum + item.quantity, 0)} items)`}
+                      </h3>
+
+                      {cart.length === 0 ? (
+                        <p className="text-gray-500 text-center py-8">
+                          Your cart is empty
+                        </p>
+                      ) : (
+                        <>
+                          <div className="space-y-3 mb-6">
+                            {cart.map((item) => (
+                              <div
+                                key={item.id}
+                                className="flex justify-between items-center py-2 border-b"
+                                style={{ borderColor: "var(--primary-4)" }}
+                              >
+                                <div className="flex-1">
+                                  <h4
+                                    className="font-medium"
+                                    style={{ color: "var(--primary-3)" }}
+                                  >
+                                    {item.name}
+                                  </h4>
+                                  <p className="text-sm text-gray-600">
+                                    Qty: {item.quantity}
+                                  </p>
+                                </div>
+                                <div className="text-right">
+                                  <p
+                                    className="font-semibold"
+                                    style={{ color: "var(--primary-3)" }}
+                                  >
+                                    R{(item.price * item.quantity).toFixed(2)}
+                                  </p>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className="space-y-2 mb-6">
+                            <div className="flex justify-between">
+                              <span>Subtotal:</span>
+                              <span>R{orderSummary.subtotal.toFixed(2)}</span>
+                            </div>
+                            <div
+                              className="flex justify-between font-bold text-lg border-t pt-2"
+                              style={{
+                                borderColor: "var(--primary-4)",
+                                color: "var(--primary-3)",
+                              }}
+                            >
+                              <span>Total:</span>
+                              <span>R{orderSummary.total.toFixed(2)}</span>
+                            </div>
+                          </div>
+
+                          <button
+                            onClick={handlePlaceOrder}
+                            className="btn w-full text-lg py-3"
                           >
-                            <span>Total:</span>
-                            <span>R{orderSummary.total.toFixed(2)}</span>
-                          </div>
-                        </div>
-
-                        {/* Place Order Button */}
-                        <button
-                          onClick={handlePlaceOrder}
-                          disabled={orderStatus === "confirming"}
-                          className="btn w-full text-lg py-3"
-                        >
-                          {orderStatus === "confirming"
-                            ? "Processing..."
-                            : "Place Order"}
-                        </button>
-                      </>
-                    )}
+                            Place Order
+                          </button>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );

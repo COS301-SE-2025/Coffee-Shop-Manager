@@ -9,6 +9,7 @@ import fiveOrdersBadge from "../badges/5orders.png";
 import tenOrdersBadge from "../badges/10orders.png";
 import yearAccount from "../badges/year_account.png"
 import week_month_account from "../badges/week_account.png"
+import CoffeeBackground from "assets/coffee-background";
 
 //api url
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -352,78 +353,52 @@ export default function UserPage() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`flex-1 py-4 px-6 text-center font-medium ${
-              activeTab === "profile"
-                ? "text-brown-700 border-b-2 border-brown-700"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            My Profile
-          </button>
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`flex-1 py-4 px-6 text-center font-medium ${
-              activeTab === "leaderboard"
-                ? "text-brown-700 border-b-2 border-brown-700"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Leaderboard 
-          </button>
-        </div>
+    <main className="relative min-h-screen">
+      {/* Add background layer */}
+      <div className="fixed inset-0 z-0">
+        <CoffeeBackground />
       </div>
 
-      {activeTab === "profile" && (
-        <>
-          {/* User Info Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-2xl text-white">👤</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
-                  <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
-                </div>
-              </div>
-            </div>
+      {/* Content layer */}
+      <div className="relative z-10 p-6 space-y-6">
+        {/* Tab Navigation */}
+        <div className="bg-[#F5E6DA]/90 backdrop-blur-sm rounded-lg shadow-md">
+          <div className="flex border-b">
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`flex-1 py-4 px-6 text-center font-medium ${
+                activeTab === "profile"
+                  ? "text-brown-700 border-b-2 border-brown-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              My Profile
+            </button>
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 py-4 px-6 text-center font-medium ${
+                activeTab === "leaderboard"
+                  ? "text-brown-700 border-b-2 border-brown-700"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Leaderboard 
+            </button>
           </div>
+        </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              {statsLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded w-20 mx-auto"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {userStats.totalOrders}
+        {activeTab === "profile" && (
+          <>
+            {/* User Info Card */}
+            <div className="bg-[#F5E6DA] rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-2xl text-white">👤</span>
                   </div>
-                  <div className="text-gray-600">Total Orders</div>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              {statsLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded w-24 mx-auto"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {userStats.currentStreak}
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
+                    <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
                   </div>
                   <div className="text-gray-600">Current Streak</div>
                 </>
@@ -434,214 +409,255 @@ export default function UserPage() {
               <div className="text-lg font-bold text-purple-600 mb-2">
                 {favoriteDrink}
               </div>
-              <div className="text-gray-600">Favourite Drink</div>
             </div>
-          </div>
 
-          {/* Badges Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">My Badges</h3>
-              {badgesLoading && (
-                <div className="text-sm text-gray-500">Loading badges...</div>
-              )}
-              {!badgesLoading && (
-                <button
-                  onClick={fetchUserBadges}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Refresh
-                </button>
-              )}
-            </div>
-            
-            {badgesLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(6)].map((_, index) => (
-                  <div key={index} className="p-4 rounded-lg bg-gray-100 animate-pulse">
-                    <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-2"></div>
-                    <div className="h-4 bg-gray-300 rounded mb-1"></div>
-                    <div className="h-3 bg-gray-300 rounded"></div>
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-[#F5E6DA] rounded-lg shadow-md p-6 text-center">
+                {statsLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-20 mx-auto"></div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {badges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    className={`p-4 rounded-lg text-center transition-all duration-200 ${
-                      badge.earned
-                        ? "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-sm hover:shadow-md"
-                        : "bg-gray-100 opacity-60"
-                    }`}
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-full ${badge.color} mx-auto mb-2 flex items-center justify-center ${
-                        badge.earned ? "shadow-sm" : "grayscale"
-                      }`}
-                    >
-                      {badge.image ? (
-                        <Image 
-                          src={badge.image} 
-                          alt={badge.name}
-                          width={32}
-                          height={32}
-                          className={`object-contain ${!badge.earned ? "grayscale opacity-50" : ""}`}
-                        />
-                      ) : (
-                        <span className="text-white text-xl">🏆</span>
-                      )}
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                      {userStats.totalOrders}
                     </div>
-                    <div className={`font-medium text-sm mb-1 ${
-                      badge.earned ? "text-gray-900" : "text-gray-500"
-                    }`}>
-                      {badge.name}
-                    </div>
-                    <div className={`text-xs ${
-                      badge.earned ? "text-gray-600" : "text-gray-400"
-                    }`}>
-                      {badge.description}
-                    </div>
-                    {badge.earned && (
-                      <div className="mt-2">
-                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            
-          </div>
-        </>
-      )}
-
-      {activeTab === "leaderboard" && (
-        <>
-          {/* Your Position */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-2xl text-white">👤</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
-                  <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className={`text-2xl font-bold ${getRankColor(getCurrentUserRank())}`}>
-                  {getRankIcon(getCurrentUserRank())}
-                </div>
-                <div className="text-sm text-gray-500">Current Rank</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Leaderboard */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b">
-              <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">
-                  Top Users
-                </h3>
-                {leaderboardLoading && (
-                  <div className="text-sm text-gray-500">Loading...</div>
+                    <div className="text-gray-600">Total Orders</div>
+                  </>
                 )}
-                {!leaderboardLoading && leaderboard.length > 0 && (
+              </div>
+              
+              <div className="bg-[#F5E6DA] rounded-lg shadow-md p-6 text-center">
+                {statsLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-24 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-green-600 mb-2">
+                      {userStats.currentStreak}
+                    </div>
+                    <div className="text-gray-600">Current Streak</div>
+                  </>
+                )}
+              </div>
+              
+              <div className="bg-[#F5E6DA] rounded-lg shadow-md p-6 text-center">
+                <div className="text-lg font-bold text-purple-600 mb-2">
+                  {userStats.favoritedrink}
+                </div>
+                <div className="text-gray-600">Favourite Drink</div>
+              </div>
+            </div>
+
+            {/* Badges Section */}
+            <div className="bg-[#F5E6DA] rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">My Badges</h3>
+                {badgesLoading && (
+                  <div className="text-sm text-gray-500">Loading badges...</div>
+                )}
+                {!badgesLoading && (
                   <button
-                    onClick={fetchLeaderboard}
+                    onClick={fetchUserBadges}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     Refresh
                   </button>
                 )}
               </div>
-            </div>
-            
-            {leaderboardError && (
-              <div className="p-6 text-center">
-                <div className="text-red-600 mb-2">Error loading leaderboard</div>
-                <div className="text-sm text-gray-500 mb-4">{leaderboardError}</div>
-                <button
-                  onClick={fetchLeaderboard}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Try Again
-                </button>
-              </div>
-            )}
-
-            {leaderboardLoading && (
-              <div className="p-6 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <div className="mt-2 text-gray-500">Loading leaderboard...</div>
-              </div>
-            )}
-
-            {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
-              <div className="p-6 text-center text-gray-500">
-                No leaderboard data available
-              </div>
-            )}
-
-            {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
-              <div className="divide-y">
-                {sortedLeaderboard.slice(0, 10).map((user, index) => {
-                  // Only check current user after client hydration
-                  const currentUserId = isClient 
-                    ? (localStorage.getItem("userId") || localStorage.getItem("user_id"))
-                    : null;
-                  const isCurrentUser = user.user_id === currentUserId;
-                  const displayRank = index + 1;
-                  
-                  return (
+              
+              {badgesLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index} className="p-4 rounded-lg bg-gray-100 animate-pulse">
+                      <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-2"></div>
+                      <div className="h-4 bg-gray-300 rounded mb-1"></div>
+                      <div className="h-3 bg-gray-300 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {badges.map((badge) => (
                     <div
-                      key={user.user_id}
-                      className={`p-4 flex items-center justify-between hover:bg-gray-50 ${
-                        isCurrentUser ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                      key={badge.id}
+                      className={`p-4 rounded-lg text-center transition-all duration-200 ${
+                        badge.earned
+                          ? "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-sm hover:shadow-md"
+                          : "bg-gray-100 opacity-60"
                       }`}
                     >
-                      <div className="flex items-center space-x-4">
-                        <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
-                          {getRankIcon(displayRank)}
-                        </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold">
-                            {user.username.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {user.username}
-                            {isCurrentUser && (
-                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                You
-                              </span>
-                            )}
-                          </div>
-                          
-                        </div>
+                      <div
+                        className={`w-12 h-12 rounded-full ${badge.color} mx-auto mb-2 flex items-center justify-center ${
+                          badge.earned ? "shadow-sm" : "grayscale"
+                        }`}
+                      >
+                        {badge.image ? (
+                          <Image 
+                            src={badge.image} 
+                            alt={badge.name}
+                            width={32}
+                            height={32}
+                            className={`object-contain ${!badge.earned ? "grayscale opacity-50" : ""}`}
+                          />
+                        ) : (
+                          <span className="text-white text-xl">🏆</span>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900">
-                          {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {leaderboardFilter === "orders" ? "orders" : "day streak"}
-                        </div>
+                      <div className={`font-medium text-sm mb-1 ${
+                        badge.earned ? "text-gray-900" : "text-gray-500"
+                      }`}>
+                        {badge.name}
                       </div>
+                      <div className={`text-xs ${
+                        badge.earned ? "text-gray-600" : "text-gray-400"
+                      }`}>
+                        {badge.description}
+                      </div>
+                      {badge.earned && (
+                        <div className="mt-2">
+                          <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+              )}
+              
+              
+            </div>
+          </>
+        )}
+
+        {activeTab === "leaderboard" && (
+          <>
+            {/* Your Position */}
+            <div className="bg-white rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-2xl text-white">👤</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
+                    <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-2xl font-bold ${getRankColor(getCurrentUserRank())}`}>
+                    {getRankIcon(getCurrentUserRank())}
+                  </div>
+                  <div className="text-sm text-gray-500">Current Rank</div>
+                </div>
               </div>
-            )}
-          </div>
-        </>
-      )}
-    </div>
+            </div>
+
+            {/* Leaderboard */}
+            <div className="bg-[#F5E6DA] rounded-lg shadow-md">
+              <div className="p-6 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Top Users
+                  </h3>
+                  {leaderboardLoading && (
+                    <div className="text-sm text-gray-500">Loading...</div>
+                  )}
+                  {!leaderboardLoading && leaderboard.length > 0 && (
+                    <button
+                      onClick={fetchLeaderboard}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Refresh
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {leaderboardError && (
+                <div className="p-6 text-center">
+                  <div className="text-red-600 mb-2">Error loading leaderboard</div>
+                  <div className="text-sm text-gray-500 mb-4">{leaderboardError}</div>
+                  <button
+                    onClick={fetchLeaderboard}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {leaderboardLoading && (
+                <div className="p-6 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="mt-2 text-gray-500">Loading leaderboard...</div>
+                </div>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
+                <div className="p-6 text-center text-gray-500">
+                  No leaderboard data available
+                </div>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
+                <div className="divide-y">
+                  {sortedLeaderboard.slice(0, 10).map((user, index) => {
+                    // Only check current user after client hydration
+                    const currentUserId = isClient 
+                      ? (localStorage.getItem("userId") || localStorage.getItem("user_id"))
+                      : null;
+                    const isCurrentUser = user.user_id === currentUserId;
+                    const displayRank = index + 1;
+                    
+                    return (
+                      <div
+                        key={user.user_id}
+                        className={`p-4 flex items-center justify-between hover:bg-[#F5E6DA]/80 ${
+                          isCurrentUser ? "bg-[#F5E6DA]/50 border-l-4 border-blue-500" : ""
+                        }`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
+                            {getRankIcon(displayRank)}
+                          </div>
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {user.username}
+                              {isCurrentUser && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                You
+                                </span>
+                              )}
+                            </div>
+                            
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-gray-900">
+                            {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {leaderboardFilter === "orders" ? "orders" : "day streak"}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+    </main>
   );
 }
