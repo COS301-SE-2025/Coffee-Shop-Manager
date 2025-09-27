@@ -34,6 +34,7 @@ export default function OrderPage() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
+  const [specialInstructions, setSpecialInstructions] = useState("");
   const router = useRouter();
 
   const API_BASE_URL =
@@ -147,6 +148,7 @@ export default function OrderPage() {
           product: item.name,
           quantity: item.quantity,
         })),
+        custom: specialInstructions,
       };
 
       try {
@@ -183,6 +185,7 @@ export default function OrderPage() {
         product: item.name,
         quantity: item.quantity,
       })),
+      special_instructions: specialInstructions,
       payment_method: paymentMethod,
     };
 
@@ -636,6 +639,30 @@ export default function OrderPage() {
                                 </div>
                               </div>
                             ))}
+                          </div>
+
+                          {/* Special Instructions Section */}
+                          <div className="mb-6">
+                            <label
+                              htmlFor="special-instructions"
+                              className="block text-sm font-medium mb-2"
+                              style={{ color: "var(--primary-3)" }}
+                            >
+                              Special Instructions
+                            </label>
+                            <textarea
+                              id="special-instructions"
+                              rows={3}
+                              placeholder="Any special requests for the barista?"
+                              value={specialInstructions}
+                              onChange={(e) => setSpecialInstructions(e.target.value)}
+                              className="w-full px-3 py-2 border rounded-lg text-sm resize-none focus:outline-none focus:ring-2 focus:ring-opacity-50"
+                              style={{
+                                borderColor: "var(--primary-4)",
+                                backgroundColor: "white",
+                                color: "var(--primary-3)",
+                              }}
+                            />
                           </div>
 
                           <div className="space-y-2 mb-6">
