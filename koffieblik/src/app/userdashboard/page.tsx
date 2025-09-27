@@ -39,6 +39,9 @@ export default function DashboardPage() {
   const [showOrder, setShowOrders] = useState(false);
   const [showPoints, setShowPoints] = useState(false);
   const [loading, setLoading] = useState(true); // Changed from false to true
+  const [graphFilter, setGraphFilter] = useState<"day" | "month" | "year">(
+    "month",
+  );
   const router = useRouter();
 
   useEffect(() => {
@@ -156,6 +159,51 @@ export default function DashboardPage() {
     return null;
   };
 
+  function aggregatePoints(
+    data: { date: string; points: number }[],
+    filter: "day" | "month" | "year",
+  ) {
+    const result: { label: string; points: number }[] = [];
+    const map = new Map<string, number>();
+
+    data.forEach(({ date, points }) => {
+      const d = new Date(date);
+      let label = "";
+      if (filter === "day") {
+        label = d.toLocaleDateString("en-ZA", {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+        });
+      } else if (filter === "month") {
+        label = d.toLocaleDateString("en-ZA", { year: "numeric", month: "short" });
+      } else if (filter === "year") {
+        label = d.getFullYear().toString();
+      }
+      map.set(label, (map.get(label) || 0) + points);
+    });
+
+    map.forEach((points, label) => {
+      result.push({ label, points });
+    });
+
+    // Sort by label (date ascending)
+    result.sort((a, b) => a.label.localeCompare(b.label));
+    return result;
+  }
+
+  // Replace pointsData with your API data
+  const rawPointsData = [
+    { date: "2025-07-01", points: 100 },
+    { date: "2025-07-01", points: 50 },
+    { date: "2025-07-02", points: 200 },
+    { date: "2025-06-30", points: 75 },
+    { date: "2025-06-01", points: 300 },
+    { date: "2024-07-01", points: 120 },
+  ];
+
+  const graphData = aggregatePoints(rawPointsData, graphFilter);
+
   return (
     <main className="relative min-h-full bg-transparent">
       {/* <div className="absolute inset-0 bg-black opacity-60 z-0"></div> */}
@@ -196,11 +244,45 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
+                  {/* Add this UI above your graph */}
+                  <div className="mb-6 flex gap-4">
+                    <button
+                      className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
+                        graphFilter === "day"
+                          ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
+                          : "bg-[var(--primary-3)] text-[var(--primary-2)]"
+                      }`}
+                      onClick={() => setGraphFilter("day")}
+                    >
+                      Day
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
+                        graphFilter === "month"
+                          ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
+                          : "bg-[var(--primary-3)] text-[var(--primary-2)]"
+                      }`}
+                      onClick={() => setGraphFilter("month")}
+                    >
+                      Month
+                    </button>
+                    <button
+                      className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
+                        graphFilter === "year"
+                          ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
+                          : "bg-[var(--primary-3)] text-[var(--primary-2)]"
+                      }`}
+                      onClick={() => setGraphFilter("year")}
+                    >
+                      Year
+                    </button>
+                  </div>
+
                   <div className="h-[300px] w-full relative bg-gradient-to-t from-black/5 to-transparent rounded-xl p-4 border border-white/10">
                     <div className="absolute inset-0 bg-grid-pattern opacity-5 rounded-xl"></div>
                     <ResponsiveContainer width="100%" height="100%">
                       <LineChart
-                        data={pointsData}
+                        data={graphData}
                         margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                       >
                         <defs>
@@ -226,12 +308,24 @@ export default function DashboardPage() {
                           vertical={false}
                         />
                         <XAxis
-                          dataKey="month"
+                          dataKey="label" // <-- Use "label" from your aggregated data
                           stroke="var(--primary-2)"
                           tick={{ fill: "var(--primary-2)", fontSize: 12, fontWeight: 500 }}
                           tickLine={false}
                           axisLine={{ stroke: "var(--primary-4)", opacity: 0.3 }}
                           dy={10}
+                          label={{
+                            value: graphFilter === "day"
+                              ? "Date"
+                              : graphFilter === "month"
+                              ? "Month"
+                              : "Year",
+                            position: "insideBottom",
+                            offset: -15,
+                            fill: "var(--primary-2)",
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
                         />
                         <YAxis
                           stroke="var(--primary-2)"
@@ -239,6 +333,15 @@ export default function DashboardPage() {
                           tickLine={false}
                           axisLine={false}
                           tickFormatter={(value) => `${value}`}
+                          label={{
+                            value: "Points",
+                            angle: -90,
+                            position: "insideLeft",
+                            offset: 10,
+                            fill: "var(--primary-2)",
+                            fontSize: 14,
+                            fontWeight: 700,
+                          }}
                         />
                         <Tooltip content={<CustomTooltip />} />
                         <Area

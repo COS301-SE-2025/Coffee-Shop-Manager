@@ -1,6 +1,15 @@
 "use client";
 import React, { useState } from "react";
 
+// Example: Replace with your fetched data from Supabase
+const pointsData = [
+  { date: "2025-09-27", points: 50 },
+  { date: "2025-09-26", points: 40 },
+  { date: "2025-09-01", points: 30 },
+  { date: "2025-08-15", points: 20 },
+  { date: "2024-09-27", points: 60 },
+];
+
 const faqs = [
   {
     question: "How do I create an account?",
@@ -40,13 +49,74 @@ const faqs = [
 
 export default function HelpPage() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [graphFilter, setGraphFilter] = useState<"day" | "month" | "year">(
+    "month"
+  );
 
   const toggleFAQ = (index: number) => {
     setOpenIndex((prev) => (prev === index ? null : index));
   };
 
+  // Get today's date
+  const now = new Date();
+
+  // Filter logic
+  let filteredPointsData = pointsData;
+  if (graphFilter === "day") {
+    filteredPointsData = pointsData.filter(
+      (d) => new Date(d.date).toDateString() === now.toDateString()
+    );
+  } else if (graphFilter === "month") {
+    filteredPointsData = pointsData.filter(
+      (d) =>
+        new Date(d.date).getMonth() === now.getMonth() &&
+        new Date(d.date).getFullYear() === now.getFullYear()
+    );
+  } else if (graphFilter === "year") {
+    filteredPointsData = pointsData.filter(
+      (d) => new Date(d.date).getFullYear() === now.getFullYear()
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto p-6">
+      {/* Filter UI */}
+      <div className="mb-6 flex gap-4">
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
+            graphFilter === "day"
+              ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
+              : "bg-[var(--primary-3)] text-[var(--primary-2)]"
+          }`}
+          onClick={() => setGraphFilter("day")}
+        >
+          Day
+        </button>
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
+            graphFilter === "month"
+              ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
+              : "bg-[var(--primary-3)] text-[var(--primary-2)]"
+          }`}
+          onClick={() => setGraphFilter("month")}
+        >
+          Month
+        </button>
+        <button
+          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
+            graphFilter === "year"
+              ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
+              : "bg-[var(--primary-3)] text-[var(--primary-2)]"
+          }`}
+          onClick={() => setGraphFilter("year")}
+        >
+          Year
+        </button>
+      </div>
+
+      {/* Your graph component here, pass filteredPointsData */}
+      {/* <YourGraphComponent data={filteredPointsData} /> */}
+
       <h1
         className="text-3xl font-bold mb-6"
         style={{ color: "var(--primary-2)" }}
@@ -74,7 +144,8 @@ export default function HelpPage() {
                 className="text-2xl transition-transform duration-300"
                 style={{
                   color: "var(--primary-2)",
-                  transform: openIndex === index ? "rotate(0deg)" : "rotate(90deg)",
+                  transform:
+                    openIndex === index ? "rotate(0deg)" : "rotate(90deg)",
                 }}
               >
                 {openIndex === index ? "−" : "+"}
