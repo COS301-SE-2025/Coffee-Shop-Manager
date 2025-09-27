@@ -231,8 +231,30 @@ export default function POSPage() {
     fetchProducts();
   }, []);
 
+  const [userEmails, setUserEmails] = useState<string[]>([]);
+  const [selectedEmail, setSelectedEmail] = useState("");
+
+  useEffect(() => {
+    const fetchUserEmails = async () => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/user/emails`, {
+          credentials: "include",
+        });
+        const data = await res.json();
+        console.log("📧 User emails:", data.emails);
+        setUserEmails(data.emails || []); // ✅ save into state
+      } catch (err) {
+        console.error("❌ Error fetching user emails:", err);
+      }
+    };
+
+    fetchUserEmails();
+  }, [API_BASE_URL]);
+
+
+
   // Filter orders based on selected filter
-  const now = new Date();
+
   let filteredOrders = orders;
 
   // if (filter === "Today") {
@@ -358,8 +380,49 @@ export default function POSPage() {
       </div> */}
       <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
         {/* LEFT COLUMN (menu + cart stacked) */}
+
         <div style={{ flex: "0 0 50%", maxWidth: "50%", display: "flex", border: "2px solid var(--primary-3)", padding: "20px", flexDirection: "column", gap: "20px" }}>
           {/* Menu */}
+          <div
+            className="p-4 rounded-xl shadow-md mb-6"
+            style={{
+              backgroundColor: "var(--primary-2)",
+            }}
+          >
+            <label
+              htmlFor="user-email-dropdown"
+              className="block text-sm font-medium mb-2"
+              style={{ color: "var(--primary-3)" }}
+            >
+              Select User Email
+            </label>
+
+            <select
+              id="user-email-dropdown"
+              value={selectedEmail}
+              onChange={(e) => setSelectedEmail(e.target.value)}
+              className="w-full p-3 border rounded-lg"
+              style={{
+                borderColor: "var(--primary-2)",
+                color: "var(--primary-2)",
+                backgroundColor: "var(--primary-3)",
+              }}
+            >
+              <option value="">-- Choose an email --</option>
+              {userEmails.map((email, idx) => (
+                <option key={idx} value={email}>
+                  {email}
+                </option>
+              ))}
+            </select>
+
+            {selectedEmail && (
+              <p className="mt-3 text-sm" style={{ color: "var(--primary-1)" }}>
+                Selected: <b>{selectedEmail}</b>
+              </p>
+            )}
+          </div>
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
             {loading ? (
               <div className="col-span-2 md:col-span-3 lg:col-span-4 flex justify-center items-center py-10">
