@@ -29,10 +29,11 @@ export default function OrderPage() {
   const [cart, setCart] = useState<CartItem[]>([]);
   const [searchQuery, setSearchQuery] = useState<string>(""); // Replace activeCategory with searchQuery
   const [orderStatus, setOrderStatus] = useState<
-    "ordering" | "confirming" | "placed"
+    "ordering" | "selecting-payment" | "confirming" | "placed"
   >("ordering");
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
+  const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
   const router = useRouter();
 
   const API_BASE_URL =
@@ -131,14 +132,58 @@ export default function OrderPage() {
       return;
     }
 
-    setOrderStatus("confirming");
+    setOrderStatus("selecting-payment");
     setMessage("");
+  };
+
+  // Update the handlePaymentMethodSelect function
+  const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
+    setSelectedPaymentMethod(paymentMethod);
+    
+    // For cash payments, just create the order and show success
+    if (paymentMethod === 'cash') {
+      const payload = {
+        products: cart.map((item) => ({
+          product: item.name,
+          quantity: item.quantity,
+        })),
+      };
+
+      try {
+        const res = await fetch(`${API_BASE_URL}/create_order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+
+        const result = await res.json();
+
+        if (res.ok && result.success) {
+          setOrderStatus("placed");
+          setCart([]);
+          setMessage("Order created! Please proceed to the counter to pay.");
+        } else {
+          setOrderStatus("ordering");
+          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
+        }
+      } catch (err) {
+        console.error("Order error:", err);
+        setOrderStatus("ordering");
+        setMessage("Failed to submit order. Please try again.");
+      }
+      return;
+    }
+
+    // For card payments, continue with existing flow
+    setOrderStatus("confirming");
 
     const payload = {
       products: cart.map((item) => ({
         product: item.name,
         quantity: item.quantity,
       })),
+      payment_method: paymentMethod,
     };
 
     try {
@@ -168,6 +213,11 @@ export default function OrderPage() {
     }
   };
 
+  const handleCancelPayment = () => {
+    setOrderStatus("ordering");
+    setSelectedPaymentMethod(null);
+  };
+
   // Replace category filtering with search filtering
   const filteredItems = menu.filter((item) => {
     if (!searchQuery) return true;
@@ -182,10 +232,139 @@ export default function OrderPage() {
 
   const orderSummary = getOrderSummary();
 
+  // Payment Method Selection Modal
+  if (orderStatus === "selecting-payment") {
+    return (
+      <div className="min-h-screen w-full">
+        <div className="fixed inset-0 w-full h-full">
+          <CoffeeBackground />
+        </div>
+
+        <div className="fixed inset-0 z-10 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative z-20">
+            <h2
+              className="text-2xl font-bold mb-6 text-center"
+              style={{ color: "var(--primary-3)" }}
+            >
+              Choose Payment Method
+            </h2>
+            
+            <div className="space-y-4 mb-6">
+              <button
+                onClick={() => handlePaymentMethodSelect("card")}
+                className="w-full p-4 border-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-3"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  backgroundColor: "white",
+                  color: "var(--primary-3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--primary-4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "white";
+                }}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
+                  />
+                </svg>
+                <span className="text-lg font-semibold">Card Payment</span>
+              </button>
+
+              <button
+                onClick={() => handlePaymentMethodSelect("cash")}
+                className="w-full p-4 border-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-3"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  backgroundColor: "white",
+                  color: "var(--primary-3)",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.backgroundColor = "var(--primary-4)";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.backgroundColor = "white";
+                }}
+              >
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                  />
+                </svg>
+                <span className="text-lg font-semibold">Cash Payment</span>
+              </button>
+            </div>
+
+            <div className="text-center">
+              <p
+                className="text-lg font-semibold mb-4"
+                style={{ color: "var(--primary-3)" }}
+              >
+                Total: R{getOrderSummary().total.toFixed(2)}
+              </p>
+              
+              <button
+                onClick={handleCancelPayment}
+                className="text-gray-500 hover:text-gray-700 underline"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Processing state
+  if (orderStatus === "confirming") {
+    return (
+      <div className="min-h-screen relative">
+        <div className="fixed inset-0 z-0 h-screen">
+          <CoffeeBackground />
+        </div>
+
+        <div className="min-h-screen flex justify-center items-center relative z-10">
+          <div className="text-center p-8 bg-white rounded-lg shadow-lg">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 mx-auto mb-4" style={{ borderColor: "var(--primary-3)" }}></div>
+            <h2
+              className="text-2xl font-bold mb-2"
+              style={{ color: "var(--primary-3)" }}
+            >
+              Processing Your Order
+            </h2>
+            <p className="text-gray-600">
+              Payment method: {selectedPaymentMethod === "card" ? "Card" : "Cash"}
+            </p>
+            <p className="text-gray-600">Please wait...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (orderStatus === "placed") {
     return (
       <div className="min-h-screen relative">
-        <div className="fixed inset-0 z-0">
+        <div className="fixed inset-0 z-0 h-screen">
           <CoffeeBackground />
         </div>
 
@@ -200,8 +379,11 @@ export default function OrderPage() {
             >
               Order Placed Successfully!
             </h2>
-            <p className="text-gray-600 mb-4">
+            <p className="text-gray-600 mb-2">
               Your order is being prepared. You can track it in your dashboard.
+            </p>
+            <p className="text-gray-500 mb-4">
+              Payment method: {selectedPaymentMethod === "card" ? "Card" : "Cash"}
             </p>
             {message && <p className="text-green-600 mb-4">{message}</p>}
             <div className="space-y-3">
@@ -220,7 +402,7 @@ export default function OrderPage() {
 
   return (
     <div className="min-h-screen relative">
-      <div className="fixed inset-0 z-0">
+      <div className="fixed inset-0 z-0 h-screen">
         <CoffeeBackground />
       </div>
 
@@ -475,12 +657,9 @@ export default function OrderPage() {
 
                           <button
                             onClick={handlePlaceOrder}
-                            disabled={orderStatus === "confirming"}
                             className="btn w-full text-lg py-3"
                           >
-                            {orderStatus === "confirming"
-                              ? "Processing..."
-                              : "Place Order"}
+                            Place Order
                           </button>
                         </>
                       )}
