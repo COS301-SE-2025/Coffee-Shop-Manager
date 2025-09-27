@@ -245,7 +245,7 @@ export default function Navbar() {
                     case "Help":
                       return "/help";
                     case username:
-                      return "/profile";
+                      return "/user";
                     default:
                       return "/";
                   }
