@@ -66,6 +66,7 @@ export default function DashboardPage() {
   const [userGamificationStats, setUserGamificationStats] = useState<
     UserGamificationStats | null
   >(null);
+  const [statusFilter, setStatusFilter] = useState<string>("all");
   const router = useRouter();
 
   useEffect(() => {
@@ -157,6 +158,7 @@ export default function DashboardPage() {
   const now = new Date();
   let filteredOrders = orders;
 
+  // First apply date filters
   if (filter === "Today") {
     filteredOrders = orders.filter(
       (order) =>
@@ -184,16 +186,23 @@ export default function DashboardPage() {
     });
   }
 
+  // Then apply status filter
+  if (statusFilter !== "all") {
+    filteredOrders = filteredOrders.filter(
+      (order) => order.status.toLowerCase() === statusFilter.toLowerCase()
+    );
+  }
+
   const getTotalLoyaltyPoints = () => {};
 
   const getStatusStyle = (status: string) => {
-    switch (status) {
-      case "Completed":
+    switch (status.toLowerCase()) {
+      case "completed":
         return "text-green-700 bg-green-100 px-2 py-1 rounded-full text-xs font-medium";
-      case "Pending":
-        return "text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full text-xs font-medium";
-      case "Cancelled":
+      case "cancelled":
         return "text-red-700 bg-red-100 px-2 py-1 rounded-full text-xs font-medium";
+      case "pending":
+        return "text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium";
       default:
         return "text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium";
     }
@@ -598,7 +607,7 @@ export default function DashboardPage() {
           ) : (
             <>
               <button
-                className="select-none backdrop-blur-sm border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+                className="select-none backdrop-blur-sm border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none hover:-translate-y-1 transition-all duration-300 ease-in-out hover:shadow-lg cursor-pointer"
                 style={{ backgroundColor: "var(--primary-3)" }}
                 onClick={() => setShowOrders(false)}
               >
@@ -607,7 +616,7 @@ export default function DashboardPage() {
 
               {/* Orders Section */}
               <section
-                className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
+                className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl overflow-hidden mt-4" // Added overflow-hidden and mt-4
                 style={{ backgroundColor: "var(--primary-3)" }}
               >
                 {/* Heading */}
@@ -620,20 +629,8 @@ export default function DashboardPage() {
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: "var(--primary-4)" }}
-                      >
-                        <span
-                          className="text-sm"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          📋
-                        </span>
-                      </div>
-
                       <h2
-                        className="text-xl font-bold"
+                        className="text-3xl"
                         style={{ color: "var(--primary-2)" }}
                       >
                         Recent Orders
@@ -643,7 +640,7 @@ export default function DashboardPage() {
                     {/* Filter */}
                     <div className="flex flex-wrap gap-3">
                       <select
-                        className={`${dateInputStyle} text-[var(--primary-2)]`}
+                        className={`${dateInputStyle} text-[var(--primary-2)] cursor-pointer`}
                         style={{
                           backgroundColor: "var(--primary-3)",
                           borderColor: "var(--primary-4)",
@@ -656,6 +653,23 @@ export default function DashboardPage() {
                         <option>This Week</option>
                         <option>This Month</option>
                         <option>Custom Range</option>
+                      </select>
+
+                      {/* Add Status Filter */}
+                      <select
+                        className={`${dateInputStyle} text-[var(--primary-2)] cursor-pointer`}
+                        style={{
+                          backgroundColor: "var(--primary-3)",
+                          borderColor: "var(--primary-4)",
+                          boxShadow: "0 0 0 0 transparent",
+                        }}
+                        value={statusFilter}
+                        onChange={(e) => setStatusFilter(e.target.value)}
+                      >
+                        <option value="all">All Status</option>
+                        <option value="pending">Pending</option>
+                        <option value="completed">Completed</option>
+                        <option value="cancelled">Cancelled</option>
                       </select>
 
                       {filter === "Custom Range" && (
@@ -711,7 +725,7 @@ export default function DashboardPage() {
                           className="text-left px-6 py-4 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
-                          Order #
+                          Order
                         </th>
                         <th
                           className="text-left px-6 py-4 font-semibold"
