@@ -120,17 +120,17 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
-
+// 🔄 run once on mount (or whenever API_BASE_URL changes)
+  useEffect(() => {
+    fetchOrders();
+  }, [API_BASE_URL]);
   //when the offsetStart changes it will refecth the function
   useEffect(() => {
     fetchOrders();
   }, [offSetStart, statusFilter]);
 
 
-  // 🔄 run once on mount (or whenever API_BASE_URL changes)
-  useEffect(() => {
-    fetchOrders();
-  }, [API_BASE_URL]);
+  
 
   // Route to different pages based on selected tab
   useEffect(() => {
