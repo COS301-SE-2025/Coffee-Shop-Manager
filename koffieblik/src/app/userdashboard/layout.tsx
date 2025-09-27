@@ -1,5 +1,6 @@
 // layout.tsx - Updated
 import Navbar from "@/app/components/Navbar";
+import CoffeeBackground from "assets/coffee-background";
 
 export const metadata = {
   title: "Dashboard - DieKoffieBlik",
@@ -17,10 +18,7 @@ export default function DashboardLayout({
   return (
     <div className="relative h-screen flex flex-col">
       {/* Background image layer */}
-      <div
-        className="absolute inset-0 -z-10"
-        style={{ backgroundColor: "var(--primary-4)" }}
-      />
+      <CoffeeBackground />
 
       {/* Optional overlay */}
       {/* <div className="absolute inset-0 bg-black/60 -z-10" /> */}

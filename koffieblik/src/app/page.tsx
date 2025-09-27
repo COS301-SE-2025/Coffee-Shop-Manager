@@ -1,7 +1,20 @@
+"use client";
+import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import CoffeeBackground from "assets/coffee-background";
+import CoffeeLoading from "assets/loading";
 
 export default function Home() {
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+
+  const handleNavigation = (path: string) => {
+    setIsLoading(true);
+    router.push(path);
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -18,34 +31,32 @@ export default function Home() {
               className="text-white"
             />
           </div>
-          <span className="text-2xl font-bold text-stone-800">
+          <span className="text-3xl font-bold text-stone-800">
             DieKoffieBlik
           </span>
         </div>
         <div className="flex gap-4">
-          <Link href="/login">
-            <button
-              className="px-6 py-2 font-medium border-2 rounded-full transform hover:-translate-y-1 transition-all duration-300"
-              style={{
-                color: "var(--primary-3)",
-                borderColor: "var(--primary-3)",
-              }}
-            >
-              Login
-            </button>
-          </Link>
+          <button
+            onClick={() => handleNavigation('/login')}
+            className="px-6 py-2 font-medium border-2 rounded-full transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            style={{
+              color: "var(--primary-3)",
+              borderColor: "var(--primary-3)",
+            }}
+          >
+            Login
+          </button>
 
-          <Link href="/signup">
-            <button
-              className="px-6 py-2 rounded-lg transition-colors font-medium shadow-lg"
-              style={{
-                backgroundColor: "var(--primary-3)",
-                color: "var(--primary-2)",
-              }}
-            >
-              Get Started
-            </button>
-          </Link>
+          <button
+            onClick={() => handleNavigation('/signup')}
+            className="px-6 py-2 rounded-lg font-medium shadow-lg transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+            style={{
+              backgroundColor: "var(--primary-3)",
+              color: "var(--primary-2)",
+            }}
+          >
+            Get Started
+          </button>
         </div>
       </header>
 
@@ -104,8 +115,11 @@ export default function Home() {
       </section>
 
       {}
-      <section className="py-20 px-6 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-6xl mx-auto">
+      <section className="relative py-20 px-6">
+        <div className="absolute inset-0 z-0">
+          <CoffeeBackground />
+        </div>
+        <div className="relative z-10 max-w-6xl mx-auto">
           {/* For Customers */}
           <div className="text-center mb-16">
             <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-4">
@@ -258,6 +272,8 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
+      <CoffeeLoading visible={isLoading} />
     </div>
   );
 }
