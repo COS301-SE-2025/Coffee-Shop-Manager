@@ -1,8 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+
 import { useRouter } from "next/navigation";
 import { Router } from "express";
+
+
 
 interface OrderProduct {
   product_id: string;
@@ -18,6 +21,7 @@ interface OrderProduct {
 interface Order {
   id: string;
   number: number;
+  order_number: number;
   status: "pending" | "completed" | "cancelled";
   total_price: number;
   created_at: string;
@@ -29,15 +33,50 @@ export default function ManageOrdersPage() {
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+
   const dateInputStyle =
     "p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
   const [filter, setFilter] = useState("Today");
 
   const [offSetStart, setOffsetStart] = useState(0);
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
+  const today = new Date().toISOString().split("T")[0];
+
+  const [startDate, setStartDate] = useState(today);
+  const [endDate, setEndDate] = useState(today);
   const limit = 5; // items per page
   const [statusFilter, setStatusFilter] = useState("pending");
+  const [expandedOrderId, setExpandedOrderId] = useState<string | null>(null);
+
+  const toggleExpand = (orderId: string) => {
+    setExpandedOrderId(expandedOrderId === orderId ? null : orderId);
+  };
+
+  useEffect(() => {
+    const now = new Date();
+
+    if (filter === "Today") {
+      const today = now.toISOString().split("T")[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (filter === "This Week") {
+      const startOfWeek = new Date(now);
+      startOfWeek.setDate(now.getDate() - now.getDay()); // Sunday as start
+      const start = startOfWeek.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "This Month") {
+      const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+      const start = startOfMonth.toISOString().split("T")[0];
+      const end = now.toISOString().split("T")[0];
+      setStartDate(start);
+      setEndDate(end);
+    } else if (filter === "Custom Range") {
+      // do nothing: leave startDate/endDate as manually chosen
+    }
+  }, [filter]);
+
   const router = useRouter();
   const getStatusStyle = (status: string) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-semibold";
@@ -131,10 +170,12 @@ export default function ManageOrdersPage() {
         },
         credentials: "include",
         body: JSON.stringify({
+          start_Date: startDate,
+          end_Date: endDate,
           offset: offSetStart,
           limit: limit,
-          orderBy: "created_at",
-          orderDirection: "desc",
+          orderBy: "order_number",
+          orderDirection: "asc",
           filters: {
             status: statusFilter,
           },
@@ -167,7 +208,7 @@ export default function ManageOrdersPage() {
 
   useEffect(() => {
     fetchOrders();
-  }, [offSetStart, statusFilter]);
+  }, [offSetStart, statusFilter, startDate, endDate]);
   return (
     <main
       className="relative min-h-full bg-transparent overflow-x-hidden p-8"
@@ -403,66 +444,85 @@ export default function ManageOrdersPage() {
               </thead>
               <tbody>
                 {orders.map((order) => (
-                  <tr
-                    key={order.id}
-                    className={`border-b ${order.status === "completed"
-                      ? "bg-green-50"
-                      : order.status === "cancelled"
-                        ? "bg-red-50"
-                        : "bg-white"
-                      }`}
-                  >
-                    <td className="p-3 font-semibold">{order.id}</td>
-                    <td className="p-3">
-                      <span className={getStatusStyle(order.status)}>
-                        {order.status}
-                      </span>
-                    </td>
-                    <td className="p-3 text-sm text-gray-500">
-                      {new Date(order.created_at).toLocaleString()}
-                    </td>
-
-
-                    {/* <td className="p-3">
-                      <ul className="list-disc list-inside text-sm">
-                        {order.order_products.map((item, idx) => (
-                          <li key={idx}>
-                            {item.products.name} x{item.quantity} — R
-                            {item.price * item.quantity}
-                          </li>
-                        ))}
-                      </ul>
-                    </td> */}
-                    <td className="p-3 font-bold">R{order.total_price}</td>
-                    <td className="p-3">
-                      {order.status === "pending" && (
-                        <div className="flex gap-2">
+                  <React.Fragment key={order.id}>
+                    {/* Main row */}
+                    <tr
+                      className={`border-b cursor-pointer ${order.status === "completed"
+                        ? "bg-green-50"
+                        : order.status === "cancelled"
+                          ? "bg-red-50"
+                          : "bg-white"
+                        }`}
+                      onClick={() => toggleExpand(order.id)}
+                    >
+                      <td className="p-3 font-semibold">#{order.order_number}</td>
+                      <td className="p-3">
+                        <span className={getStatusStyle(order.status)}>{order.status}</span>
+                      </td>
+                      <td className="p-3 text-sm text-gray-500">
+                        {new Date(order.created_at).toLocaleString()}
+                      </td>
+                      <td className="p-3 font-bold">R{order.total_price}</td>
+                      <td className="p-3">
+                        {order.status === "pending" && (
+                          <div className="flex gap-2">
+                            <button
+                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                              onClick={(e) => {
+                                e.stopPropagation(); // prevent row toggle
+                                updateOrderStatus(order.id, "completed");
+                              }}
+                            >
+                              ✅ Complete
+                            </button>
+                            <button
+                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOrderStatus(order.id, "cancelled");
+                              }}
+                            >
+                              ❌ Cancel
+                            </button>
+                          </div>
+                        )}
+                        {order.status === "completed" && (
                           <button
-                            className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                            onClick={() => updateOrderStatus(order.id, "completed")}
+                            className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              updateOrderStatus(order.id, "pending");
+                            }}
                           >
-                            ✅ Complete
+                            🔄 Revert
                           </button>
-                          <button
-                            className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
-                            onClick={() => updateOrderStatus(order.id, "cancelled")}
-                          >
-                            ❌ Cancel
-                          </button>
-                        </div>
-                      )}
-                      {order.status === "completed" && (
-                        <button
-                          className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                          onClick={() => updateOrderStatus(order.id, "pending")}
-                        >
-                          🔄 Revert
-                        </button>
-                      )}
-                    </td>
-                  </tr>
+                        )}
+                      </td>
+                    </tr>
+
+                    {/* Expanded items row */}
+                    {expandedOrderId === order.id && (
+                      <tr className="bg-gray-50">
+                        <td colSpan={5} className="p-4">
+                          <h4 className="font-semibold mb-2">🛒 Items</h4>
+                          <p className="text-sm text-gray-600 mb-2">
+                            Customer: <span className="font-medium">Test@coffee.com</span>
+                          </p>
+                          <ul className="list-disc list-inside space-y-1">
+                            {order.order_products.map((item, idx) => (
+                              <li key={idx}>
+                                {item.products.name} × {item.quantity} — R
+                                {(item.price * item.quantity).toFixed(2)}
+                              </li>
+                            ))}
+                          </ul>
+                        </td>
+                      </tr>
+                    )}
+                  </React.Fragment>
                 ))}
               </tbody>
+
             </table>
           </div>
         )

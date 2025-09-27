@@ -103,14 +103,14 @@ export default function InventoryPage() {
             prev.map((i) =>
               i.item === payload.item
                 ? {
-                    ...i,
-                    ...payload,
-                    percentage_left: payload.max_capacity
-                      ? Math.round(
-                          (payload.quantity / payload.max_capacity) * 100,
-                        )
-                      : null,
-                  }
+                  ...i,
+                  ...payload,
+                  percentage_left: payload.max_capacity
+                    ? Math.round(
+                      (payload.quantity / payload.max_capacity) * 100,
+                    )
+                    : null,
+                }
                 : i,
             ),
           );
@@ -206,7 +206,7 @@ export default function InventoryPage() {
               "quantity",
               "unit_type",
               "max_capacity",
-              "reserved_quantity",
+
             ].map((field) => (
               <div key={field}>
                 <label
