@@ -52,6 +52,14 @@ export default function POSPage() {
   const [loadingOrders, setLoadingOrders] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
+
+  const [toast, setToast] = useState<{
+    orderId: string;
+    prevStatus: string;
+    newStatus: string;
+  } | null>(null);
+
+
   useEffect(() => {
     const role = localStorage.getItem("role");
     if (role !== "admin") {
@@ -109,6 +117,46 @@ export default function POSPage() {
       setLoadingOrders(false);
     }
   };
+
+  const updateOrderStatus = async (
+    orderId: string,
+    newStatus: "completed" | "cancelled" | "pending",
+  ) => {
+    const prevOrder = orders.find((o) => o.id === orderId);
+    if (!prevOrder) return;
+
+    try {
+      const res = await fetch(`${API_BASE_URL}/update_order_status`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setOrders((prev) =>
+          prev.map((order) =>
+            order.id === orderId ? { ...order, status: newStatus } : order,
+          ),
+        );
+
+        // 🔔 Show toast with undo option
+        setToast({ orderId, prevStatus: prevOrder.status, newStatus });
+
+        // Auto-dismiss after 5s
+        setTimeout(() => setToast(null), 5000);
+      } else {
+        console.error("❌ Failed to update order status:", data.message || data.error);
+      }
+    } catch (err) {
+      console.error("❌ Error updating status:", err);
+    }
+  };
+
 
   // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
@@ -589,6 +637,13 @@ export default function POSPage() {
                       >
                         Date
                       </th>
+                      <th
+                        className="text-left px-6 py-4 font-semibold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Actions
+                      </th>
+
                     </tr>
                   </thead>
                   <tbody
@@ -621,6 +676,41 @@ export default function POSPage() {
                             "en-ZA",
                           )}
                         </td>
+                        <td className="p-3">
+                          {order.status === "pending" && (
+                            <div className="flex gap-2">
+                              <button
+                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // prevent row toggle
+                                  updateOrderStatus(order.id, "completed");
+                                }}
+                              >
+                                ✅ Complete
+                              </button>
+                              <button
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateOrderStatus(order.id, "cancelled");
+                                }}
+                              >
+                                ❌ Cancel
+                              </button>
+                            </div>
+                          )}
+                          {order.status === "completed" && (
+                            <button
+                              className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                updateOrderStatus(order.id, "pending");
+                              }}
+                            >
+                              🔄 Revert
+                            </button>
+                          )}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -629,6 +719,27 @@ export default function POSPage() {
             </section>
           )}
         </div>
+        {toast && (
+          <div
+            className="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3"
+            style={{ zIndex: 1000 }}
+          >
+            <span>
+              ✅ Order <b>{toast.orderId}</b> marked as{" "}
+              <b>{toast.newStatus}</b>.
+            </span>
+            <button
+              className="bg-yellow-500 text-black px-2 py-1 rounded hover:bg-yellow-600"
+              onClick={() => {
+                updateOrderStatus(toast.orderId, toast.prevStatus as any);
+                setToast(null);
+              }}
+            >
+              Undo
+            </button>
+          </div>
+        )}
+
 
       </div>
 
