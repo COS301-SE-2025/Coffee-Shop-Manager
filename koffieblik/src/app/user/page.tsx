@@ -7,6 +7,7 @@ import threeDayBadge from "../badges/3dayStreak.png";
 import sevenDayBadge from "../badges/7dayStreak.png";
 import fiveOrdersBadge from "../badges/5orders.png";
 import tenOrdersBadge from "../badges/10orders.png";
+import yearAccount from "../badges/year_account.png"
 
 //api url
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -276,7 +277,7 @@ export default function UserPage() {
       name: "Year Member", 
       description: "Member for a year", 
       color: "bg-pink-500", 
-      image: null
+      image: yearAccount
 
     }
   ];
