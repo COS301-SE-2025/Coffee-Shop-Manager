@@ -643,7 +643,7 @@ export default function DashboardPage() {
       {showPoints && (
         <div className="p-8">
           <button
-            className="select-none backdrop-blur-sm border border-[var(--primary-4)] rounded-xl shadow-md px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none"
+            className="select-none backdrop-blur-sm border border-[var(--primary-4)] rounded-xl shadow-lg px-4 py-2 inline-block text-[var(--primary-2)] text-xl font-semibold leading-none cursor-pointer transform hover:-translate-y-1 transition-all duration-300"
             style={{ backgroundColor: "var(--primary-3)" }}
             onClick={() => setShowPoints(false)}
           >
