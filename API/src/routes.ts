@@ -81,7 +81,7 @@ router.delete("/product/:id", authMiddleware, deleteProductHandler);
 
 // LEGACY
 router.post("/create_order", authMiddleware, createOrderHandler);
-router.get("/get_orders", authMiddleware, getOrdersHandler);
+router.post("/get_orders", authMiddleware, getOrdersHandler);
 router.get("/check-token", checkTokenHandler);
 router.get("/getProducts", authMiddleware, getProductsHandler_old);
 router.put("/update_order_status", authMiddleware, updateOrderStatusHandler);

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { FaChartBar, FaShoppingCart, FaUser, FaSignOutAlt, FaQuestionCircle, FaBoxOpen, FaChartLine, FaCog } from "react-icons/fa";
 
 export default function Navbar() {
   const router = useRouter();
@@ -104,23 +105,22 @@ export default function Navbar() {
   const getTabIcon = (tab: string) => {
     switch (tab) {
       case "Dashboard":
-        return "📊";
+        return <FaChartBar />;
       case "Inventory":
-        return "📦";
+        return <FaBoxOpen />;
       case "Reports":
-        return "📈";
+        return <FaChartLine />;
       case "pos":
-        return "🛒";
       case "Order Here":
-        return "🛒";
+        return <FaShoppingCart />;
       case "manage":
-        return "⚙️";
+        return <FaCog />;
       case "Help":
-        return "❓";
+        return <FaQuestionCircle />;
       case "Logout":
-        return "🚪";
+        return <FaSignOutAlt />;
       default:
-        return "👤"; // User profile icon
+        return <FaUser />;
     }
   };
 
@@ -146,122 +146,130 @@ export default function Navbar() {
   }
 
   return (
-    <nav
-      className="sticky top-0 z-50 border-b border-[var(--primary-1)]"
-      style={{ backgroundColor: "var(--primary-3)" }}
-    >
-      <div className="px-6 py-4">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-10 h-10 rounded-xl flex items-center justify-center"
-              style={{ backgroundColor: "var(--primary-2)" }}
-            >
-              <span className="text-white font-bold text-lg">☕</span>
-            </div>
-
-            <div>
-              <h1
-                className="text-xl font-bold"
-                style={{ color: "var(--primary-2)" }}
-              >
-                Coffee Shop Dashboard
-              </h1>
-              <p className="text-sm" style={{ color: "var(--primary-2)" }}>
-                Welcome back, {username}
-              </p>
-            </div>
-          </div>
-          <div className="text-right">
-            <p
-              className="text-sm font-medium"
-              style={{ color: "var(--primary-2)" }}
-            >
-              {date}
-            </p>
-            <p className="text-xs" style={{ color: "var(--primary-2)" }}>
-              {time}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex flex-wrap gap-3">
-          {tabs.map((tab) => {
-            const isActive = selectedTab === tab;
-            const isLogout = tab === "Logout";
-            const isUsername = tab === username; // Check if this tab is the username
-
-            const getHref = () => {
-              if (role === "user") {
-                switch (tab) {
-                  case "Dashboard":
-                    return "/userdashboard";
-                  case "Order Here":
-                    return "/userPOS";
-                }
-              }
-              switch (tab) {
-                case "Dashboard":
-                  return "/dashboard";
-                case "Inventory":
-                  return "/inventory";
-                case "Reports":
-                  return "/reports";
-                case "pos":
-                  return "/pos";
-                case "manage":
-                  return "/manage";
-                case "Help":
-                  return "/help";
-                default:
-                  return "#";
-              }
-            };
-
-            // Special handling for username - redirect to user profile
-            const getUserHref = () => {
-              if (isUsername) {
-                return "/user"; // This will take them to the user profile page
-              }
-              return getHref();
-            };
-
-            const baseClass = `flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors duration-200 ${
-              isActive ? "bg-white/10 text-white" : "text-[var(--primary-2)]"
-            }`;
-
-            if (isLogout) {
-              return (
-                <button
-                  key={tab}
-                  className="flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium text-red-600 hover:text-white hover:bg-red-500 transition-colors duration-200"
-                  onClick={handleLogout}
+    <nav className="sticky top-0 z-50">
+      {/* Reduced all padding */}
+      <div className="px-2 py-2"> {/* Changed from px-4 */}
+        <div 
+          className="rounded-xl shadow-sm border border-[var(--primary-1)]"
+          style={{ backgroundColor: "var(--primary-3)" }}
+        >
+          {/* Reduced inner padding */}
+          <div className="px-3 py-3"> {/* Changed from px-4 */}
+            {/* Content container */}
+            <div className="flex items-center justify-between mb-3"> {/* Changed mb-4 to mb-3 */}
+              <div className="flex items-center gap-3">
+                {/* <div
+                  className="w-10 h-10 rounded-xl flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-2)" }}
                 >
-                  <span className="text-lg">{getTabIcon(tab)}</span>
-                  <span className="capitalize">{tab}</span>
-                </button>
-              );
-            }
+                  <span className="text-white font-bold text-lg">☕</span>
+                </div> */}
 
-            // Special styling for username tab to make it look clickable
-            const usernameClass = isUsername 
-              ? `${baseClass} hover:bg-white/10 hover:text-white cursor-pointer`
-              : baseClass;
+                <div>
+                  <h1
+                    className="text-2xl md:text-3xl"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Coffee Shop Dashboard
+                  </h1>
+                  <p className="text-sm" style={{ color: "var(--primary-2)", marginLeft: "2em", }}>
+                    Welcome back, {username}
+                  </p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p
+                  className="text-sm font-medium"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  {date}
+                </p>
+                <p className="text-xs" style={{ color: "var(--primary-2)" }}>
+                  {time}
+                </p>
+              </div>
+            </div>
 
-            return (
-              <a
-                key={tab}
-                href={getUserHref()}
-                className={usernameClass}
-                onClick={() => setSelectedTab(tab)}
-              >
-                <span className="text-lg">{getTabIcon(tab)}</span>
-                <span className="capitalize">
-                  {tab === "pos" ? "POS" : tab === "manage" ? "Manage" : tab}
-                </span>
-              </a>
-            );
-          })}
+            {/* Updated tabs section with better highlighting */}
+            <div className="flex flex-wrap gap-2"> {/* Reduced gap from 3 to 2 */}
+              {tabs.map((tab) => {
+                const isActive = pathname.includes(tab.toLowerCase()) || 
+                               (tab === "Dashboard" && pathname === "/") ||
+                               (tab === selectedTab);
+                const isLogout = tab === "Logout";
+                const isUsername = tab === username;
+
+                const baseClass = `
+                  flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium 
+                  transition-all duration-200
+                  ${isActive 
+                    ? "bg-[var(--primary-2)]/15 text-[var(--primary-2)] font-semibold shadow-sm" // More subtle highlighting
+                    : "hover:bg-[var(--primary-2)]/10 text-[var(--primary-2)]"
+                  }
+                `;
+
+                // Update the logout button styling to match
+                if (isLogout) {
+                  return (
+                    <button
+                      key={tab}
+                      className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium
+                                 text-red-600 hover:bg-red-100 
+                                 transition-all duration-200 shadow-sm"
+                      onClick={handleLogout}
+                    >
+                      <span className="text-lg">{getTabIcon(tab)}</span>
+                      <span className="capitalize">{tab}</span>
+                    </button>
+                  );
+                }
+
+                const usernameClass = isUsername 
+                  ? `${baseClass} hover:bg-[var(--primary-2)]/10 cursor-pointer`
+                  : baseClass;
+
+                function getUserHref(): string {
+                  switch (tab) {
+                  case "Dashboard":
+                    return "/";
+                  case "Inventory":
+                    return "/inventory";
+                  case "Reports":
+                    return "/reports";
+                  case "Order Here":
+                  case "pos":
+                    return "/pos";
+                  case "manage":
+                    return "/manage";
+                  case "Help":
+                    return "/help";
+                  case username:
+                    return "/profile";
+                  default:
+                    return "/";
+                  }
+                }
+
+                return (
+                  <a
+                    key={tab}
+                    href={getUserHref()}
+                    className={usernameClass}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setSelectedTab(tab);
+                      router.push(getUserHref());
+                    }}
+                  >
+                    <span className="text-lg">{getTabIcon(tab)}</span>
+                    <span className="capitalize">
+                      {tab === "pos" ? "POS" : tab === "manage" ? "Manage" : tab}
+                    </span>
+                  </a>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
     </nav>
