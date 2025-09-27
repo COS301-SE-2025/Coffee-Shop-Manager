@@ -18,14 +18,14 @@ export default function Home() {
               className="text-white"
             />
           </div>
-          <span className="text-2xl font-bold text-stone-800">
+          <span className="text-3xl font-bold text-stone-800">
             DieKoffieBlik
           </span>
         </div>
         <div className="flex gap-4">
           <Link href="/login">
             <button
-              className="px-6 py-2 font-medium border-2 rounded-full transform hover:-translate-y-1 transition-all duration-300"
+              className="px-6 py-2 font-medium border-2 rounded-full transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               style={{
                 color: "var(--primary-3)",
                 borderColor: "var(--primary-3)",
@@ -37,7 +37,7 @@ export default function Home() {
 
           <Link href="/signup">
             <button
-              className="px-6 py-2 rounded-lg transition-colors font-medium shadow-lg"
+              className="px-6 py-2 rounded-lg font-medium shadow-lg transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
               style={{
                 backgroundColor: "var(--primary-3)",
                 color: "var(--primary-2)",
