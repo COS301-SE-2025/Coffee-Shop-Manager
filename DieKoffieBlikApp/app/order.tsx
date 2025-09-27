@@ -20,7 +20,7 @@ import CoffeeBackground from "../assets/coffee-background";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "https://api.diekoffieblik.co.za";
+const API_BASE_URL = "http://192.168.0.97:5000";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 

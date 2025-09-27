@@ -22,7 +22,7 @@
   # rm -rf supabase/volumes/db/data
   # start the docker
 
-name: Coffee_Shop_Manager
+name: coffee_shop_manager
 
 services:
   frontend:

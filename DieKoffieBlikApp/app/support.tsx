@@ -33,26 +33,26 @@ export default function HelpSupportScreen() {
     {
       id: "phone",
       title: "Call Us",
-      subtitle: "+27 11 234 5678",
+      subtitle: "+27 82 536 0893",
       description: "Available 24/7",
       icon: "call",
-      action: () => Linking.openURL("tel:+27112345678"),
+      action: () => Linking.openURL("tel:+27825360893"),
     },
     {
       id: "whatsapp",
       title: "WhatsApp",
-      subtitle: "+27 82 456 7890",
+      subtitle: "+27 82 536 0893",
       description: "Quick response",
       icon: "logo-whatsapp",
-      action: () => Linking.openURL("https://wa.me/27824567890"),
+      action: () => Linking.openURL("https://wa.me/27825360893"),
     },
     {
       id: "email",
       title: "Email Support",
-      subtitle: "support@diekoffieblik.co.za",
+      subtitle: "johanbloem@quantsolutions.co.za",
       description: "Response within 24hrs",
       icon: "mail",
-      action: () => Linking.openURL("mailto:support@diekoffieblik.co.za"),
+      action: () => Linking.openURL("mailto:johanbloem@quantsolutions.co.za"),
     },
   ];
 

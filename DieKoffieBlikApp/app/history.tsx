@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
 
-const API_BASE_URL = "https://api.diekoffieblik.co.za";
+const API_BASE_URL = "http://192.168.0.97:5000";
 
 interface Order {
   id: string;
@@ -72,7 +72,7 @@ export default function OrderHistoryScreen() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+      const response = await fetch(`${API_BASE_URL}/order`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
