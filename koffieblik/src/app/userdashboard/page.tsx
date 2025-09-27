@@ -54,20 +54,33 @@ export default function DashboardPage() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
   async function fetchOrders() {
-    setLoading(true); // Set loading when starting fetch
+    setLoading(true);
     try {
       const response = await fetch(`${API_BASE_URL}/get_orders`, {
-        method: "GET",
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
+        body: JSON.stringify({
+          offset: 0,
+          limit: 100,
+          orderBy: "created_at",
+           orderDirection: "desc"
+          // ,
+          // filters: {
+          //   status: statusFilter,
+          // },
+        }),
       });
 
       const data = await response.json();
 
       if (response.ok) {
+        console.log("Fetched data:", data);
         setOrders(data.orders);
+        // setTotalOrders(data.count);
+        // setFilteredOrdersTotal(data.filteredOrders);
       } else {
         console.warn(
           "⚠️ Failed to fetch orders:",
@@ -79,7 +92,11 @@ export default function DashboardPage() {
     } finally {
       setLoading(false); // Always set loading to false when done
     }
-  }
+  };
+  // 🔄 run once on mount (or whenever API_BASE_URL changes)
+  useEffect(() => {
+    fetchOrders();
+  }, [API_BASE_URL]);
 
   const dateInputStyle =
     "p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";

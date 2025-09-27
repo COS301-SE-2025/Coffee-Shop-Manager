@@ -13,7 +13,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 
 		// Base query
 		let query = supabase.from("orders").select(
-		`id,
+			`id,
 		status,
 		total_price,
 		created_at,
@@ -63,12 +63,41 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 
 		if (error) throw error;
 
+		
+
 		const numberedOrders = data.map((data, index) => ({
 			...data,
 			number: index + 1,
 		}));
 
-		res.status(200).json({ sucess: true, orders: numberedOrders });
+
+
+		// --extra for Admin Dash
+
+		//getting total order count
+		let countQuery = supabase.from("orders").select("id", { count: "exact", head: true });
+		const { count, error: countError } = await countQuery;
+		if (countError) throw countError;
+
+		//get count orders per filter
+		let filteredCountQuery = supabase.from("orders").select("id", { count: "exact", head: true });
+
+		if (filters && typeof filters === "object") {
+			for (const [key, value] of Object.entries(filters)) {
+				if (value !== undefined && value !== null) {
+					filteredCountQuery = filteredCountQuery.eq(key, value);
+				}
+			}
+		}
+
+		const { count: filteredOrders, error: filteredCountError } = await filteredCountQuery;
+		if (filteredCountError) throw filteredCountError;
+
+		// --extra for Admin Dash
+
+
+
+		res.status(200).json({ sucess: true, orders: numberedOrders, count, filteredOrders });
 	} catch (error: any) {
 		console.error("Get orders error:", error);
 		res.status(500).json({ error: error.message || "Internal server error" });

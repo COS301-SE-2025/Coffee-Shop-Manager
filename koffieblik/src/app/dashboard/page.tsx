@@ -31,6 +31,9 @@ export default function DashboardPage() {
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
   const [loading, setLoading] = useState(true);
+  const [offSetStart, setOffsetStart] = useState(0);
+  const limit = 5; // items per page
+  const [statusFilter, setStatusFilter] = useState("pending");
 
   useEffect(() => {
     const role = localStorage.getItem("role");
@@ -41,37 +44,93 @@ export default function DashboardPage() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
-  useEffect(() => {
-    async function fetchOrders() {
-      setLoading(true);
-      try {
-        const response = await fetch(`${API_BASE_URL}/get_orders`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
+  // useEffect(() => {
+  //   async function fetchOrders() {
+  //     setLoading(true);
+  //     try {
+  //       const response = await fetch(`${API_BASE_URL}/get_orders`, {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //         },
+  //         credentials: "include",
+  //       });
+
+  //       const data = await response.json();
+
+  //       if (response.ok) {
+  //         setOrders(data.orders);
+  //       } else {
+  //         console.warn(
+  //           "⚠️ Failed to fetch orders:",
+  //           data.error || "Unknown error",
+  //         );
+  //       }
+  //     } catch (error) {
+  //       console.error("❌ Network or server error:", error);
+  //     } finally {
+  //       setLoading(false);
+  //     }
+  //   }
+
+  //   fetchOrders();
+  // }, [API_BASE_URL]);
+
+  const topSelling = "N/A"
+  const [totalAmount, settotalAmount] = useState(0);
+  const [totalOrders, setTotalOrders] = useState(0);
+  const [filteredOrdersTotal, setFilteredOrdersTotal] = useState(0);
+
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify({
+          offset: offSetStart,
+          limit: limit,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            status: statusFilter,
           },
-          credentials: "include",
-        });
+        }),
+      });
 
-        const data = await response.json();
+      const data = await response.json();
 
-        if (response.ok) {
-          setOrders(data.orders);
-        } else {
-          console.warn(
-            "⚠️ Failed to fetch orders:",
-            data.error || "Unknown error",
-          );
-        }
-      } catch (error) {
-        console.error("❌ Network or server error:", error);
-      } finally {
-        setLoading(false);
+      if (response.ok) {
+        console.log("Fetched data:", data);
+        setOrders(data.orders);
+        setTotalOrders(data.count);
+        setFilteredOrdersTotal(data.filteredOrders);
+      } else {
+        console.warn(
+          "⚠️ Failed to fetch orders:",
+          data.error || "Unknown error",
+        );
       }
+    } catch (error) {
+      console.error("❌ Network or server error:", error);
+    } finally {
+      setLoading(false);
     }
-
+  };
+  // 🔄 run once on mount (or whenever API_BASE_URL changes)
+  useEffect(() => {
     fetchOrders();
   }, [API_BASE_URL]);
+  //when the offsetStart changes it will refecth the function
+  useEffect(() => {
+    fetchOrders();
+  }, [offSetStart, statusFilter]);
+
+
+
 
   // Route to different pages based on selected tab
   useEffect(() => {
@@ -101,68 +160,56 @@ export default function DashboardPage() {
   const now = new Date();
   let filteredOrders = orders;
 
-  if (filter === "Today") {
-    filteredOrders = orders.filter(
-      (order) =>
-        new Date(order.created_at).toDateString() === now.toDateString(),
-    );
-  } else if (filter === "This Week") {
-    const startOfWeek = new Date(now);
-    startOfWeek.setDate(now.getDate() - now.getDay());
-    filteredOrders = orders.filter(
-      (order) => new Date(order.created_at) >= startOfWeek,
-    );
-  } else if (filter === "This Month") {
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    filteredOrders = orders.filter(
-      (order) => new Date(order.created_at) >= startOfMonth,
-    );
-  } else if (filter === "Custom Range" && startDate && endDate) {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-    end.setHours(23, 59, 59, 999);
+  // if (filter === "Today") {
+  //   filteredOrders = orders.filter(
+  //     (order) =>
+  //       new Date(order.created_at).toDateString() === now.toDateString(),
+  //   );
+  // } else if (filter === "This Week") {
+  //   const startOfWeek = new Date(now);
+  //   startOfWeek.setDate(now.getDate() - now.getDay());
+  //   filteredOrders = orders.filter(
+  //     (order) => new Date(order.created_at) >= startOfWeek,
+  //   );
+  // } else if (filter === "This Month") {
+  //   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  //   filteredOrders = orders.filter(
+  //     (order) => new Date(order.created_at) >= startOfMonth,
+  //   );
+  // } else if (filter === "Custom Range" && startDate && endDate) {
+  //   const start = new Date(startDate);
+  //   const end = new Date(endDate);
+  //   end.setHours(23, 59, 59, 999);
 
-    filteredOrders = orders.filter((order) => {
-      const orderDate = new Date(order.created_at);
-      return orderDate >= start && orderDate <= end;
-    });
-  }
+  //   filteredOrders = orders.filter((order) => {
+  //     const orderDate = new Date(order.created_at);
+  //     return orderDate >= start && orderDate <= end;
+  //   });
+  // }
 
   // Calculate metrics
-  const totalSales = filteredOrders
-    .filter((order) => order.status === "completed")
-    .reduce((sum, order) => sum + order.total_price, 0);
+  //create API calls for these
+  // const totalAmount = 0;
 
-  const ordersCompleted = filteredOrders.filter(
-    (order) => order.status === "completed",
-  ).length;
+  // const ordersTotal = 0;
 
-  const topSelling = (() => {
-    const productCountMap: Record<string, number> = {};
 
-    for (const order of orders) {
-      for (const op of order.order_products) {
-        const name = op.products.name;
-        productCountMap[name] = (productCountMap[name] || 0) + op.quantity;
-      }
-    }
 
-    const sortedProducts = Object.entries(productCountMap).sort(
-      ([, a], [, b]) => b - a,
-    );
 
-    return sortedProducts.length > 0 ? sortedProducts[0][0] : "N/A";
-  })();
+
+
+
+
 
   const metrics: Metric[] = [
     {
-      label: "Total Sales",
-      value: `R${totalSales.toFixed(2)}`,
+      label: "Total " + `${statusFilter}(R)`,
+      value: `R${totalAmount.toFixed(2)}`,
       color: "var(--primary-2)",
     },
     {
-      label: "Orders Completed",
-      value: ordersCompleted.toString(),
+      label: "Orders " + `${statusFilter}`,
+      value: filteredOrdersTotal.toString(),
       color: "var(--primary-2)",
     },
     {
@@ -172,7 +219,7 @@ export default function DashboardPage() {
     },
     {
       label: "Total Orders",
-      value: filteredOrders.length.toString(),
+      value: `${totalOrders}`,
       color: "var(--primary-2)",
     },
   ];
@@ -227,6 +274,180 @@ export default function DashboardPage() {
             </section>
 
             {/* Orders Section */}
+            <div
+              className="p-6 border-b-2"
+              style={{
+                borderColor: "var(--primary-4)",
+                backgroundColor: "var(--primary-3)",
+              }}
+            >
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--primary-4)" }}
+                  >
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      📋
+                    </span>
+                  </div>
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Recent Orders
+                  </h2>
+                </div>
+                <div
+                  className="p-6 border-b-2"
+                  style={{
+                    borderColor: "var(--primary-4)",
+                    backgroundColor: "var(--primary-3)",
+                  }}
+                >
+                  {/* Heading */}
+
+
+                  {/* Top row: Pagination + Filter */}
+                  {/* Pagination controls */}
+                  <div className="flex justify-center items-center gap-3 w-full">
+                    <button
+                      onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
+                      disabled={offSetStart === 0}
+                      className="px-3 py-1 rounded-lg border"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: offSetStart === 0 ? "gray" : "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                        opacity: offSetStart === 0 ? 0.5 : 1,
+                      }}
+                    >
+                      ⬅
+                    </button>
+
+                    <span style={{ color: "var(--primary-2)" }}>
+                      {offSetStart + 1} – {offSetStart + limit}
+                    </span>
+
+                    <button
+                      onClick={() => setOffsetStart((prev) => prev + limit)}
+                      className="px-3 py-1 rounded-lg border"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                      }}
+                    >
+                      ➡
+                    </button>
+                  </div>
+
+
+                  {/* Status Buttons Row */}
+                  <div className="flex justify-start gap-3 mt-6">
+                    <button
+                      className="px-4 py-1 rounded-lg border text-xs font-medium"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                      }}
+                      onClick={() => {
+                        setStatusFilter("pending");
+                        setOffsetStart(0);
+                      }}
+                    >
+                      pending
+                    </button>
+                    <button
+                      className="px-4 py-1 rounded-lg border text-xs font-medium"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                      }}
+                      onClick={() => {
+                        setStatusFilter("completed");
+                        setOffsetStart(0);
+                      }}
+                    >
+                      completed
+                    </button>
+                    <button
+                      className="px-4 py-1 rounded-lg border text-xs font-medium"
+                      style={{
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)",
+                        backgroundColor: "var(--primary-3)",
+                      }}
+                      onClick={() => {
+                        setStatusFilter("cancelled");
+                        setOffsetStart(0);
+                      }}
+                    >
+                      cancelled
+                    </button>
+                  </div>
+                </div>
+
+                {/* Filter */}
+                <div className="flex flex-wrap gap-3">
+                  <select
+                    className={`${dateInputStyle} text-[var(--primary-2)]`}
+                    style={{
+                      backgroundColor: "var(--primary-3)",
+                      borderColor: "var(--primary-4)",
+                      boxShadow: "0 0 0 0 transparent",
+                    }}
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  >
+                    <option>Today</option>
+                    <option>This Week</option>
+                    <option>This Month</option>
+                    <option>Custom Range</option>
+                  </select>
+
+                  {filter === "Custom Range" && (
+                    <>
+                      <input
+                        type="date"
+                        className={dateInputStyle}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        style={{
+                          backgroundColor: "var(--primary-3)",
+                          borderColor: "var(--primary-4)",
+                          color: "var(--primary-2)",
+                          boxShadow: "0 0 0 0 transparent",
+                        }}
+                      />
+                      <span
+                        className="flex items-center font-medium"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        to
+                      </span>
+                      <input
+                        type="date"
+                        className={dateInputStyle}
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        style={{
+                          backgroundColor: "var(--primary-3)",
+                          borderColor: "var(--primary-4)",
+                          color: "var(--primary-2)",
+                          boxShadow: "0 0 0 0 transparent",
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
             {loading ? (
               <Loader />
             ) : (
@@ -235,93 +456,11 @@ export default function DashboardPage() {
                 style={{ backgroundColor: "var(--primary-3)" }}
               >
                 {/* Heading */}
-                <div
-                  className="p-6 border-b-2"
-                  style={{
-                    borderColor: "var(--primary-4)",
-                    backgroundColor: "var(--primary-3)",
-                  }}
-                >
-                  <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                      <div
-                        className="w-8 h-8 rounded-lg flex items-center justify-center"
-                        style={{ backgroundColor: "var(--primary-4)" }}
-                      >
-                        <span
-                          className="text-sm"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          📋
-                        </span>
-                      </div>
-                      <h2
-                        className="text-xl font-bold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Recent Orders
-                      </h2>
-                    </div>
 
-                    {/* Filter */}
-                    <div className="flex flex-wrap gap-3">
-                      <select
-                        className={`${dateInputStyle} text-[var(--primary-2)]`}
-                        style={{
-                          backgroundColor: "var(--primary-3)",
-                          borderColor: "var(--primary-4)",
-                          boxShadow: "0 0 0 0 transparent",
-                        }}
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                      >
-                        <option>Today</option>
-                        <option>This Week</option>
-                        <option>This Month</option>
-                        <option>Custom Range</option>
-                      </select>
-
-                      {filter === "Custom Range" && (
-                        <>
-                          <input
-                            type="date"
-                            className={dateInputStyle}
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            style={{
-                              backgroundColor: "var(--primary-3)",
-                              borderColor: "var(--primary-4)",
-                              color: "var(--primary-2)",
-                              boxShadow: "0 0 0 0 transparent",
-                            }}
-                          />
-                          <span
-                            className="flex items-center font-medium"
-                            style={{ color: "var(--primary-2)" }}
-                          >
-                            to
-                          </span>
-                          <input
-                            type="date"
-                            className={dateInputStyle}
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            style={{
-                              backgroundColor: "var(--primary-3)",
-                              borderColor: "var(--primary-4)",
-                              color: "var(--primary-2)",
-                              boxShadow: "0 0 0 0 transparent",
-                            }}
-                          />
-                        </>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
                 {/* Table */}
                 <div className="overflow-x-auto">
-                  <table className="min-w-full text-sm">
+                  <table className="min-w-full text-xs">
                     <thead
                       className="border-b"
                       style={{
