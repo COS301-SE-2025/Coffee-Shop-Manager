@@ -63,7 +63,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 
 		if (error) throw error;
 
-		
+
 
 		const numberedOrders = data.map((data, index) => ({
 			...data,
@@ -93,11 +93,27 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 		const { count: filteredOrders, error: filteredCountError } = await filteredCountQuery;
 		if (filteredCountError) throw filteredCountError;
 
+		const { data: topProducts, error: topError } = await supabase.rpc(
+			"get_top_selling_products",
+			{ limit_count: 1 } // top 5 by default
+		);
+		if (topError) throw topError;
+
+		const statusForSum =
+			filters && filters.status ? filters.status : "pending";
+
+		const { data: sumFiltered, error: sumFilteredError } =
+			await supabase.rpc("get_total_sales_by_status", {
+				order_status: statusForSum,
+			});
+
+		if (sumFilteredError) throw sumFilteredError;
+
 		// --extra for Admin Dash
 
 
 
-		res.status(200).json({ sucess: true, orders: numberedOrders, count, filteredOrders });
+		res.status(200).json({ sucess: true, orders: numberedOrders, count, filteredOrders, topProducts, sumFiltered });
 	} catch (error: any) {
 		console.error("Get orders error:", error);
 		res.status(500).json({ error: error.message || "Internal server error" });

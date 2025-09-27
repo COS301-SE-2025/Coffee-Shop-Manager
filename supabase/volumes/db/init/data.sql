@@ -611,3 +611,42 @@ INSERT INTO product_stock (product_id, stock_id, quantity) VALUES
 ((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Coffee Beans'), 10),
 ((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Sugar'), 5),
 ((SELECT id FROM products WHERE name = 'Ice Coffee'), (SELECT id FROM stock WHERE item = 'Milk'), 1);
+
+
+create or replace function get_top_selling_products(limit_count int default 5)
+returns table (
+  product_id uuid,
+  name text,
+  total_quantity bigint,
+  total_revenue numeric
+) as $$
+begin
+  return query
+  select
+    op.product_id,
+    p.name,
+    sum(op.quantity) as total_quantity,
+    sum(op.quantity * op.price) as total_revenue
+  from order_products op
+  join products p on op.product_id = p.id
+  group by op.product_id, p.name
+  order by total_quantity desc
+  limit limit_count;
+end;
+$$ language plpgsql stable;
+
+
+create or replace function get_total_sales_by_status(order_status text)
+returns numeric as $$
+declare
+  total_sales numeric;
+begin
+  select coalesce(sum(total_price), 0)
+  into total_sales
+  from orders
+  where status = order_status;
+
+  return total_sales;
+end;
+$$ language plpgsql stable;
+

@@ -83,31 +83,28 @@ export default function HelpPage() {
       {/* Filter UI */}
       <div className="mb-6 flex gap-4">
         <button
-          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
-            graphFilter === "day"
+          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${graphFilter === "day"
               ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
               : "bg-[var(--primary-3)] text-[var(--primary-2)]"
-          }`}
+            }`}
           onClick={() => setGraphFilter("day")}
         >
           Day
         </button>
         <button
-          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
-            graphFilter === "month"
+          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${graphFilter === "month"
               ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
               : "bg-[var(--primary-3)] text-[var(--primary-2)]"
-          }`}
+            }`}
           onClick={() => setGraphFilter("month")}
         >
           Month
         </button>
         <button
-          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${
-            graphFilter === "year"
+          className={`px-4 py-2 rounded-lg font-semibold border cursor-pointer ${graphFilter === "year"
               ? "bg-[var(--primary-2)] text-[var(--primary-3)]"
               : "bg-[var(--primary-3)] text-[var(--primary-2)]"
-          }`}
+            }`}
           onClick={() => setGraphFilter("year")}
         >
           Year

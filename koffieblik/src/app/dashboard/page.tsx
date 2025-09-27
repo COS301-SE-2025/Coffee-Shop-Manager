@@ -76,7 +76,8 @@ export default function DashboardPage() {
   //   fetchOrders();
   // }, [API_BASE_URL]);
 
-  const topSelling = "N/A"
+  const [topSelling, setTopSelling] = useState("N/A");
+
   const [totalAmount, settotalAmount] = useState(0);
   const [totalOrders, setTotalOrders] = useState(0);
   const [filteredOrdersTotal, setFilteredOrdersTotal] = useState(0);
@@ -108,6 +109,12 @@ export default function DashboardPage() {
         setOrders(data.orders);
         setTotalOrders(data.count);
         setFilteredOrdersTotal(data.filteredOrders);
+        settotalAmount(data.sumFiltered);
+        if (data.topProducts && data.topProducts.length > 0) {
+          setTopSelling(data.topProducts[0].name); // only 1 top product
+        } else {
+          setTopSelling("N/A");
+        }
       } else {
         console.warn(
           "⚠️ Failed to fetch orders:",
@@ -204,7 +211,7 @@ export default function DashboardPage() {
   const metrics: Metric[] = [
     {
       label: "Total " + `${statusFilter}(R)`,
-      value: `R${totalAmount.toFixed(2)}`,
+      value: `R ${totalAmount.toFixed(2)}`,
       color: "var(--primary-2)",
     },
     {
