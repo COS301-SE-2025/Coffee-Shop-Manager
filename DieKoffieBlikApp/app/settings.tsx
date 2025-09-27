@@ -111,7 +111,7 @@ export default function AccountSettingsScreen() {
 
       // Set the form fields with fetched data
       setName(profile.display_name || "");
-      setEmail(userEmail);
+      setEmail(userEmail); // Email from AsyncStorage (read-only)
       setPhone(profile.phone_number || "");
       setDateOfBirth(profile.date_of_birth || "");
     } catch (err: unknown) {
@@ -144,18 +144,6 @@ export default function AccountSettingsScreen() {
       return;
     }
 
-    if (!email.trim()) {
-      Alert.alert("Validation Error", "Email is required");
-      return;
-    }
-
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert("Validation Error", "Please enter a valid email address");
-      return;
-    }
-
     // Validate phone number if provided
     if (phone && (phone.length !== 10 || !phone.startsWith("0"))) {
       Alert.alert(
@@ -176,7 +164,7 @@ export default function AccountSettingsScreen() {
         return;
       }
 
-      // Prepare update data
+      // Prepare update data (only fields that backend accepts)
       const updateData: UpdateProfileData = {
         display_name: name.trim(),
         phone_number: phone.trim(),
@@ -221,15 +209,11 @@ export default function AccountSettingsScreen() {
 
       console.log("Profile updated successfully:", result);
 
-      // Update stored email if it changed
-      await AsyncStorage.setItem("email", email);
-
       // Update session data if it exists
       try {
         const sessionData = await AsyncStorage.getItem("user_session");
         if (sessionData) {
           const parsedSession = JSON.parse(sessionData);
-          parsedSession.email = email;
           if (parsedSession.user) {
             parsedSession.user.name = name;
             parsedSession.user.display_name = name;
@@ -338,8 +322,8 @@ export default function AccountSettingsScreen() {
           {/* Profile Section */}
           <View style={styles.profileSection}>
             <Ionicons name="person-circle" size={80} color="#78350f" />
-            <Text style={styles.profileName}>{name ?? ""}</Text>
-            <Text style={styles.profileEmail}>{email ?? ""}</Text>
+            <Text style={styles.profileName}>{name || "User"}</Text>
+            <Text style={styles.profileEmail}>{email || "No email"}</Text>
           </View>
 
           {/* Editable Fields */}
@@ -360,14 +344,15 @@ export default function AccountSettingsScreen() {
             <View style={styles.inputGroup}>
               <Text style={styles.inputLabel}>Email</Text>
               <TextInput
-                style={styles.input}
+                style={[styles.input, styles.inputDisabled]}
                 value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                placeholder="Enter your email"
+                placeholder="Email address"
                 placeholderTextColor="#9ca3af"
-                autoCapitalize="none"
+                editable={false}
               />
+              <Text style={styles.inputNote}>
+                Email cannot be changed for security reasons
+              </Text>
             </View>
 
             <View style={styles.inputGroup}>
@@ -427,20 +412,7 @@ export default function AccountSettingsScreen() {
               />
             </View>
 
-            <View style={styles.preferenceRow}>
-              <View style={styles.preferenceLeft}>
-                <Text style={styles.preferenceText}>Dark Mode</Text>
-                <Text style={styles.preferenceSubtext}>
-                  Switch to dark theme
-                </Text>
-              </View>
-              <Switch
-                value={darkModeEnabled}
-                onValueChange={setDarkModeEnabled}
-                trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
-                thumbColor={darkModeEnabled ? "#78350f" : "#f4f3f4"}
-              />
-            </View>
+            
           </View>
 
           {/* Save Button */}
@@ -584,6 +556,16 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowRadius: 2,
     elevation: 1,
+  },
+  inputDisabled: {
+    backgroundColor: "#f9fafb",
+    color: "#6b7280",
+  },
+  inputNote: {
+    fontSize: 12,
+    color: "#9ca3af",
+    marginTop: 4,
+    fontStyle: "italic",
   },
   preferenceRow: {
     flexDirection: "row",
