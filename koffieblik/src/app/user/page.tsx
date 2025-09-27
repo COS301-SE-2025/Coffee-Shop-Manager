@@ -520,7 +520,7 @@ export default function UserPage() {
 
       {activeTab === "leaderboard" && (
         <>
-          {/* Your Position */}
+          {/* Username and member since */}
           <div className="bg-white rounded-lg shadow-md p-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -541,7 +541,7 @@ export default function UserPage() {
             </div>
           </div>
 
-          {/* Leaderboard */}
+          {/* Leaderboard section */}
           <div className="bg-white rounded-lg shadow-md">
             <div className="p-6 border-b">
               <div className="flex items-center justify-between">
@@ -591,7 +591,8 @@ export default function UserPage() {
             {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
               <div className="divide-y">
                 {sortedLeaderboard.slice(0, 10).map((user, index) => {
-                  // Only check current user after client hydration
+                 
+
                   const currentUserId = isClient 
                     ? (localStorage.getItem("userId") || localStorage.getItem("user_id"))
                     : null;
