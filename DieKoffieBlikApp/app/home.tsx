@@ -58,7 +58,7 @@ export default function HomeScreen() {
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
 
-  const API_BASE_URL = "https://api.diekoffieblik.co.za";
+const API_BASE_URL = "http://192.168.0.97:5000";
 
   const coffeeQuotes = [
     "Life begins after coffee ☕",
