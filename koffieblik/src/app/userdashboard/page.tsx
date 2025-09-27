@@ -31,6 +31,27 @@ interface Order {
   }[];
 }
 
+// Add these interfaces at the top with your existing interfaces
+interface UserStats {
+  totalPoints: number;
+  monthlyPoints: number;
+  redeemedPoints: number;
+  recentActivity: {
+    points: number;
+    description: string;
+    date: string;
+    type: "earned" | "redeemed";
+  }[];
+}
+
+// Add this interface at the top with your other interfaces
+interface UserGamificationStats {
+  total_orders: number;
+  current_streak: number;
+  longest_streak: number;
+  account_age_days: number;
+}
+
 export default function DashboardPage() {
   const [filter, setFilter] = useState("Today");
   const [orders, setOrders] = useState<Order[]>([]);
@@ -42,6 +63,9 @@ export default function DashboardPage() {
   const [graphFilter, setGraphFilter] = useState<"day" | "month" | "year">(
     "month",
   );
+  const [userGamificationStats, setUserGamificationStats] = useState<
+    UserGamificationStats | null
+  >(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -53,6 +77,7 @@ export default function DashboardPage() {
 
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
+  // Update the fetchOrders function to include user_id in the request
   async function fetchOrders() {
     setLoading(true);
     try {
@@ -66,11 +91,11 @@ export default function DashboardPage() {
           offset: 0,
           limit: 100,
           orderBy: "created_at",
-           orderDirection: "desc"
-          // ,
-          // filters: {
-          //   status: statusFilter,
-          // },
+          orderDirection: "desc",
+          filters: {
+            // Add user_id filter here if needed
+            user_id: localStorage.getItem("user_id"), // Make sure you store user_id in localStorage during login
+          },
         }),
       });
 
@@ -92,10 +117,38 @@ export default function DashboardPage() {
     } finally {
       setLoading(false); // Always set loading to false when done
     }
-  };
+  }
+
+  // Add this function to fetch user stats
+  async function fetchUserStats() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/stats`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setUserGamificationStats(data.stats);
+      } else {
+        console.warn(
+          "⚠️ Failed to fetch user stats:",
+          data.error || "Unknown error",
+        );
+      }
+    } catch (error) {
+      console.error("❌ Error fetching user stats:", error);
+    }
+  }
+
   // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
     fetchOrders();
+    fetchUserStats();
   }, [API_BASE_URL]);
 
   const dateInputStyle =
@@ -193,7 +246,10 @@ export default function DashboardPage() {
           day: "numeric",
         });
       } else if (filter === "month") {
-        label = d.toLocaleDateString("en-ZA", { year: "numeric", month: "short" });
+        label = d.toLocaleDateString("en-ZA", {
+          year: "numeric",
+          month: "short",
+        });
       } else if (filter === "year") {
         label = d.getFullYear().toString();
       }
@@ -221,6 +277,63 @@ export default function DashboardPage() {
 
   const graphData = aggregatePoints(rawPointsData, graphFilter);
 
+  // Remove the duplicate useEffect
+  useEffect(() => {
+    fetchOrders();
+  }, [API_BASE_URL]); // This is the only useEffect for fetching orders
+
+  // Keep the calculateUserStats function focused on the current data
+  const calculateUserStats = (orders: Order[]): UserStats => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    // Create a Set to track processed orders
+    const processedOrderIds = new Set();
+    const recentActivity: UserStats["recentActivity"] = [];
+
+    // Process orders only once and create activity log
+    orders.forEach((order) => {
+      if (processedOrderIds.has(order.id)) return;
+      processedOrderIds.add(order.id);
+
+      const pointsEarned = Math.round(order.total_price * 0.05 * 100);
+      recentActivity.push({
+        points: pointsEarned,
+        description: `Order #${order.number}`,
+        date: order.created_at,
+        type: "earned",
+      });
+    });
+
+    // Sort by most recent first
+    recentActivity.sort(
+      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    );
+
+    // Calculate totals from the activity log
+    const totalPoints = recentActivity.reduce((sum, activity) => {
+      return activity.type === "earned" ? sum + activity.points : sum - activity.points;
+    }, 0);
+
+    const monthlyPoints = recentActivity.reduce((sum, activity) => {
+      const activityDate = new Date(activity.date);
+      if (activityDate >= startOfMonth) {
+        return activity.type === "earned" ? sum + activity.points : sum - activity.points;
+      }
+      return sum;
+    }, 0);
+
+    return {
+      totalPoints,
+      monthlyPoints,
+      redeemedPoints: 0,
+      recentActivity: recentActivity.slice(0, 5),
+    };
+  };
+
+  // Update the points display section
+  const userStats = calculateUserStats(orders);
+
   return (
     <main className="relative min-h-full bg-transparent">
       {/* <div className="absolute inset-0 bg-black opacity-60 z-0"></div> */}
@@ -229,20 +342,19 @@ export default function DashboardPage() {
         <div className="p-8 flex flex-col min-h-full w-full">
           {/* Main content container - graph left, buttons right */}
           <div className="flex flex-col lg:flex-row gap-8 items-start mb-8">
-            
             {/* Graph Section - Left Side */}
             <div className="w-full lg:w-2/3">
               <div
                 className="backdrop-blur-sm border border-[var(--primary-4)] rounded-2xl shadow-xl p-8 relative overflow-hidden"
-                style={{ 
+                style={{
                   backgroundColor: "var(--primary-3)",
-                  background: "linear-gradient(135deg, var(--primary-3) 0%, rgba(255,255,255,0.05) 100%)"
+                  background:
+                    "linear-gradient(135deg, var(--primary-3) 0%, rgba(255,255,255,0.05) 100%)",
                 }}
               >
                 {/* Add gradient overlay */}
                 <div className="absolute inset-0 bg-gradient-to-br from-transparent via-white/5 to-transparent pointer-events-none"></div>
                 <div className="relative z-10">
-                  
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                     <div>
                       <h2 className="text-2xl font-bold text-[var(--primary-2)] mb-1">
@@ -254,8 +366,12 @@ export default function DashboardPage() {
                     </div>
                     <div className="flex items-center gap-4 mt-4 sm:mt-0">
                       <div className="text-right">
-                        <p className="text-xs text-[var(--primary-4)] opacity-60">Current Points</p>
-                        <p className="text-lg font-bold text-green-400">1,250</p>
+                        <p className="text-xs text-[var(--primary-4)] opacity-60">
+                          Current Points
+                        </p>
+                        <p className="text-lg font-bold text-green-400">
+                          {userStats.totalPoints.toLocaleString()}
+                        </p>
                       </div>
                       <div className="w-2 h-2 bg-[var(--primary-2)] rounded-full opacity-50"></div>
                     </div>
@@ -303,17 +419,39 @@ export default function DashboardPage() {
                         margin={{ top: 20, right: 30, left: 20, bottom: 20 }}
                       >
                         <defs>
-                          <linearGradient id="pointsGradient" x1="0" y1="0" x2="0" y2="1">
-                            <stop offset="0%" stopColor="var(--primary-2)" stopOpacity={0.4} />
-                            <stop offset="30%" stopColor="var(--primary-2)" stopOpacity={0.2} />
-                            <stop offset="70%" stopColor="var(--primary-2)" stopOpacity={0.1} />
-                            <stop offset="100%" stopColor="var(--primary-2)" stopOpacity={0} />
+                          <linearGradient
+                            id="pointsGradient"
+                            x1="0"
+                            y1="0"
+                            x2="0"
+                            y2="1"
+                          >
+                            <stop
+                              offset="0%"
+                              stopColor="var(--primary-2)"
+                              stopOpacity={0.4}
+                            />
+                            <stop
+                              offset="30%"
+                              stopColor="var(--primary-2)"
+                              stopOpacity={0.2}
+                            />
+                            <stop
+                              offset="70%"
+                              stopColor="var(--primary-2)"
+                              stopOpacity={0.1}
+                            />
+                            <stop
+                              offset="100%"
+                              stopColor="var(--primary-2)"
+                              stopOpacity={0}
+                            />
                           </linearGradient>
                           <filter id="glow">
-                            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-                            <feMerge> 
-                              <feMergeNode in="coloredBlur"/>
-                              <feMergeNode in="SourceGraphic"/>
+                            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+                            <feMerge>
+                              <feMergeNode in="coloredBlur" />
+                              <feMergeNode in="SourceGraphic" />
                             </feMerge>
                           </filter>
                         </defs>
@@ -327,16 +465,21 @@ export default function DashboardPage() {
                         <XAxis
                           dataKey="label" // <-- Use "label" from your aggregated data
                           stroke="var(--primary-2)"
-                          tick={{ fill: "var(--primary-2)", fontSize: 12, fontWeight: 500 }}
+                          tick={{
+                            fill: "var(--primary-2)",
+                            fontSize: 12,
+                            fontWeight: 500,
+                          }}
                           tickLine={false}
                           axisLine={{ stroke: "var(--primary-4)", opacity: 0.3 }}
                           dy={10}
                           label={{
-                            value: graphFilter === "day"
-                              ? "Date"
-                              : graphFilter === "month"
-                              ? "Month"
-                              : "Year",
+                            value:
+                              graphFilter === "day"
+                                ? "Date"
+                                : graphFilter === "month"
+                                ? "Month"
+                                : "Year",
                             position: "insideBottom",
                             offset: -15,
                             fill: "var(--primary-2)",
@@ -373,25 +516,24 @@ export default function DashboardPage() {
                           dataKey="points"
                           stroke="var(--primary-2)"
                           strokeWidth={3}
-                          dot={{ 
-                            fill: "var(--primary-2)", 
-                            strokeWidth: 0, 
+                          dot={{
+                            fill: "var(--primary-2)",
+                            strokeWidth: 0,
                             r: 5,
-                            filter: "url(#glow)"
+                            filter: "url(#glow)",
                           }}
-                          activeDot={{ 
-                            r: 8, 
+                          activeDot={{
+                            r: 8,
                             fill: "var(--primary-2)",
                             stroke: "rgba(255,255,255,0.8)",
                             strokeWidth: 3,
-                            filter: "url(#glow)"
+                            filter: "url(#glow)",
                           }}
                           filter="url(#glow)"
                         />
                       </LineChart>
                     </ResponsiveContainer>
                   </div>
-                  
                 </div>
               </div>
             </div>
@@ -445,7 +587,6 @@ export default function DashboardPage() {
                 </p>
               </div>
             </div>
-
           </div>
         </div>
       )}
@@ -664,50 +805,115 @@ export default function DashboardPage() {
             {/* Points Overview */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 text-center">
               <div
-                className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border"
+                className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
                 style={{ borderColor: "var(--primary-4)" }}
               >
-                <p className="text-sm opacity-70">Total Points</p>
-                <p className="text-3xl font-bold text-green-400">1,250</p>
+                <p className="text-sm opacity-70">Total Orders</p>
+                <p className="text-3xl font-bold text-green-400">
+                  {userGamificationStats?.total_orders || 0}
+                </p>
               </div>
 
               <div
-                className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border"
+                className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
                 style={{ borderColor: "var(--primary-4)" }}
               >
-                <p className="text-sm opacity-70">Points This Month</p>
-                <p className="text-2xl font-semibold text-yellow-300">300</p>
+                <p className="text-sm opacity-70">Current Streak</p>
+                <p className="text-3xl font-semibold text-yellow-300">
+                  {userGamificationStats?.current_streak || 0} days
+                </p>
               </div>
 
               <div
-                className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border"
+                className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
                 style={{ borderColor: "var(--primary-4)" }}
               >
-                <p className="text-sm opacity-70">Redeemed Points</p>
-                <p className="text-2xl font-semibold text-red-300">150</p>
+                <p className="text-sm opacity-70">Longest Streak</p>
+                <p className="text-3xl font-semibold text-red-300">
+                  {userGamificationStats?.longest_streak || 0} days
+                </p>
               </div>
             </div>
 
-            {/* Recent Activity */}
+            {/* Account Age */}
+            <div className="mt-4 text-center">
+              <p className="text-sm opacity-70">
+                Member for {userGamificationStats?.account_age_days || 0} days
+              </p>
+            </div>
+
+            {/* Recent Activity Section */}
             <div>
               <h3 className="text-lg font-semibold text-[var(--primary-2)] mb-3">
                 📅 Recent Activity
               </h3>
               <ul className="space-y-2 text-lg">
-                <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
-                  <span>+100 points — Latte Purchase</span>
-                  <span className="opacity-70">2025-07-29</span>
-                </li>
-                <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
-                  <span>+200 points — Referral Bonus</span>
-                  <span className="opacity-70">2025-07-27</span>
-                </li>
-                <li className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center">
-                  <span>-150 points — Free Cappuccino</span>
-                  <span className="opacity-70">2025-07-24</span>
-                </li>
+                {userStats.recentActivity.map((activity, index) => (
+                  <li
+                    key={index}
+                    className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center"
+                  >
+                    <span>
+                      {activity.type === "earned" ? "+" : "-"}
+                      {activity.points} points — {activity.description}
+                    </span>
+                    <span className="opacity-70">
+                      {new Date(activity.date).toLocaleDateString("en-ZA")}
+                    </span>
+                  </li>
+                ))}
               </ul>
             </div>
+
+            {/* Streaks and Account Age Section - New */}
+            {userGamificationStats && (
+              <div>
+                <h3 className="text-lg font-semibold text-[var(--primary-2)] mb-3">
+                  🚀 Your Progress
+                </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                  <div
+                    className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
+                    style={{ borderColor: "var(--primary-4)" }}
+                  >
+                    <p className="text-sm opacity-70">Total Orders</p>
+                    <p className="text-3xl font-bold text-blue-400">
+                      {userGamificationStats.total_orders}
+                    </p>
+                  </div>
+
+                  <div
+                    className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
+                    style={{ borderColor: "var(--primary-4)" }}
+                  >
+                    <p className="text-sm opacity-70">Current Streak</p>
+                    <p className="text-3xl font-bold text-green-400">
+                      {userGamificationStats.current_streak} days
+                    </p>
+                  </div>
+
+                  <div
+                    className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
+                    style={{ borderColor: "var(--primary-4)" }}
+                  >
+                    <p className="text-sm opacity-70">Longest Streak</p>
+                    <p className="text-3xl font-bold text-orange-400">
+                      {userGamificationStats.longest_streak} days
+                    </p>
+                  </div>
+
+                  <div
+                    className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
+                    style={{ borderColor: "var(--primary-4)" }}
+                  >
+                    <p className="text-sm opacity-70">Account Age</p>
+                    <p className="text-3xl font-bold text-purple-400">
+                      {userGamificationStats.account_age_days} days
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}
