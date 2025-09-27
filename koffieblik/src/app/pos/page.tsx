@@ -312,7 +312,9 @@ export default function POSPage() {
       products: cart.map((item) => ({
         product: item.name,
         quantity: item.quantity,
+
       })),
+      email: selectedEmail
     };
     // setLoading(true);
     try {
