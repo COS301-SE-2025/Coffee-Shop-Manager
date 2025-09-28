@@ -1,22 +1,31 @@
 import Navbar from "@/app/components/Navbar";
+import CoffeeBackground from "assets/coffee-background";
 
 export const metadata = {
-  title: "Dashboard - DieKoffieBlik",
-  description: "Dashboard overview for managing DieKoffieBlik coffee shop",
+  title: "Reports - DieKoffieBlik",
+  description: "Reports dashboard for managing DieKoffieBlik coffee shop",
   icons: {
     icon: "/favicon.ico",
   },
 };
 
-export default function REPORTSLayout({
+export default function ReportsLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="relative h-screen flex flex-col">
+      {/* Background image layer */}
+      <div className="fixed inset-0 -z-10">
+        <CoffeeBackground />
+        {/* Dark overlay */}
+        <div  />
+      </div>
+
+      {/* Foreground content */}
       <Navbar />
-      {children}
+      <div className="flex-1 overflow-auto">{children}</div>
     </div>
   );
 }

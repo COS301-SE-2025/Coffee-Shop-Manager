@@ -109,7 +109,7 @@ export default function ProfileScreen() {
     "3_day_streak": require("../app/badges/badges/3dayStreak.png"),
     "7_day_streak": require("../app/badges/badges/7dayStreak.png"),
     week_member: require("../app/badges/badges/week_account.png"),
-    month_member: require("../app/badges/badges/week_account.png"),
+    month_member: require("../app/badges/badges/month_account.png"),
     year_member: require("../app/badges/badges/year_account.png"),
   };
 
