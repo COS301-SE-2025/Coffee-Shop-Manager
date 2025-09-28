@@ -31,7 +31,7 @@ export function setup() {
     const sessionCookie = cookies.split(";")[0];
     return { sessionCookie };
 }
-const today = new Date(Date.now()).toISOString().split("T")[0];
+
 
 // Executed by each VU during the test
 export default function (data) {
