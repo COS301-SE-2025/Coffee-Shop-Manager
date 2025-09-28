@@ -33,6 +33,7 @@ import { getStockAdjustmentsHandler } from "./endpoints/stock/getStockAdjustment
 import { getOrdersHandler } from "./endpoints/order/getOrders";
 import { createOrderHandler } from "./endpoints/order/createOrder";
 import { createOrderByEmailHandler } from "./endpoints/order/createOrderByEmail";
+import { updateOrderPaidStatusHandler } from "./endpoints/order/payOrder";
 
 // PRODUCTS
 import { createProductHandler } from "./endpoints/product/createProduct";
@@ -90,6 +91,7 @@ router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
 router.get("/order", authMiddleware, getOrdersHandler);
 router.post("/order", authMiddleware, createOrderHandler);
 router.post("/order/email", authMiddleware, createOrderByEmailHandler);
+router.post("/order/pay/:id", authMiddleware, updateOrderPaidStatusHandler);
 
 // PRODUCTS
 router.get("/product/stock", authMiddleware, getProductsWithStockHandler);

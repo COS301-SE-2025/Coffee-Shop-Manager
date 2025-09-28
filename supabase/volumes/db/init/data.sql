@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS orders (
 	"status" VARCHAR(255) NOT NULL DEFAULT 'pending',
 	"created_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
 	"updated_at" TIMESTAMP(0) WITH TIME ZONE NOT NULL DEFAULT NOW(),
+	"order_number" BIGSERIAL UNIQUE,
 
 	CONSTRAINT orders_pkey PRIMARY KEY (id),
 	CONSTRAINT orders_user_id_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE,
