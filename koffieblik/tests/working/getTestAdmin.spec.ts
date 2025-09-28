@@ -20,10 +20,9 @@ async function login(page: Page) {
   await page.click('button[type="submit"]');
 
   const loginError = page.locator("text=Invalid email or password");
-  await Promise.race([
-    page.waitForURL("**/dashboard", { timeout: 10000 }),
-    loginError.waitFor({ timeout: 10000 }),
-  ]);
+  // Check for login success (redirect to /dashboard)
+  await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 15000 });
+
 
   if (await loginError.isVisible()) {
     throw new Error("Login failed: Invalid credentials");
@@ -122,11 +121,12 @@ test("fetches and displays Orders from /get_orders on manage", async ({ page }) 
   if (!ordersJson.orders || ordersJson.orders.length === 0) {
     await expect(page.getByText("No orders found.")).toBeVisible();
     console.log("ℹ️ No orders, message is displayed.");
-    return; 
+    return;
   }
 
   // Otherwise, expect a table
   const ordersTable = page.locator("table");
+  await page.waitForSelector("table", { timeout: 10000 });
   await expect(ordersTable).toBeVisible({ timeout: 10000 });
 
   // Verify header
