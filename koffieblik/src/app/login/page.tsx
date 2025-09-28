@@ -53,11 +53,16 @@ export default function LoginPage() {
             result.user.user_metadata?.display_name ?? result.user.email;
           const role = result.user.user_metadata?.role ?? "guest";
           const token = result.session?.access_token ?? "N/A";
+          const userId = result.user.id; // Get the user ID
+
+          // Store values in localStorage
           localStorage.setItem("username", username);
           localStorage.setItem(
             "role",
             result.user.user_metadata?.role ?? "user",
           );
+          localStorage.setItem("user_id", userId); // Store the user ID
+
           console.log("🧑‍💼 Role:", role); // Log role
           setLoginError("");
           if (role === "user") {
@@ -299,7 +304,7 @@ export default function LoginPage() {
           </form>
         </div>
       </main>
-      <CoffeeLoading visible={isLoading}/>
+      <CoffeeLoading visible={isLoading} />
     </HydrationFix>
   );
 }

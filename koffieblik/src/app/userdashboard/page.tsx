@@ -40,7 +40,7 @@ interface UserStats {
     points: number;
     description: string;
     date: string;
-    type: "earned" | "redeemed";
+    type: "earn" | "redeemed";
   }[];
 }
 
@@ -50,6 +50,16 @@ interface UserGamificationStats {
   current_streak: number;
   longest_streak: number;
   account_age_days: number;
+}
+
+// Add new interface for points history
+interface PointsHistory {
+  id: string;
+  order_id: string;
+  points: number;
+  type: "earn" | "redeemed";
+  description: string;
+  created_at: string;
 }
 
 export default function DashboardPage() {
@@ -67,6 +77,7 @@ export default function DashboardPage() {
     UserGamificationStats | null
   >(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [pointsHistory, setPointsHistory] = useState<PointsHistory[]>([]);
   const router = useRouter();
 
   useEffect(() => {
@@ -146,10 +157,34 @@ export default function DashboardPage() {
     }
   }
 
+  // Add function to fetch points history
+  async function fetchPointsHistory() {
+    try {
+      const response = await fetch(`${API_BASE_URL}/user/points`, {
+        method: "GET",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setPointsHistory(data.history);
+      } else {
+        console.warn("Failed to fetch points history:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching points history:", error);
+    }
+  }
+
   // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
     fetchOrders();
     fetchUserStats();
+    fetchPointsHistory();
   }, [API_BASE_URL]);
 
   const dateInputStyle =
@@ -193,8 +228,6 @@ export default function DashboardPage() {
     );
   }
 
-  const getTotalLoyaltyPoints = () => {};
-
   const getStatusStyle = (status: string) => {
     switch (status.toLowerCase()) {
       case "completed":
@@ -207,17 +240,6 @@ export default function DashboardPage() {
         return "text-blue-700 bg-blue-100 px-2 py-1 rounded-full text-xs font-medium";
     }
   };
-
-  // Add this mock data for the graph (replace with real data later)
-  const pointsData = [
-    { month: "Jan", points: 150 },
-    { month: "Feb", points: 300 },
-    { month: "Mar", points: 450 },
-    { month: "Apr", points: 500 },
-    { month: "May", points: 750 },
-    { month: "Jun", points: 900 },
-    { month: "Jul", points: 1250 },
-  ];
 
   // Add this custom tooltip component
   const CustomTooltip = ({ active, payload, label }: any) => {
@@ -238,16 +260,60 @@ export default function DashboardPage() {
     return null;
   };
 
+  // Update the points calculation function
+  const calculateUserStats = (pointsHistory: PointsHistory[]): UserStats => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const totalPoints = pointsHistory.reduce((sum, record) => {
+      return record.type === "earn" ? sum + record.points : sum - record.points;
+    }, 0);
+
+    const monthlyPoints = pointsHistory.reduce((sum, record) => {
+      const recordDate = new Date(record.created_at);
+      if (recordDate >= startOfMonth) {
+        return record.type === "earn" ? sum + record.points : sum - record.points;
+      }
+      return sum;
+    }, 0);
+
+    const redeemedPoints = pointsHistory
+      .filter((record) => record.type === "redeemed")
+      .reduce((sum, record) => sum + record.points, 0);
+
+    return {
+      totalPoints,
+      monthlyPoints,
+      redeemedPoints,
+      recentActivity: pointsHistory.slice(0, 5).map((record) => ({
+        points: record.points,
+        description: record.description,
+        date: record.created_at,
+        type: record.type,
+      })),
+    };
+  };
+
+  // Update where the graph data is processed
   function aggregatePoints(
-    data: { date: string; points: number }[],
+    pointsHistory: PointsHistory[],
     filter: "day" | "month" | "year",
   ) {
+    console.log("Raw points history:", pointsHistory); // Debug log
+    
+    // Sort points history by date first
+    const sortedHistory = [...pointsHistory].sort(
+      (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    );
+
     const result: { label: string; points: number }[] = [];
     const map = new Map<string, number>();
+    let runningTotal = 0;
 
-    data.forEach(({ date, points }) => {
-      const d = new Date(date);
+    sortedHistory.forEach(({ created_at, points, type }) => {
+      const d = new Date(created_at);
       let label = "";
+
       if (filter === "day") {
         label = d.toLocaleDateString("en-ZA", {
           year: "numeric",
@@ -262,16 +328,20 @@ export default function DashboardPage() {
       } else if (filter === "year") {
         label = d.getFullYear().toString();
       }
-      map.set(label, (map.get(label) || 0) + points);
+
+      // Update running total based on point type
+      runningTotal += type === "earn" ? points : -points;
+      map.set(label, runningTotal);
     });
 
+    // Convert map to array and sort by date
     map.forEach((points, label) => {
       result.push({ label, points });
     });
 
-    // Sort by label (date ascending)
-    result.sort((a, b) => a.label.localeCompare(b.label));
-    return result;
+    console.log("Processed points data:", result); // Debug log
+
+    return result.sort((a, b) => a.label.localeCompare(b.label));
   }
 
   // Replace pointsData with your API data
@@ -284,7 +354,7 @@ export default function DashboardPage() {
     { date: "2024-07-01", points: 120 },
   ];
 
-  const graphData = aggregatePoints(rawPointsData, graphFilter);
+  const graphData = aggregatePoints(pointsHistory, graphFilter);
 
   // Remove the duplicate useEffect
   useEffect(() => {
@@ -292,56 +362,7 @@ export default function DashboardPage() {
   }, [API_BASE_URL]); // This is the only useEffect for fetching orders
 
   // Keep the calculateUserStats function focused on the current data
-  const calculateUserStats = (orders: Order[]): UserStats => {
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-
-    // Create a Set to track processed orders
-    const processedOrderIds = new Set();
-    const recentActivity: UserStats["recentActivity"] = [];
-
-    // Process orders only once and create activity log
-    orders.forEach((order) => {
-      if (processedOrderIds.has(order.id)) return;
-      processedOrderIds.add(order.id);
-
-      const pointsEarned = Math.round(order.total_price * 0.05 * 100);
-      recentActivity.push({
-        points: pointsEarned,
-        description: `Order #${order.number}`,
-        date: order.created_at,
-        type: "earned",
-      });
-    });
-
-    // Sort by most recent first
-    recentActivity.sort(
-      (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
-    );
-
-    // Calculate totals from the activity log
-    const totalPoints = recentActivity.reduce((sum, activity) => {
-      return activity.type === "earned" ? sum + activity.points : sum - activity.points;
-    }, 0);
-
-    const monthlyPoints = recentActivity.reduce((sum, activity) => {
-      const activityDate = new Date(activity.date);
-      if (activityDate >= startOfMonth) {
-        return activity.type === "earned" ? sum + activity.points : sum - activity.points;
-      }
-      return sum;
-    }, 0);
-
-    return {
-      totalPoints,
-      monthlyPoints,
-      redeemedPoints: 0,
-      recentActivity: recentActivity.slice(0, 5),
-    };
-  };
-
-  // Update the points display section
-  const userStats = calculateUserStats(orders);
+  const userStats = calculateUserStats(pointsHistory);
 
   return (
     <main className="relative min-h-full bg-transparent">
@@ -868,7 +889,7 @@ export default function DashboardPage() {
                     className="bg-white/5 px-4 py-2 rounded-lg flex justify-between items-center"
                   >
                     <span>
-                      {activity.type === "earned" ? "+" : "-"}
+                      {activity.type === "earn" ? "+" : "-"}
                       {activity.points} points — {activity.description}
                     </span>
                     <span className="opacity-70">
@@ -882,7 +903,7 @@ export default function DashboardPage() {
             {/* Streaks and Account Age Section - New */}
             {userGamificationStats && (
               <div>
-                <h3 className="text-lg font-semibold text-[var(--primary-2)] mb-3">
+                <h3 className="text-xl font-semibold text-[var(--primary-2)] mb-3">
                   🚀 Your Progress
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
@@ -920,9 +941,9 @@ export default function DashboardPage() {
                     className="bg-white/10 backdrop-blur rounded-xl p-4 shadow-inner border transition-all duration-300 hover:scale-105 hover:bg-white/20 hover:shadow-lg"
                     style={{ borderColor: "var(--primary-4)" }}
                   >
-                    <p className="text-sm opacity-70">Account Age</p>
+                    <p className="text-sm opacity-70">Total Points</p>
                     <p className="text-3xl font-bold text-purple-400">
-                      {userGamificationStats.account_age_days} days
+                      {userStats.totalPoints}
                     </p>
                   </div>
                 </div>

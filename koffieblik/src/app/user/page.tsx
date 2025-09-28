@@ -9,13 +9,14 @@ import fiveOrdersBadge from "../badges/5orders.png";
 import tenOrdersBadge from "../badges/10orders.png";
 import yearAccount from "../badges/year_account.png"
 import week_month_account from "../badges/week_account.png"
+import CoffeeBackground from "assets/coffee-background";
+import { Toaster, toast } from 'react-hot-toast';
 
 //api url
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
 interface LeaderboardUser {
   user_id: string;
-  display_name: string;
   total_orders: number;
   current_streak?: number;
   favorite_drink?: string;
@@ -25,6 +26,13 @@ interface LeaderboardUser {
   totalOrders: number;
   currentStreak: number;
   favoritedrink: string;
+}
+
+// Add this type definition at the top with other interfaces
+interface ProfileFormData {
+  display_name?: string;
+  date_of_birth?: string;
+  phone_number?: string;
 }
 
 export default function UserPage() {
@@ -54,6 +62,16 @@ export default function UserPage() {
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
   const [leaderboardFilter, setLeaderboardFilter] = useState("orders");
+
+  // Add these state variables after other useState declarations
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    display_name: "",
+    date_of_birth: "",
+    phone_number: ""
+  });
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
     // Set client flag to true once component mounts on client
@@ -205,13 +223,12 @@ export default function UserPage() {
           // Add rank to each user and map to expected format
           const leaderboardWithRank = data.leaderboard.map((user: any, index: number) => ({
             user_id: user.user_id,
-            display_name: user.display_name,
             total_orders: user.total_orders,
             current_streak: user.current_streak || 0,
             favorite_drink: user.favorite_drink || "Unknown",
             // Mapped properties for easier access
             id: user.user_id,
-            username: user.display_name || user.user_id.substring(0, 8), // Use display_name, fallback to user_id
+            username: user.user_id.substring(0, 8), // Use first 8 chars of user_id as display name
             totalOrders: user.total_orders,
             currentStreak: user.current_streak || 0,
             favoritedrink: user.favorite_drink || "Unknown",
@@ -353,298 +370,487 @@ export default function UserPage() {
     return "text-gray-700";
   };
 
+  // Replace the existing handleProfileUpdate function
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdateError(null);
+    setUpdateSuccess(false);
+
+    try {
+      // Get user ID from localStorage or session
+      const userId = localStorage.getItem("user_id") || 
+                    localStorage.getItem("userId");
+
+      if (!userId) {
+        setUpdateError("User ID not found. Please try logging in again.");
+        return;
+      }
+
+      // Only include fields that have values
+      const updates: ProfileFormData = {};
+      if (profileForm.display_name) updates.display_name = profileForm.display_name;
+      if (profileForm.date_of_birth) updates.date_of_birth = profileForm.date_of_birth;
+      if (profileForm.phone_number) updates.phone_number = profileForm.phone_number;
+
+      // Don't make the request if no fields to update
+      if (Object.keys(updates).length === 0) {
+        setUpdateError("No changes to update");
+        return;
+      }
+
+      // Use the correct endpoint with user ID
+      const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updates)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setUpdateSuccess(true);
+        setIsEditing(false);
+        
+        // Show success toast
+        toast.success('Profile updated successfully!', {
+          duration: 3000,
+          style: {
+            background: '#4CAF50',
+            color: '#fff',
+            borderRadius: '10px',
+          },
+        });
+
+        // Update local username if display_name was changed
+        if (updates.display_name) {
+          setUsername(updates.display_name);
+          localStorage.setItem("username", updates.display_name);
+        }
+
+        // Clear form
+        setProfileForm({
+          display_name: "",
+          date_of_birth: "",
+          phone_number: ""
+        });
+      } else {
+        // Show error toast
+        toast.error(data.message || 'Failed to update profile', {
+          duration: 3000,
+        });
+        setUpdateError(data.message || "Failed to update profile");
+      }
+    } catch (error: any) {
+      toast.error('Network error. Please try again.', {
+        duration: 3000,
+      });
+      setUpdateError("Network error. Please try again.");
+      console.error("Profile update error:", error);
+    }
+  };
+
   return (
-    <div className="space-y-6">
-      {/* Tab Navigation */}
-      <div className="bg-white rounded-lg shadow-md">
-        <div className="flex border-b">
-          <button
-            onClick={() => setActiveTab("profile")}
-            className={`flex-1 py-4 px-6 text-center font-medium ${
-              activeTab === "profile"
-                ? "text-brown-700 border-b-2 border-brown-700"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            My Profile
-          </button>
-          <button
-            onClick={() => setActiveTab("leaderboard")}
-            className={`flex-1 py-4 px-6 text-center font-medium ${
-              activeTab === "leaderboard"
-                ? "text-brown-700 border-b-2 border-brown-700"
-                : "text-gray-500 hover:text-gray-700"
-            }`}
-          >
-            Leaderboard 
-          </button>
-        </div>
+    <div className="min-h-screen relative">
+      <Toaster position="bottom-right" />
+      {/* Background */}
+      <div className="fixed inset-0 z-0 h-screen">
+        <CoffeeBackground />
       </div>
 
-      {activeTab === "profile" && (
-        <>
-          {/* User Info Card */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-2xl text-white">👤</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
-                  <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
-                </div>
-              </div>
-            </div>
+      {/* Content */}
+      <div className="relative z-10 p-6 space-y-6">
+        {/* Tab Navigation */}
+        <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md">
+          <div className="flex border-b border-gray-200">
+            <button
+              onClick={() => setActiveTab("profile")}
+              className={`flex-1 py-4 px-6 text-center font-medium ${
+                activeTab === "profile"
+                  ? "text-[var(--primary-3)] border-b-2 border-[var(--primary-3)]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              My Profile
+            </button>
+            <button
+              onClick={() => setActiveTab("leaderboard")}
+              className={`flex-1 py-4 px-6 text-center font-medium ${
+                activeTab === "leaderboard"
+                  ? "text-[var(--primary-3)] border-b-2 border-[var(--primary-3)]"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              Leaderboard 
+            </button>
           </div>
+        </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              {statsLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded w-20 mx-auto"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-blue-600 mb-2">
-                    {userStats.totalOrders}
-                  </div>
-                  <div className="text-gray-600">Total Orders</div>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              {statsLoading ? (
-                <div className="animate-pulse">
-                  <div className="h-8 bg-gray-300 rounded mb-2"></div>
-                  <div className="h-4 bg-gray-300 rounded w-24 mx-auto"></div>
-                </div>
-              ) : (
-                <>
-                  <div className="text-3xl font-bold text-green-600 mb-2">
-                    {userStats.currentStreak}
-                  </div>
-                  <div className="text-gray-600">Current Streak</div>
-                </>
-              )}
-            </div>
-            
-            <div className="bg-white rounded-lg shadow-md p-6 text-center">
-              <div className="text-lg font-bold text-purple-600 mb-2">
-                {favoriteDrink}
-              </div>
-              <div className="text-gray-600">Favourite Drink</div>
-            </div>
-          </div>
-
-          {/* Badges Section */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-bold text-gray-900">My Badges</h3>
-              {badgesLoading && (
-                <div className="text-sm text-gray-500">Loading badges...</div>
-              )}
-              {!badgesLoading && (
-                <button
-                  onClick={fetchUserBadges}
-                  className="text-sm text-blue-600 hover:text-blue-800"
-                >
-                  Refresh
-                </button>
-              )}
-            </div>
-            
-            {badgesLoading ? (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {[...Array(6)].map((_, index) => (
-                  <div key={index} className="p-4 rounded-lg bg-gray-100 animate-pulse">
-                    <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-2"></div>
-                    <div className="h-4 bg-gray-300 rounded mb-1"></div>
-                    <div className="h-3 bg-gray-300 rounded"></div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {badges.map((badge) => (
-                  <div
-                    key={badge.id}
-                    className={`p-4 rounded-lg text-center transition-all duration-200 ${
-                      badge.earned
-                        ? "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-sm hover:shadow-md"
-                        : "bg-gray-100 opacity-60"
-                    }`}
-                  >
-                    <div
-                      className={`w-12 h-12 rounded-full ${badge.color} mx-auto mb-2 flex items-center justify-center ${
-                        badge.earned ? "shadow-sm" : "grayscale"
-                      }`}
-                    >
-                      {badge.image ? (
-                        <Image 
-                          src={badge.image} 
-                          alt={badge.name}
-                          width={32}
-                          height={32}
-                          className={`object-contain ${!badge.earned ? "grayscale opacity-50" : ""}`}
-                        />
-                      ) : (
-                        <span className="text-white text-xl">🏆</span>
-                      )}
-                    </div>
-                    <div className={`font-medium text-sm mb-1 ${
-                      badge.earned ? "text-gray-900" : "text-gray-500"
-                    }`}>
-                      {badge.name}
-                    </div>
-                    <div className={`text-xs ${
-                      badge.earned ? "text-gray-600" : "text-gray-400"
-                    }`}>
-                      {badge.description}
-                    </div>
-                    {badge.earned && (
-                      <div className="mt-2">
-                        <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            
-          </div>
-        </>
-      )}
-
-      {activeTab === "leaderboard" && (
-        <>
-          {/* Username and member since */}
-          <div className="bg-white rounded-lg shadow-md p-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
-                  <span className="text-2xl text-white">👤</span>
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
-                  <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
-                </div>
-              </div>
-              <div className="text-right">
-                <div className={`text-2xl font-bold ${getRankColor(getCurrentUserRank())}`}>
-                  {getRankIcon(getCurrentUserRank())}
-                </div>
-                <div className="text-sm text-gray-500">Current Rank</div>
-              </div>
-            </div>
-          </div>
-
-          {/* Leaderboard section */}
-          <div className="bg-white rounded-lg shadow-md">
-            <div className="p-6 border-b">
+        {activeTab === "profile" && (
+          <>
+            {/* User Info Card */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-xl font-bold text-gray-900">
-                  Top Users
-                </h3>
-                {leaderboardLoading && (
-                  <div className="text-sm text-gray-500">Loading...</div>
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-2xl text-white">👤</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
+                    <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6 text-center">
+                {statsLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-20 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-blue-600 mb-2">
+                      {userStats.totalOrders}
+                    </div>
+                    <div className="text-gray-600">Total Orders</div>
+                  </>
                 )}
-                {!leaderboardLoading && leaderboard.length > 0 && (
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6 text-center">
+                {statsLoading ? (
+                  <div className="animate-pulse">
+                    <div className="h-8 bg-gray-300 rounded mb-2"></div>
+                    <div className="h-4 bg-gray-300 rounded w-24 mx-auto"></div>
+                  </div>
+                ) : (
+                  <>
+                    <div className="text-3xl font-bold text-green-600 mb-2">
+                      {userStats.currentStreak}
+                    </div>
+                    <div className="text-gray-600">Current Streak</div>
+                  </>
+                )}
+              </div>
+              
+              <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6 text-center">
+                <div className="text-lg font-bold text-purple-600 mb-2">
+                  {favoriteDrink}
+                </div>
+                <div className="text-gray-600">Favourite Drink</div>
+              </div>
+            </div>
+
+            {/* Profile Update Section */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Profile Information</h3>
+                {!isEditing && (
                   <button
-                    onClick={fetchLeaderboard}
+                    onClick={() => setIsEditing(true)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+
+              {isEditing ? (
+                <form onSubmit={handleProfileUpdate} className="space-y-4">
+                  <div>
+                    <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
+                      Display Name
+                    </label>
+                    <input
+                      type="text"
+                      id="display_name"
+                      value={profileForm.display_name}
+                      onChange={(e) => setProfileForm({...profileForm, display_name: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter display name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      id="date_of_birth"
+                      value={profileForm.date_of_birth}
+                      onChange={(e) => setProfileForm({...profileForm, date_of_birth: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone_number"
+                      value={profileForm.phone_number}
+                      onChange={(e) => setProfileForm({...profileForm, phone_number: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter phone number"
+                      pattern="[0-9]{10}"
+                      title="Please enter a valid 10-digit phone number"
+                    />
+                  </div>
+
+                  {updateError && (
+                    <div className="text-red-600 text-sm">{updateError}</div>
+                  )}
+
+                  {updateSuccess && (
+                    <div className="text-green-600 text-sm">Profile updated successfully!</div>
+                  )}
+
+                  <div className="flex space-x-4">
+                    <button
+                      type="submit"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setUpdateError(null);
+                        setUpdateSuccess(false);
+                        setProfileForm({
+                          display_name: "",
+                          date_of_birth: "",
+                          phone_number: ""
+                        });
+                      }}
+                      className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-gray-600">Click 'Edit Profile' to update your information</p>
+                </div>
+              )}
+            </div>
+
+            {/* Badges Section */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">My Badges</h3>
+                {badgesLoading && (
+                  <div className="text-sm text-gray-500">Loading badges...</div>
+                )}
+                {!badgesLoading && (
+                  <button
+                    onClick={fetchUserBadges}
                     className="text-sm text-blue-600 hover:text-blue-800"
                   >
                     Refresh
                   </button>
                 )}
               </div>
-            </div>
-            
-            {leaderboardError && (
-              <div className="p-6 text-center">
-                <div className="text-red-600 mb-2">Error loading leaderboard</div>
-                <div className="text-sm text-gray-500 mb-4">{leaderboardError}</div>
-                <button
-                  onClick={fetchLeaderboard}
-                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
-                >
-                  Try Again
-                </button>
-              </div>
-            )}
-
-            {leaderboardLoading && (
-              <div className="p-6 text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                <div className="mt-2 text-gray-500">Loading leaderboard...</div>
-              </div>
-            )}
-
-            {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
-              <div className="p-6 text-center text-gray-500">
-                No leaderboard data available
-              </div>
-            )}
-
-            {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
-              <div className="divide-y">
-                {sortedLeaderboard.slice(0, 10).map((user, index) => {
-                 
-
-                  const currentUserId = isClient 
-                    ? (localStorage.getItem("userId") || localStorage.getItem("user_id"))
-                    : null;
-                  const isCurrentUser = user.user_id === currentUserId;
-                  const displayRank = index + 1;
-                  
-                  return (
+              
+              {badgesLoading ? (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {[...Array(6)].map((_, index) => (
+                    <div key={index} className="p-4 rounded-lg bg-gray-100 animate-pulse">
+                      <div className="w-12 h-12 bg-gray-300 rounded-full mx-auto mb-2"></div>
+                      <div className="h-4 bg-gray-300 rounded mb-1"></div>
+                      <div className="h-3 bg-gray-300 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {badges.map((badge) => (
                     <div
-                      key={user.user_id}
-                      className={`p-4 flex items-center justify-between hover:bg-gray-50 ${
-                        isCurrentUser ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                      key={badge.id}
+                      className={`p-4 rounded-lg text-center transition-all duration-200 ${
+                        badge.earned
+                          ? "bg-gradient-to-br from-white to-gray-50 border-2 border-gray-200 shadow-sm hover:shadow-md"
+                          : "bg-gray-100 opacity-60"
                       }`}
                     >
-                      <div className="flex items-center space-x-4">
-                        <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
-                          {getRankIcon(displayRank)}
-                        </div>
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                          <span className="text-white font-bold">
-                            {user.username.charAt(0).toUpperCase()}
-                          </span>
-                        </div>
-                        <div>
-                          <div className="font-medium text-gray-900">
-                            {user.username}
-                            {isCurrentUser && (
-                              <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
-                                You
-                              </span>
-                            )}
-                          </div>
-                          
-                        </div>
+                      <div
+                        className={`w-12 h-12 rounded-full ${badge.color} mx-auto mb-2 flex items-center justify-center ${
+                          badge.earned ? "shadow-sm" : "grayscale"
+                        }`}
+                      >
+                        {badge.image ? (
+                          <Image 
+                            src={badge.image} 
+                            alt={badge.name}
+                            width={32}
+                            height={32}
+                            className={`object-contain ${!badge.earned ? "grayscale opacity-50" : ""}`}
+                          />
+                        ) : (
+                          <span className="text-white text-xl">🏆</span>
+                        )}
                       </div>
-                      <div className="text-right">
-                        <div className="font-bold text-gray-900">
-                          {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
-                        </div>
-                        <div className="text-xs text-gray-500">
-                          {leaderboardFilter === "orders" ? "orders" : "day streak"}
-                        </div>
+                      <div className={`font-medium text-sm mb-1 ${
+                        badge.earned ? "text-gray-900" : "text-gray-500"
+                      }`}>
+                        {badge.name}
                       </div>
+                      <div className={`text-xs ${
+                        badge.earned ? "text-gray-600" : "text-gray-400"
+                      }`}>
+                        {badge.description}
+                      </div>
+                      {badge.earned && (
+                        <div className="mt-2">
+                          <span className="inline-block w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                        </div>
+                      )}
                     </div>
-                  );
-                })}
+                  ))}
+                </div>
+              )}
+              
+              
+            </div>
+          </>
+        )}
+
+        {activeTab === "leaderboard" && (
+          <>
+            {/* Your Position */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="w-16 h-16 bg-blue-500 rounded-full flex items-center justify-center">
+                    <span className="text-2xl text-white">👤</span>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-gray-900">{username}</h2>
+                    <p className="text-sm text-gray-500">Member since {userStats.memberSince}</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className={`text-2xl font-bold ${getRankColor(getCurrentUserRank())}`}>
+                    {getRankIcon(getCurrentUserRank())}
+                  </div>
+                  <div className="text-sm text-gray-500">Current Rank</div>
+                </div>
               </div>
-            )}
-          </div>
-        </>
-      )}
+            </div>
+
+            {/* Leaderboard */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md">
+              <div className="p-6 border-b">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-bold text-gray-900">
+                    Top Users
+                  </h3>
+                  {leaderboardLoading && (
+                    <div className="text-sm text-gray-500">Loading...</div>
+                  )}
+                  {!leaderboardLoading && leaderboard.length > 0 && (
+                    <button
+                      onClick={fetchLeaderboard}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      Refresh
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              {leaderboardError && (
+                <div className="p-6 text-center">
+                  <div className="text-red-600 mb-2">Error loading leaderboard</div>
+                  <div className="text-sm text-gray-500 mb-4">{leaderboardError}</div>
+                  <button
+                    onClick={fetchLeaderboard}
+                    className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  >
+                    Try Again
+                  </button>
+                </div>
+              )}
+
+              {leaderboardLoading && (
+                <div className="p-6 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <div className="mt-2 text-gray-500">Loading leaderboard...</div>
+                </div>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && leaderboard.length === 0 && (
+                <div className="p-6 text-center text-gray-500">
+                  No leaderboard data available
+                </div>
+              )}
+
+              {!leaderboardLoading && !leaderboardError && leaderboard.length > 0 && (
+                <div className="divide-y">
+                  {sortedLeaderboard.slice(0, 10).map((user, index) => {
+                    // Only check current user after client hydration
+                    const currentUserId = isClient 
+                      ? (localStorage.getItem("userId") || localStorage.getItem("user_id"))
+                      : null;
+                    const isCurrentUser = user.user_id === currentUserId;
+                    const displayRank = index + 1;
+                    
+                    return (
+                      <div
+                        key={user.user_id}
+                        className={`p-4 flex items-center justify-between hover:bg-gray-50 ${
+                          isCurrentUser ? "bg-blue-50 border-l-4 border-blue-500" : ""
+                        }`}
+                      >
+                        <div className="flex items-center space-x-4">
+                          <div className={`text-xl font-bold ${getRankColor(displayRank)} min-w-[3rem]`}>
+                            {getRankIcon(displayRank)}
+                          </div>
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
+                            <span className="text-white font-bold">
+                              {user.username.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <div>
+                            <div className="font-medium text-gray-900">
+                              {user.username}
+                              {isCurrentUser && (
+                                <span className="ml-2 text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                                  You
+                                </span>
+                              )}
+                            </div>
+                            
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-bold text-gray-900">
+                            {leaderboardFilter === "orders" ? user.totalOrders : user.currentStreak}
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            {leaderboardFilter === "orders" ? "orders" : "day streak"}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+      </div>
     </div>
   );
 }

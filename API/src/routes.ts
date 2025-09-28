@@ -31,6 +31,7 @@ import { getStockAdjustmentsHandler } from "./endpoints/stock/getStockAdjustment
 // ORDERS
 import { getOrdersHandler } from "./endpoints/order/getOrders";
 import { createOrderHandler } from "./endpoints/order/createOrder";
+import { createOrderByEmailHandler } from "./endpoints/order/createOrderByEmail";
 
 // PRODUCTS
 import { createProductHandler } from "./endpoints/product/createProduct";
@@ -44,6 +45,9 @@ import { checkTokenHandler } from "./endpoints/legacy/check-token";
 import { getProductsHandler_old } from "./endpoints/legacy/getProducts_old";
 import { updateOrderStatusHandler } from "./endpoints/legacy/update_order_status";
 import { updateStockHandler } from "./endpoints/legacy/updateStock";
+
+// PAYMENT
+import { initiatePaymentHandler } from "../src/endpoints/payment/paymentHandler";
 
 const router = Router();
 
@@ -83,6 +87,7 @@ router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
 // ORDERS
 router.get("/order", authMiddleware, getOrdersHandler);
 router.post("/order", authMiddleware, createOrderHandler);
+router.post("/order/email", authMiddleware, createOrderByEmailHandler);
 
 // PRODUCTS
 router.get("/product/stock", authMiddleware, getProductsWithStockHandler);
@@ -101,6 +106,9 @@ router.get("/getProducts", authMiddleware, getProductsHandler_old);
 router.put("/update_order_status", authMiddleware, updateOrderStatusHandler);
 router.get("/get_stock", authMiddleware, getStockHandler);
 router.post("/update_stock", authMiddleware, updateStockHandler);
+
+// PAYMENT
+router.post("/initiate-payment", authMiddleware, initiatePaymentHandler);
 
 // Catch for undefined routes
 router.use((req, res) => {
