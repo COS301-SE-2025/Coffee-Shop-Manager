@@ -27,7 +27,7 @@ interface OrderSummary {
 export default function OrderPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>(""); // Replace activeCategory with searchQuery
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [orderStatus, setOrderStatus] = useState<
     "ordering" | "selecting-payment" | "confirming" | "placed"
   >("ordering");
@@ -45,6 +45,54 @@ export default function OrderPage() {
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  // Move this useEffect up here with the other hooks
+  useEffect(() => {
+    // Check for PayFast return with successful payment
+    const checkPaymentSuccess = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      const pendingOrderId = localStorage.getItem("pendingOrder");
+      
+      // If we have a successful payment and pending order ID
+      if (paymentStatus === 'COMPLETE' && pendingOrderId) {
+        try {
+          // Call the payment update endpoint
+          const updateRes = await fetch(`${API_BASE_URL}/order/pay/${pendingOrderId}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ paid_status: 'paid' })
+          });
+          
+          const updateResult = await updateRes.json();
+          
+          if (updateRes.ok && updateResult.success) {
+            // Show success message
+            setOrderStatus("placed");
+            setMessage("Payment successful! Your order has been paid.");
+            // Clear the pending order
+            localStorage.removeItem("pendingOrder");
+          } else {
+            console.error("Failed to update payment status:", updateResult);
+            setMessage("Payment was received but order status update failed.");
+          }
+        } catch (err) {
+          console.error("Error updating payment status:", err);
+        }
+      }
+      
+      // If we have a canceled or failed payment
+      if (paymentStatus === 'CANCELLED' || paymentStatus === 'FAILED') {
+        setMessage("Payment was cancelled or failed. Please try again or pay at the counter.");
+      }
+    };
+    
+    // Run the payment check
+    if (window.location.search.includes('payment_status')) {
+      checkPaymentSuccess();
+    }
+  }, [API_BASE_URL]);
 
   useEffect(() => {
     const role = localStorage.getItem("role");
