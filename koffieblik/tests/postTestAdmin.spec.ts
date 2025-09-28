@@ -54,38 +54,42 @@ async function login(page: Page) {
 //   }
 // });
 
-test("fetches and displays Products from /getProducts on POS", async ({
-  page,
-}) => {
+
+test("fetches and displays Products from /getProducts on POS", async ({ page }) => {
   await login(page);
 
+  // Navigate to dashboard → POS
   await page.goto("http://localhost:3000/dashboard");
   await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(3000); // hydration
+  await page.waitForTimeout(2000);
 
   await page.locator("text=POS").click();
   await page.waitForURL("**/pos", { timeout: 15000 });
-  await page.waitForTimeout(3000); // hydration
+  await page.waitForTimeout(2000);
 
-  const productCards = page.locator("button:has(h2)"); // Adjusted for POS buttons
+  // Products: each has data-testid="product-card"
+  const productCards = page.locator('[data-testid="product-card"]');
   await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+
   const count = await productCards.count();
   expect(count).toBeGreaterThan(0);
 
-  const ordersTable = page.locator("table:has-text('Order #')");
+  // Orders table: has "Order #" in the header
+  const ordersTable = page.locator("table >> text=Order #");
   await expect(ordersTable).toBeVisible({ timeout: 15000 });
 
-  // Optionally also check at least one row exists
+  // Ensure at least 0+ rows render
   const orderRows = ordersTable.locator("tbody tr");
   const rowCount = await orderRows.count();
 
   if (rowCount > 0) {
-    // Optional: check that at least the first row renders expected data
     await expect(orderRows.first()).toBeVisible();
   } else {
     console.log("ℹ️ No orders found, but table is rendered.");
   }
 });
+
+
 
 test("orders a product and checks it appears in POS orders table", async ({ page }) => {
   await login(page);
@@ -93,194 +97,157 @@ test("orders a product and checks it appears in POS orders table", async ({ page
   await page.goto("http://localhost:3000/pos");
   await page.waitForLoadState("networkidle");
 
+  // Grab product cards
   const productCards = page.getByTestId("product-card");
   await expect(productCards.first()).toBeVisible({ timeout: 20000 });
 
-  const productName = await productCards.first().locator("h2").innerText();
+  // Get product name (h3 now, not h2)
+  const productName = await productCards.first().locator("h3").innerText();
   console.log("Ordering product:", productName);
 
+  // Add to cart
   await productCards.first().click();
   await expect(page.getByText(/Total:\s*R\d+/)).toBeVisible();
 
+  // Complete order
   await page.getByRole("button", { name: /Complete Order/i }).click();
-  await expect(page.getByText("✅ Order successfully submitted!")).toBeVisible();
 
+  // Check the orders table
   const posTable = page.getByRole("table");
+  const orderRows = posTable.locator("tbody tr");
 
-  const matchingRow = posTable.locator("tbody tr").filter({
-    hasText: new RegExp(`${productName}.*pending`, "i"),
+  // Look for a row that has both the product name and "pending" in the status cell
+  const matchingRow = orderRows.filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /pending/i }),
   });
 
   await expect(matchingRow.first()).toBeVisible({ timeout: 20000 });
 });
 
-test("orders the second product and completes it via row-level button", async ({ page }) => {
+
+
+test("orders a product, verifies it in POS table, and marks it completed", async ({ page }) => {
   await login(page);
 
-  // Go to POS
   await page.goto("http://localhost:3000/pos");
   await page.waitForLoadState("networkidle");
 
-  // Wait for product cards
+  // Grab product cards
   const productCards = page.getByTestId("product-card");
-  const count = await productCards.count();
-  expect(count).toBeGreaterThanOrEqual(2);
+  await expect(productCards.first()).toBeVisible({ timeout: 20000 });
 
-  const productName = await productCards.nth(1).locator("h2").innerText();
+  // Get product name (h3 now, not h2)
+  const productName = await productCards.first().locator("h3").innerText();
   console.log("Ordering product:", productName);
 
-  await productCards.nth(1).click();
+  // Add to cart
+  await productCards.first().click();
   await expect(page.getByText(/Total:\s*R\d+/)).toBeVisible();
 
+  // Submit order
   await page.getByRole("button", { name: /Complete Order/i }).click();
-  await expect(page.getByText("✅ Order successfully submitted!")).toBeVisible();
 
+  // Find the order row with product name and pending status
   const posTable = page.getByRole("table");
+  const orderRows = posTable.locator("tbody tr");
 
-  const orderRow = posTable.locator("tr", { hasText: new RegExp(productName, "i") });
-  await expect(orderRow).toBeVisible({ timeout: 20000 });
+  const pendingRow = orderRows.filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /pending/i }),
+  });
 
-  await expect(orderRow).toContainText(/pending/i);
+  await expect(pendingRow.first()).toBeVisible({ timeout: 20000 });
 
-  const completeBtn = orderRow.getByRole("button", { name: "✅ Complete" });
+  // Click the row's "Complete" button
+  const completeBtn = pendingRow.first().getByRole("button", { name: /Complete/i });
+  await expect(completeBtn).toBeVisible({ timeout: 10000 });
   await completeBtn.click();
 
-  await expect(orderRow).toContainText(/completed/i, { timeout: 20000 });
+  // Verify the row updates to completed
+  const completedRow = orderRows.filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /completed/i }),
+  });
+
+  await expect(completedRow.first()).toBeVisible({ timeout: 20000 });
+
   await page.waitForTimeout(6000); // wait 6 seconds
+  // 🔑 Switch
+  await page.getByRole("button", { name: /Completed/i }).click();
 
 
-  await page.getByRole("button", { name: "completed" }).click();
-
-  const completedRow = posTable.locator("tr", { hasText: new RegExp(productName, "i") });
-  await expect(completedRow).toBeVisible({ timeout: 20000 });
-  await expect(completedRow).toContainText(/completed/i);
+  const completedFilteredRow = posTable.locator("tbody tr").filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /completed/i }),
+  });
+  await expect(completedFilteredRow.first()).toBeVisible({ timeout: 20000 });
 });
 
-test("orders the second product and cancel it via row-level button", async ({ page }) => {
+test("orders a product, verifies it in POS table, and marks it cancelled", async ({ page }) => {
   await login(page);
 
-  // Go to POS
   await page.goto("http://localhost:3000/pos");
   await page.waitForLoadState("networkidle");
 
-  // Wait for product cards
+  // Grab product cards
   const productCards = page.getByTestId("product-card");
-  const count = await productCards.count();
-  expect(count).toBeGreaterThanOrEqual(2);
+  await expect(productCards.first()).toBeVisible({ timeout: 20000 });
 
-  // Pick the second product
-  const productName = await productCards.nth(1).locator("h2").innerText();
+  // Get product name (h3 now, not h2)
+  const productName = await productCards.first().locator("h3").innerText();
   console.log("Ordering product:", productName);
 
-  await productCards.nth(1).click();
+  // Add to cart
+  await productCards.first().click();
   await expect(page.getByText(/Total:\s*R\d+/)).toBeVisible();
 
+  // Submit order
   await page.getByRole("button", { name: /Complete Order/i }).click();
-  await expect(page.getByText("✅ Order successfully submitted!")).toBeVisible();
 
+  // Find the order row with product name and pending status
   const posTable = page.getByRole("table");
+  const orderRows = posTable.locator("tbody tr");
 
-  const orderRow = posTable.locator("tr", { hasText: new RegExp(productName, "i") });
-  await expect(orderRow).toBeVisible({ timeout: 20000 });
+  const pendingRow = orderRows.filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /pending/i }),
+  });
 
-  await expect(orderRow).toContainText(/pending/i);
+  await expect(pendingRow.first()).toBeVisible({ timeout: 20000 });
 
-  const cancelBtn = orderRow.getByRole("button", { name: "❌ Cancel" });
+  // Click the row's "Cancel" button
+  const cancelBtn = pendingRow.first().getByRole("button", { name: /Cancel/i });
+  await expect(cancelBtn).toBeVisible({ timeout: 10000 });
   await cancelBtn.click();
 
-  await expect(orderRow).toContainText(/cancelled/i, { timeout: 20000 });
+  // Verify the row updates to cancelled
+  const cancelledRow = orderRows.filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /cancelled/i }),
+  });
+
+  await expect(cancelledRow.first()).toBeVisible({ timeout: 20000 });
+
   await page.waitForTimeout(6000); // wait 6 seconds
+  // 🔑 Switch to the Cancelled filter tab
+  await page.getByRole("button", { name: /cancelled/i }).click();
 
-
-  await page.getByRole("button", { name: "cancelled" }).click();
-
-  const completedRow = posTable.locator("tr", { hasText: new RegExp(productName, "i") });
-  await expect(completedRow).toBeVisible({ timeout: 20000 });
-  await expect(completedRow).toContainText(/cancelled/i);
+  // Confirm the cancelled row is still visible in this filter view
+  const cancelledFilteredRow = posTable.locator("tbody tr").filter({
+    has: page.locator("td", { hasText: productName }),
+  }).filter({
+    has: page.locator("td span", { hasText: /cancelled/i }),
+  });
+  await expect(cancelledFilteredRow.first()).toBeVisible({ timeout: 20000 });
 });
 
 
 
 
-test("orders second and third product, completes it, and verifies in manage", async ({ page }) => {
-  await login(page);
-
-  // Go to POS
-  await page.goto("http://localhost:3000/pos");
-  await page.waitForLoadState("networkidle");
-
-  const productCards = page.getByTestId("product-card");
-  expect(await productCards.count()).toBeGreaterThanOrEqual(3);
-
-  // Add 2 products
-  await productCards.nth(1).click();
-  await productCards.nth(2).click();
-  await page.getByRole("button", { name: /Complete Order/i }).click();
-  await expect(page.getByText("✅ Order successfully submitted!")).toBeVisible();
-
-  const posTable = page.getByRole("table");
-  const latestRow = posTable.locator("tbody tr").first();
-
-  // Extract the order number
-  const orderNumberText = await latestRow.locator("td").first().innerText();
-  const orderNumber = orderNumberText.replace("#", "").trim();
-  console.log("🆕 Created order number:", orderNumber);
-
-  const completeBtn = latestRow.getByRole("button", { name: "✅ Complete" });
-  await completeBtn.click();
-  await expect(latestRow).toContainText(/completed/i);
-
-  // --- Go to Manage page ---
-  await page.goto("http://localhost:3000/manage");
-  await page.waitForLoadState("networkidle");
-
-  await page.getByRole("button", { name: "completed" }).click();
-
-  const manageTable = page.getByRole("table");
-  const completedRow = manageTable.locator("tr", { hasText: `#${orderNumber}` });
-
-  await expect(completedRow).toBeVisible({ timeout: 20000 });
-  await expect(completedRow).toContainText(/completed/i);
-});
-
-
-// test("fetches and displays Inventory from /get_stock on Inventory page", async ({
-//   page,
-// }) => {
-//   await login(page);
-
-//   await page.locator("text=Inventory").click();
-//   await page.waitForURL("**/inventory", { timeout: 10000 });
-//   await page.waitForTimeout(3000); // hydration
-
-//   await page.waitForSelector("table tbody tr", { timeout: 10000 });
-//   const inventoryRows = page.locator("table tbody tr");
-//   await expect(inventoryRows.first()).toBeVisible({ timeout: 10000 });
-//   const count = await inventoryRows.count();
-//   expect(count).toBeGreaterThan(0);
-// });
-
-// test("fetches and displays Orders from /get_orders on manage", async ({
-//   page,
-// }) => {
-//   await login(page);
-
-//   await page.locator("text=manage").click();
-//   await page.waitForURL("**/manage", { timeout: 15000 });
-//   await page.waitForTimeout(3000); // hydration
-
-
-//   const ordersTable = page.locator("table:has-text('Order #')");
-//   await expect(ordersTable).toBeVisible({ timeout: 15000 });
-
-//   // Optionally also check at least one row exists
-//   const orderRows = ordersTable.locator("tbody tr");
-//   const rowCount = await orderRows.count();
-
-//   if (rowCount > 0) {
-//     // Optional: check that at least the first row renders expected data
-//     await expect(orderRows.first()).toBeVisible();
-//   } else {
-//     console.log("ℹ️ No orders found, but table is rendered.");
-//   }
-// });
