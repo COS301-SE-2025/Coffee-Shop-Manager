@@ -19,6 +19,7 @@ logintest:
 	@echo "Running login tests..."
 	npx playwright test tests/working/login.spec.ts
 
+
 posTest:
 	@echo "Running manager tests..."
 	npx playwright test tests/working/postTestAdminPOS.spec.ts
@@ -34,11 +35,15 @@ getAdminTest:
 teste2e: logintest
 # 	@$(MAKE) signuptest
 	@$(MAKE) getAdminTest
+# 	@$(MAKE) posTest
+# 	@$(MAKE) managerTest
+
+test_safe: logintest
+	@$(MAKE) getAdminTest
+
+test_unsafe: logintest
 	@$(MAKE) posTest
 	@$(MAKE) managerTest
-
-
-
 
 
 createOrdesLoadTest:

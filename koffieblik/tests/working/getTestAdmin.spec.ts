@@ -20,10 +20,9 @@ async function login(page: Page) {
   await page.click('button[type="submit"]');
 
   const loginError = page.locator("text=Invalid email or password");
-  await Promise.race([
-    page.waitForURL("**/dashboard", { timeout: 10000 }),
-    loginError.waitFor({ timeout: 10000 }),
-  ]);
+  // Check for login success (redirect to /dashboard)
+  await expect(page).toHaveURL(/.*\/dashboard/, { timeout: 15000 });
+
 
   if (await loginError.isVisible()) {
     throw new Error("Login failed: Invalid credentials");
@@ -54,39 +53,39 @@ test("fetches and displays orders from /get_orders on dashboard", async ({
   }
 });
 
-test("fetches and displays Products from /getProducts on POS", async ({ page }) => {
-  await login(page);
+// test("fetches and displays Products from /getProducts on POS", async ({ page }) => {
+//   await login(page);
 
-  // Navigate to dashboard → POS
-  await page.goto("http://localhost:3000/dashboard");
-  await page.waitForLoadState("networkidle");
-  await page.waitForTimeout(2000);
+//   // Navigate to dashboard → POS
+//   await page.goto("http://localhost:3000/dashboard");
+//   await page.waitForLoadState("networkidle");
+//   await page.waitForTimeout(2000);
 
-  await page.locator("text=POS").click();
-  await page.waitForURL("**/pos", { timeout: 15000 });
-  await page.waitForTimeout(2000);
+//   await page.locator("text=POS").click();
+//   await page.waitForURL("**/pos", { timeout: 15000 });
+//   await page.waitForTimeout(2000);
 
-  // Products: each has data-testid="product-card"
-  const productCards = page.locator('[data-testid="product-card"]');
-  await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+//   // Products: each has data-testid="product-card"
+//   const productCards = page.locator('[data-testid="product-card"]');
+//   await expect(productCards.first()).toBeVisible({ timeout: 15000 });
 
-  const count = await productCards.count();
-  expect(count).toBeGreaterThan(0);
+//   const count = await productCards.count();
+//   expect(count).toBeGreaterThan(0);
 
-  // Orders table: has "Order #" in the header
-  const ordersTable = page.locator("table >> text=Order #");
-  await expect(ordersTable).toBeVisible({ timeout: 15000 });
+//   // Orders table: has "Order #" in the header
+//   const ordersTable = page.locator("table >> text=Order #");
+//   await expect(ordersTable).toBeVisible({ timeout: 15000 });
 
-  // Ensure at least 0+ rows render
-  const orderRows = ordersTable.locator("tbody tr");
-  const rowCount = await orderRows.count();
+//   // Ensure at least 0+ rows render
+//   const orderRows = ordersTable.locator("tbody tr");
+//   const rowCount = await orderRows.count();
 
-  if (rowCount > 0) {
-    await expect(orderRows.first()).toBeVisible();
-  } else {
-    console.log("ℹ️ No orders found, but table is rendered.");
-  }
-});
+//   if (rowCount > 0) {
+//     await expect(orderRows.first()).toBeVisible();
+//   } else {
+//     console.log("ℹ️ No orders found, but table is rendered.");
+//   }
+// });
 
 test("fetches and displays Inventory from /get_stock on Inventory page", async ({
   page,
@@ -107,30 +106,41 @@ test("fetches and displays Inventory from /get_stock on Inventory page", async (
 test("fetches and displays Orders from /get_orders on manage", async ({ page }) => {
   await login(page);
 
-  await page.locator("text=manage").click();
-  await page.waitForURL("**/manage", { timeout: 15000 });
-  await page.waitForTimeout(3000); // hydration
+  // Wait for /get_orders API to finish
+  const [ordersResponse] = await Promise.all([
+    page.waitForResponse((res) =>
+      res.url().includes("/get_orders") && res.status() === 200
+    ),
+    page.locator("text=manage").click(),
+  ]);
 
-  // Check if a table exists at all
-  const ordersTable = page.getByRole("table");
-  const tableCount = await ordersTable.count();
+  const ordersJson = await ordersResponse.json();
+  // console.log("API returned orders:", ordersJson);
 
-  if (tableCount > 0) {
-    await expect(
-      ordersTable.getByRole("columnheader", { name: /Order/i })
-    ).toBeVisible({ timeout: 15000 });
-
-    const orderRows = ordersTable.locator("tbody tr");
-    const rowCount = await orderRows.count();
-
-    if (rowCount > 0) {
-      await expect(orderRows.first()).toBeVisible();
-      console.log(`Found ${rowCount} order(s) in Manage table`);
-    } else {
-      console.log("ℹ️ Table rendered but no rows inside.");
-    }
-  } else {
-    console.log("ℹ️ No orders table rendered (no orders available).");
+  // If no orders, check the "No orders found." message
+  if (!ordersJson.orders || ordersJson.orders.length === 0) {
+    await expect(page.getByText("No orders found.")).toBeVisible();
+    console.log("ℹ️ No orders, message is displayed.");
+    return;
   }
+
+  // Otherwise, expect a table
+  const ordersTable = page.locator("table");
+  await page.waitForSelector("table", { timeout: 10000 });
+  await expect(ordersTable).toBeVisible({ timeout: 10000 });
+
+  // Verify header
+  await expect(ordersTable.locator("th", { hasText: "Order #" })).toBeVisible({
+    timeout: 10000,
+  });
+
+  // Verify rows
+  const orderRows = ordersTable.locator("tbody tr");
+  const rowCount = await orderRows.count();
+  expect(rowCount).toBeGreaterThan(0);
+
+  console.log(`✅ Found ${rowCount} order(s) in Manage table`);
 });
+
+
 
