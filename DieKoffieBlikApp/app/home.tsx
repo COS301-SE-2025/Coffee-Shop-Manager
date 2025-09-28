@@ -47,11 +47,29 @@ interface UserStats {
 interface Order {
   id: string;
   status: string;
+  total_price: number;
   created_at: string;
+  order_products: {
+    quantity: number;
+    price: number;
+    products: {
+      id: string;
+      name: string;
+      price: number;
+      description: string;
+    };
+  }[];
 }
 
 interface ProductWithStats extends ApiProduct {
   totalQuantity: number;
+}
+
+interface BackendUserStats {
+  total_orders: number;
+  current_streak: number;
+  longest_streak: number;
+  account_age_days: number;
 }
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -108,146 +126,96 @@ export default function HomeScreen() {
     "Adding milk to coffee can slow down the effects of caffeine",
     "Instant coffee was invented in 1901 by Japanese scientist Satori Kato",
     "Turkey has one of the oldest coffee brewing methods: Turkish coffee",
-    "The world's largest cup of coffee was over 22,000 liters in South Korea",
-    "Coffee cherries turn bright red when they are ripe for picking",
-    "The first webcam was invented at Cambridge University to monitor a coffee pot",
-    "Beethoven was obsessed with coffee and counted 60 beans per cup he drank",
-    "Coffee was banned in Mecca in the 16th century because of its stimulating effect",
-    "New Yorkers drink seven times more coffee than people in other U.S. cities",
-    "The word 'cappuccino' comes from the brown robes worn by Capuchin monks",
-    "Coffee was originally chewed, not sipped, by mixing ground beans with fat",
-    "Italy has over 150,000 coffee bars across the country",
-    "Luwak coffee, made from civet droppings, is one of the priciest coffees",
-    "Coffee plants can grow up to 30 feet tall in the wild",
-    "The Boston Tea Party helped popularize coffee in the United States",
-    "Dark roast coffee has less caffeine than light roast coffee due to roasting",
-    "Coffee houses were called 'penny universities' in 17th century England",
-    "Coffee grounds can be used as natural fertilizer and insect repellent",
-    "Hawaii is the only U.S. state that grows coffee commercially",
-    "Coffee was first brought to Europe through Venice in the 1600s",
-    "A single coffee tree yields about one pound of roasted coffee per year",
-    "Norway ranks among the highest consumers of coffee per capita in the world",
-    "Caffeine is a natural pesticide produced by the coffee plant",
-    "The Americano was created by soldiers in WWII diluting espresso with water",
-    "In Japan, there are coffee spas where you can literally bathe in coffee",
-    "Coffee is believed to have originated around the 9th century in Ethiopia",
-    "The average barista makes about 200 cups of coffee per day",
-    "Coffee drinkers tend to live longer according to several studies",
-    "The largest coffee-producing continent is South America",
-    "Coffee foam (crema) is a sign of freshness and quality in espresso",
-    "Coffee beans are roasted at temperatures between 370°F and 540°F",
-    "There are over 800 known coffee compounds that contribute to its flavor",
-    "The French press was actually invented by an Italian designer in 1929",
-    "Coffee can improve cognitive function and memory retention",
-    "The coffee belt spans between 25 degrees north and 30 degrees south",
-    "Espresso machines were invented in Italy in the early 1900s",
-    "Coffee can help protect against Parkinson's disease",
-    "The term 'coffee break' was first used in the 1950s",
-    "Coffee was once considered a medicine in ancient civilizations",
-    "The coffee plant is actually a flowering shrub",
-    "Coffee can reduce the risk of developing type 2 diabetes",
-    "The espresso shot should be pulled within 30 seconds for optimal taste",
-    "Coffee was first cultivated in Yemen in the 15th century",
-    "The perfect water temperature for brewing coffee is 195-205°F",
-    "Coffee can help boost metabolism by 3-11%",
-    "The coffee industry employs over 100 million people worldwide",
-    "A coffee tree takes 3-5 years to produce its first harvest",
-    "Coffee was once used as currency in some African cultures",
-    "The French drink more coffee than wine on average",
-    "Coffee can help prevent liver disease and cirrhosis",
-    "The ideal grind size varies depending on brewing method",
-    "Coffee beans lose flavor quickly once ground",
-    "The first coffeehouse opened in Mecca in the 1500s",
-    "Coffee can help reduce inflammation in the body",
-    "The coffee cherry contains two seeds (coffee beans)",
-    "Coffee was brought to the Americas by European colonists",
-    "The pH level of coffee is around 5, making it acidic",
-    "Coffee can help improve athletic performance",
-    "The first instant coffee was created in 1901",
-    "Coffee can help reduce the risk of depression",
-    "The coffee plant produces white, jasmine-scented flowers",
-    "Coffee was first sold in cans in 1878",
-    "Coffee can help protect against Alzheimer's disease",
-    "The Mocha port in Yemen gave its name to the coffee variety",
-    "Coffee can help reduce the risk of stroke",
-    "The drip coffee method was invented in 1908",
-    "Coffee can help improve focus and concentration",
-    "The coffee industry is worth over $100 billion globally",
-    "Coffee was first freeze-dried in 1964",
-    "Coffee can help reduce muscle pain after exercise",
-    "The first espresso machine was patented in 1884",
-    "Coffee can help protect against certain types of cancer",
-    "The term 'barista' comes from Italian meaning 'bartender'",
-    "Coffee can help improve mood and reduce anxiety",
-    "The first coffee filter was invented by a German housewife in 1908",
-    "Coffee can help boost antioxidant levels in the body",
-    "The coffee trade routes helped shape global commerce",
-    "Coffee can help improve insulin sensitivity",
-    "The first vacuum-packed coffee was sold in 1900",
-    "Coffee can help reduce the risk of gallstones",
-    "The coffee ceremony is an important cultural tradition in Ethiopia",
-    "Coffee can help improve physical endurance",
-    "The first coffee vending machine was installed in 1946",
-    "Coffee can help protect against gout",
-    "The coffee plant is related to the gardenia family",
-    "Coffee can help improve reaction time",
-    "The first coffee pods were invented in the 1970s",
-    "Coffee can help reduce the risk of kidney stones",
-    "The coffee cupping method is used to evaluate coffee quality",
-    "Coffee can help improve short-term memory",
   ];
 
-  // Fetch user data for personalization
+  // Calculate points from orders (EXACT same logic as website)
+  const calculatePointsFromOrders = (orders: Order[]) => {
+    const processedOrderIds = new Set();
+    let totalPoints = 0;
+
+    // Process orders only once and calculate points
+    orders.forEach((order) => {
+      if (processedOrderIds.has(order.id)) return;
+      processedOrderIds.add(order.id);
+
+      const pointsEarned = Math.round(order.total_price * 0.05 * 100);
+      totalPoints += pointsEarned;
+    });
+
+    return totalPoints;
+  };
+
+  // Fetch user data for personalization - using EXACT same pattern as working profile screen
   const fetchUserData = useCallback(async () => {
     try {
       const accessToken = await AsyncStorage.getItem("access_token");
+      const userEmail = await AsyncStorage.getItem("email");
       const userId = await AsyncStorage.getItem("user_id");
       
-      if (!accessToken || !userId) return;
+      if (!accessToken || !userEmail || !userId) return;
 
-      // Fetch user profile
-      const profileResponse = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
-
-      let loyaltyPoints = 0;
-      if (profileResponse.ok) {
-        const profileData = await profileResponse.json();
-        if (profileData.success) {
-          setUserName(profileData.profile.display_name || "Coffee Lover");
-          loyaltyPoints = profileData.profile.loyalty_points || 0;
-        }
-      }
-
-      // Fetch orders for stats
+      // Fetch orders first (using same pattern as profile page)
       const ordersResponse = await fetch(`${API_BASE_URL}/order`, {
-        headers: { Authorization: `Bearer ${accessToken}` },
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
 
+      let fetchedOrders: Order[] = [];
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
         if (ordersData.orders) {
-          const orders = ordersData.orders;
-          const completedOrders = orders.filter((o: Order) => o.status.toLowerCase() === 'completed');
-          
-          setUserStats({
-            totalOrders: completedOrders.length,
-            loyaltyPoints: loyaltyPoints,
-            currentStreak: calculateStreak(orders),
-          });
+          fetchedOrders = ordersData.orders;
         }
       }
+
+      // Fetch user profile (same as profile page)
+      const profileResponse = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!profileResponse.ok) return;
+
+      const apiResponse = await profileResponse.json();
+      if (!apiResponse.success || !apiResponse.profile) return;
+
+      const profile = apiResponse.profile;
+
+      // Calculate stats from fetched orders (EXACT same logic as profile page)
+      const completedOrders = fetchedOrders.filter(order => 
+        order.status.toLowerCase() === 'completed'
+      );
+      
+      const currentStreak = calculateStreak(fetchedOrders);
+      // Calculate points from orders like website
+      const calculatedPoints = calculatePointsFromOrders(fetchedOrders);
+
+      setUserStats({
+        totalOrders: fetchedOrders.length, // Same as profile page
+        loyaltyPoints: calculatedPoints, // NOW CALCULATED FROM ORDERS LIKE WEBSITE
+        currentStreak: currentStreak,
+      });
+
+      setUserName(profile.display_name || "Coffee Lover");
     } catch (error) {
       console.error("Failed to fetch user data:", error);
+      // Fallback: Don't show error, just use default values
     }
   }, []);
 
+  // Calculate streak from orders (EXACT same function as profile page)
   const calculateStreak = (orders: Order[]) => {
     if (orders.length === 0) return 0;
     
     const sortedOrders = orders
-      .filter((order: Order) => order.status.toLowerCase() === 'completed')
-      .sort((a: Order, b: Order) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      .filter(order => order.status.toLowerCase() === 'completed')
+      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
     if (sortedOrders.length === 0) return 0;
 
@@ -255,8 +223,15 @@ export default function HomeScreen() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    const latestOrder = new Date(sortedOrders[0].created_at);
+    latestOrder.setHours(0, 0, 0, 0);
+    
+    const daysDiff = Math.floor((today.getTime() - latestOrder.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (daysDiff > 1) return 0;
+
     const orderDates = new Set(
-      sortedOrders.map((order: Order) => {
+      sortedOrders.map(order => {
         const date = new Date(order.created_at);
         return date.toDateString();
       })
@@ -264,6 +239,10 @@ export default function HomeScreen() {
 
     let currentDate = new Date(today);
     
+    if (daysDiff === 1) {
+      currentDate.setDate(currentDate.getDate() - 1);
+    }
+
     while (orderDates.has(currentDate.toDateString())) {
       streak++;
       currentDate.setDate(currentDate.getDate() - 1);
@@ -304,7 +283,7 @@ export default function HomeScreen() {
         ordersData = await ordersResponse.json();
       }
 
-      // Calculate product popularity from order data
+      // Calculate product popularity from order data - same as before
       const productPopularity = calculateProductPopularity(ordersData.orders || []);
       
       // Get all products with their popularity stats
@@ -316,9 +295,9 @@ export default function HomeScreen() {
         };
       });
 
-      // Sort by popularity and determine top 20%
+      // Sort by popularity and determine top 25%
       const sortedByPopularity = productsWithStats.sort((a: ProductWithStats, b: ProductWithStats) => b.totalQuantity - a.totalQuantity);
-      const topPercentileThreshold = Math.ceil(sortedByPopularity.length * 0.2);
+      const topPercentileThreshold = Math.ceil(sortedByPopularity.length * 0.25);
       const popularProductIds = new Set(
         sortedByPopularity.slice(0, topPercentileThreshold).map((p: ProductWithStats) => p.id)
       );
@@ -514,12 +493,7 @@ export default function HomeScreen() {
           </View>
         </View>
         <View style={styles.navRight}>
-          <Pressable
-            style={styles.navButton}
-            android_ripple={{ color: "#78350f20" }}
-          >
-            <Ionicons name="search" size={22} color="#78350f" />
-          </Pressable>
+          
 
           <Pressable
             style={styles.profileButton}
@@ -591,12 +565,7 @@ export default function HomeScreen() {
                 <Ionicons name="cafe" size={60} color="#78350f" />
               </Animated.View>
               
-              {userStats.loyaltyPoints > 0 && (
-                <View style={styles.loyaltyBadge}>
-                  <Ionicons name="star" size={12} color="#f59e0b" />
-                  <Text style={styles.loyaltyPoints}>{userStats.loyaltyPoints}</Text>
-                </View>
-              )}
+             
             </View>
           </View>
         </LinearGradient>
@@ -607,7 +576,11 @@ export default function HomeScreen() {
 
   const StatsSection = () => (
     <View style={styles.statsSection}>
-      
+      <View style={styles.statCard}>
+        <Ionicons name="receipt" size={24} color="#78350f" />
+        <Text style={styles.statNumber}>{userStats.totalOrders}</Text>
+        <Text style={styles.statLabel}>Orders</Text>
+      </View>
       
       <View style={styles.statCard}>
         <Ionicons name="flame" size={24} color="#f59e0b" />
@@ -634,6 +607,14 @@ export default function HomeScreen() {
         color: "#78350f",
       },
       {
+        title: "Leaderboard",
+        icon: "trophy" as const,
+        route: "/leaderboard",
+        primary: false,
+        description: "Top coffee lovers",
+        color: "#f59e0b",
+      },
+      {
         title: "Order History",
         icon: "time" as const,
         route: "/history",
@@ -653,6 +634,7 @@ export default function HomeScreen() {
               style={[
                 styles.quickActionCard,
                 action.primary && styles.primaryAction,
+                index === 2 && styles.fullWidthAction, // Make history full width
               ]}
               onPress={() => router.push(action.route)}
               android_ripple={{
@@ -1092,6 +1074,7 @@ const styles = StyleSheet.create({
   },
   quickActionsGrid: {
     flexDirection: "row",
+    flexWrap: "wrap",
     justifyContent: "space-between",
   },
   quickActionCard: {
@@ -1104,6 +1087,9 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
+  },
+  fullWidthAction: {
+    width: "100%",
   },
   primaryAction: {
     elevation: 6,

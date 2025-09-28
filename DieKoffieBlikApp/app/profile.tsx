@@ -49,6 +49,7 @@ interface Order {
     quantity: number;
     price: number;
     products: {
+      id: string;
       name: string;
       price: number;
       description: string;
@@ -77,10 +78,16 @@ interface Badge {
   image: any; // For require() images
 }
 
+interface UserStats {
+  total_orders: number;
+  current_streak: number;
+  longest_streak: number;
+  account_age_days: number;
+}
+
 export default function ProfileScreen() {
   const router = useRouter();
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [darkModeEnabled, setDarkModeEnabled] = useState(false);
 
   // State for user data
   const [userData, setUserData] = useState<UserData | null>(null);
@@ -91,11 +98,14 @@ export default function ProfileScreen() {
   const [badgesLoading, setBadgesLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
 
-  // Badge images mapping
+  // Updated badgeImages object to include both naming conventions
   const badgeImages = {
     first_order: require("../app/badges/badges/first.png"),
     "5_orders": require("../app/badges/badges/5orders.png"),
     "10_orders": require("../app/badges/badges/10orders.png"),
+    // Add the API naming convention as well
+    "five_orders": require("../app/badges/badges/5orders.png"),
+    "ten_orders": require("../app/badges/badges/10orders.png"),
     "3_day_streak": require("../app/badges/badges/3dayStreak.png"),
     "7_day_streak": require("../app/badges/badges/7dayStreak.png"),
     week_member: require("../app/badges/badges/week_account.png"),
@@ -113,7 +123,7 @@ export default function ProfileScreen() {
     fetchAllData();
   }, []);
 
-  // Fetch all data - simplified approach like history page
+  // Fetch all data - using API stats endpoint like website
   const fetchAllData = async (isRefresh = false) => {
     if (isRefresh) {
       setRefreshing(true);
@@ -132,15 +142,60 @@ export default function ProfileScreen() {
         return;
       }
 
-      // Fetch orders first (using same pattern as history page)
-      const ordersResponse = await fetch(`${API_BASE_URL}/order`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
+      // Add delay to prevent rate limiting
+      if (isRefresh) {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
 
+      // Fetch user profile, stats, and orders simultaneously like the website
+      const [profileResponse, statsResponse, ordersResponse] = await Promise.all([
+        fetch(`${API_BASE_URL}/user/${userId}`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }),
+        fetch(`${API_BASE_URL}/user/stats`, {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }),
+        fetch(`${API_BASE_URL}/order`, {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        })
+      ]);
+
+      // Handle profile response
+      if (!profileResponse.ok) {
+        if (profileResponse.status === 401) {
+          await handleTokenExpiry();
+          return;
+        }
+        throw new Error(`HTTP ${profileResponse.status}: Failed to fetch profile`);
+      }
+
+      const profileData: ApiResponse = await profileResponse.json();
+      if (!profileData.success || !profileData.profile) {
+        throw new Error("Invalid profile API response format");
+      }
+
+      // Handle stats response (like website version)
+      let userStats: UserStats | null = null;
+      if (statsResponse.ok) {
+        const statsData = await statsResponse.json();
+        if (statsData.success) {
+          userStats = statsData.stats;
+        }
+      }
+
+      // Handle orders response
       let fetchedOrders: Order[] = [];
       if (ordersResponse.ok) {
         const ordersData = await ordersResponse.json();
@@ -150,45 +205,21 @@ export default function ProfileScreen() {
         }
       }
 
-      // Fetch user profile
-      const profileResponse = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const profile = profileData.profile;
 
-      if (!profileResponse.ok) {
-        if (profileResponse.status === 401) {
-          await handleTokenExpiry();
-          return;
-        }
-        throw new Error(`HTTP ${profileResponse.status}: Failed to fetch profile`);
-      }
-
-      const apiResponse: ApiResponse = await profileResponse.json();
-
-      if (!apiResponse.success || !apiResponse.profile) {
-        throw new Error("Invalid API response format");
-      }
-
-      const profile = apiResponse.profile;
-
-      // Calculate stats from fetched orders (same logic as history page)
-      const completedOrders = fetchedOrders.filter(order => 
-        order.status.toLowerCase() === 'completed'
-      );
-      
-      const totalSpent = fetchedOrders.reduce((sum, order) => sum + order.total_price, 0);
-      const currentStreak = calculateStreak(fetchedOrders);
+      // Calculate favorite drink using proper logic like website
       const favoriteDrink = calculateFavoriteDrink(fetchedOrders);
+
+      // Use backend stats if available, otherwise calculate from orders
+      const currentStreak = userStats?.current_streak ?? calculateStreakFromOrders(fetchedOrders);
+      const totalOrders = userStats?.total_orders ?? fetchedOrders.length;
+      const totalSpent = fetchedOrders.reduce((sum, order) => sum + order.total_price, 0);
 
       const formattedUserData: UserData = {
         name: profile.display_name || "User",
         email: userEmail,
         phone: profile.phone_number || "Not provided",
-        totalOrders: fetchedOrders.length,
+        totalOrders: totalOrders,
         currentStreak: currentStreak,
         favoriteDrink: favoriteDrink,
         loyaltyPoints: profile.loyalty_points || 0,
@@ -207,7 +238,9 @@ export default function ProfileScreen() {
         console.error("Error fetching data:", err);
         setError(err.message);
         if (!isRefresh) {
-          Alert.alert("Error", "Failed to load profile data. Please try again.");
+          Alert.alert("Error", err.message.includes("Too many requests") 
+            ? "Please wait a moment before refreshing again." 
+            : "Failed to load profile data. Please try again.");
         }
       } else {
         console.error("Unknown error:", err);
@@ -219,40 +252,84 @@ export default function ProfileScreen() {
     }
   };
 
-  // Calculate streak from orders (same as before)
-  const calculateStreak = (orders: Order[]) => {
+  // Fixed favorite drink calculation - properly counts product quantities
+  const calculateFavoriteDrink = (orders: Order[]) => {
+    if (orders.length === 0) return "None";
+    
+    // Only count completed orders
+    const completedOrders = orders.filter(order => 
+      order.status.toLowerCase() === 'completed'
+    );
+    
+    if (completedOrders.length === 0) return "None";
+    
+    const drinkCounts: { [key: string]: number } = {};
+    
+    // Count each product by total quantity across all orders
+    completedOrders.forEach(order => {
+      order.order_products.forEach(orderProduct => {
+        const drinkName = orderProduct.products.name;
+        const quantity = orderProduct.quantity;
+        drinkCounts[drinkName] = (drinkCounts[drinkName] || 0) + quantity;
+      });
+    });
+
+    if (Object.keys(drinkCounts).length === 0) return "None";
+
+    // Find the drink with highest total quantity
+    const favoriteDrink = Object.keys(drinkCounts).reduce((a, b) => 
+      drinkCounts[a] > drinkCounts[b] ? a : b
+    );
+
+    return favoriteDrink;
+  };
+
+  // Fixed streak calculation - matches website logic
+  const calculateStreakFromOrders = (orders: Order[]) => {
     if (orders.length === 0) return 0;
     
-    const sortedOrders = orders
-      .filter(order => order.status.toLowerCase() === 'completed')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    // Only count completed orders
+    const completedOrders = orders.filter(order => 
+      order.status.toLowerCase() === 'completed'
+    );
+    
+    if (completedOrders.length === 0) return 0;
 
-    if (sortedOrders.length === 0) return 0;
+    // Sort orders by date (newest first)
+    const sortedOrders = completedOrders.sort((a, b) => 
+      new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
 
-    let streak = 0;
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    const latestOrder = new Date(sortedOrders[0].created_at);
-    latestOrder.setHours(0, 0, 0, 0);
+    // Check if user made an order today or yesterday
+    const latestOrderDate = new Date(sortedOrders[0].created_at);
+    latestOrderDate.setHours(0, 0, 0, 0);
     
-    const daysDiff = Math.floor((today.getTime() - latestOrder.getTime()) / (1000 * 60 * 60 * 24));
+    const daysDiff = Math.floor((today.getTime() - latestOrderDate.getTime()) / (1000 * 60 * 60 * 24));
     
+    // If last order was more than 1 day ago, streak is broken
     if (daysDiff > 1) return 0;
 
+    // Create set of unique order dates
     const orderDates = new Set(
       sortedOrders.map(order => {
         const date = new Date(order.created_at);
+        date.setHours(0, 0, 0, 0);
         return date.toDateString();
       })
     );
 
+    let streak = 0;
     let currentDate = new Date(today);
     
+    // If last order was yesterday, start counting from yesterday
     if (daysDiff === 1) {
       currentDate.setDate(currentDate.getDate() - 1);
     }
 
+    // Count consecutive days with orders
     while (orderDates.has(currentDate.toDateString())) {
       streak++;
       currentDate.setDate(currentDate.getDate() - 1);
@@ -261,28 +338,7 @@ export default function ProfileScreen() {
     return streak;
   };
 
-  // Calculate favorite drink from orders (same as before)
-  const calculateFavoriteDrink = (orders: Order[]) => {
-    if (orders.length === 0) return "None";
-    
-    const drinkCounts: { [key: string]: number } = {};
-    
-    orders.forEach(order => {
-      order.order_products.forEach(product => {
-        const drinkName = product.products.name;
-        drinkCounts[drinkName] = (drinkCounts[drinkName] || 0) + product.quantity;
-      });
-    });
-
-    if (Object.keys(drinkCounts).length === 0) return "None";
-
-    const favoriteDrink = Object.keys(drinkCounts).reduce((a, b) => 
-      drinkCounts[a] > drinkCounts[b] ? a : b
-    );
-
-    return favoriteDrink;
-  };
-
+  // Fixed fetchUserBadges function with correct API key mapping
   const fetchUserBadges = async (isRefresh = false, providedToken?: string) => {
     const accessToken = providedToken || await AsyncStorage.getItem("access_token");
     
@@ -303,11 +359,14 @@ export default function ProfileScreen() {
 
       if (response.ok) {
         const data = await response.json();
+        console.log("Badges API response:", data); // Debug log
+        
         if (data.success && data.badges) {
+          // Updated badge mapping to match API response exactly
           const badgeMapping = [
             { apiKey: "first_order", name: "First Sip", description: "Placed your first order" },
-            { apiKey: "5_orders", name: "Coffee Lover", description: "Ordered 5 coffees" },
-            { apiKey: "10_orders", name: "Regular", description: "Ordered 10 coffees" },
+            { apiKey: "five_orders", name: "Coffee Lover", description: "Ordered 5 coffees" },
+            { apiKey: "ten_orders", name: "Regular", description: "Ordered 10 coffees" },
             { apiKey: "3_day_streak", name: "Daily Habit", description: "3 day streak" },
             { apiKey: "7_day_streak", name: "Weekly Warrior", description: "7 day streak" },
             { apiKey: "week_member", name: "Week Member", description: "Member for a week" },
@@ -315,16 +374,24 @@ export default function ProfileScreen() {
             { apiKey: "year_member", name: "Year Member", description: "Member for a year" },
           ];
 
-          const userBadges = badgeMapping.map(badge => ({
-            id: badge.apiKey,
-            name: badge.name,
-            description: badge.description,
-            image: badgeImages[badge.apiKey as keyof typeof badgeImages],
-            earned: data.badges.includes(badge.apiKey)
-          }));
+          const userBadges = badgeMapping.map(badge => {
+            const isEarned = data.badges.includes(badge.apiKey);
+            console.log(`Badge ${badge.apiKey}: earned = ${isEarned}`); // Debug log
+            
+            return {
+              id: badge.apiKey,
+              name: badge.name,
+              description: badge.description,
+              image: badgeImages[badge.apiKey as keyof typeof badgeImages],
+              earned: isEarned
+            };
+          });
 
+          console.log("Processed badges:", userBadges); // Debug log
           setBadges(userBadges);
         }
+      } else if (response.status === 429) {
+        console.warn("Rate limited when fetching badges");
       } else {
         console.warn("Failed to fetch badges:", response.status);
       }
@@ -429,7 +496,7 @@ export default function ProfileScreen() {
       route: "/settings",
       description: "Your account settings",
     },
-    
+   
     {
       title: "Help & Support",
       icon: "help-circle" as const,
@@ -444,11 +511,7 @@ export default function ProfileScreen() {
       value: userData.totalOrders.toString(),
       icon: "receipt" as const,
     },
-    {
-      label: "Current Streak",
-      value: `${userData.currentStreak} days`,
-      icon: "flame" as const,
-    },
+    
     {
       label: "Favourite Drink",
       value: userData.favoriteDrink,
@@ -486,9 +549,7 @@ export default function ProfileScreen() {
           <View style={styles.profileImagePlaceholder}>
             <Ionicons name="person" size={60} color="#78350f" />
           </View>
-          <Pressable style={styles.editProfileButton}>
-            <Ionicons name="camera" size={16} color="#78350f" />
-          </Pressable>
+          
         </View>
 
         <View style={styles.profileInfo}>
@@ -624,8 +685,6 @@ export default function ProfileScreen() {
           thumbColor={notificationsEnabled ? "#fff" : "#f3f4f6"}
         />
       </View>
-
-      
     </View>
   );
 
@@ -643,13 +702,14 @@ export default function ProfileScreen() {
   );
 
   return (
-    <CoffeeBackground>
-      <SafeAreaView style={styles.container}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent
-        />
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent
+      />
+
+      <CoffeeBackground>
         <NavBar />
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -676,8 +736,8 @@ export default function ProfileScreen() {
             <Text style={styles.footerSubtext}>Version 1.0.0</Text>
           </View>
         </ScrollView>
-      </SafeAreaView>
-    </CoffeeBackground>
+      </CoffeeBackground>
+    </SafeAreaView>
   );
 }
 
