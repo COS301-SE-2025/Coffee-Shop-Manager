@@ -46,7 +46,7 @@ export default function POSPage() {
 
   const dateInputStyle =
     "p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
-  
+
   const [customerName, setCustomerName] = useState("");
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
@@ -314,11 +314,11 @@ export default function POSPage() {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3">
-            <div 
+            <div
               className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
               style={{ backgroundColor: "var(--primary-4)" }}
             >
-              <span 
+              <span
                 className="font-bold text-xl"
                 style={{ color: "var(--primary-2)" }}
               >
@@ -326,7 +326,7 @@ export default function POSPage() {
               </span>
             </div>
             <div>
-              <h1 
+              <h1
                 className="text-3xl font-bold"
                 style={{ color: "var(--primary-2)" }}
               >
@@ -335,82 +335,7 @@ export default function POSPage() {
               <p style={{ color: "var(--primary-2)" }}>
                 Process orders and manage transactions
               </p>
-<!-- <<<<<<< testing
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-            {loading ? (
-              <div className="col-span-2 md:col-span-3 lg:col-span-4 flex justify-center items-center py-10">
-                <Loader />
-              </div>
-            ) : (
-              <>
-                {menu.map((item) => (
-                  <button
-                    key={item.id}
-                    data-testid="product-card"
-                    onClick={() => addToCart(item)}
-                    className="rounded-xl p-4 hover:shadow-md"
-                    style={{
-                      backgroundColor: "var(--primary-2)",
-                      border: "1px solid var(--primary-3)",
-                      color: "var(--primary-3)",
-                    }}
-                  >
-                    <h2 className="font-semibold text-lg">{item.name}</h2>
-                    <p>R{item.price}</p>
-                  </button>
-                ))}
-              </>
-            )}
-          </div>
-
-          {/* Cart */}
-          <div
-            className="rounded-xl shadow-md p-6 mb-6 "
-            style={{
-              backgroundColor: "var(--primary-2)",
-            }}
-          >
-            <h2 className="text-xl font-bold mb-4">🛒 Cart</h2>
-            {cart.length === 0 ? (
-              <p className="text-red-500">Cart is empty.</p>
-            ) : (
-              <ul>
-                {cart.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex justify-between items-center mb-2"
-                  >
-                    <span>
-                      {item.name} x{item.quantity}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-amber-700">
-                        R{item.price * item.quantity}
-                      </span>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </li>
-                ))}
-                <li className="font-bold mt-4">Total: R{total}</li>
-              </ul>
-            )}
-            {message && <p className="mb-4 text-sm font-medium">{message}</p>}
-
-            <button onClick={completeOrder} className="btn">
-
-              Complete Order
-            </button>
-======= -->
             </div>
-<!-- >>>>>>> developer -->
           </div>
         </div>
 
@@ -418,33 +343,33 @@ export default function POSPage() {
           {/* LEFT COLUMN - Menu & Cart */}
           <div className="space-y-6">
             {/* User Selection */}
-            <div 
+            <div
               className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
-              style={{ 
+              style={{
                 backgroundColor: "var(--primary-3)",
                 borderColor: "var(--primary-4)"
               }}
             >
               <div className="flex items-center gap-3 mb-4">
-                <div 
+                <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: "var(--primary-4)" }}
                 >
-                  <span 
+                  <span
                     className="text-sm"
                     style={{ color: "var(--primary-2)" }}
                   >
                     👤
                   </span>
                 </div>
-                <h2 
+                <h2
                   className="text-xl font-bold"
                   style={{ color: "var(--primary-2)" }}
                 >
                   Customer Selection
                 </h2>
               </div>
-              
+
               <select
                 value={selectedEmail}
                 onChange={(e) => setSelectedEmail(e.target.value)}
@@ -464,14 +389,14 @@ export default function POSPage() {
               </select>
 
               {selectedEmail && (
-                <div 
+                <div
                   className="mt-3 p-3 rounded-lg border"
                   style={{
                     backgroundColor: "var(--primary-4)",
                     borderColor: "var(--primary-2)"
                   }}
                 >
-                  <p 
+                  <p
                     className="text-sm"
                     style={{ color: "var(--primary-2)" }}
                   >
@@ -482,26 +407,26 @@ export default function POSPage() {
             </div>
 
             {/* Menu Items */}
-            <div 
+            <div
               className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
-              style={{ 
+              style={{
                 backgroundColor: "var(--primary-3)",
                 borderColor: "var(--primary-4)"
               }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <div 
+                <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: "var(--primary-4)" }}
                 >
-                  <span 
+                  <span
                     className="text-sm"
                     style={{ color: "var(--primary-2)" }}
                   >
                     ☕
                   </span>
                 </div>
-                <h2 
+                <h2
                   className="text-xl font-bold"
                   style={{ color: "var(--primary-2)" }}
                 >
@@ -518,6 +443,7 @@ export default function POSPage() {
                   {menu.map((item) => (
                     <button
                       key={item.id}
+                      data-testid="product-card"
                       onClick={() => addToCart(item)}
                       className="group rounded-xl p-4 border transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
                       style={{
@@ -544,26 +470,26 @@ export default function POSPage() {
             </div>
 
             {/* Cart */}
-            <div 
+            <div
               className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
-              style={{ 
+              style={{
                 backgroundColor: "var(--primary-3)",
                 borderColor: "var(--primary-4)"
               }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <div 
+                <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: "var(--primary-4)" }}
                 >
-                  <span 
+                  <span
                     className="text-sm"
                     style={{ color: "var(--primary-2)" }}
                   >
                     🛒
                   </span>
                 </div>
-                <h2 
+                <h2
                   className="text-xl font-bold"
                   style={{ color: "var(--primary-2)" }}
                 >
@@ -609,18 +535,18 @@ export default function POSPage() {
                     </div>
                   ))}
 
-                  <div 
+                  <div
                     className="border-t pt-4"
                     style={{ borderColor: "var(--primary-2)" }}
                   >
                     <div className="flex justify-between items-center mb-4">
-                      <span 
+                      <span
                         className="text-xl font-bold"
                         style={{ color: "var(--primary-2)" }}
                       >
                         Total:
                       </span>
-                      <span 
+                      <span
                         className="text-2xl font-bold"
                         style={{ color: "var(--primary-2)" }}
                       >
@@ -629,14 +555,14 @@ export default function POSPage() {
                     </div>
 
                     {message && (
-                      <div 
+                      <div
                         className="mb-4 p-3 border rounded-lg"
                         style={{
                           backgroundColor: "var(--primary-4)",
                           borderColor: "var(--primary-2)"
                         }}
                       >
-                        <p 
+                        <p
                           className="text-sm"
                           style={{ color: "var(--primary-2)" }}
                         >
@@ -645,7 +571,7 @@ export default function POSPage() {
                       </div>
                     )}
 
-                    <button 
+                    <button
                       onClick={completeOrder}
                       className="w-full py-4 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
                       style={{ backgroundColor: "var(--primary-2)" }}
@@ -659,31 +585,31 @@ export default function POSPage() {
           </div>
 
           {/* RIGHT COLUMN - Orders */}
-          <div 
+          <div
             className="backdrop-blur-sm rounded-2xl shadow-xl border"
-            style={{ 
+            style={{
               backgroundColor: "var(--primary-3)",
               borderColor: "var(--primary-4)"
             }}
           >
             {/* Header */}
-            <div 
+            <div
               className="p-6 border-b"
               style={{ borderColor: "var(--primary-2)" }}
             >
               <div className="flex items-center gap-3 mb-6">
-                <div 
+                <div
                   className="w-8 h-8 rounded-lg flex items-center justify-center"
                   style={{ backgroundColor: "var(--primary-4)" }}
                 >
-                  <span 
+                  <span
                     className="text-sm"
                     style={{ color: "var(--primary-2)" }}
                   >
                     📋
                   </span>
                 </div>
-                <h2 
+                <h2
                   className="text-xl font-bold"
                   style={{ color: "var(--primary-2)" }}
                 >
@@ -708,7 +634,7 @@ export default function POSPage() {
                   >
                     ←
                   </button>
-                  <span 
+                  <span
                     className="font-medium"
                     style={{ color: "var(--primary-2)" }}
                   >
@@ -758,45 +684,10 @@ export default function POSPage() {
                           color: "var(--primary-2)"
                         }}
                       />
-                      <span 
+                      <span
                         className="flex items-center font-medium"
                         style={{ color: "var(--primary-2)" }}
                       >
-<!-- <<<<<<< testing
-                        Total
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Status
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Paid Status
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Date
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Actions
-                      </th>
-
-
-
-                    </tr>
-                  </thead>
-                  <tbody
-                    className="divide-y text-[var(--primary-3)]"
-======= -->
                         to
                       </span>
                       <input
@@ -821,7 +712,6 @@ export default function POSPage() {
                   <button
                     key={status}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
-<!-- >>>>>>> developer -->
                     style={{
                       backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
                       color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
@@ -847,47 +737,47 @@ export default function POSPage() {
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
-                      <tr 
+                      <tr
                         className="border-b"
                         style={{ borderColor: "var(--primary-2)" }}
                       >
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
                           Order #
                         </th>
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
                           Items
                         </th>
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
                           Total
                         </th>
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
                           Status
                         </th>
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
                           Paid
                         </th>
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
                           Date
                         </th>
-                        <th 
+                        <th
                           className="text-left py-3 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
@@ -895,15 +785,15 @@ export default function POSPage() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody 
+                    <tbody
                       className="divide-y"
                       style={{ borderColor: "var(--primary-4)" }}
                     >
                       {filteredOrders.map((order) => (
-                        <tr 
-                          key={order.id} 
+                        <tr
+                          key={order.id}
                           className="hover:bg-opacity-50 transition-colors duration-200"
-                          style={{ 
+                          style={{
                             backgroundColor: "#F5F5DC"
                           }}
                         >
