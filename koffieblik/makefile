@@ -59,7 +59,7 @@ getProductLoadTest:
 load:
 	@$(MAKE) createOrdesLoadTest
 	@$(MAKE) getOrdesLoadTest
-	@$(MAKE) getProductsLoadTest
+	@$(MAKE) getProductLoadTest
 
 createOrdesStressTest:
 	@echo "Running stress test with k6..."

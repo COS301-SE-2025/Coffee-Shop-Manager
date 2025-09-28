@@ -46,7 +46,7 @@ export default function (data) {
     });
 
     check(res, {
-        "product request succeeded": (r) => r.status === 200 || r.status === 201,
+        "getProducts request succeeded": (r) => r.status === 200 || r.status === 201,
     });
 
 
