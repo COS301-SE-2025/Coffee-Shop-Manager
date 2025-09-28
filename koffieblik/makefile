@@ -11,6 +11,9 @@ testint:
 # 	npx playwright test tests/intlogin.spec.ts  && \
 #  	npx playwright test tests/intGetTests.spec.ts
 
+signuptest:
+	@echo "Running login tests..."
+	npx playwright test tests/working/signup.spec.ts
 
 logintest:
 	@echo "Running login tests..."
@@ -29,9 +32,26 @@ getAdminTest:
 	npx playwright test tests/working/getTestAdmin.spec.ts
 
 teste2e: logintest
+# 	@$(MAKE) signuptest
 	@$(MAKE) getAdminTest
 	@$(MAKE) posTest
 	@$(MAKE) managerTest
+
+
+
+createOrdesLoadTest:
+	@echo "Running load test with k6..."
+	k6 run load-tests/create_order_load.js
+
+getOrdesLoadTest:
+	@echo "Running load test with k6..."
+	k6 run load-tests/get_orders_load.js
+
+load:
+	@$(MAKE) createOrdesLoadTest
+	@$(MAKE) getOrdesLoadTest
+
+
 
 
 
