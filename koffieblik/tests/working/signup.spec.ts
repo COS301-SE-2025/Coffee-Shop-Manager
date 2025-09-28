@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 
 const username = "user9";
-const email = "user9@coffee.com";
+const email = "new99@coffee.com";
 const password = "P@ssword123";
 
 test("signs up a new user", async ({ page }) => {
