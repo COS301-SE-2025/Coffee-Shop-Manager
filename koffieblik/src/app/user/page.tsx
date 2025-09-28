@@ -28,6 +28,7 @@ interface LeaderboardUser {
   totalOrders: number;
   currentStreak: number;
   favoritedrink: string;
+  display_name: string;
 }
 
 // Add this type definition at the top with other interfaces
@@ -241,9 +242,10 @@ export default function UserPage() {
             total_orders: user.total_orders,
             current_streak: user.current_streak || 0,
             favorite_drink: user.favorite_drink || "Unknown",
+            display_name: user.display_name,
             // Mapped properties for easier access
             id: user.user_id,
-            username: user.user_id.substring(0, 8), // Use first 8 chars of user_id as display name
+            username: user.display_name || user.user_id.substring(0, 8),
             totalOrders: user.total_orders,
             currentStreak: user.current_streak || 0,
             favoritedrink: user.favorite_drink || "Unknown",
