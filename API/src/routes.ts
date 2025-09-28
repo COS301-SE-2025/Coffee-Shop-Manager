@@ -16,6 +16,7 @@ import { getUserProfileHandler } from "./endpoints/user/getUser";
 import { updateUserProfileHandler } from "./endpoints/user/updateUser";
 import { getUserEmailsHandler } from "./endpoints/user/getUserEmails";
 import { getUserPointsHistoryHandler } from "./endpoints/user/getPointsHistory";
+import { getRecommendationsHandler } from "./endpoints/user/getRecommendation";
 
 // STOCK
 import { getStockHandler } from "./endpoints/stock/getStock";
@@ -62,6 +63,7 @@ router.get("/user/badges", authMiddleware, getUserBadgesHandler);
 router.get("/leaderboard", authMiddleware, getLeaderboardHandler); 
 
 // USERS
+router.get("/user/recommendation", authMiddleware, getRecommendationsHandler);
 router.get("/user/points", authMiddleware, getUserPointsHistoryHandler);
 router.get("/user/emails", authMiddleware, getUserEmailsHandler);
 router.get("/user/:id", getUserProfileHandler);

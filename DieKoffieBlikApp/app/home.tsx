@@ -620,7 +620,7 @@ export default function HomeScreen() {
         route: "/history",
         primary: false,
         description: "View past orders",
-        color: "#059669",
+        color: "#724204ff",
       },
     ];
 

@@ -341,26 +341,29 @@ export default function QuickReport() {
 
   const summaryCards = useMemo(
     () => [
-      { title: "Top Product", value: topProduct || "—", icon: "☕", trend: "", trendColor: "text-amber-700" },
-      { title: "Busiest Day", value: busiestDay || "—", icon: "📈", trend: `${filtered.length} orders`, trendColor: "text-blue-600" },
-      { title: "Total Sales", value: currency(totalSales), icon: "💰", trend: "", trendColor: "text-green-600" },
-      { title: "Orders Today", value: String(ordersToday), icon: "🛒", trend: "", trendColor: "text-green-600" },
+      { title: "Top Product", value: topProduct || "—", icon: "☕", trend: "", trendColor: "var(--primary-2)" },
+      { title: "Busiest Day", value: busiestDay || "—", icon: "📈", trend: `${filtered.length} orders`, trendColor: "var(--primary-2)" },
+      { title: "Total Sales", value: currency(totalSales), icon: "💰", trend: "", trendColor: "var(--primary-2)" },
+      { title: "Orders Today", value: String(ordersToday), icon: "🛒", trend: "", trendColor: "var(--primary-2)" },
     ],
     [topProduct, busiestDay, totalSales, ordersToday, filtered.length]
   );
 
   return (
-    <main className="min-h-screen px-6 py-4 bg-gradient-to-br from-amber-50 to-orange-100">
+    <main
+      className="relative min-h-full bg-transparent overflow-x-hidden p-8"
+      style={{
+        color: "var(--primary-3)",
+      }}
+    >
       {/* Header */}
       <div className="mb-8">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-r from-amber-500 to-orange-500 rounded-xl flex items-center justify-center shadow-lg">
-              <span className="text-white font-bold text-xl">📊</span>
-            </div>
             <div>
-              <h1 className="text-3xl font-bold text-amber-900">Analytics Dashboard</h1>
-              <p className="text-amber-700">Real-time insights from live orders</p>
+              <h1 className="text-4xl font-bold mb-6" style={{ color: "var(--primary-3)" }}>
+                 Reports Dashboard
+              </h1>
             </div>
           </div>
 
@@ -368,7 +371,13 @@ export default function QuickReport() {
             <select
               value={timeRange}
               onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="px-4 py-2 bg-white border border-amber-300 rounded-lg text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
+              style={{
+                backgroundColor: "var(--primary-3)",
+                borderColor: "var(--primary-4)",
+                color: "var(--primary-2)",
+                boxShadow: "0 0 0 0 transparent",
+              }}
             >
               <option value="day">Today</option>
               <option value="week">This Week</option>
@@ -376,7 +385,12 @@ export default function QuickReport() {
               <option value="year">This Year</option>
             </select>
             <button
-              className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-lg hover:from-amber-600 hover:to-orange-600 transition-all duration-200 shadow-lg"
+              className="px-4 py-2 rounded-lg border font-medium transition-all duration-200"
+              style={{
+                borderColor: "var(--primary-4)",
+                color: "var(--primary-2)",
+                backgroundColor: "var(--primary-3)",
+              }}
               onClick={() => {
                 const header = ["number", "status", "total_price", "created_at"];
                 const rows = filtered.map((o) => [o.number, o.status, o.total_price, o.created_at]);
@@ -396,30 +410,50 @@ export default function QuickReport() {
             </button>
           </div>
         </div>
-        {loading && <p className="text-amber-700">Loading orders…</p>}
+        {loading && <p style={{ color: "var(--primary-2)" }}>Loading orders...</p>}
         {error && <p className="text-red-600">Error: {error}</p>}
       </div>
 
       {/* Summary Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        {summaryCards.map(({ title, value, icon, trend, trendColor }) => (
+      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
+        {summaryCards.map(({ title, value, icon, trend, trendColor }, index) => (
           <div
-            key={title}
-            className="group bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border border-white/50"
+            key={index}
+            className="backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border"
+            style={{ 
+              backgroundColor: "var(--primary-3)",
+              borderColor: "var(--primary-4)"
+            }}
           >
             <div className="flex items-center justify-between mb-3">
-              <div className="text-3xl transform group-hover:scale-110 transition-transform duration-200">
+              <div className="text-3xl">
                 {icon}
               </div>
               {trend && (
-                <div className={`text-sm font-semibold ${trendColor} bg-gray-100 px-2 py-1 rounded-full`}>
+                <div 
+                  className="text-sm font-semibold px-2 py-1 rounded-full"
+                  style={{ 
+                    color: trendColor,
+                    backgroundColor: "var(--primary-4)"
+                  }}
+                >
                   {trend}
                 </div>
               )}
             </div>
-            <h3 className="text-sm font-medium text-amber-700 mb-1">{title}</h3>
-            <p className="text-2xl font-bold text-amber-900">{value}</p>
-            <div className="mt-3 h-1 bg-gradient-to-r from-amber-200 to-orange-200 rounded-full opacity-60" />
+            <h2 className="text-sm mb-2 font-medium" style={{ color: "var(--primary-2)" }}>
+              {title}
+            </h2>
+            <p 
+              className="text-3xl font-bold"
+              style={{ color: trendColor }}
+            >
+              {value}
+            </p>
+            <div 
+              className="mt-3 h-1 rounded-full"
+              style={{ backgroundColor: "var(--primary-4)" }}
+            />
           </div>
         ))}
       </section>
@@ -427,9 +461,21 @@ export default function QuickReport() {
       {/* Main + Product Mix */}
       <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Main Chart */}
-        <div className="lg:col-span-2 bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
-          <div className="p-6 border-b border-amber-100 flex items-center justify-between">
-            <h2 className="text-xl font-bold text-amber-900 flex items-center gap-2">
+        <div 
+          className="lg:col-span-2 backdrop-blur-sm rounded-2xl shadow-xl border"
+          style={{ 
+            backgroundColor: "var(--primary-3)",
+            borderColor: "var(--primary-4)"
+          }}
+        >
+          <div 
+            className="p-6 border-b flex items-center justify-between"
+            style={{ borderColor: "var(--primary-4)" }}
+          >
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ color: "var(--primary-2)" }}
+            >
               <span className="text-2xl">📈</span> {RANGE_TITLES[timeRange]} Performance
             </h2>
             <div className="flex gap-2">
@@ -437,11 +483,11 @@ export default function QuickReport() {
                 <button
                   key={metric}
                   onClick={() => setSelectedMetric(metric)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200 ${
-                    selectedMetric === metric
-                      ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-md"
-                      : "text-amber-700 hover:bg-amber-100"
-                  }`}
+                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200`}
+                  style={{
+                    backgroundColor: selectedMetric === metric ? "var(--primary-2)" : "var(--primary-4)",
+                    color: selectedMetric === metric ? "var(--primary-3)" : "var(--primary-2)"
+                  }}
                 >
                   {metric[0].toUpperCase() + metric.slice(1)}
                 </button>
@@ -489,9 +535,21 @@ export default function QuickReport() {
         </div>
 
         {/* Product Distribution */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
-          <div className="p-6 border-b border-amber-100">
-            <h2 className="text-xl font-bold text-amber-900 flex items-center gap-2">
+        <div 
+          className="backdrop-blur-sm rounded-2xl shadow-xl border"
+          style={{ 
+            backgroundColor: "var(--primary-3)",
+            borderColor: "var(--primary-4)"
+          }}
+        >
+          <div 
+            className="p-6 border-b"
+            style={{ borderColor: "var(--primary-4)" }}
+          >
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ color: "var(--primary-2)" }}
+            >
               <span className="text-2xl">🥧</span> Product Mix
             </h2>
           </div>
@@ -519,9 +577,11 @@ export default function QuickReport() {
                 <div key={item.name} className="flex items-center justify-between text-sm">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span className="text-amber-800">{item.name}</span>
+                    <span style={{ color: "var(--primary-2)" }}>{item.name}</span>
                   </div>
-                  <span className="font-semibold text-amber-900">{item.value}%</span>
+                  <span className="font-semibold" style={{ color: "var(--primary-2)" }}>
+                    {item.value}%
+                  </span>
                 </div>
               ))}
             </div>
@@ -532,9 +592,21 @@ export default function QuickReport() {
       {/* Secondary Analytics */}
       <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         {/* Hourly Trends */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
-          <div className="p-6 border-b border-amber-100">
-            <h2 className="text-xl font-bold text-amber-900 flex items-center gap-2">
+        <div 
+          className="backdrop-blur-sm rounded-2xl shadow-xl border"
+          style={{ 
+            backgroundColor: "var(--primary-3)",
+            borderColor: "var(--primary-4)"
+          }}
+        >
+          <div 
+            className="p-6 border-b"
+            style={{ borderColor: "var(--primary-4)" }}
+          >
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ color: "var(--primary-2)" }}
+            >
               <span className="text-2xl">⏰</span> Hourly Trends
             </h2>
           </div>
@@ -560,9 +632,21 @@ export default function QuickReport() {
         </div>
 
         {/* Notable Orders */}
-        <div className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl border border-white/50">
-          <div className="p-6 border-b border-amber-100">
-            <h2 className="text-xl font-bold text-amber-900 flex items-center gap-2">
+        <div 
+          className="backdrop-blur-sm rounded-2xl shadow-xl border"
+          style={{ 
+            backgroundColor: "var(--primary-3)",
+            borderColor: "var(--primary-4)"
+          }}
+        >
+          <div 
+            className="p-6 border-b"
+            style={{ borderColor: "var(--primary-4)" }}
+          >
+            <h2 
+              className="text-xl font-bold flex items-center gap-2"
+              style={{ color: "var(--primary-2)" }}
+            >
               <span className="text-2xl">⭐</span> Notable Orders
             </h2>
           </div>
@@ -571,11 +655,17 @@ export default function QuickReport() {
               {highlights.map(({ id, note, amount, time, status }) => (
                 <div
                   key={id}
-                  className="flex items-center justify-between p-4 bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl border border-amber-200 hover:shadow-md transition-all duration-200"
+                  className="flex items-center justify-between p-4 rounded-xl border hover:shadow-md transition-all duration-200"
+                  style={{
+                    backgroundColor: "var(--primary-2)",
+                    borderColor: "var(--primary-4)"
+                  }}
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold text-amber-900">{id}</span>
+                      <span className="font-bold" style={{ color: "var(--primary-3)" }}>
+                        {id}
+                      </span>
                       <span
                         className={`text-xs px-2 py-1 rounded-full ${
                           status === "completed"
@@ -588,17 +678,25 @@ export default function QuickReport() {
                         {status}
                       </span>
                     </div>
-                    <p className="text-sm text-amber-700 mb-1">{note}</p>
-                    <div className="flex items-center gap-3 text-xs text-amber-600">
+                    <p className="text-sm mb-1" style={{ color: "var(--primary-3)" }}>
+                      {note}
+                    </p>
+                    <div className="flex items-center gap-3 text-xs" style={{ color: "var(--primary-3)" }}>
                       <span>🕐 {time}</span>
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-lg font-bold text-amber-900">{amount}</p>
+                    <p className="text-lg font-bold" style={{ color: "var(--primary-3)" }}>
+                      {amount}
+                    </p>
                   </div>
                 </div>
               ))}
-              {highlights.length === 0 && <p className="text-amber-700">No notable orders in this range.</p>}
+              {highlights.length === 0 && (
+                <p style={{ color: "var(--primary-2)" }}>
+                  No notable orders in this range.
+                </p>
+              )}
             </div>
           </div>
         </div>
