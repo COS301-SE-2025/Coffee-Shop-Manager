@@ -163,21 +163,49 @@ export default function POSPage() {
     if (!prevOrder) return;
 
     try {
+      // Update the order status
       const res = await fetch(`${API_BASE_URL}/update_order_status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+        body: JSON.stringify({ 
+          order_id: orderId, 
+          status: newStatus
+        }),
       });
 
       const data = await res.json();
 
+      // If status updated successfully and new status is "completed", update payment status
+      if (data.success && newStatus === "completed") {
+        // Call the dedicated payment API endpoint
+        const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include"
+        });
+        
+        const paymentData = await paymentRes.json();
+        if (!paymentRes.ok) {
+          console.error("Failed to update payment status:", paymentData.message);
+        }
+      }
+
       if (data.success) {
         setOrders((prev) =>
           prev.map((order) =>
-            order.id === orderId ? { ...order, status: newStatus } : order,
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  status: newStatus,
+                  // Also update paid_status in local state when completed
+                  paid_status: newStatus === "completed" ? "paid" : order.paid_status 
+                } 
+              : order
           ),
         );
 
@@ -187,7 +215,6 @@ export default function POSPage() {
           setToast(null);
           fetchOrders();
         }, 5000);
-
       } else {
         console.error("❌ Failed to update order status:", data.message || data.error);
       }

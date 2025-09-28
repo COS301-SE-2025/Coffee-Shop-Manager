@@ -109,21 +109,47 @@ export default function ManageOrdersPage() {
     newStatus: "completed" | "cancelled" | "pending",
   ) => {
     try {
+      // Update order status
       const res = await fetch(`${API_BASE_URL}/update_order_status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+        body: JSON.stringify({ 
+          order_id: orderId, 
+          status: newStatus
+        }),
       });
 
       const data = await res.json();
 
+      // If order is completed, also update payment status
+      if (data.success && newStatus === "completed") {
+        // Call the dedicated payment API endpoint
+        const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include"
+        });
+        
+        const paymentData = await paymentRes.json();
+        console.log("Payment status update:", paymentData.success ? "success" : "failed");
+      }
+
       if (data.success) {
         setOrders((prev) =>
           prev.map((order) =>
-            order.id === orderId ? { ...order, status: newStatus } : order,
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  status: newStatus,
+                  // Also update paid_status in local state
+                  paid_status: newStatus === "completed" ? "paid" : order.paid_status 
+                } 
+            : order
           ),
         );
       } else {
