@@ -440,6 +440,7 @@ export default function POSPage() {
                 {menu.map((item) => (
                   <button
                     key={item.id}
+                    data-testid="product-card"
                     onClick={() => addToCart(item)}
                     className="rounded-xl p-4 hover:shadow-md"
                     style={{
@@ -755,8 +756,8 @@ export default function POSPage() {
                       >
                         Actions
                       </th>
-                      
-                      
+
+
 
                     </tr>
                   </thead>

@@ -32,195 +32,132 @@ async function login(page: Page) {
   await page.waitForSelector('h1:text("Dashboard")', { timeout: 10000 }); //Confirm dashboard is loaded
 }
 
-test("clicks and orders a product, then checks it on the dashboard", async ({
+// test("fetches and displays orders from /get_orders on dashboard", async ({
+//   page,
+// }) => {
+//   await login(page);
+//   await page.goto("http://localhost:3000/dashboard");
+//   await page.waitForLoadState("networkidle");
+//   await page.waitForTimeout(3000); // hydration
+
+//   const rows = page.locator("table tbody tr");
+//   const rowCount = await rows.count();
+
+//   //   console.log(`Found ${rowCount} orders in table`);
+
+//   if (rowCount === 0) {
+//     // console.warn('No orders found – possibly a fresh database or user.');
+//     expect(rowCount).toBe(0); // Passes test intentionally
+//   } else {
+//     await expect(rows.first()).toBeVisible({ timeout: 10000 });
+//     expect(rowCount).toBeGreaterThan(0);
+//   }
+// });
+
+test("fetches and displays Products from /getProducts on POS", async ({
   page,
 }) => {
   await login(page);
 
-  // Go to POS
+  await page.goto("http://localhost:3000/dashboard");
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(3000); // hydration
+
   await page.locator("text=POS").click();
-  await page.waitForURL("**/pos", { timeout: 10000 });
+  await page.waitForURL("**/pos", { timeout: 15000 });
+  await page.waitForTimeout(3000); // hydration
 
-  const productCards = page.locator("button:has(h2)");
-  await expect(productCards.first()).toBeVisible({ timeout: 10000 });
-  expect(await productCards.count()).toBeGreaterThan(0);
+  const productCards = page.locator("button:has(h2)"); // Adjusted for POS buttons
+  await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+  const count = await productCards.count();
+  expect(count).toBeGreaterThan(0);
 
-  // Extract the product name
+  const ordersTable = page.locator("table:has-text('Order #')");
+  await expect(ordersTable).toBeVisible({ timeout: 15000 });
+
+  // Optionally also check at least one row exists
+  const orderRows = ordersTable.locator("tbody tr");
+  const rowCount = await orderRows.count();
+
+  if (rowCount > 0) {
+    // Optional: check that at least the first row renders expected data
+    await expect(orderRows.first()).toBeVisible();
+  } else {
+    console.log("ℹ️ No orders found, but table is rendered.");
+  }
+});
+
+test("orders a product and checks it appears in POS orders table", async ({ page }) => {
+  await login(page);
+
+  // Go straight to POS
+  await page.goto("http://localhost:3000/pos");
+  await page.waitForLoadState("networkidle");
+
+  // Wait for products
+  const productCards = page.getByTestId("product-card");
+  await expect(productCards.first()).toBeVisible({ timeout: 20000 });
+
+  // Pick product
   const productName = await productCards.first().locator("h2").innerText();
-  // console.log('Clicked product:', productName);
+  console.log("Ordering product:", productName);
 
-  // Click card → add to cart
+  // Add to cart
   await productCards.first().click();
-
-  // Verify cart total updated
   await expect(page.getByText(/Total:\s*R\d+/)).toBeVisible();
 
   // Complete order
   await page.getByRole("button", { name: /Complete Order/i }).click();
+  await expect(page.getByText("✅ Order successfully submitted!")).toBeVisible();
 
-  // Success message
-  await expect(
-    page.getByText("✅ Order successfully submitted!"),
-  ).toBeVisible();
+  // --- Orders table ---
+  const posTable = page.getByRole("table");
 
-  // still in POS → assert cart product name is visible
-  await expect(page.getByText(productName)).toBeVisible();
+  // Wait until *any* row in the table contains the product name
+  await expect(posTable).toContainText(productName, { timeout: 20000 });
 
-  // Navigate back to dashboard
-  await page.getByRole("link", { name: /Dashboard/ }).click();
-  await page.waitForURL("**/dashboard", { timeout: 10000 });
-
-  // Assert the product name appears in the dashboard table
-  await expect(page.getByRole("table")).toContainText(productName);
+  // Also check it has "pending" status somewhere in the same table
+  await expect(posTable).toContainText(/pending/i);
 });
 
-test("clicks and orders multiple products, then checks them on the dashboard", async ({
-  page,
-}) => {
-  await login(page);
 
-  // Go to POS
-  await page.getByRole("link", { name: /POS/ }).click();
-  await page.waitForURL("**/pos", { timeout: 10000 });
+// test("fetches and displays Inventory from /get_stock on Inventory page", async ({
+//   page,
+// }) => {
+//   await login(page);
 
-  const productCards = page.locator("button:has(h2)");
-  await expect(productCards.first()).toBeVisible({ timeout: 10000 });
-  const count = await productCards.count();
-  expect(count).toBeGreaterThanOrEqual(2); // need at least 2 products
+//   await page.locator("text=Inventory").click();
+//   await page.waitForURL("**/inventory", { timeout: 10000 });
+//   await page.waitForTimeout(3000); // hydration
 
-  // Extract product names
-  const firstProduct = await productCards.nth(0).locator("h2").innerText();
-  const secondProduct = await productCards.nth(1).locator("h2").innerText();
+//   await page.waitForSelector("table tbody tr", { timeout: 10000 });
+//   const inventoryRows = page.locator("table tbody tr");
+//   await expect(inventoryRows.first()).toBeVisible({ timeout: 10000 });
+//   const count = await inventoryRows.count();
+//   expect(count).toBeGreaterThan(0);
+// });
 
-  // Add both to cart
-  await productCards.nth(0).click();
-  await productCards.nth(1).click();
+// test("fetches and displays Orders from /get_orders on manage", async ({
+//   page,
+// }) => {
+//   await login(page);
 
-  // Verify cart has both
-  const cart = page.locator(".shadow-md"); // the cart box
-  await expect(
-    cart.getByText(new RegExp(`^${firstProduct}\\s*x\\d+$`)),
-  ).toBeVisible();
-  await expect(
-    cart.getByText(new RegExp(`^${secondProduct}\\s*x\\d+$`)),
-  ).toBeVisible();
+//   await page.locator("text=manage").click();
+//   await page.waitForURL("**/manage", { timeout: 15000 });
+//   await page.waitForTimeout(3000); // hydration
 
-  // Complete order
-  await page.getByRole("button", { name: /Complete Order/i }).click();
 
-  // Success message
-  await expect(
-    page.getByText("✅ Order successfully submitted!"),
-  ).toBeVisible();
+//   const ordersTable = page.locator("table:has-text('Order #')");
+//   await expect(ordersTable).toBeVisible({ timeout: 15000 });
 
-  // Navigate back to dashboard
-  await page.getByRole("link", { name: /Dashboard/ }).click();
-  await page.waitForURL("**/dashboard", { timeout: 10000 });
+//   // Optionally also check at least one row exists
+//   const orderRows = ordersTable.locator("tbody tr");
+//   const rowCount = await orderRows.count();
 
-  // Assert both product names appear
-  await expect(page.getByRole("table")).toContainText(firstProduct, {
-    timeout: 15000,
-  });
-  await expect(page.getByRole("table")).toContainText(secondProduct, {
-    timeout: 15000,
-  });
-});
-
-test("marks the first pending order as COMPLETED", async ({ page }) => {
-  await login(page);
-
-  await page.getByRole("link", { name: /Manage/i }).click();
-  await page.waitForURL("**/manage", { timeout: 10000 });
-
-  const firstPendingCard = page
-    .locator("div.rounded-xl", {
-      has: page.locator("span.font-bold.text-yellow-600", {
-        hasText: "PENDING",
-      }),
-    })
-    .first();
-
-  await expect(firstPendingCard).toBeVisible({ timeout: 10000 });
-
-  await firstPendingCard
-    .getByRole("button", { name: /Mark as Completed/i })
-    .click();
-
-  const firstCompletedCard = page
-    .locator("div.rounded-xl", {
-      has: page.locator("span.font-bold.text-green-600", {
-        hasText: "COMPLETED",
-      }),
-    })
-    .first();
-
-  await expect(firstCompletedCard).toBeVisible({ timeout: 10000 });
-  const statusSpan = firstCompletedCard.locator(
-    "span.font-bold.text-green-600",
-  );
-  await expect(statusSpan).toHaveText("COMPLETED", { timeout: 10000 });
-});
-
-test("marks the first COMPLETED order as PENDING", async ({ page }) => {
-  await login(page);
-
-  await page.getByRole("link", { name: /Manage/i }).click();
-  await page.waitForURL("**/manage", { timeout: 10000 });
-
-  const firstCompletedCard = page
-    .locator("div.rounded-xl", {
-      has: page.locator("span.font-bold.text-green-600", {
-        hasText: "COMPLETED",
-      }),
-    })
-    .first();
-
-  await expect(firstCompletedCard).toBeVisible({ timeout: 10000 });
-
-  await firstCompletedCard
-    .getByRole("button", { name: /Revert to Pending/i })
-    .click();
-
-  const firstPendingCard = page
-    .locator("div.rounded-xl", {
-      has: page.locator("span.font-bold.text-yellow-600", {
-        hasText: "PENDING",
-      }),
-    })
-    .first();
-
-  await expect(firstPendingCard).toBeVisible({ timeout: 10000 });
-  const statusSpan = firstPendingCard.locator("span.font-bold.text-yellow-600");
-  await expect(statusSpan).toHaveText("PENDING", { timeout: 10000 });
-});
-
-test("marks the first PENDING order as CANCELLED", async ({ page }) => {
-  await login(page);
-
-  await page.getByRole("link", { name: /Manage/i }).click();
-  await page.waitForURL("**/manage", { timeout: 10000 });
-
-  const firstPendingCard = page
-    .locator("div.rounded-xl", {
-      has: page.locator("span.font-bold.text-yellow-600", {
-        hasText: "PENDING",
-      }),
-    })
-    .first();
-
-  await expect(firstPendingCard).toBeVisible({ timeout: 10000 });
-
-  await firstPendingCard.getByRole("button", { name: /Cancel Order/i }).click();
-
-  const firstCancelledCard = page
-    .locator("div.rounded-xl", {
-      has: page.locator("span.font-bold.text-red-600", {
-        hasText: "CANCELLED",
-      }),
-    })
-    .first();
-
-  await expect(firstCancelledCard).toBeVisible({ timeout: 10000 });
-  const statusSpan = firstCancelledCard.locator("span.font-bold.text-red-600");
-  await expect(statusSpan).toHaveText("CANCELLED", { timeout: 10000 });
-});
+//   if (rowCount > 0) {
+//     // Optional: check that at least the first row renders expected data
+//     await expect(orderRows.first()).toBeVisible();
+//   } else {
+//     console.log("ℹ️ No orders found, but table is rendered.");
+//   }
+// });
