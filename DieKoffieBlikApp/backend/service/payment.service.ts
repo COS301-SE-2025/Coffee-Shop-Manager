@@ -1,3 +1,9 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
+// Define API_BASE_URL and APP_URL
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
+const APP_URL = "https://diekoffieblik.co.za"; // This would be your web app URL
+
 type CustomerInfo = {
   name: string;
   phone: string;
@@ -26,13 +32,17 @@ class PaymentService {
       // Ensure email exists (PayFast requires it)
       const email = customerInfo.email || `${customerInfo.phone}@tempmail.com`;
 
+      // Create custom return URLs with query parameters
+      const returnUrl = `${APP_URL}/userPOS?payfast_return=success&order=${orderNumber}`;
+      const cancelUrl = `${APP_URL}/userPOS?payfast_return=cancelled&order=${orderNumber}`;
+
       // Basic payment data
       const paymentData = {
         merchant_id: this.MERCHANT_ID,
         merchant_key: this.MERCHANT_KEY,
-        return_url: "https://payment-result/success",
-        cancel_url: "https://payment-result/failed",
-        notify_url: "https://your-backend.com/api/payfast/notify", // webhook for backend verification
+        return_url: returnUrl,
+        cancel_url: cancelUrl,
+        notify_url: `${API_BASE_URL}/payment/notify`,
         name_first: firstName,
         name_last: lastName,
         email_address: email,

@@ -14,7 +14,7 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { useRouter } from "expo-router";
+import { useRouter, useLocalSearchParams } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
@@ -68,25 +68,12 @@ interface ProductWithStats extends ApiProduct {
   totalQuantity: number;
 }
 
-interface Recommendation {
-  suggestions: string[];
-  reasoning: string;
-  weather?: {
-    temperature: number;
-    windspeed: number;
-    weathercode: number;
-    time: string;
-  };
-  confidence: 'low' | 'medium' | 'high';
-}
-
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
 const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = (width - 60) / 2;
 
 // Memoized constants
-const PRETORIA_COORDINATES = { latitude: -25.7479, longitude: 28.2293 };
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 const COFFEE_QUOTES = [
@@ -239,6 +226,9 @@ const useAnimations = () => {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams(); // Move this to component level
+  const paymentStatus = params.paymentStatus as string | undefined;
+  
   const { apiCall, isLoading: apiLoading, error: apiError, setError } = useApiData();
   const {
     fadeAnim,
@@ -264,12 +254,6 @@ export default function HomeScreen() {
     currentStreak: 0 
   });
   const [userName, setUserName] = useState("Coffee Lover");
-  
-  // Recommendation state
-  const [recommendations, setRecommendations] = useState<Recommendation | null>(null);
-  const [recommendationProducts, setRecommendationProducts] = useState<FeaturedItem[]>([]);
-  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
-  const [hasLoadedRecommendations, setHasLoadedRecommendations] = useState(false);
 
   // Memoized greeting calculation
   const greeting = useMemo(() => {
@@ -298,23 +282,6 @@ export default function HomeScreen() {
     if (lowercaseName.includes("iced")) return "snow-outline";
     if (lowercaseName.includes("tea")) return "leaf-outline";
     return "cafe-outline";
-  }, []);
-
-  const getConfidenceColor = useCallback((confidence: string) => {
-    switch (confidence) {
-      case 'high': return '#10b981';
-      case 'medium': return '#f59e0b';
-      case 'low': return '#ef4444';
-      default: return '#6b7280';
-    }
-  }, []);
-
-  const getWeatherIcon = useCallback((weathercode: number): IoniconName => {
-    if (weathercode === 0) return 'sunny-outline';
-    if (weathercode <= 3) return 'partly-sunny-outline';
-    if (weathercode <= 67) return 'rainy-outline';
-    if (weathercode <= 77) return 'snow-outline';
-    return 'cloudy-outline';
   }, []);
 
   // Error handling with user feedback
@@ -537,92 +504,23 @@ export default function HomeScreen() {
     }
   }, [apiCall, calculateProductPopularity, getIconForProduct, handleError]);
 
-  // Fetch recommendations (improved)
-  const fetchRecommendations = useCallback(async () => {
-    if (recommendationsLoading || hasLoadedRecommendations) return;
-    
-    try {
-      setRecommendationsLoading(true);
-      
-      console.log('Fetching recommendations...');
-      
-      const data = await apiCall(
-        `${API_BASE_URL}/user/recommendation?lat=${PRETORIA_COORDINATES.latitude}&lon=${PRETORIA_COORDINATES.longitude}`
-      );
-      
-      if (data.success && data.recommendations) {
-        setRecommendations(data.recommendations);
-        await fetchRecommendationProducts(data.recommendations.suggestions);
-        setHasLoadedRecommendations(true);
-      }
-    } catch (error) {
-      console.error("Failed to fetch recommendations:", error);
-      // Don't show error to user for recommendations as they're not critical
-    } finally {
-      setRecommendationsLoading(false);
-    }
-  }, [apiCall, recommendationsLoading, hasLoadedRecommendations]);
-
-  // Fetch recommendation products (improved)
-  const fetchRecommendationProducts = useCallback(async (suggestions: string[]) => {
-    try {
-      console.log('Fetching products for suggestions:', suggestions);
-      
-      const productsData = await apiCall(`${API_BASE_URL}/product`);
-
-      // Improved product matching algorithm
-      const matchedProducts = productsData.filter((product: ApiProduct) => {
-        return suggestions.some(suggestion => {
-          const suggestionWords = suggestion.toLowerCase().replace(/_/g, ' ').split(' ');
-          const productName = product.name.toLowerCase();
-          const productDescription = (product.description || '').toLowerCase();
-          
-          return suggestionWords.some(word => 
-            productName.includes(word) || productDescription.includes(word)
-          );
-        });
-      });
-
-      console.log('Matched products:', matchedProducts.length);
-
-      const recommendationItems: FeaturedItem[] = matchedProducts
-        .slice(0, 4) // Show more recommendations
-        .map((item: ApiProduct) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          description: item.description,
-          stock_quantity: item.stock_quantity,
-          icon: getIconForProduct(item.name),
-          popular: false,
-          rating: "",
-        }));
-
-      setRecommendationProducts(recommendationItems);
-    } catch (error) {
-      console.error("Failed to fetch recommendation products:", error);
-    }
-  }, [apiCall, getIconForProduct]);
-
   // Refresh handler (improved)
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setError(null);
     fadeAnim.setValue(1);
     slideAnim.setValue(0);
-    setHasLoadedRecommendations(false);
 
     Promise.allSettled([
       fetchFeaturedItems(),
       fetchUserData(),
-      fetchRecommendations(),
     ]).finally(() => {
       setTimeout(() => {
         setRefreshing(false);
         setCurrentFactIndex(Math.floor(Math.random() * COFFEE_FACTS.length));
       }, 1500);
     });
-  }, [fetchFeaturedItems, fetchUserData, fetchRecommendations, fadeAnim, slideAnim, setError]);
+  }, [fetchFeaturedItems, fetchUserData, fadeAnim, slideAnim, setError]);
 
   // Animation effects
   useEffect(() => {
@@ -662,14 +560,22 @@ export default function HomeScreen() {
   useEffect(() => {
     fetchFeaturedItems();
     fetchUserData();
-    
-    // Load recommendations after a delay
-    const recommendationTimer = setTimeout(() => {
-      fetchRecommendations();
-    }, 1000);
-
-    return () => clearTimeout(recommendationTimer);
   }, []);
+
+  // Payment status check effect
+  useEffect(() => {
+    if (paymentStatus === "success") {
+      Alert.alert(
+        "Payment Successful",
+        "Your order has been paid successfully and is being prepared."
+      );
+    } else if (paymentStatus === "cancelled") {
+      Alert.alert(
+        "Payment Cancelled",
+        "Your payment was cancelled. Your order will be available for payment at the counter."
+      );
+    }
+  }, [paymentStatus]); // Depend on paymentStatus
 
   // Header opacity animation
   const headerOpacity = scrollY.interpolate({
@@ -951,8 +857,6 @@ export default function HomeScreen() {
                   {item.name}
                 </Text>
                 <Text style={styles.featuredItemPrice}>R{item.price.toFixed(2)}</Text>
-
-                
               </Pressable>
             </Animated.View>
           ))}
@@ -960,98 +864,6 @@ export default function HomeScreen() {
       )}
     </View>
   ));
-
-  // Recommendations section (improved)
-  const RecommendationsSection = React.memo(() => {
-    if (!recommendations && !recommendationsLoading) return null;
-
-    return (
-      <View style={styles.recommendationsSection}>
-        <View style={styles.sectionHeader}>
-          <View style={styles.recommendationHeaderLeft}>
-            <Ionicons name="sparkles" size={20} color="#78350f" />
-            <Text style={styles.sectionTitle}>Recommended for You</Text>
-          </View>
-          {recommendations && (
-            <View >
-             
-            </View>
-          )}
-        </View>
-
-        {recommendationsLoading ? (
-          <View style={styles.loadingContainer}>
-            <CoffeeLoading visible={recommendationsLoading} />
-          </View>
-        ) : recommendations ? (
-          <>
-            
-
-            {/* Recommended Products */}
-            {recommendationProducts.length > 0 ? (
-              <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.recommendationScroll}
-                contentContainerStyle={styles.recommendationScrollContent}
-                removeClippedSubviews={true}
-              >
-                {recommendationProducts.map((item) => (
-                  <View
-                    key={item.id}
-                    style={styles.recommendationCard}
-                  >
-                    <Pressable
-                      style={styles.recommendationCardContent}
-                      android_ripple={{ color: "#78350f20" }}
-                      onPress={() => router.push("/order")}
-                      accessibilityLabel={`Recommended: ${item.name} - R${item.price.toFixed(2)}`}
-                    >
-                      <View style={styles.recommendationIconContainer}>
-                        <Ionicons
-                          name={item.icon as IoniconName}
-                          size={28}
-                          color="#78350f"
-                        />
-                      </View>
-
-                      <View style={styles.sparkleIndicator}>
-                        <Ionicons name="sparkles" size={12} color="#f59e0b" />
-                      </View>
-
-                      <Text style={styles.recommendationItemName} numberOfLines={2}>
-                        {item.name}
-                      </Text>
-                      <Text style={styles.recommendationItemPrice}>
-                        R{item.price.toFixed(2)}
-                      </Text>
-
-                      
-                    </Pressable>
-                  </View>
-                ))}
-              </ScrollView>
-            ) : (
-              <View style={styles.noRecommendationsContainer}>
-                <Ionicons name="cafe-outline" size={32} color="#9ca3af" />
-                <Text style={styles.noRecommendationsText}>
-                  No matching products found for current recommendations
-                </Text>
-                <Pressable
-                  style={styles.browseMenuBtn}
-                  onPress={() => router.push("/order")}
-                  android_ripple={{ color: "#78350f20" }}
-                  accessibilityLabel="Browse full menu"
-                >
-                  <Text style={styles.browseMenuText}>Browse Full Menu</Text>
-                </Pressable>
-              </View>
-            )}
-          </>
-        ) : null}
-      </View>
-    );
-  });
 
   // Coffee fact card (memoized)
   const CoffeeFactCard = React.memo(() => (
@@ -1127,7 +939,6 @@ export default function HomeScreen() {
           <HeroSection />
           <StatsSection />
           <QuickActions />
-          <RecommendationsSection />
           <FeaturedItems />
           <CoffeeFactCard />
 
@@ -1411,148 +1222,6 @@ const styles = StyleSheet.create({
     color: "#fed7aa",
   },
 
-  // Recommendations Section
-  recommendationsSection: {
-    paddingHorizontal: 20,
-    marginTop: 32,
-  },
-  recommendationHeaderLeft: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  confidenceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-  },
-  confidenceText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
-    textTransform: "uppercase",
-  },
-  recommendationInfo: {
-    backgroundColor: "#fff",
-    padding: 16,
-    borderRadius: 12,
-    marginBottom: 16,
-    elevation: 2,
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-  },
-  reasoningText: {
-    fontSize: 14,
-    color: "#374151",
-    marginBottom: 8,
-    lineHeight: 20,
-  },
-  weatherInfo: {
-    flexDirection: "row",
-    alignItems: "center",
-  },
-  weatherText: {
-    fontSize: 12,
-    color: "#6b7280",
-    marginLeft: 4,
-  },
-  recommendationScroll: {
-    overflow: "visible",
-  },
-  recommendationScrollContent: {
-    paddingRight: 0,
-  },
-  recommendationCard: {
-    marginRight: 12,
-    borderRadius: 16,
-    overflow: "hidden",
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowOffset: { width: 0, height: 3 },
-    shadowRadius: 6,
-  },
-  recommendationCardContent: {
-    backgroundColor: "#fff",
-    width: 150,
-    padding: 14,
-    paddingBottom: 20,
-    alignItems: "center",
-    position: "relative",
-  },
-  recommendationIconContainer: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    backgroundColor: "#fff7ed",
-    alignItems: "center",
-    justifyContent: "center",
-    marginBottom: 10,
-    marginTop: 6,
-    elevation: 2,
-  },
-  sparkleIndicator: {
-    position: "absolute",
-    top: 8,
-    right: 8,
-    backgroundColor: "#fef3c7",
-    width: 20,
-    height: 20,
-    borderRadius: 10,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  recommendationItemName: {
-    fontSize: 13,
-    fontWeight: "600",
-    color: "#78350f",
-    textAlign: "center",
-    marginBottom: 8,
-    lineHeight: 16,
-  },
-  recommendationItemPrice: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#78350f",
-    marginBottom: 10,
-  },
-  recommendationAddBtn: {
-    backgroundColor: "#78350f",
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
-  },
-  noRecommendationsContainer: {
-    alignItems: "center",
-    padding: 24,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    elevation: 2,
-  },
-  noRecommendationsText: {
-    fontSize: 14,
-    color: "#6b7280",
-    textAlign: "center",
-    marginTop: 8,
-    marginBottom: 12,
-    lineHeight: 20,
-  },
-  browseMenuBtn: {
-    backgroundColor: "#78350f",
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-    borderRadius: 20,
-  },
-  browseMenuText: {
-    color: "#fff",
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
   // Featured Items
   featuredSection: {
     paddingLeft: 20,
@@ -1634,15 +1303,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#78350f",
     marginBottom: 12,
-  },
-  addToCartBtn: {
-    backgroundColor: "#78350f",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
   },
 
   // Coffee Fact Card

@@ -384,7 +384,10 @@ export default function CheckoutScreen() {
               console.log("Opening PayFast payment page...");
               router.push({
                 pathname: "/payment-webview",
-                params: { url: encodeURIComponent(paymentRes.paymentUrl) },
+                params: { 
+                  url: encodeURIComponent(paymentRes.paymentUrl),
+                  orderId: result.order_id // Make sure to pass the order ID
+                },
               });
             } else {
               Alert.alert(
