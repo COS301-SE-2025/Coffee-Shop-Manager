@@ -47,9 +47,14 @@ getOrdesLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/get_orders_load.js
 
+getProductsLoadTest:
+	@echo "Running load test with k6..."
+	k6 run load-tests/getProducts_load.js
+
 load:
 	@$(MAKE) createOrdesLoadTest
 	@$(MAKE) getOrdesLoadTest
+	@$(MAKE) getProductsLoadTest
 
 
 
