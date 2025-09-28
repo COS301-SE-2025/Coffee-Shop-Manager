@@ -39,7 +39,9 @@ export async function getRecommendationsHandler(req: Request, res: Response): Pr
 
         const inputData = { data: orders };
 
-        const scriptPath = path.resolve(__dirname, "../../../Prediction/main.py");
+        // const scriptPath = path.resolve(__dirname, "../../../Prediction/main.py");
+        const scriptPath = path.join(process.cwd(), "Prediction/main.py");
+
         const py = spawn("python3", [
             scriptPath,
             userId,
