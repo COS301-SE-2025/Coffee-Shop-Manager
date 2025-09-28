@@ -104,6 +104,7 @@ export default function POSPage() {
     switch (normalized) {
       case "completed":
       case "paid":
+      case "points": // Add this case for orders paid with points
         return `${baseClasses} bg-green-100 text-green-800`;
       case "pending":
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
@@ -350,35 +351,71 @@ export default function POSPage() {
       return;
     }
 
-    const payload = {
-      products: cart.map((item) => ({
-        product: item.name,
-        quantity: item.quantity,
-      })),
-      email: selectedEmail,
-      paymentMethod: "redeem"  // Indicate points payment
-    };
-
     try {
-      const res = await fetch(`${API_BASE_URL}/create_order_with_points`, {
+      // Get user profile first to get both points and user_id
+      const response = await fetch(`${API_BASE_URL}/user/${selectedEmail}`, {
+        credentials: "include",
+      });
+      
+      const userData = await response.json();
+      if (!response.ok || !userData.success) {
+        setMessage("❌ Failed to retrieve customer information.");
+        return;
+      }
+
+      const userId = userData.profile.user_id; // Get the correct user_id from profile
+      const pointsNeeded = Math.round(total * 100); // Convert total to points
+
+      if (userData.profile.loyalty_points < pointsNeeded) {
+        setMessage(`❌ Not enough points. Needed: ${pointsNeeded}, Available: ${userData.profile.loyalty_points}`);
+        return;
+      }
+
+      // Call the redeem points endpoint with the correct user_id
+      const redeemRes = await fetch(`${API_BASE_URL}/user/points`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          user_id: userId,
+          points: pointsNeeded,
+          description: `Payment for order - ${cart.map(item => `${item.name} x${item.quantity}`).join(", ")}`
+        }),
       });
 
-      const result = await res.json();
+      const redeemData = await redeemRes.json();
+      if (!redeemRes.ok) {
+        setMessage(`❌ Failed to redeem points: ${redeemData.error || "Unknown error"}`);
+        return;
+      }
 
-      if (res.ok && result.success) {
+      // Create the order with the correct user_id
+      const orderPayload = {
+        products: cart.map((item) => ({
+          product: item.name,
+          quantity: item.quantity,
+        })),
+        email: selectedEmail,
+        paymentMethod: "points",
+        user_id: userId,
+        pointsRedeemed: pointsNeeded
+      };
+
+      const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(orderPayload),
+      });
+
+      const orderResult = await orderRes.json();
+
+      if (orderRes.ok && orderResult.success) {
         setCart([]);
         setMessage("✅ Order successfully submitted using loyalty points!");
         fetchOrders();
-      } else if (result.error === "insufficient_points") {
-        setMessage("❌ Customer doesn't have enough loyalty points for this purchase.");
       } else {
-        setMessage(
-          `❌ Failed to create order: ${result.message || "Unknown error"}`
-        );
+        setMessage(`❌ Failed to create order: ${orderResult.message || "Unknown error"}`);
       }
     } catch (err) {
       console.error("Order error:", err);
@@ -727,9 +764,9 @@ export default function POSPage() {
                       onClick={completeOrder}
                       className="w-full py-4 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                       style={{ 
-                        background: "linear-gradient(135deg, #78350f, #92400e)",
+                        background: "linear-gradient(135deg, #5a2e14ff, #5a2e14ff)",
                         boxShadow: "0 4px 12px rgba(120, 53, 15, 0.3)",
-                        border: "1px solid #92400e" 
+                        border: "1px solid #5a2e14ff" 
                       }}
                     >
                       <span className="text-lg">🛒</span> 
