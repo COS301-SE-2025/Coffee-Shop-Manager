@@ -335,7 +335,82 @@ export default function POSPage() {
               <p style={{ color: "var(--primary-2)" }}>
                 Process orders and manage transactions
               </p>
+<!-- <<<<<<< testing
+            )}
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
+            {loading ? (
+              <div className="col-span-2 md:col-span-3 lg:col-span-4 flex justify-center items-center py-10">
+                <Loader />
+              </div>
+            ) : (
+              <>
+                {menu.map((item) => (
+                  <button
+                    key={item.id}
+                    data-testid="product-card"
+                    onClick={() => addToCart(item)}
+                    className="rounded-xl p-4 hover:shadow-md"
+                    style={{
+                      backgroundColor: "var(--primary-2)",
+                      border: "1px solid var(--primary-3)",
+                      color: "var(--primary-3)",
+                    }}
+                  >
+                    <h2 className="font-semibold text-lg">{item.name}</h2>
+                    <p>R{item.price}</p>
+                  </button>
+                ))}
+              </>
+            )}
+          </div>
+
+          {/* Cart */}
+          <div
+            className="rounded-xl shadow-md p-6 mb-6 "
+            style={{
+              backgroundColor: "var(--primary-2)",
+            }}
+          >
+            <h2 className="text-xl font-bold mb-4">🛒 Cart</h2>
+            {cart.length === 0 ? (
+              <p className="text-red-500">Cart is empty.</p>
+            ) : (
+              <ul>
+                {cart.map((item) => (
+                  <li
+                    key={item.id}
+                    className="flex justify-between items-center mb-2"
+                  >
+                    <span>
+                      {item.name} x{item.quantity}
+                    </span>
+                    <div className="flex items-center gap-3">
+                      <span className="text-amber-700">
+                        R{item.price * item.quantity}
+                      </span>
+                      <button
+                        onClick={() => removeFromCart(item.id)}
+                        className="text-red-500 hover:text-red-700"
+                      >
+                        ✕
+                      </button>
+                    </div>
+                  </li>
+                ))}
+                <li className="font-bold mt-4">Total: R{total}</li>
+              </ul>
+            )}
+            {message && <p className="mb-4 text-sm font-medium">{message}</p>}
+
+            <button onClick={completeOrder} className="btn">
+
+              Complete Order
+            </button>
+======= -->
             </div>
+<!-- >>>>>>> developer -->
           </div>
         </div>
 
@@ -687,6 +762,41 @@ export default function POSPage() {
                         className="flex items-center font-medium"
                         style={{ color: "var(--primary-2)" }}
                       >
+<!-- <<<<<<< testing
+                        Total
+                      </th>
+                      <th
+                        className="text-left px-6 py-4 font-semibold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Status
+                      </th>
+                      <th
+                        className="text-left px-6 py-4 font-semibold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Paid Status
+                      </th>
+                      <th
+                        className="text-left px-6 py-4 font-semibold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Date
+                      </th>
+                      <th
+                        className="text-left px-6 py-4 font-semibold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Actions
+                      </th>
+
+
+
+                    </tr>
+                  </thead>
+                  <tbody
+                    className="divide-y text-[var(--primary-3)]"
+======= -->
                         to
                       </span>
                       <input
@@ -711,6 +821,7 @@ export default function POSPage() {
                   <button
                     key={status}
                     className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
+<!-- >>>>>>> developer -->
                     style={{
                       backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
                       color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
