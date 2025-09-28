@@ -10,6 +10,7 @@ import tenOrdersBadge from "../badges/10orders.png";
 import yearAccount from "../badges/year_account.png"
 import week_month_account from "../badges/week_account.png"
 import CoffeeBackground from "assets/coffee-background";
+import { Toaster, toast } from 'react-hot-toast';
 
 //api url
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -25,6 +26,13 @@ interface LeaderboardUser {
   totalOrders: number;
   currentStreak: number;
   favoritedrink: string;
+}
+
+// Add this type definition at the top with other interfaces
+interface ProfileFormData {
+  display_name?: string;
+  date_of_birth?: string;
+  phone_number?: string;
 }
 
 export default function UserPage() {
@@ -54,6 +62,16 @@ export default function UserPage() {
   const [leaderboardError, setLeaderboardError] = useState<string | null>(null);
 
   const [leaderboardFilter, setLeaderboardFilter] = useState("orders");
+
+  // Add these state variables after other useState declarations
+  const [isEditing, setIsEditing] = useState(false);
+  const [profileForm, setProfileForm] = useState({
+    display_name: "",
+    date_of_birth: "",
+    phone_number: ""
+  });
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updateSuccess, setUpdateSuccess] = useState(false);
 
   useEffect(() => {
     // Set client flag to true once component mounts on client
@@ -352,8 +370,91 @@ export default function UserPage() {
     return "text-gray-700";
   };
 
+  // Replace the existing handleProfileUpdate function
+  const handleProfileUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUpdateError(null);
+    setUpdateSuccess(false);
+
+    try {
+      // Get user ID from localStorage or session
+      const userId = localStorage.getItem("user_id") || 
+                    localStorage.getItem("userId");
+
+      if (!userId) {
+        setUpdateError("User ID not found. Please try logging in again.");
+        return;
+      }
+
+      // Only include fields that have values
+      const updates: ProfileFormData = {};
+      if (profileForm.display_name) updates.display_name = profileForm.display_name;
+      if (profileForm.date_of_birth) updates.date_of_birth = profileForm.date_of_birth;
+      if (profileForm.phone_number) updates.phone_number = profileForm.phone_number;
+
+      // Don't make the request if no fields to update
+      if (Object.keys(updates).length === 0) {
+        setUpdateError("No changes to update");
+        return;
+      }
+
+      // Use the correct endpoint with user ID
+      const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+        body: JSON.stringify(updates)
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        setUpdateSuccess(true);
+        setIsEditing(false);
+        
+        // Show success toast
+        toast.success('Profile updated successfully!', {
+          duration: 3000,
+          style: {
+            background: '#4CAF50',
+            color: '#fff',
+            borderRadius: '10px',
+          },
+        });
+
+        // Update local username if display_name was changed
+        if (updates.display_name) {
+          setUsername(updates.display_name);
+          localStorage.setItem("username", updates.display_name);
+        }
+
+        // Clear form
+        setProfileForm({
+          display_name: "",
+          date_of_birth: "",
+          phone_number: ""
+        });
+      } else {
+        // Show error toast
+        toast.error(data.message || 'Failed to update profile', {
+          duration: 3000,
+        });
+        setUpdateError(data.message || "Failed to update profile");
+      }
+    } catch (error: any) {
+      toast.error('Network error. Please try again.', {
+        duration: 3000,
+      });
+      setUpdateError("Network error. Please try again.");
+      console.error("Profile update error:", error);
+    }
+  };
+
   return (
     <div className="min-h-screen relative">
+      <Toaster position="bottom-right" />
       {/* Background */}
       <div className="fixed inset-0 z-0 h-screen">
         <CoffeeBackground />
@@ -444,6 +545,105 @@ export default function UserPage() {
                 </div>
                 <div className="text-gray-600">Favourite Drink</div>
               </div>
+            </div>
+
+            {/* Profile Update Section */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md p-6">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-xl font-bold text-gray-900">Profile Information</h3>
+                {!isEditing && (
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                  >
+                    Edit Profile
+                  </button>
+                )}
+              </div>
+
+              {isEditing ? (
+                <form onSubmit={handleProfileUpdate} className="space-y-4">
+                  <div>
+                    <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
+                      Display Name
+                    </label>
+                    <input
+                      type="text"
+                      id="display_name"
+                      value={profileForm.display_name}
+                      onChange={(e) => setProfileForm({...profileForm, display_name: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter display name"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="date_of_birth" className="block text-sm font-medium text-gray-700">
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      id="date_of_birth"
+                      value={profileForm.date_of_birth}
+                      onChange={(e) => setProfileForm({...profileForm, date_of_birth: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div>
+                    <label htmlFor="phone_number" className="block text-sm font-medium text-gray-700">
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      id="phone_number"
+                      value={profileForm.phone_number}
+                      onChange={(e) => setProfileForm({...profileForm, phone_number: e.target.value})}
+                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                      placeholder="Enter phone number"
+                      pattern="[0-9]{10}"
+                      title="Please enter a valid 10-digit phone number"
+                    />
+                  </div>
+
+                  {updateError && (
+                    <div className="text-red-600 text-sm">{updateError}</div>
+                  )}
+
+                  {updateSuccess && (
+                    <div className="text-green-600 text-sm">Profile updated successfully!</div>
+                  )}
+
+                  <div className="flex space-x-4">
+                    <button
+                      type="submit"
+                      className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      Save Changes
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsEditing(false);
+                        setUpdateError(null);
+                        setUpdateSuccess(false);
+                        setProfileForm({
+                          display_name: "",
+                          date_of_birth: "",
+                          phone_number: ""
+                        });
+                      }}
+                      className="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </form>
+              ) : (
+                <div className="space-y-2">
+                  <p className="text-gray-600">Click 'Edit Profile' to update your information</p>
+                </div>
+              )}
             </div>
 
             {/* Badges Section */}
