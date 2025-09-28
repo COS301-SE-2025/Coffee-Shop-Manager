@@ -15,6 +15,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 		let query = supabase.from("orders").select(
 			`id,
 		status,
+		paid_status,
 		total_price,
 		created_at,
 		updated_at,
