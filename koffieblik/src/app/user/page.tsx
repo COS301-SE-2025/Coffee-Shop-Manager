@@ -11,6 +11,8 @@ import yearAccount from "../badges/year_account.png"
 import week_month_account from "../badges/week_account.png"
 import CoffeeBackground from "assets/coffee-background";
 import { Toaster, toast } from 'react-hot-toast';
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
+import { validatePassword } from '@/lib/validators/passwordValidator';
 
 //api url
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -72,6 +74,19 @@ export default function UserPage() {
   });
   const [updateError, setUpdateError] = useState<string | null>(null);
   const [updateSuccess, setUpdateSuccess] = useState(false);
+
+  // Add this state near your other state declarations
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmNewPassword: ""
+  });
+  const [passwordUpdateError, setPasswordUpdateError] = useState<string | null>(null);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
+  const [passwordVisible, setPasswordVisible] = useState(false);
+
+  // Add this state for password section dropdown
+  const [isPasswordSectionOpen, setIsPasswordSectionOpen] = useState(false);
 
   useEffect(() => {
     // Set client flag to true once component mounts on client
@@ -452,6 +467,69 @@ export default function UserPage() {
     }
   };
 
+  // Add this function after your other handlers
+  const handlePasswordUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setPasswordUpdateError(null);
+    setIsUpdatingPassword(true);
+
+    try {
+      const supabase = createClientComponentClient();
+      
+      // Validate passwords
+      if (passwordForm.newPassword !== passwordForm.confirmNewPassword) {
+        setPasswordUpdateError("New passwords do not match");
+        setIsUpdatingPassword(false);
+        return;
+      }
+
+      // Get email from localStorage
+      const userEmail = localStorage.getItem("email");
+      if (!userEmail) {
+        setPasswordUpdateError("Please log in again");
+        setIsUpdatingPassword(false);
+        return;
+      }
+
+      // First verify current password
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: userEmail,
+        password: passwordForm.currentPassword  // Use current password to verify
+      });
+
+      if (signInError) {
+        setPasswordUpdateError("Current password is incorrect");
+        setIsUpdatingPassword(false);
+        return;
+      }
+
+      // Then update to new password
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: passwordForm.newPassword
+      });
+
+      if (updateError) {
+        toast.error(updateError.message);
+        setPasswordUpdateError(updateError.message);
+      } else {
+        toast.success('Password updated successfully!');
+        // Clear form
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmNewPassword: ""
+        });
+        // Close the dropdown after successful update
+        setIsPasswordSectionOpen(false);
+      }
+    } catch (error: any) {
+      console.error("Password update error:", error);
+      setPasswordUpdateError('Failed to update password');
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  };
+
   return (
     <div className="min-h-screen relative">
       <Toaster position="bottom-right" />
@@ -642,6 +720,88 @@ export default function UserPage() {
               ) : (
                 <div className="space-y-2">
                   <p className="text-gray-600">Click 'Edit Profile' to update your information</p>
+                </div>
+              )}
+            </div>
+
+            {/* Password Update Section - Collapsible */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-lg shadow-md overflow-hidden mb-6">
+              {/* Header - Clickable to expand/collapse */}
+              <div 
+                className="p-4 cursor-pointer flex justify-between items-center"
+                onClick={() => setIsPasswordSectionOpen(!isPasswordSectionOpen)}
+                style={{ backgroundColor: "var(--primary-3)" }}
+              >
+                <h3 className="text-xl font-semibold text-white">Update Password</h3>
+                <span className="text-white text-xl">
+                  {isPasswordSectionOpen ? '▲' : '▼'}
+                </span>
+              </div>
+              
+              {/* Collapsible Content */}
+              {isPasswordSectionOpen && (
+                <div className="p-5">
+                  <form onSubmit={handlePasswordUpdate} className="space-y-4">
+                    <div className="flex flex-col items-center">
+                      <div className="w-3/4 mb-3">
+                        <label htmlFor="currentPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                          Current Password
+                        </label>
+                        <input
+                          type="password"
+                          id="currentPassword"
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, currentPassword: e.target.value})}
+                          className="w-full h-12 px-4 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+
+                      <div className="w-3/4 mb-3">
+                        <label htmlFor="newPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                          New Password
+                        </label>
+                        <input
+                          type="password"
+                          id="newPassword"
+                          value={passwordForm.newPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, newPassword: e.target.value})}
+                          className="w-full h-12 px-4 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+
+                      <div className="w-3/4 mb-3">
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1">
+                          Confirm New Password
+                        </label>
+                        <input
+                          type="password"
+                          id="confirmPassword"
+                          value={passwordForm.confirmNewPassword}
+                          onChange={(e) => setPasswordForm({...passwordForm, confirmNewPassword: e.target.value})}
+                          className="w-full h-12 px-4 rounded-md border border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                          required
+                        />
+                      </div>
+                    </div>
+
+                    {passwordUpdateError && (
+                      <div className="text-red-600 text-sm mt-2 text-center">
+                        {passwordUpdateError}
+                      </div>
+                    )}
+
+                    <div className="flex justify-center mt-4">
+                      <button
+                        type="submit"
+                        disabled={isUpdatingPassword}
+                        className="bg-blue-600 text-white px-6 py-3 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50"
+                      >
+                        {isUpdatingPassword ? "Updating..." : "Update Password"}
+                      </button>
+                    </div>
+                  </form>
                 </div>
               )}
             </div>

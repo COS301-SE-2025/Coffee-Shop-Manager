@@ -10,6 +10,7 @@
 #     ENV_FILE=.env docker compose --profile dev up
 #   PROD:
 #     ENV_FILE=.env.prod docker compose --profile prod up
+#     Powershell : $env:ENV_FILE=".env.prod"; docker compose --profile prod up
 
 # STOP:
 #   DEV:

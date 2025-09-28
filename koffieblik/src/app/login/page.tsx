@@ -62,6 +62,7 @@ export default function LoginPage() {
           localStorage.setItem("username", username);
           localStorage.setItem("role", role);
           localStorage.setItem("user_id", user.id);
+          localStorage.setItem("email", email);
 
           console.log("🧑‍💼 Role:", role); // Log role for debugging
         }
@@ -108,6 +109,7 @@ export default function LoginPage() {
             result.user.user_metadata?.role ?? "user",
           );
           localStorage.setItem("user_id", userId); // Store the user ID
+          localStorage.setItem("email", email);
 
           console.log("🧑‍💼 Role:", role); // Log role
           setLoginError("");
@@ -292,13 +294,13 @@ export default function LoginPage() {
                 >
                   Password
                 </label>
-                <a
-                  href="#"
-                  className="text-xs transition-colors"
+                {/* <Link
+                  href="/reset-password"
+                  className="text-xs transition-colors hover:underline"
                   style={{ color: "var(--primary-3)" }}
                 >
                   Forgot password?
-                </a>
+                </Link> */}
               </div>
               <div className="relative">
                 <input
