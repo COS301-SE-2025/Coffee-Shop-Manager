@@ -2,6 +2,8 @@ from collections import Counter
 from datetime import datetime
 from typing import Dict, Any, Optional
 import requests
+import json
+import sys
 
 
 class CoffeeRecommendationEngine:
@@ -316,9 +318,78 @@ def main():
         target_time=datetime(2025, 9, 18, 8, 30)
     )
 
-    print("Recommendations:", recommendations)
+    # print("Recommendations:", recommendations)
+    print(json.dumps(recommendations))
     return recommendations
 
+def main_cli():
+    if len(sys.argv) < 5:
+        print(json.dumps({"error": "Missing arguments"}))
+        sys.exit(1)
+    user_id = sys.argv[1]
+    lat = float(sys.argv[2])
+    lon = float(sys.argv[3])
+    use_json = "--json" in sys.argv
+
+    if use_json:
+        # Read JSON from stdin
+        input_json = sys.stdin.read()
+        try:
+            InputData = json.loads(input_json)
+        except Exception as e:
+            print(json.dumps({"error": f"Invalid JSON input: {str(e)}"}))
+            sys.exit(1)
+    else:
+        # fallback to hardcoded data
+        InputData = {
+            "data": [
+                {
+                    "id": 101,
+                    "user_id": "user-123", 
+                    "status": "done",
+                    "total_price": 75.00,
+                    "created_at": "2025-09-15T08:15:00",
+                    "updated_at": "2025-09-15T08:20:00",
+                    "order_products": [
+                        {"product_id": "cappuccino", "quantity": 2, "price": 50.00},
+                        {"product_id": "cafe_latte", "quantity": 1, "price": 25.00}
+                    ]
+                },
+                {
+                    "id": 102,
+                    "user_id": "user-123",
+                    "status": "done", 
+                    "total_price": 30.00,
+                    "created_at": "2025-09-16T14:10:00",
+                    "updated_at": "2025-09-16T14:12:00",
+                    "order_products": [
+                        {"product_id": "cappuccino", "quantity": 1, "price": 30.00}
+                    ]
+                },
+                {
+                    "id": 103,
+                    "user_id": "user-123",
+                    "status": "done",
+                    "total_price": 45.00, 
+                    "created_at": "2025-09-17T19:30:00",
+                    "updated_at": "2025-09-17T19:35:00",
+                    "order_products": [
+                        {"product_id": "espresso", "quantity": 3, "price": 45.00}
+                    ]
+                }
+            ]
+        }
+
+    engine = CoffeeRecommendationEngine()
+    engine.add_orders(InputData)
+    recommendations = engine.get_recommendations(lat=lat, lon=lon)
+    print(json.dumps(recommendations))
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        main_cli()
+    else:
+        main()
+
+# if __name__ == "__main__":
+    # main()

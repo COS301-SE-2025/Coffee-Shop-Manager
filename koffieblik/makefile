@@ -20,9 +20,9 @@ teste2e:
 
 # 	npx playwright test tests/login.spec.ts && \
 
-	npx playwright test tests/getTestAdmin.spec.ts
+# 	npx playwright test tests/getTestAdmin.spec.ts
 
-# 	npx playwright test tests/postTestAdmin.spec.ts && \
+	npx playwright test tests/postTestAdmin.spec.ts 
 
 # 	npx playwright test tests/getTestUser.spec.ts && \
 

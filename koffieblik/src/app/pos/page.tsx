@@ -45,7 +45,8 @@ export default function POSPage() {
   const [endDate, setEndDate] = useState(today);
 
   const dateInputStyle =
-    "p-3 border rounded-lg  focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
+    "p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200";
+
   const [customerName, setCustomerName] = useState("");
   const [userId, setUserId] = useState("");
   const [message, setMessage] = useState("");
@@ -89,7 +90,6 @@ export default function POSPage() {
     newStatus: string;
   } | null>(null);
 
-
   useEffect(() => {
     const role = localStorage.getItem("role");
     if (role !== "admin") {
@@ -114,6 +114,7 @@ export default function POSPage() {
         return `${baseClasses} bg-gray-100 text-gray-800`;
     }
   };
+
   const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
@@ -180,10 +181,7 @@ export default function POSPage() {
           ),
         );
 
-        // 🔔 Show toast with undo option
         setToast({ orderId, prevStatus: prevOrder.status, newStatus });
-
-        // Auto-dismiss after 5s
 
         setTimeout(() => {
           setToast(null);
@@ -198,20 +196,13 @@ export default function POSPage() {
     }
   };
 
-
-  // 🔄 run once on mount (or whenever API_BASE_URL changes)
   useEffect(() => {
     fetchOrders();
   }, [API_BASE_URL]);
 
-  //when the offsetStart changes it will refecth the function
   useEffect(() => {
     fetchOrders();
   }, [offSetStart, statusFilter, startDate, endDate]);
-
-
-
-
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -247,7 +238,7 @@ export default function POSPage() {
         });
         const data = await res.json();
         console.log("📧 User emails:", data.emails);
-        setUserEmails(data.emails || []); // ✅ save into state
+        setUserEmails(data.emails || []);
       } catch (err) {
         console.error("❌ Error fetching user emails:", err);
       }
@@ -256,38 +247,7 @@ export default function POSPage() {
     fetchUserEmails();
   }, [API_BASE_URL]);
 
-
-
-  // Filter orders based on selected filter
-
   let filteredOrders = orders;
-
-  // if (filter === "Today") {
-  //   filteredOrders = orders.filter(
-  //     (order) =>
-  //       new Date(order.created_at).toDateString() === now.toDateString(),
-  //   );
-  // } else if (filter === "This Week") {
-  //   const startOfWeek = new Date(now);
-  //   startOfWeek.setDate(now.getDate() - now.getDay());
-  //   filteredOrders = orders.filter(
-  //     (order) => new Date(order.created_at) >= startOfWeek,
-  //   );
-  // } else if (filter === "This Month") {
-  //   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  //   filteredOrders = orders.filter(
-  //     (order) => new Date(order.created_at) >= startOfMonth,
-  //   );
-  // } else if (filter === "Custom Range" && startDate && endDate) {
-  //   const start = new Date(startDate);
-  //   const end = new Date(endDate);
-  //   end.setHours(23, 59, 59, 999);
-
-  //   filteredOrders = orders.filter((order) => {
-  //     const orderDate = new Date(order.created_at);
-  //     return orderDate >= start && orderDate <= end;
-  //   });
-  // }
 
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
@@ -317,11 +277,10 @@ export default function POSPage() {
       products: cart.map((item) => ({
         product: item.name,
         quantity: item.quantity,
-
       })),
       email: selectedEmail
     };
-    // setLoading(true);
+
     try {
       const res = await fetch(`${API_BASE_URL}/create_order`, {
         method: "POST",
@@ -350,505 +309,567 @@ export default function POSPage() {
   };
 
   return (
-    <main
-      className="relative min-h-full bg-transparent overflow-x-hidden p-8"
-      style={{
-        // backgroundColor: "var(--primary-4)",
-        color: "var(--primary-3)",
-      }}
-    >
-      {/* <h1 className="text-4xl font-bold mb-6">🧾 POS System</h1> */}
-
-      {/* <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <input
-          type="text"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          placeholder="Customer Name"
-          className="p-3 rounded-lg w-full"
-          style={{
-            border: '1px solid var(--primary-3)',
-            color: 'var(--primary-3)',
-            backgroundColor: 'transparent',
-          }}
-        />
-        <input
-          type="text"
-          value={userId}
-          onChange={(e) => setUserId(e.target.value)}
-          placeholder="User ID / Cell Number"
-          className="p-3 rounded-lg w-full"
-          style={{
-            border: '1px solid var(--primary-3)',
-            color: 'var(--primary-3)',
-            backgroundColor: 'transparent',
-          }}
-        />
-      </div> */}
-      <div style={{ display: "flex", gap: "20px", alignItems: "flex-start" }}>
-        {/* LEFT COLUMN (menu + cart stacked) */}
-
-        <div style={{ flex: "0 0 50%", maxWidth: "50%", display: "flex", border: "2px solid var(--primary-3)", padding: "20px", flexDirection: "column", gap: "20px" }}>
-          {/* Menu */}
-          <div
-            className="p-4 rounded-xl shadow-md mb-6"
-            style={{
-              backgroundColor: "var(--primary-2)",
-            }}
-          >
-            <label
-              htmlFor="user-email-dropdown"
-              className="block text-sm font-medium mb-2"
-              style={{ color: "var(--primary-3)" }}
+    <main className="relative min-h-full bg-transparent">
+      <div className="p-8">
+        {/* Header */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3">
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
+              style={{ backgroundColor: "var(--primary-4)" }}
             >
-              Select User Email
-            </label>
-
-            <select
-              id="user-email-dropdown"
-              value={selectedEmail}
-              onChange={(e) => setSelectedEmail(e.target.value)}
-              className="w-full p-3 border rounded-lg"
-              style={{
-                borderColor: "var(--primary-2)",
-                color: "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-              }}
-            >
-              <option value="">-- Choose an email --</option>
-              {userEmails.map((email, idx) => (
-                <option key={idx} value={email}>
-                  {email}
-                </option>
-              ))}
-            </select>
-
-            {selectedEmail && (
-              <p className="mt-3 text-sm" style={{ color: "var(--primary-1)" }}>
-                Selected: <b>{selectedEmail}</b>
-              </p>
-            )}
-          </div>
-
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 mb-10">
-            {loading ? (
-              <div className="col-span-2 md:col-span-3 lg:col-span-4 flex justify-center items-center py-10">
-                <Loader />
-              </div>
-            ) : (
-              <>
-                {menu.map((item) => (
-                  <button
-                    key={item.id}
-                    onClick={() => addToCart(item)}
-                    className="rounded-xl p-4 hover:shadow-md"
-                    style={{
-                      backgroundColor: "var(--primary-2)",
-                      border: "1px solid var(--primary-3)",
-                      color: "var(--primary-3)",
-                    }}
-                  >
-                    <h2 className="font-semibold text-lg">{item.name}</h2>
-                    <p>R{item.price}</p>
-                  </button>
-                ))}
-              </>
-            )}
-          </div>
-
-          {/* Cart */}
-          <div
-            className="rounded-xl shadow-md p-6 mb-6 "
-            style={{
-              backgroundColor: "var(--primary-2)",
-            }}
-          >
-            <h2 className="text-xl font-bold mb-4">🛒 Cart</h2>
-            {cart.length === 0 ? (
-              <p className="text-red-500">Cart is empty.</p>
-            ) : (
-              <ul>
-                {cart.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex justify-between items-center mb-2"
-                  >
-                    <span>
-                      {item.name} x{item.quantity}
-                    </span>
-                    <div className="flex items-center gap-3">
-                      <span className="text-amber-700">
-                        R{item.price * item.quantity}
-                      </span>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  </li>
-                ))}
-                <li className="font-bold mt-4">Total: R{total}</li>
-              </ul>
-            )}
-            {message && <p className="mb-4 text-sm font-medium">{message}</p>}
-
-            <button onClick={completeOrder} className="btn">
-
-              Complete Order
-            </button>
-          </div>
-        </div>
-
-        {/* RIGHT COLUMN */}
-        <div style={{ flex: "0 0 50%", maxWidth: "50%", padding: "20px", border: "2px solid var(--primary-3)", overflowX: "auto" }}>
-          {/* <h2 className="text-xl font-bold mb-4">📋 Recent Orders</h2>
-          <table className="table-auto w-full border-collapse border border-gray-400 bg-white">
-            <thead>
-              <tr>
-                <th className="border border-gray-400 px-4 py-2">Name</th>
-                <th className="border border-gray-400 px-4 py-2">Quantity</th>
-                <th className="border border-gray-400 px-4 py-2">Price</th>
-
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td className="border border-gray-400 px-4 py-2">Latte</td>
-                <td className="border border-gray-400 px-4 py-2">2</td>
-                <td className="border border-gray-400 px-4 py-2">R60</td>
-              </tr>
-              <tr className="bg-gray-100">
-                <td className="border border-gray-400 px-4 py-2">Cappuccino</td>
-                <td className="border border-gray-400 px-4 py-2">1</td>
-                <td className="border border-gray-400 px-4 py-2">R35</td>
-              </tr>
-            </tbody>
-          </table> */}
-
-          {/* Heading */}
-          <div
-            className="p-6 border-b-2"
-            style={{
-              borderColor: "var(--primary-4)",
-              backgroundColor: "var(--primary-3)",
-            }}
-          >
-            {/* Heading */}
-            <div className="flex items-center gap-3 mb-4">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{ backgroundColor: "var(--primary-4)" }}
-              >
-                <span className="text-sm" style={{ color: "var(--primary-2)" }}>
-                  📋
-                </span>
-              </div>
-              <h2
-                className="text-base font-bold"
+              <span
+                className="font-bold text-xl"
                 style={{ color: "var(--primary-2)" }}
               >
-                Orders
-              </h2>
+                🛒
+              </span>
             </div>
+            <div>
+              <h1
+                className="text-3xl font-bold"
+                style={{ color: "var(--primary-2)" }}
+              >
+                Point of Sale
+              </h1>
+              <p style={{ color: "var(--primary-2)" }}>
+                Process orders and manage transactions
+              </p>
+            </div>
+          </div>
+        </div>
 
-            {/* Top row: Pagination + Filter */}
-            <div className="flex flex-col sm:flex-row justify-between items-center w-full gap-6 text-xs">
-              {/* Pagination controls */}
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
-                  disabled={offSetStart === 0}
-                  className="px-3 py-1 rounded-lg border"
-                  style={{
-                    borderColor: "var(--primary-4)",
-                    color: offSetStart === 0 ? "gray" : "var(--primary-2)",
-                    backgroundColor: "var(--primary-3)",
-                    opacity: offSetStart === 0 ? 0.5 : 1,
-                  }}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          {/* LEFT COLUMN - Menu & Cart */}
+          <div className="space-y-6">
+            {/* User Selection */}
+            <div
+              className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
+              style={{
+                backgroundColor: "var(--primary-3)",
+                borderColor: "var(--primary-4)"
+              }}
+            >
+              <div className="flex items-center gap-3 mb-4">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-4)" }}
                 >
-                  ⬅
-                </button>
-
-                <span style={{ color: "var(--primary-2)" }}>
-                  {offSetStart + 1} – {offSetStart + limit}
-                </span>
-
-                <button
-                  onClick={() => setOffsetStart((prev) => prev + limit)}
-                  className="px-3 py-1 rounded-lg border"
-                  style={{
-                    borderColor: "var(--primary-4)",
-                    color: "var(--primary-2)",
-                    backgroundColor: "var(--primary-3)",
-                  }}
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    👤
+                  </span>
+                </div>
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "var(--primary-2)" }}
                 >
-                  ➡
-                </button>
+                  Customer Selection
+                </h2>
               </div>
 
-              {/* Filter */}
-              <div className="flex flex-wrap gap-3">
-                <select
-                  className={`${dateInputStyle} text-xs text-[var(--primary-2)]`}
-                  style={{
-                    backgroundColor: "var(--primary-3)",
-                    borderColor: "var(--primary-4)",
-                    boxShadow: "0 0 0 0 transparent",
-                  }}
-                  value={filter}
-                  onChange={(e) => setFilter(e.target.value)}
-                >
-                  <option>Today</option>
-                  <option>This Week</option>
-                  <option>This Month</option>
-                  <option>Custom Range</option>
-                </select>
+              <select
+                value={selectedEmail}
+                onChange={(e) => setSelectedEmail(e.target.value)}
+                className="w-full p-4 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
+                style={{
+                  backgroundColor: "var(--primary-3)",
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)"
+                }}
+              >
+                <option value="">-- Choose a customer --</option>
+                {userEmails.map((email, idx) => (
+                  <option key={idx} value={email}>
+                    {email}
+                  </option>
+                ))}
+              </select>
 
-                {filter === "Custom Range" && (
-                  <>
-                    <input
-                      type="date"
-                      className={dateInputStyle}
-                      value={startDate}
-                      onChange={(e) => setStartDate(e.target.value)}
+              {selectedEmail && (
+                <div
+                  className="mt-3 p-3 rounded-lg border"
+                  style={{
+                    backgroundColor: "var(--primary-4)",
+                    borderColor: "var(--primary-2)"
+                  }}
+                >
+                  <p
+                    className="text-sm"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Selected: <span className="font-semibold">{selectedEmail}</span>
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* Menu Items */}
+            <div
+              className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
+              style={{
+                backgroundColor: "var(--primary-3)",
+                borderColor: "var(--primary-4)"
+              }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-4)" }}
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    ☕
+                  </span>
+                </div>
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  Menu Items
+                </h2>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  {menu.map((item) => (
+                    <button
+                      key={item.id}
+                      data-testid="product-card"
+                      onClick={() => addToCart(item)}
+                      className="group rounded-xl p-4 border transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
                       style={{
-                        backgroundColor: "var(--primary-3)",
-                        borderColor: "var(--primary-4)",
-                        color: "var(--primary-2)",
-                        boxShadow: "0 0 0 0 transparent",
+                        backgroundColor: "#F5F5DC",
+                        borderColor: "var(--primary-2)",
+                        color: "#8B4513"
                       }}
-                    />
-                    <span
-                      className="flex items-center font-medium"
-                      style={{ color: "var(--primary-2)" }}
                     >
-                      to
-                    </span>
-                    <input
-                      type="date"
-                      className={dateInputStyle}
-                      value={endDate}
-                      onChange={(e) => setEndDate(e.target.value)}
-                      style={{
-                        backgroundColor: "var(--primary-3)",
-                        borderColor: "var(--primary-4)",
-                        color: "var(--primary-2)",
-                        boxShadow: "0 0 0 0 transparent",
-                      }}
-                    />
-                  </>
-                )}
-              </div>
+                      <div className="text-center">
+                        <h3 className="font-semibold text-sm mb-1 text-amber-900">
+                          {item.name}
+                        </h3>
+                        <p className="text-lg font-bold text-amber-800">
+                          R{item.price}
+                        </p>
+                        <div className="mt-2 text-xs text-amber-700">
+                          Stock: {item.stock_quantity}
+                        </div>
+                      </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
-            {/* Status Buttons Row */}
-            <div className="flex justify-start gap-3 mt-6">
-              <button
-                className="px-4 py-1 rounded-lg border text-xs font-medium"
-                style={{
-                  borderColor: "var(--primary-4)",
-                  color: "var(--primary-2)",
-                  backgroundColor: "var(--primary-3)",
-                }}
-                onClick={() => {
-                  setStatusFilter("pending");
-                  setOffsetStart(0);
-                }}
-              >
-                pending
-              </button>
-              <button
-                className="px-4 py-1 rounded-lg border text-xs font-medium"
-                style={{
-                  borderColor: "var(--primary-4)",
-                  color: "var(--primary-2)",
-                  backgroundColor: "var(--primary-3)",
-                }}
-                onClick={() => {
-                  setStatusFilter("completed");
-                  setOffsetStart(0);
-                }}
-              >
-                completed
-              </button>
-              <button
-                className="px-4 py-1 rounded-lg border text-xs font-medium"
-                style={{
-                  borderColor: "var(--primary-4)",
-                  color: "var(--primary-2)",
-                  backgroundColor: "var(--primary-3)",
-                }}
-                onClick={() => {
-                  setStatusFilter("cancelled");
-                  setOffsetStart(0);
-                }}
-              >
-                cancelled
-              </button>
+            {/* Cart */}
+            <div
+              className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
+              style={{
+                backgroundColor: "var(--primary-3)",
+                borderColor: "var(--primary-4)"
+              }}
+            >
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-4)" }}
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    🛒
+                  </span>
+                </div>
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  Shopping Cart
+                </h2>
+              </div>
+
+              {cart.length === 0 ? (
+                <div className="text-center py-8">
+                  <div className="text-6xl mb-4 opacity-30">🛒</div>
+                  <p style={{ color: "var(--primary-2)" }}>Cart is empty</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {cart.map((item) => (
+                    <div
+                      key={item.id}
+                      className="flex items-center justify-between p-4 rounded-xl border"
+                      style={{
+                        backgroundColor: "#F5F5DC",
+                        borderColor: "var(--primary-2)"
+                      }}
+                    >
+                      <div className="flex-1">
+                        <h4 className="font-semibold text-amber-900">
+                          {item.name}
+                        </h4>
+                        <p className="text-sm text-amber-800">
+                          Qty: {item.quantity} × R{item.price}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3">
+                        <span className="font-bold text-amber-900">
+                          R{item.price * item.quantity}
+                        </span>
+                        <button
+                          onClick={() => removeFromCart(item.id)}
+                          className="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+
+                  <div
+                    className="border-t pt-4"
+                    style={{ borderColor: "var(--primary-2)" }}
+                  >
+                    <div className="flex justify-between items-center mb-4">
+                      <span
+                        className="text-xl font-bold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        Total:
+                      </span>
+                      <span
+                        className="text-2xl font-bold"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        R{total}
+                      </span>
+                    </div>
+
+                    {message && (
+                      <div
+                        className="mb-4 p-3 border rounded-lg"
+                        style={{
+                          backgroundColor: "var(--primary-4)",
+                          borderColor: "var(--primary-2)"
+                        }}
+                      >
+                        <p
+                          className="text-sm"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          {message}
+                        </p>
+                      </div>
+                    )}
+
+                    <button
+                      onClick={completeOrder}
+                      className="w-full py-4 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
+                      style={{ backgroundColor: "var(--primary-2)" }}
+                    >
+                      Complete Order
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
-
-
-          {loading || loadingOrders ? (
-            <Loader />
-          ) : (
-            <section
-              className="backdrop-blur-sm border border-[var(--primary-2)] rounded-2xl shadow-xl"
-              style={{ backgroundColor: "var(--primary-3)" }}
+          {/* RIGHT COLUMN - Orders */}
+          <div
+            className="backdrop-blur-sm rounded-2xl shadow-xl border"
+            style={{
+              backgroundColor: "var(--primary-3)",
+              borderColor: "var(--primary-4)"
+            }}
+          >
+            {/* Header */}
+            <div
+              className="p-6 border-b"
+              style={{ borderColor: "var(--primary-2)" }}
             >
+              <div className="flex items-center gap-3 mb-6">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{ backgroundColor: "var(--primary-4)" }}
+                >
+                  <span
+                    className="text-sm"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    📋
+                  </span>
+                </div>
+                <h2
+                  className="text-xl font-bold"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  Recent Orders
+                </h2>
+              </div>
 
-
-
-              {/* Table */}
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-xs">
-                  <thead
-                    className="border-b"
+              {/* Controls */}
+              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                {/* Pagination */}
+                <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
+                    disabled={offSetStart === 0}
+                    className="px-4 py-2 rounded-lg border transition-colors duration-200"
+                    style={{
+                      backgroundColor: offSetStart === 0 ? "var(--primary-4)" : "var(--primary-3)",
+                      borderColor: "var(--primary-4)",
+                      color: offSetStart === 0 ? "gray" : "var(--primary-2)",
+                      opacity: offSetStart === 0 ? 0.5 : 1,
+                    }}
+                  >
+                    ←
+                  </button>
+                  <span
+                    className="font-medium"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    {offSetStart + 1} – {offSetStart + limit}
+                  </span>
+                  <button
+                    onClick={() => setOffsetStart((prev) => prev + limit)}
+                    className="px-4 py-2 rounded-lg border transition-colors duration-200"
                     style={{
                       backgroundColor: "var(--primary-3)",
-                      borderColor: "var(--primary-2)",
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-2)"
                     }}
                   >
-                    <tr>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Order #
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Items
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Total
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Status
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Paid Status
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Date
-                      </th>
-                      <th
-                        className="text-left px-6 py-4 font-semibold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Actions
-                      </th>
-                      
-                      
+                    →
+                  </button>
+                </div>
 
-                    </tr>
-                  </thead>
-                  <tbody
-                    className="divide-y text-[var(--primary-3)]"
+                {/* Filter */}
+                <div className="flex flex-wrap gap-3">
+                  <select
+                    className={`${dateInputStyle}`}
                     style={{
-                      backgroundColor: "var(--primary-2)",
-                      borderColor: "var(--primary-3)",
+                      backgroundColor: "var(--primary-3)",
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-2)"
+                    }}
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                  >
+                    <option>Today</option>
+                    <option>This Week</option>
+                    <option>This Month</option>
+                    <option>Custom Range</option>
+                  </select>
+
+                  {filter === "Custom Range" && (
+                    <>
+                      <input
+                        type="date"
+                        className={dateInputStyle}
+                        value={startDate}
+                        onChange={(e) => setStartDate(e.target.value)}
+                        style={{
+                          backgroundColor: "var(--primary-3)",
+                          borderColor: "var(--primary-4)",
+                          color: "var(--primary-2)"
+                        }}
+                      />
+                      <span
+                        className="flex items-center font-medium"
+                        style={{ color: "var(--primary-2)" }}
+                      >
+                        to
+                      </span>
+                      <input
+                        type="date"
+                        className={dateInputStyle}
+                        value={endDate}
+                        onChange={(e) => setEndDate(e.target.value)}
+                        style={{
+                          backgroundColor: "var(--primary-3)",
+                          borderColor: "var(--primary-4)",
+                          color: "var(--primary-2)"
+                        }}
+                      />
+                    </>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Filters */}
+              <div className="flex gap-3 mt-6">
+                {["pending", "completed", "cancelled"].map((status) => (
+                  <button
+                    key={status}
+                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
+                    style={{
+                      backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
+                      color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
+                    }}
+                    onClick={() => {
+                      setStatusFilter(status);
+                      setOffsetStart(0);
                     }}
                   >
-                    {filteredOrders.map((order) => (
-                      <tr key={order.id}>
-                        <td className="px-6 py-4 font-medium">
-                          #{order.order_number}
-                        </td>
-                        <td className="px-6 py-4">
-                          {order.order_products
-                            .map((p) => `${p.products.name} x${p.quantity}`)
-                            .join(", ")}
-                        </td>
-                        <td className="px-6 py-4 font-semibold">
-                          R{order.total_price}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={getStatusStyle(order.status)}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          <span className={getStatusStyle(order.paid_status)}>
-                            {order.paid_status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4">
-                          {new Date(order.created_at).toLocaleDateString(
-                            "en-ZA",
-                          )}
-                        </td>
-                        <td className="p-3">
-                          {order.status === "pending" && (
-                            <div className="flex gap-2">
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Orders Table */}
+            <div className="p-6">
+              {loadingOrders ? (
+                <div className="flex justify-center items-center py-20">
+                  <Loader />
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr
+                        className="border-b"
+                        style={{ borderColor: "var(--primary-2)" }}
+                      >
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Order #
+                        </th>
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Items
+                        </th>
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Total
+                        </th>
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Status
+                        </th>
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Paid
+                        </th>
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Date
+                        </th>
+                        <th
+                          className="text-left py-3 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody
+                      className="divide-y"
+                      style={{ borderColor: "var(--primary-4)" }}
+                    >
+                      {filteredOrders.map((order) => (
+                        <tr
+                          key={order.id}
+                          className="hover:bg-opacity-50 transition-colors duration-200"
+                          style={{
+                            backgroundColor: "#F5F5DC"
+                          }}
+                        >
+                          <td className="py-4 font-medium text-amber-900">
+                            #{order.order_number}
+                          </td>
+                          <td className="py-4 text-amber-800">
+                            {order.order_products
+                              .map((p) => `${p.products.name} x${p.quantity}`)
+                              .join(", ")}
+                          </td>
+                          <td className="py-4 font-semibold text-amber-900">
+                            R{order.total_price}
+                          </td>
+                          <td className="py-4">
+                            <span className={getStatusStyle(order.status)}>{order.status}</span>
+                          </td>
+                          <td className="py-4">
+                            <span className={getStatusStyle(order.paid_status)}>{order.paid_status}</span>
+                          </td>
+                          <td className="py-4 text-amber-800">
+                            {new Date(order.created_at).toLocaleDateString("en-ZA")}
+                          </td>
+                          <td className="py-4">
+                            {order.status === "pending" && (
+                              <div className="flex gap-2">
+                                <button
+                                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, "completed");
+                                  }}
+                                >
+                                  Complete
+                                </button>
+                                <button
+                                  className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, "cancelled");
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            )}
+                            {order.status === "completed" && (
                               <button
-                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                                onClick={(e) => {
-                                  e.stopPropagation(); // prevent row toggle
-                                  updateOrderStatus(order.id, "completed");
-                                }}
-                              >
-                                ✅ Complete
-                              </button>
-                              <button
-                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg transition-colors duration-200"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  updateOrderStatus(order.id, "cancelled");
+                                  updateOrderStatus(order.id, "pending");
                                 }}
                               >
-                                ❌ Cancel
+                                Revert
                               </button>
-                            </div>
-                          )}
-                          {order.status === "completed" && (
-                            <button
-                              className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                updateOrderStatus(order.id, "pending");
-                              }}
-                            >
-                              🔄 Revert
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </section>
-          )}
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
+
+        {/* Toast Notification */}
         {toast && (
-          <div
-            className="fixed bottom-5 right-5 bg-gray-800 text-white px-4 py-3 rounded-lg shadow-lg flex items-center gap-3"
-            style={{ zIndex: 1000 }}
-          >
+          <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-4 z-50">
             <span>
-              ✅ Order <b>{toast.orderId}</b> marked as{" "}
-              <b>{toast.newStatus}</b>.
+              Order <strong>{toast.orderId}</strong> marked as <strong>{toast.newStatus}</strong>
             </span>
             <button
-              className="bg-yellow-500 text-black px-2 py-1 rounded hover:bg-yellow-600"
+              className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg transition-colors duration-200"
               onClick={() => {
                 updateOrderStatus(toast.orderId, toast.prevStatus as any);
                 setToast(null);
@@ -858,10 +879,7 @@ export default function POSPage() {
             </button>
           </div>
         )}
-
-
       </div>
-
     </main>
   );
 }
