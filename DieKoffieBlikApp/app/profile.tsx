@@ -365,8 +365,8 @@ export default function ProfileScreen() {
           // Updated badge mapping to match API response exactly
           const badgeMapping = [
             { apiKey: "first_order", name: "First Sip", description: "Placed your first order" },
-            { apiKey: "five_orders", name: "Coffee Lover", description: "Ordered 5 coffees" },
-            { apiKey: "ten_orders", name: "Regular", description: "Ordered 10 coffees" },
+            { apiKey: "five_orders", name: "Regular", description: "Ordered 5 coffees" },
+            { apiKey: "ten_orders", name: "Coffee Lover", description: "Ordered 10 coffees" },
             { apiKey: "3_day_streak", name: "Daily Habit", description: "3 day streak" },
             { apiKey: "7_day_streak", name: "Weekly Warrior", description: "7 day streak" },
             { apiKey: "week_member", name: "Week Member", description: "Member for a week" },
