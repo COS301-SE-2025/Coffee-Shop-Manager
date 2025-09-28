@@ -20,7 +20,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface UserProfile {
   user_id: string;
@@ -100,7 +100,7 @@ export default function ProfileScreen() {
 
   // Updated badgeImages object to include both naming conventions
   const badgeImages = {
-    first_order: require("../app/badges/badges/first.png"),
+    first_order: require("./badges/badges/first.png"),
     "5_orders": require("../app/badges/badges/5orders.png"),
     "10_orders": require("../app/badges/badges/10orders.png"),
     // Add the API naming convention as well
@@ -108,9 +108,9 @@ export default function ProfileScreen() {
     "ten_orders": require("../app/badges/badges/10orders.png"),
     "3_day_streak": require("../app/badges/badges/3dayStreak.png"),
     "7_day_streak": require("../app/badges/badges/7dayStreak.png"),
-    week_member: require("../app/badges/badges/week_account.png"),
-    month_member: require("../app/badges/badges/month_account.png"),
-    year_member: require("../app/badges/badges/year_account.png"),
+    week_member: require("./badges/badges/week_account.png"),
+    month_member: require("./badges/badges/month_account.png"),
+    year_member: require("./badges/badges/year_account.png"),
   };
 
   // Add refresh functionality

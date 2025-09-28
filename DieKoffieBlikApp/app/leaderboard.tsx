@@ -19,7 +19,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface LeaderboardEntry {
   user_id: string;

@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface Order {
   id: string;

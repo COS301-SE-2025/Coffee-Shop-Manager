@@ -18,7 +18,7 @@ import DateTimePicker, {
 } from "@react-native-community/datetimepicker";
 import CoffeeLoading from "../assets/loading";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 // Web-compatible DateTimePicker component
 const WebDatePicker = ({

@@ -87,7 +87,7 @@ const CARD_WIDTH = (width - 60) / 2;
 
 // Memoized constants
 const PRETORIA_COORDINATES = { latitude: -25.7479, longitude: 28.2293 };
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 const COFFEE_QUOTES = [
   "Life begins after coffee",
