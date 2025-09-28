@@ -31,17 +31,37 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ---
 
-## 🛠 Technologies Used
+## Tech Stack
 
-| Area               | Tech Stack                    |
-|--------------------|-------------------------------|
-| Frontend (Web)     | Next.js                       |
-| Frontend (Mobile)  | React Native                  |
-| Backend            | Node.js                       |
-| Database           | PostgreSQL                    |
-| DevOps / CI/CD     | GitHub Actions, Docker        |
-| Testing            | Jest, React Testing Library   |
-| Version Control    | Git, GitHub                   |
+**Frontend:**  
+
+- React
+- HTML5, CSS3
+
+**Backend:**  
+
+- Node.js
+- RESTful APIs
+
+**Database:**  
+
+- PostgreSQL (Through Supabase)
+
+**Authentication & Security:**  
+
+- JWT (JSON Web Tokens)
+
+**DevOps & Deployment:**  
+
+- Docker (containerization)
+- GitHub Actions (CI/CD)
+- Cloud Hosting (Render)
+
+**Other Tools:**  
+
+- TypeScript
+- ESLint, Prettier (code quality)
+- Postman (API documentation)
 
 ---
 
