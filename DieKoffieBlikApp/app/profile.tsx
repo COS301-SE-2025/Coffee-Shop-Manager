@@ -662,31 +662,7 @@ export default function ProfileScreen() {
     </View>
   );
 
-  const SettingsSection = () => (
-    <View style={styles.settingsSection}>
-      <Text style={styles.sectionTitle}>Settings</Text>
 
-      <View style={styles.settingItem}>
-        <View style={styles.settingLeft}>
-          <View style={styles.settingIconContainer}>
-            <Ionicons name="notifications" size={20} color="#78350f" />
-          </View>
-          <View>
-            <Text style={styles.settingTitle}>Push Notifications</Text>
-            <Text style={styles.settingDescription}>
-              Get notified about orders
-            </Text>
-          </View>
-        </View>
-        <Switch
-          value={notificationsEnabled}
-          onValueChange={setNotificationsEnabled}
-          trackColor={{ false: "#e5e7eb", true: "#78350f" }}
-          thumbColor={notificationsEnabled ? "#fff" : "#f3f4f6"}
-        />
-      </View>
-    </View>
-  );
 
   const ActionButtons = () => (
     <View style={styles.actionButtonsSection}>
@@ -727,7 +703,7 @@ export default function ProfileScreen() {
           <StatsSection />
           <BadgesSection />
           <MenuSection />
-          <SettingsSection />
+
           <ActionButtons />
 
           {/* Footer */}
