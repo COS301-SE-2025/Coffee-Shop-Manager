@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   Platform,
   RefreshControl,
   Pressable,
+  Alert,
+  Image,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
@@ -28,6 +30,8 @@ interface FeaturedItem {
   icon: string;
   popular: boolean;
   rating: string;
+  image?: string;
+  score?: number; // Add score for recommendations
 }
 
 interface ApiProduct {
@@ -65,307 +69,143 @@ interface ProductWithStats extends ApiProduct {
   totalQuantity: number;
 }
 
-interface BackendUserStats {
-  total_orders: number;
-  current_streak: number;
-  longest_streak: number;
-  account_age_days: number;
+interface Recommendation {
+  suggestions: string[];
+  reasoning: string;
+  weather?: {
+    temperature: number;
+    windspeed: number;
+    weathercode: number;
+    time: string;
+  };
+  confidence: 'low' | 'medium' | 'high';
+  scores?: { [productId: string]: number };
+  target_time?: string;
+  weekday?: string;
+  time_period?: string;
 }
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
-const { width } = Dimensions.get("window");
+const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = (width - 60) / 2;
 
-export default function HomeScreen() {
-  const router = useRouter();
+// Memoized constants
+const PRETORIA_COORDINATES = { latitude: -25.7479, longitude: 28.2293 };
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
+
+const COFFEE_QUOTES = [
+  "Life begins after coffee",
+  "But first, coffee",
+  "Espresso yourself!",
+  "Coffee is my love language",
+  "Rise and grind!",
+  "Fuel your passion",
+];
+
+const COFFEE_FACTS = [
+  "The word 'coffee' comes from the Arabic word 'qahwa'",
+  "Espresso has less caffeine than drip coffee per cup!",
+  "Coffee was first discovered by goats in Ethiopia",
+  "Finland consumes the most coffee per capita globally",
+  "Coffee beans are actually seeds, not beans!",
+  "Brazil is the largest producer of coffee in the world",
+  "Cold brew coffee is less acidic than hot brewed coffee",
+  "A typical coffee tree can live up to 100 years",
+  "There are two main coffee species: Arabica and Robusta",
+  "Coffee can enhance physical performance by increasing adrenaline levels",
+];
+
+// FIXED: Simple cache to prevent duplicate API calls
+const apiCache = new Map();
+const CACHE_DURATION = 60000; // 1 minute cache
+
+// Custom hook for managing API state with caching
+const useApiData = () => {
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const apiCall = useCallback(async (url: string, options?: RequestInit) => {
+    // Check cache first
+    const cacheKey = `${url}_${JSON.stringify(options)}`;
+    const cached = apiCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      console.log('Using cached data for:', url);
+      return cached.data;
+    }
+
+    try {
+      setIsLoading(true);
+      setError(null);
+      
+      const accessToken = await AsyncStorage.getItem("access_token");
+      if (!accessToken) {
+        throw new Error("No access token found");
+      }
+
+      const response = await fetch(url, {
+        ...options,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+          ...options?.headers,
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error(`API call failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Cache the result
+      apiCache.set(cacheKey, {
+        data,
+        timestamp: Date.now()
+      });
+
+      return data;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'An error occurred';
+      setError(errorMessage);
+      console.error('API Error:', errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  return { apiCall, isLoading, error, setError };
+};
+
+// Custom hook for animations
+const useAnimations = () => {
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(50)).current;
   const factFadeAnim = useRef(new Animated.Value(1)).current;
   const pulseAnim = useRef(new Animated.Value(1)).current;
-
-  const [currentFactIndex, setCurrentFactIndex] = useState(0);
-  const [refreshing, setRefreshing] = useState(false);
-  const [currentTime, setCurrentTime] = useState(new Date());
   const scrollY = useRef(new Animated.Value(0)).current;
-  const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
-  const [featuredLoading, setFeaturedLoading] = useState(true);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [userStats, setUserStats] = useState<UserStats>({ totalOrders: 0, loyaltyPoints: 0, currentStreak: 0 });
-  const [userName, setUserName] = useState("Coffee Lover");
 
-  const API_BASE_URL = "http://192.168.0.97:5000";
+  const startInitialAnimations = useCallback(() => {
+    fadeAnim.setValue(0);
+    slideAnim.setValue(50);
 
-  const coffeeQuotes = [
-    "Life begins after coffee",
-    "But first, coffee",
-    "Espresso yourself!",
-    "Coffee is my love language",
-    "Rise and grind!",
-    "Fuel your passion",
-  ];
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 1000,
+        useNativeDriver: true,
+      }),
+      Animated.timing(slideAnim, {
+        toValue: 0,
+        duration: 800,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [fadeAnim, slideAnim]);
 
-  const coffeeFacts = [
-    "The word 'coffee' comes from the Arabic word 'qahwa'",
-    "Espresso has less caffeine than drip coffee per cup!",
-    "Coffee was first discovered by goats in Ethiopia",
-    "Finland consumes the most coffee per capita globally",
-    "Coffee beans are actually seeds, not beans!",
-    "Brazil is the largest producer of coffee in the world",
-    "Cold brew coffee is less acidic than hot brewed coffee",
-    "A typical coffee tree can live up to 100 years",
-    "There are two main coffee species: Arabica and Robusta",
-    "Coffee can enhance physical performance by increasing adrenaline levels",
-    "Black coffee contains almost zero calories",
-    "The smell of coffee alone can help reduce stress",
-    "Vietnam is the world's second-largest coffee producer",
-    "There are over 25 million coffee farmers around the world",
-    "The most expensive coffee comes from elephant dung",
-    "Decaf coffee still contains small amounts of caffeine",
-    "Coffee is the second most traded commodity after oil",
-    "Adding milk to coffee can slow down the effects of caffeine",
-    "Instant coffee was invented in 1901 by Japanese scientist Satori Kato",
-    "Turkey has one of the oldest coffee brewing methods: Turkish coffee",
-  ];
-
-  // Calculate points from orders (EXACT same logic as website)
-  const calculatePointsFromOrders = (orders: Order[]) => {
-    const processedOrderIds = new Set();
-    let totalPoints = 0;
-
-    // Process orders only once and calculate points
-    orders.forEach((order) => {
-      if (processedOrderIds.has(order.id)) return;
-      processedOrderIds.add(order.id);
-
-      const pointsEarned = Math.round(order.total_price * 0.05 * 100);
-      totalPoints += pointsEarned;
-    });
-
-    return totalPoints;
-  };
-
-  // Fetch user data for personalization - using EXACT same pattern as working profile screen
-  const fetchUserData = useCallback(async () => {
-    try {
-      const accessToken = await AsyncStorage.getItem("access_token");
-      const userEmail = await AsyncStorage.getItem("email");
-      const userId = await AsyncStorage.getItem("user_id");
-      
-      if (!accessToken || !userEmail || !userId) return;
-
-      // Fetch orders first (using same pattern as profile page)
-      const ordersResponse = await fetch(`${API_BASE_URL}/order`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-
-      let fetchedOrders: Order[] = [];
-      if (ordersResponse.ok) {
-        const ordersData = await ordersResponse.json();
-        if (ordersData.orders) {
-          fetchedOrders = ordersData.orders;
-        }
-      }
-
-      // Fetch user profile (same as profile page)
-      const profileResponse = await fetch(`${API_BASE_URL}/user/${userId}`, {
-        method: "GET",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!profileResponse.ok) return;
-
-      const apiResponse = await profileResponse.json();
-      if (!apiResponse.success || !apiResponse.profile) return;
-
-      const profile = apiResponse.profile;
-
-      // Calculate stats from fetched orders (EXACT same logic as profile page)
-      const completedOrders = fetchedOrders.filter(order => 
-        order.status.toLowerCase() === 'completed'
-      );
-      
-      const currentStreak = calculateStreak(fetchedOrders);
-      // Calculate points from orders like website
-      const calculatedPoints = calculatePointsFromOrders(fetchedOrders);
-
-      setUserStats({
-        totalOrders: fetchedOrders.length, // Same as profile page
-        loyaltyPoints: calculatedPoints, // NOW CALCULATED FROM ORDERS LIKE WEBSITE
-        currentStreak: currentStreak,
-      });
-
-      setUserName(profile.display_name || "Coffee Lover");
-    } catch (error) {
-      console.error("Failed to fetch user data:", error);
-      // Fallback: Don't show error, just use default values
-    }
-  }, []);
-
-  // Calculate streak from orders (EXACT same function as profile page)
-  const calculateStreak = (orders: Order[]) => {
-    if (orders.length === 0) return 0;
-    
-    const sortedOrders = orders
-      .filter(order => order.status.toLowerCase() === 'completed')
-      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-
-    if (sortedOrders.length === 0) return 0;
-
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    const latestOrder = new Date(sortedOrders[0].created_at);
-    latestOrder.setHours(0, 0, 0, 0);
-    
-    const daysDiff = Math.floor((today.getTime() - latestOrder.getTime()) / (1000 * 60 * 60 * 24));
-    
-    if (daysDiff > 1) return 0;
-
-    const orderDates = new Set(
-      sortedOrders.map(order => {
-        const date = new Date(order.created_at);
-        return date.toDateString();
-      })
-    );
-
-    let currentDate = new Date(today);
-    
-    if (daysDiff === 1) {
-      currentDate.setDate(currentDate.getDate() - 1);
-    }
-
-    while (orderDates.has(currentDate.toDateString())) {
-      streak++;
-      currentDate.setDate(currentDate.getDate() - 1);
-    }
-
-    return streak;
-  };
-
-  const fetchFeaturedItems = useCallback(async () => {
-    try {
-      const accessToken = await AsyncStorage.getItem("access_token");
-      if (!accessToken) return;
-
-      // Fetch products and orders simultaneously
-      const [productsResponse, ordersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/product`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        }),
-        fetch(`${API_BASE_URL}/order`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
-          },
-        })
-      ]);
-
-      if (!productsResponse.ok) throw new Error("Failed to fetch products");
-      
-      const productsData = await productsResponse.json();
-      let ordersData = { orders: [] };
-      
-      if (ordersResponse.ok) {
-        ordersData = await ordersResponse.json();
-      }
-
-      // Calculate product popularity from order data - same as before
-      const productPopularity = calculateProductPopularity(ordersData.orders || []);
-      
-      // Get all products with their popularity stats
-      const productsWithStats: ProductWithStats[] = productsData.map((item: ApiProduct) => {
-        const popularity = productPopularity[item.id] || { orderCount: 0, totalQuantity: 0 };
-        return {
-          ...item,
-          totalQuantity: popularity.totalQuantity,
-        };
-      });
-
-      // Sort by popularity and determine top 25%
-      const sortedByPopularity = productsWithStats.sort((a: ProductWithStats, b: ProductWithStats) => b.totalQuantity - a.totalQuantity);
-      const topPercentileThreshold = Math.ceil(sortedByPopularity.length * 0.25);
-      const popularProductIds = new Set(
-        sortedByPopularity.slice(0, topPercentileThreshold).map((p: ProductWithStats) => p.id)
-      );
-
-      const getIconForProduct = (name: string) => {
-        const lowercaseName = name.toLowerCase();
-        if (lowercaseName.includes("espresso")) return "flash-outline";
-        if (lowercaseName.includes("latte")) return "heart-outline";
-        if (lowercaseName.includes("cappuccino")) return "cafe-outline";
-        if (lowercaseName.includes("americano")) return "snow-outline";
-        if (lowercaseName.includes("mocha")) return "color-palette-outline";
-        if (lowercaseName.includes("macchiato")) return "star-outline";
-        return "cafe-outline";
-      };
-
-      const featuredProducts: FeaturedItem[] = productsData
-        .slice(0, 4)
-        .map((item: ApiProduct) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          description: item.description,
-          stock_quantity: item.stock_quantity,
-          icon: getIconForProduct(item.name),
-          popular: popularProductIds.has(item.id), // Top 25% most ordered products
-          rating: "", // Removed ratings
-        }));
-
-      setFeaturedItems(featuredProducts);
-    } catch (error) {
-      console.error("Featured items error:", error);
-    } finally {
-      setFeaturedLoading(false);
-    }
-  }, []);
-
-  // Calculate product popularity from order data
-  const calculateProductPopularity = (orders: any[]) => {
-    const productStats: { [productId: string]: { orderCount: number; totalQuantity: number } } = {};
-    
-    // Only count completed orders for popularity
-    const completedOrders = orders.filter((order: any) => 
-      order.status && order.status.toLowerCase() === 'completed'
-    );
-    
-    completedOrders.forEach((order: any) => {
-      if (order.order_products && Array.isArray(order.order_products)) {
-        order.order_products.forEach((orderProduct: any) => {
-          if (orderProduct.products && orderProduct.products.id) {
-            const productId = orderProduct.products.id;
-            const quantity = orderProduct.quantity || 0;
-            
-            if (!productStats[productId]) {
-              productStats[productId] = { orderCount: 0, totalQuantity: 0 };
-            }
-            
-            productStats[productId].orderCount += 1;
-            productStats[productId].totalQuantity += quantity;
-          }
-        });
-      }
-    });
-    
-    return productStats;
-  };
-
-  // Add subtle pulsing animation for CTA button
-  useEffect(() => {
+  const startPulseAnimation = useCallback(() => {
     const pulseAnimation = Animated.loop(
       Animated.sequence([
         Animated.timing(pulseAnim, {
@@ -381,103 +221,425 @@ export default function HomeScreen() {
       ])
     );
     pulseAnimation.start();
-
     return () => pulseAnimation.stop();
-  }, []);
+  }, [pulseAnim]);
 
-  useEffect(() => {
-    fadeAnim.setValue(0);
-    slideAnim.setValue(50);
-
-    const animationTimer = setTimeout(() => {
-      Animated.parallel([
-        Animated.timing(fadeAnim, {
-          toValue: 1,
-          duration: 1000,
-          useNativeDriver: true,
-        }),
-        Animated.timing(slideAnim, {
-          toValue: 0,
-          duration: 800,
-          useNativeDriver: true,
-        }),
-      ]).start();
-    }, 100);
-
-    return () => clearTimeout(animationTimer);
-  }, []);
-
-  useEffect(() => {
-    const timeInterval = setInterval(() => {
-      setCurrentTime(new Date());
-    }, 60000);
-
-    return () => clearInterval(timeInterval);
-  }, []);
-
-  useEffect(() => {
-    const factInterval = setInterval(() => {
-      if (isAnimating) return;
-
-      setIsAnimating(true);
-
-      Animated.timing(factFadeAnim, {
-        toValue: 0,
-        duration: 300,
-        useNativeDriver: true,
-      }).start(() => {
-        setCurrentFactIndex((prev) => (prev + 1) % coffeeFacts.length);
-
-        setTimeout(() => {
-          Animated.timing(factFadeAnim, {
-            toValue: 1,
-            duration: 300,
-            useNativeDriver: true,
-          }).start(() => {
-            setIsAnimating(false);
-          });
-        }, 50);
-      });
-    }, 12000);
-
-    return () => clearInterval(factInterval);
-  }, [isAnimating, factFadeAnim]);
-
-  useEffect(() => {
-    fetchFeaturedItems();
-    fetchUserData();
-  }, [fetchFeaturedItems, fetchUserData]);
-
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    fadeAnim.setValue(1);
-    slideAnim.setValue(0);
-
-    Promise.all([
-      fetchFeaturedItems(),
-      fetchUserData(),
-    ]).finally(() => {
+  const animateFactTransition = useCallback((callback: () => void) => {
+    Animated.timing(factFadeAnim, {
+      toValue: 0,
+      duration: 300,
+      useNativeDriver: true,
+    }).start(() => {
+      callback();
       setTimeout(() => {
-        setRefreshing(false);
-        setCurrentFactIndex(Math.floor(Math.random() * coffeeFacts.length));
-      }, 1500);
+        Animated.timing(factFadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }).start();
+      }, 50);
     });
-  }, [fetchFeaturedItems, fetchUserData]);
+  }, [factFadeAnim]);
 
-  const getGreeting = useCallback(() => {
+  return {
+    fadeAnim,
+    slideAnim,
+    factFadeAnim,
+    pulseAnim,
+    scrollY,
+    startInitialAnimations,
+    startPulseAnimation,
+    animateFactTransition,
+  };
+};
+
+export default function HomeScreen() {
+  const router = useRouter();
+  const { apiCall, isLoading: apiLoading, error: apiError, setError } = useApiData();
+  const {
+    fadeAnim,
+    slideAnim,
+    factFadeAnim,
+    pulseAnim,
+    scrollY,
+    startInitialAnimations,
+    startPulseAnimation,
+    animateFactTransition,
+  } = useAnimations();
+
+  // State management
+  const [currentFactIndex, setCurrentFactIndex] = useState(0);
+  const [refreshing, setRefreshing] = useState(false);
+  const [currentTime, setCurrentTime] = useState(new Date());
+  const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
+  const [allProducts, setAllProducts] = useState<ApiProduct[]>([]); // Store all products once
+  const [featuredLoading, setFeaturedLoading] = useState(true);
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [userStats, setUserStats] = useState<UserStats>({ 
+    totalOrders: 0, 
+    loyaltyPoints: 0, 
+    currentStreak: 0 
+  });
+  const [userName, setUserName] = useState("Coffee Lover");
+  
+  // FIXED: Simplified recommendation state
+  const [recommendations, setRecommendations] = useState<Recommendation | null>(null);
+  const [recommendationProducts, setRecommendationProducts] = useState<FeaturedItem[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Memoized greeting calculation
+  const greeting = useMemo(() => {
     const hour = currentTime.getHours();
     if (hour < 12) return "Good Morning";
     if (hour < 17) return "Good Afternoon";
     return "Good Evening";
   }, [currentTime]);
 
+  // Memoized random quote
+  const currentQuote = useMemo(() => 
+    COFFEE_QUOTES[Math.floor(Math.random() * COFFEE_QUOTES.length)], 
+    [refreshing]
+  );
+
+  // Helper functions
+  const getIconForProduct = useCallback((name: string): IoniconName => {
+    const lowercaseName = name.toLowerCase();
+    if (lowercaseName.includes("espresso")) return "flash-outline";
+    if (lowercaseName.includes("latte")) return "heart-outline";
+    if (lowercaseName.includes("cappuccino")) return "cafe-outline";
+    if (lowercaseName.includes("americano")) return "snow-outline";
+    if (lowercaseName.includes("mocha")) return "color-palette-outline";
+    if (lowercaseName.includes("macchiato")) return "star-outline";
+    if (lowercaseName.includes("frappuccino")) return "cloudy-outline";
+    if (lowercaseName.includes("iced")) return "snow-outline";
+    if (lowercaseName.includes("tea")) return "leaf-outline";
+    return "cafe-outline";
+  }, []);
+
+  const getConfidenceColor = useCallback((confidence: string) => {
+    switch (confidence) {
+      case 'high': return '#10b981';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#ef4444';
+      default: return '#6b7280';
+    }
+  }, []);
+
+  const getWeatherIcon = useCallback((weathercode: number): IoniconName => {
+    if (weathercode === 0) return 'sunny-outline';
+    if (weathercode <= 3) return 'partly-sunny-outline';
+    if (weathercode <= 67) return 'rainy-outline';
+    if (weathercode <= 77) return 'snow-outline';
+    return 'cloudy-outline';
+  }, []);
+
+  // Calculate points from orders
+  const calculatePointsFromOrders = useCallback((orders: Order[]) => {
+    try {
+      return orders.reduce((total, order) => {
+        const pointsEarned = Math.round(order.total_price * 0.05 * 100);
+        return total + pointsEarned;
+      }, 0);
+    } catch (error) {
+      console.error('Error calculating points:', error);
+      return 0;
+    }
+  }, []);
+
+  // Calculate streak from orders
+  const calculateStreak = useCallback((orders: Order[]) => {
+    try {
+      if (orders.length === 0) return 0;
+      
+      const completedOrders = orders
+        .filter(order => order.status.toLowerCase() === 'completed')
+        .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+
+      if (completedOrders.length === 0) return 0;
+
+      let streak = 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      const orderDates = new Set(
+        completedOrders.map(order => {
+          const date = new Date(order.created_at);
+          return date.toDateString();
+        })
+      );
+
+      let currentDate = new Date(today);
+      const latestOrder = new Date(completedOrders[0].created_at);
+      latestOrder.setHours(0, 0, 0, 0);
+      
+      const daysDiff = Math.floor((today.getTime() - latestOrder.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff > 1) return 0;
+      if (daysDiff === 1) currentDate.setDate(currentDate.getDate() - 1);
+
+      while (orderDates.has(currentDate.toDateString())) {
+        streak++;
+        currentDate.setDate(currentDate.getDate() - 1);
+      }
+
+      return streak;
+    } catch (error) {
+      console.error('Error calculating streak:', error);
+      return 0;
+    }
+  }, []);
+
+  // FIXED: Optimized data fetch function with proper user filtering
+  const fetchAllData = useCallback(async () => {
+    if (dataLoaded && !refreshing) return;
+    
+    try {
+      setFeaturedLoading(true);
+      
+      const userEmail = await AsyncStorage.getItem("email");
+      const userId = await AsyncStorage.getItem("user_id");
+      
+      if (!userEmail || !userId) {
+        console.log('Missing user credentials');
+        setFeaturedLoading(false);
+        return;
+      }
+
+      console.log('Fetching data for user ID:', userId);
+
+      // FIXED: Make only 2 API calls instead of 4+
+      const accessToken = await AsyncStorage.getItem("access_token");
+      
+      // Get products (no change needed)
+      const productsResponse = await apiCall(`${API_BASE_URL}/product`);
+      
+      // FIXED: Use POST with filters to get only current user's orders
+      const ordersResponse = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          offset: 0,
+          limit: 100,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            user_id: userId  // This ensures we only get the current user's orders
+          }
+        })
+      });
+      
+      const ordersData = await ordersResponse.json();
+      
+      // Handle products the same way (no change needed)
+      if (productsResponse) {
+        const products = productsResponse;
+        console.log('Products loaded:', products.length, products.slice(0, 2)); 
+        setAllProducts(products);
+
+        // Create featured items (first 6 products)
+        const featuredProducts: FeaturedItem[] = products
+          .slice(0, 6)
+          .map((item: ApiProduct) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            description: item.description,
+            stock_quantity: item.stock_quantity,
+            icon: getIconForProduct(item.name),
+            popular: false,
+            rating: "",
+          }));
+
+        setFeaturedItems(featuredProducts);
+      }
+
+      // FIXED: Handle user-specific orders
+      if (ordersResponse.ok) {
+        // Get only this user's orders
+        const orders = ordersData.orders || [];
+        console.log('User-specific orders loaded:', orders.length);
+        
+        const currentStreak = calculateStreak(orders);
+        const calculatedPoints = calculatePointsFromOrders(orders);
+
+        setUserStats({
+          totalOrders: orders.length,
+          loyaltyPoints: calculatedPoints,
+          currentStreak: currentStreak,
+        });
+      } else {
+        console.error('Failed to fetch orders:', ordersData.error || "Unknown error");
+      }
+
+      setDataLoaded(true);
+    } catch (error) {
+      console.error('Error fetching data:', error);
+    } finally {
+      setFeaturedLoading(false);
+    }
+  }, [apiCall, calculateStreak, calculatePointsFromOrders, getIconForProduct, dataLoaded, refreshing]);
+
+  // FIXED: Recommendations fetch - now correctly matches product IDs
+  const fetchRecommendations = useCallback(async () => {
+    if (!dataLoaded || recommendationsLoading || recommendations) return;
+    
+    try {
+      setRecommendationsLoading(true);
+      
+      console.log('Fetching recommendations...');
+      
+      const data = await apiCall(
+        `${API_BASE_URL}/user/recommendation?lat=${PRETORIA_COORDINATES.latitude}&lon=${PRETORIA_COORDINATES.longitude}`
+      );
+      
+      console.log('Recommendations response:', data);
+      
+      if (data.success && data.recommendations) {
+        setRecommendations(data.recommendations);
+        
+        // FIXED: Match products by ID (not name) since API returns product IDs
+        if (data.recommendations.suggestions && allProducts.length > 0) {
+          const suggestedProductIds = data.recommendations.suggestions;
+          console.log('Suggested product IDs:', suggestedProductIds);
+          console.log('Available products count:', allProducts.length);
+          console.log('Sample product IDs:', allProducts.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
+          
+          // Filter products by matching IDs
+          const matchedProducts = allProducts.filter((product: ApiProduct) => {
+            const isMatch = suggestedProductIds.includes(product.id);
+            if (isMatch) {
+              console.log(`✅ Matched product: ${product.name} (${product.id})`);
+            }
+            return isMatch;
+          });
+
+          console.log('Total matched products:', matchedProducts.length);
+          
+          if (matchedProducts.length === 0) {
+            console.log('❌ No products matched! Checking for ID format issues...');
+            console.log('Expected IDs:', suggestedProductIds);
+            console.log('Available IDs:', allProducts.slice(0, 5).map(p => p.id));
+          }
+
+          // Sort by recommendation scores if available
+          const sortedProducts = matchedProducts.sort((a, b) => {
+            const scoreA = data.recommendations.scores?.[a.id] || 0;
+            const scoreB = data.recommendations.scores?.[b.id] || 0;
+            return scoreB - scoreA; // Higher scores first
+          });
+
+          const recommendationItems: FeaturedItem[] = sortedProducts
+            .slice(0, 4) // Show up to 4 recommendations
+            .map((item: ApiProduct) => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              description: item.description,
+              stock_quantity: item.stock_quantity,
+              icon: getIconForProduct(item.name),
+              popular: false,
+              rating: "",
+              score: data.recommendations.scores?.[item.id] || 0, // Add confidence score
+            }));
+
+          console.log('Final recommendation items:', recommendationItems.length, recommendationItems.map(i => i.name));
+          setRecommendationProducts(recommendationItems);
+        } else {
+          console.log('❌ Missing suggestions or products not loaded yet');
+          console.log('Suggestions:', data.recommendations.suggestions);
+          console.log('Products loaded:', allProducts.length);
+        }
+      } else {
+        console.log('❌ Invalid recommendations response:', data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch recommendations:", error);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, [apiCall, dataLoaded, recommendationsLoading, recommendations, allProducts, getIconForProduct]);
+
+  // FIXED: Optimized refresh handler
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    setError(null);
+    setDataLoaded(false);
+    setRecommendations(null);
+    setRecommendationProducts([]);
+    
+    // Clear cache on refresh
+    apiCache.clear();
+
+    fetchAllData().finally(() => {
+      setTimeout(() => {
+        setRefreshing(false);
+        setCurrentFactIndex(Math.floor(Math.random() * COFFEE_FACTS.length));
+      }, 1000);
+    });
+  }, [fetchAllData, setError]);
+
+  // FIXED: Simplified effects - fewer dependencies
+  useEffect(() => {
+    startInitialAnimations();
+  }, []);
+
+  useEffect(() => {
+    return startPulseAnimation();
+  }, []);
+
+  // FIXED: Single effect for initial data loading
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  // FIXED: Load recommendations only after main data is loaded
+  useEffect(() => {
+    if (dataLoaded && allProducts.length > 0) {
+      const timer = setTimeout(() => {
+        fetchRecommendations();
+      }, 2000); // Delayed to avoid overwhelming the API
+
+      return () => clearTimeout(timer);
+    }
+  }, [dataLoaded, allProducts.length]);
+
+  // Time update effect (less frequent)
+  useEffect(() => {
+    const timeInterval = setInterval(() => {
+      setCurrentTime(new Date());
+    }, 300000); // Update every 5 minutes instead of 1 minute
+
+    return () => clearInterval(timeInterval);
+  }, []);
+
+  // Coffee fact rotation effect
+  useEffect(() => {
+    const factInterval = setInterval(() => {
+      if (isAnimating) return;
+
+      setIsAnimating(true);
+      animateFactTransition(() => {
+        setCurrentFactIndex((prev) => (prev + 1) % COFFEE_FACTS.length);
+        setIsAnimating(false);
+      });
+    }, 20000); // Longer interval
+
+    return () => clearInterval(factInterval);
+  }, [isAnimating, animateFactTransition]);
+
+  // Header opacity animation
   const headerOpacity = scrollY.interpolate({
     inputRange: [0, 100],
     outputRange: [0, 1],
     extrapolate: "clamp",
   });
 
-  const NavBar = () => (
+  // Navigation bar component (memoized)
+  const NavBar = React.memo(() => (
     <>
       <Animated.View
         style={[styles.navbarBackground, { opacity: headerOpacity }]}
@@ -489,98 +651,95 @@ export default function HomeScreen() {
           </View>
           <View>
             <Text style={styles.navTitle}>DieKoffieBlik</Text>
-            <Text style={styles.navSubtitle}>{getGreeting()}, {userName}</Text>
+            <Text style={styles.navSubtitle}>{greeting}, {userName}</Text>
           </View>
         </View>
         <View style={styles.navRight}>
-          
-
           <Pressable
             style={styles.profileButton}
             android_ripple={{ color: "#78350f20" }}
             onPress={() => router.push("/profile")}
+            accessibilityLabel="Open profile"
           >
             <Ionicons name="person-circle" size={28} color="#78350f" />
           </Pressable>
         </View>
       </View>
     </>
-  );
+  ));
 
-  const HeroSection = useCallback(
-    () => (
-      <Animated.View
-        style={[
-          styles.heroSection,
-          {
-            opacity: fadeAnim,
-            transform: [{ translateY: slideAnim }],
-          },
-        ]}
+  // Hero section component (memoized)
+  const HeroSection = React.memo(() => (
+    <Animated.View
+      style={[
+        styles.heroSection,
+        {
+          opacity: fadeAnim,
+          transform: [{ translateY: slideAnim }],
+        },
+      ]}
+    >
+      <LinearGradient
+        colors={["#78350f", "#92400e", "#b45309"]}
+        style={styles.heroGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
       >
-        <LinearGradient
-          colors={["#78350f", "#92400e", "#b45309"]}
-          style={styles.heroGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 1 }}
-        >
-          <View style={styles.heroContent}>
-            <Text style={styles.heroGreeting}>{getGreeting()}</Text>
-            <Text style={styles.heroMainTitle}>Ready for some coffee?</Text>
-            <Text style={styles.heroSubtitle}>
-              {coffeeQuotes[Math.floor(Math.random() * coffeeQuotes.length)]}
-            </Text>
-            
-            
+        <View style={styles.heroContent}>
+          <Text style={styles.heroGreeting}>{greeting}</Text>
+          <Text style={styles.heroMainTitle}>Ready for some coffee?</Text>
+          <Text style={styles.heroSubtitle}>{currentQuote}</Text>
 
-            <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
-              <Pressable
-                style={styles.ctaButton}
-                onPress={() => router.push("/order")}
-                android_ripple={{ color: "#78350f30" }}
-              >
-                <Ionicons name="cafe" size={20} color="#78350f" />
-                <Text style={styles.ctaButtonText}>Order Now</Text>
-              </Pressable>
+          <Animated.View style={{ transform: [{ scale: pulseAnim }] }}>
+            <Pressable
+              style={styles.ctaButton}
+              onPress={() => router.push("/order")}
+              android_ripple={{ color: "#78350f30" }}
+              accessibilityLabel="Order coffee now"
+            >
+              <Ionicons name="cafe" size={20} color="#78350f" />
+              <Text style={styles.ctaButtonText}>Order Now</Text>
+            </Pressable>
+          </Animated.View>
+        </View>
+        
+        <View style={styles.heroImageContainer}>
+          <View style={styles.coffeeCupContainer}>
+            <Animated.View
+              style={[
+                styles.coffeeCupPlaceholder,
+                {
+                  transform: [
+                    {
+                      rotate: slideAnim.interpolate({
+                        inputRange: [0, 50],
+                        outputRange: ["0deg", "5deg"],
+                      }),
+                    },
+                  ],
+                },
+              ]}
+            >
+              <Ionicons name="cafe" size={60} color="#78350f" />
             </Animated.View>
           </View>
-          
-          <View style={styles.heroImageContainer}>
-            <View style={styles.coffeeCupContainer}>
-              <Animated.View
-                style={[
-                  styles.coffeeCupPlaceholder,
-                  {
-                    transform: [
-                      {
-                        rotate: slideAnim.interpolate({
-                          inputRange: [0, 50],
-                          outputRange: ["0deg", "5deg"],
-                        }),
-                      },
-                    ],
-                  },
-                ]}
-              >
-                <Ionicons name="cafe" size={60} color="#78350f" />
-              </Animated.View>
-              
-             
-            </View>
-          </View>
-        </LinearGradient>
-      </Animated.View>
-    ),
-    [fadeAnim, slideAnim, getGreeting, userStats, pulseAnim],
-  );
+        </View>
+      </LinearGradient>
+    </Animated.View>
+  ));
 
-  const StatsSection = () => (
+  // Stats section component (memoized)
+  const StatsSection = React.memo(() => (
     <View style={styles.statsSection}>
-      <View style={styles.statCard}>
+      <Pressable 
+        style={styles.statCard}
+        onPress={() => router.push("/history")}
+        android_ripple={{ color: "#78350f10" }}
+      >
         <Ionicons name="receipt" size={24} color="#78350f" />
         <Text style={styles.statNumber}>{userStats.totalOrders}</Text>
         <Text style={styles.statLabel}>Orders</Text>
-      </View>
+      </Pressable>
       
       <View style={styles.statCard}>
         <Ionicons name="flame" size={24} color="#f59e0b" />
@@ -594,9 +753,10 @@ export default function HomeScreen() {
         <Text style={styles.statLabel}>Points</Text>
       </View>
     </View>
-  );
+  ));
 
-  const QuickActions = () => {
+  // Quick actions component
+  const QuickActions = React.memo(() => {
     const quickActions = [
       {
         title: "Order Coffee",
@@ -634,12 +794,12 @@ export default function HomeScreen() {
               style={[
                 styles.quickActionCard,
                 action.primary && styles.primaryAction,
-                index === 2 && styles.fullWidthAction, // Make history full width
               ]}
               onPress={() => router.push(action.route)}
               android_ripple={{
                 color: action.primary ? "#ffffff30" : "#78350f20",
               }}
+              accessibilityLabel={`${action.title}: ${action.description}`}
             >
               <LinearGradient
                 colors={action.primary ? ["#78350f", "#92400e"] : ["#fff", "#f9fafb"]}
@@ -679,9 +839,10 @@ export default function HomeScreen() {
         </View>
       </View>
     );
-  };
+  });
 
-  const FeaturedItems = () => (
+  // Featured items component
+  const FeaturedItems = React.memo(() => (
     <View style={styles.featuredSection}>
       <View style={styles.sectionHeader}>
         <Text style={styles.sectionTitle}>Featured Items</Text>
@@ -700,8 +861,9 @@ export default function HomeScreen() {
           showsHorizontalScrollIndicator={false}
           style={styles.featuredScroll}
           contentContainerStyle={styles.featuredScrollContent}
+          removeClippedSubviews={true}
         >
-          {featuredItems.map((item, index) => (
+          {featuredItems.map((item) => (
             <Animated.View
               key={item.id}
               style={[
@@ -721,6 +883,8 @@ export default function HomeScreen() {
               <Pressable
                 style={styles.featuredCardContent}
                 android_ripple={{ color: "#78350f20" }}
+                onPress={() => router.push("/order")}
+                accessibilityLabel={`${item.name} - R${item.price.toFixed(2)}`}
               >
                 <View style={styles.featuredIconContainer}>
                   <Ionicons
@@ -730,53 +894,152 @@ export default function HomeScreen() {
                   />
                 </View>
 
-                {item.popular && (
-                  <View style={styles.popularBadge}>
-                    <Text style={styles.popularText}>Popular</Text>
-                  </View>
-                )}
-
-                <Text style={styles.featuredItemName}>{item.name}</Text>
-
+                <Text style={styles.featuredItemName} numberOfLines={2}>
+                  {item.name}
+                </Text>
                 <Text style={styles.featuredItemPrice}>R{item.price.toFixed(2)}</Text>
-
-                <Pressable
-                  style={styles.addToCartBtn}
-                  android_ripple={{ color: "#ffffff30" }}
-                >
-                  <Ionicons name="add" size={16} color="#fff" />
-                </Pressable>
               </Pressable>
             </Animated.View>
           ))}
         </ScrollView>
       )}
     </View>
-  );
+  ));
 
-  const CoffeeFactCard = useCallback(
-    () => (
-      <View style={styles.factCard}>
-        <LinearGradient
-          colors={["#fef3c7", "#fbbf24"]}
-          style={styles.factGradient}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-        >
-          <View style={styles.factHeader}>
-            <View style={styles.factIconContainer}>
-              <Ionicons name="bulb" size={20} color="#92400e" />
-            </View>
-            <Text style={styles.factTitle}>Coffee Fact</Text>
+  // FIXED: Enhanced recommendations section with better info display
+  const RecommendationsSection = React.memo(() => {
+    if (!recommendations && !recommendationsLoading) return null;
+
+    return (
+      <View style={styles.recommendationsSection}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.recommendationHeaderLeft}>
+            <Ionicons name="sparkles" size={20} color="#78350f" />
+            <Text style={styles.sectionTitle}>Recommended for You</Text>
           </View>
-          <Animated.Text style={[styles.factText, { opacity: factFadeAnim }]}>
-            {coffeeFacts[currentFactIndex]}
-          </Animated.Text>
-        </LinearGradient>
+          {recommendations && (
+            <View style={[
+              styles.confidenceBadge,
+              { backgroundColor: getConfidenceColor(recommendations.confidence) }
+            ]}>
+              <Text style={styles.confidenceText}>{recommendations.confidence}</Text>
+            </View>
+          )}
+        </View>
+
+        {recommendationsLoading ? (
+          <View style={styles.loadingContainer}>
+            <CoffeeLoading visible={recommendationsLoading} />
+            <Text style={styles.loadingText}>Getting personalized recommendations...</Text>
+          </View>
+        ) : recommendations ? (
+          <>
+            {/* Recommendation Info */}
+            <View style={styles.recommendationInfo}>
+              <Text style={styles.reasoningText}>{recommendations.reasoning}</Text>
+              {recommendations.weather && (
+                <View style={styles.weatherInfo}>
+                  <Ionicons 
+                    name={getWeatherIcon(recommendations.weather.weathercode)} 
+                    size={16} 
+                    color="#6b7280" 
+                  />
+                  <Text style={styles.weatherText}>
+                    {recommendations.weather.temperature}°C • {recommendations.time_period} • {recommendations.weekday}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Recommended Products */}
+            {recommendationProducts.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.recommendationScroll}
+                contentContainerStyle={styles.recommendationScrollContent}
+                removeClippedSubviews={true}
+              >
+                {recommendationProducts.map((item, index) => (
+                  <View key={item.id} style={styles.recommendationCard}>
+                    <Pressable
+                      style={styles.recommendationCardContent}
+                      android_ripple={{ color: "#78350f20" }}
+                      onPress={() => router.push("/order")}
+                      accessibilityLabel={`Recommended: ${item.name} - R${item.price.toFixed(2)}`}
+                    >
+                      <View style={styles.recommendationIconContainer}>
+                        <Ionicons
+                          name={item.icon as IoniconName}
+                          size={28}
+                          color="#78350f"
+                        />
+                      </View>
+
+                      <View style={styles.sparkleIndicator}>
+                        <Ionicons name="sparkles" size={12} color="#f59e0b" />
+                      </View>
+
+                      {/* Score indicator */}
+                      {item.score && (
+                        <View style={styles.scoreIndicator}>
+                          <Text style={styles.scoreText}>{Math.round(item.score * 100)}%</Text>
+                        </View>
+                      )}
+
+                      <Text style={styles.recommendationItemName} numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.recommendationItemPrice}>
+                        R{item.price.toFixed(2)}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.noRecommendationsContainer}>
+                <Ionicons name="cafe-outline" size={32} color="#9ca3af" />
+                <Text style={styles.noRecommendationsText}>
+                  No matching products found for your preferences
+                </Text>
+                <Pressable
+                  style={styles.browseMenuBtn}
+                  onPress={() => router.push("/order")}
+                  android_ripple={{ color: "#78350f20" }}
+                  accessibilityLabel="Browse full menu"
+                >
+                  <Text style={styles.browseMenuText}>Browse Full Menu</Text>
+                </Pressable>
+              </View>
+            )}
+          </>
+        ) : null}
       </View>
-    ),
-    [currentFactIndex, factFadeAnim],
-  );
+    );
+  });
+
+  // Coffee fact card (memoized)
+  const CoffeeFactCard = React.memo(() => (
+    <View style={styles.factCard}>
+      <LinearGradient
+        colors={["#fef3c7", "#fbbf24"]}
+        style={styles.factGradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 0 }}
+      >
+        <View style={styles.factHeader}>
+          <View style={styles.factIconContainer}>
+            <Ionicons name="bulb" size={20} color="#92400e" />
+          </View>
+          <Text style={styles.factTitle}>Coffee Fact</Text>
+        </View>
+        <Animated.Text style={[styles.factText, { opacity: factFadeAnim }]}>
+          {COFFEE_FACTS[currentFactIndex]}
+        </Animated.Text>
+      </LinearGradient>
+    </View>
+  ));
 
   return (
     <SafeAreaView style={styles.container}>
@@ -793,17 +1056,24 @@ export default function HomeScreen() {
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
-            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+            <RefreshControl 
+              refreshing={refreshing} 
+              onRefresh={onRefresh}
+              colors={['#78350f']}
+              tintColor="#78350f"
+            />
           }
           onScroll={Animated.event(
             [{ nativeEvent: { contentOffset: { y: scrollY } } }],
             { useNativeDriver: false },
           )}
           scrollEventThrottle={16}
+          removeClippedSubviews={true}
         >
           <HeroSection />
           <StatsSection />
           <QuickActions />
+          <RecommendationsSection />
           <FeaturedItems />
           <CoffeeFactCard />
 
@@ -879,16 +1149,6 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
   },
-  navButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    alignItems: "center",
-    justifyContent: "center",
-    marginLeft: 8,
-    backgroundColor: "#fff",
-    elevation: 2,
-  },
   profileButton: {
     width: 44,
     height: 44,
@@ -942,22 +1202,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     lineHeight: 20,
   },
-  streakBadge: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#fff",
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 16,
-    alignSelf: "flex-start",
-    marginBottom: 16,
-  },
-  streakText: {
-    color: "#78350f",
-    fontSize: 12,
-    fontWeight: "600",
-    marginLeft: 4,
-  },
   ctaButton: {
     backgroundColor: "#fff",
     flexDirection: "row",
@@ -997,24 +1241,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 8,
-  },
-  loyaltyBadge: {
-    position: "absolute",
-    top: -8,
-    right: -8,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    flexDirection: "row",
-    alignItems: "center",
-    elevation: 3,
-  },
-  loyaltyPoints: {
-    color: "#78350f",
-    fontSize: 10,
-    fontWeight: "600",
-    marginLeft: 2,
   },
 
   // Stats Section
@@ -1060,6 +1286,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#78350f",
     marginBottom: 16,
+    marginLeft: 4,
   },
   sectionHeader: {
     flexDirection: "row",
@@ -1087,9 +1314,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowOffset: { width: 0, height: 3 },
     shadowRadius: 6,
-  },
-  fullWidthAction: {
-    width: "100%",
   },
   primaryAction: {
     elevation: 6,
@@ -1133,6 +1357,153 @@ const styles = StyleSheet.create({
     color: "#fed7aa",
   },
 
+  // Recommendations Section
+  recommendationsSection: {
+    paddingHorizontal: 20,
+    marginTop: 32,
+  },
+  recommendationHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  confidenceBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  confidenceText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  recommendationInfo: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  reasoningText: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  weatherInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  weatherText: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginLeft: 4,
+  },
+  recommendationScroll: {
+    overflow: "visible",
+  },
+  recommendationScrollContent: {
+    paddingRight: 0,
+  },
+  recommendationCard: {
+    marginRight: 12,
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+  },
+  recommendationCardContent: {
+    backgroundColor: "#fff",
+    width: 150,
+    padding: 14,
+    paddingBottom: 20,
+    alignItems: "center",
+    position: "relative",
+  },
+  recommendationIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#fff7ed",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    marginTop: 6,
+    elevation: 2,
+  },
+  sparkleIndicator: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fef3c7",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scoreIndicator: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "#10b981",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  scoreText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  recommendationItemName: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#78350f",
+    textAlign: "center",
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  recommendationItemPrice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#78350f",
+    marginBottom: 10,
+  },
+  noRecommendationsContainer: {
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    elevation: 2,
+  },
+  noRecommendationsText: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  browseMenuBtn: {
+    backgroundColor: "#78350f",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  browseMenuText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
   // Featured Items
   featuredSection: {
     paddingLeft: 20,
@@ -1173,20 +1544,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
     elevation: 2,
   },
-  popularBadge: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "#ef4444",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  popularText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
-  },
   featuredItemName: {
     fontSize: 14,
     fontWeight: "600",
@@ -1200,15 +1557,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#78350f",
     marginBottom: 12,
-  },
-  addToCartBtn: {
-    backgroundColor: "#78350f",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
   },
 
   // Coffee Fact Card
@@ -1255,9 +1603,15 @@ const styles = StyleSheet.create({
 
   // Loading
   loadingContainer: {
-    height: 150,
+    height: 100,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#78350f",
+    marginTop: 8,
+    fontWeight: "500",
   },
 
   // Footer

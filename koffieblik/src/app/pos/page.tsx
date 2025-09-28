@@ -574,7 +574,7 @@ export default function POSPage() {
                     <button
                       onClick={completeOrder}
                       className="w-full py-4 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      style={{ backgroundColor: "var(--primary-2)" }}
+                      style={{ backgroundColor: "var(--primary-1)" }}
                     >
                       Complete Order
                     </button>
