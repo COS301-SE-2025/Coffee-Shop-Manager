@@ -343,7 +343,40 @@ def main_cli():
         # fallback to hardcoded data
         InputData = {
             "data": [
-                # ...existing sample data...
+                {
+                    "id": 101,
+                    "user_id": "user-123", 
+                    "status": "done",
+                    "total_price": 75.00,
+                    "created_at": "2025-09-15T08:15:00",
+                    "updated_at": "2025-09-15T08:20:00",
+                    "order_products": [
+                        {"product_id": "cappuccino", "quantity": 2, "price": 50.00},
+                        {"product_id": "cafe_latte", "quantity": 1, "price": 25.00}
+                    ]
+                },
+                {
+                    "id": 102,
+                    "user_id": "user-123",
+                    "status": "done", 
+                    "total_price": 30.00,
+                    "created_at": "2025-09-16T14:10:00",
+                    "updated_at": "2025-09-16T14:12:00",
+                    "order_products": [
+                        {"product_id": "cappuccino", "quantity": 1, "price": 30.00}
+                    ]
+                },
+                {
+                    "id": 103,
+                    "user_id": "user-123",
+                    "status": "done",
+                    "total_price": 45.00, 
+                    "created_at": "2025-09-17T19:30:00",
+                    "updated_at": "2025-09-17T19:35:00",
+                    "order_products": [
+                        {"product_id": "espresso", "quantity": 3, "price": 45.00}
+                    ]
+                }
             ]
         }
 
