@@ -5,15 +5,15 @@ on:
     branches: [main]
     paths:
       - 'koffieblik/**'
+      - 'API/**'
       - '.github/workflows/koffieblik_ci.yml'
+  pull_request:
+    branches: [main]
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
     timeout-minutes: 25
-    defaults:
-      run:
-        working-directory: ./koffieblik
 
     steps:
       - name: Checkout code
@@ -23,11 +23,16 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: '**/package-lock.json'
 
-      - name: Install dependencies
-        run: |
-          cd ./API && npm ci --legacy-peer-deps
-          cd ../koffieblik && npm ci --legacy-peer-deps
+      - name: Install API dependencies
+        working-directory: ./API
+        run: npm ci --legacy-peer-deps
+
+      - name: Install Koffieblik dependencies
+        working-directory: ./koffieblik
+        run: npm ci --legacy-peer-deps
 
       - name: Copy PROD .env from secret
         run: echo "${{ secrets.ENV_PROD }}" > .env.prod
@@ -45,14 +50,35 @@ jobs:
           done
 
       - name: Install Newman
-        run: npm install -g newman
+        run: npm install -g newman newman-reporter-htmlextra
 
-      - name: Run API Tests with Newman
+      - name: Run API Tests against Local Server
         run: |
-          newman run API/tests/Testing.postman_collection.json --global-var "URL=http://localhost:5000/" --verbose
+          mkdir -p test-results
+          newman run API/tests/Testing.postman_collection.json \
+            --env-var "URL=http://localhost:5000/" \
+            --reporters cli,htmlextra \
+            --reporter-htmlextra-export test-results/api-local-tests.html
+
+      - name: Run API Tests against Production Server
+        run: |
+          mkdir -p test-results
+          newman run API/tests/Testing.postman_collection.json \
+            --env-var "URL=https://api.diekoffieblik.co.za" \
+            --reporters cli,htmlextra \
+            --reporter-htmlextra-export test-results/api-prod-tests.html \
+            --suppress-exit-code  # Don't fail the workflow if prod tests fail
 
       - name: Run Playwright Tests via Makefile
+        working-directory: ./koffieblik
         run: make test
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-results
+          path: test-results
 
       - name: Stop Docker Compose
         if: always()

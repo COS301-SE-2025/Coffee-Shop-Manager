@@ -162,25 +162,17 @@ export default function HelpPage() {
         </p>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button
-            className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 transform cursor-pointer"
+          <a
+            href="mailto:cos301capstonegroup9@gmail.com"
+            className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 transform cursor-pointer inline-block text-center"
             style={{
               backgroundColor: "var(--primary-2)",
               color: "var(--primary-3)",
+              textDecoration: "none"
             }}
           >
             Email Support
-          </button>
-
-          <button
-            className="px-8 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 transform cursor-pointer"
-            style={{
-              border: "1px solid var(--primary-2)",
-              color: "var(--primary-2)",
-            }}
-          >
-            Call Support
-          </button>
+          </a>
         </div>
       </div>
     </div>
