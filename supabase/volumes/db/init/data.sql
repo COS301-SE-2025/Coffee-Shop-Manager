@@ -676,3 +676,12 @@ $$ language plpgsql stable;
 
 ALTER TABLE orders 
 ADD COLUMN order_number BIGSERIAL UNIQUE;
+
+
+-- Step 1: create the enum type
+CREATE TYPE paid_status_enum AS ENUM ('unpaid', 'paid', 'refunded');
+
+-- Step 2: add the column to the orders table
+ALTER TABLE orders
+ADD COLUMN paid_status paid_status_enum DEFAULT 'unpaid' NOT NULL;
+
