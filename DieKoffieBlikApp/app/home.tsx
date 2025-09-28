@@ -412,20 +412,40 @@ export default function HomeScreen() {
         return;
       }
 
-      // Fetch orders and profile in parallel
-      const [ordersData, profileData] = await Promise.allSettled([
-        apiCall(`${API_BASE_URL}/order`),
-        apiCall(`${API_BASE_URL}/user/${userId}`)
-      ]);
+      // Use the same endpoint and filtering approach as history.tsx
+      const accessToken = await AsyncStorage.getItem("access_token");
+      
+      // Fetch user's orders with proper filtering
+      const ordersResponse = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify({
+          offset: 0,
+          limit: 100,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            user_id: userId
+          }
+        })
+      });
+
+      const ordersData = await ordersResponse.json();
+      
+      // Fetch user profile
+      const profileResponse = await apiCall(`${API_BASE_URL}/user/${userId}`);
 
       let fetchedOrders: Order[] = [];
-      if (ordersData.status === 'fulfilled' && ordersData.value.orders) {
-        fetchedOrders = ordersData.value.orders;
+      if (ordersResponse.ok && ordersData.orders) {
+        fetchedOrders = ordersData.orders;
+        console.log(`Fetched ${fetchedOrders.length} orders for user ${userId}`);
       }
 
-      if (profileData.status === 'fulfilled' && profileData.value.success && profileData.value.profile) {
-        const profile = profileData.value.profile;
-        setUserName(profile.display_name || "Coffee Lover");
+      if (profileResponse.success && profileResponse.profile) {
+        setUserName(profileResponse.profile.display_name || "Coffee Lover");
       }
 
       // Calculate stats from fetched orders
@@ -443,8 +463,14 @@ export default function HomeScreen() {
       });
     } catch (error) {
       handleError(error as Error, 'fetchUserData');
+      // Set default values in case of error
+      setUserStats({
+        totalOrders: 0,
+        loyaltyPoints: 0,
+        currentStreak: 0
+      });
     }
-  }, [apiCall, calculateStreak, calculatePointsFromOrders, handleError]);
+  }, [calculateStreak, calculatePointsFromOrders, handleError]);
 
   // Fetch featured items (improved)
   const fetchFeaturedItems = useCallback(async () => {
@@ -783,11 +809,11 @@ export default function HomeScreen() {
                 </Text>
               </LinearGradient>
             </Pressable>
-          ))}
+            ))}
+          </View>
         </View>
-      </View>
-    );
-  });
+      );
+    });
 
   // Featured items component (improved with better performance)
   const FeaturedItems = React.memo(() => (
