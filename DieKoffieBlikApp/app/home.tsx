@@ -202,13 +202,14 @@ const useAnimations = () => {
       useNativeDriver: true,
     }).start(() => {
       callback();
-      setTimeout(() => {
+      // Use requestAnimationFrame instead of setTimeout
+      requestAnimationFrame(() => {
         Animated.timing(factFadeAnim, {
           toValue: 1,
           duration: 300,
           useNativeDriver: true,
         }).start();
-      }, 50);
+      });
     });
   }, [factFadeAnim]);
 
@@ -544,17 +545,17 @@ export default function HomeScreen() {
   // Coffee fact rotation effect (improved)
   useEffect(() => {
     const factInterval = setInterval(() => {
-      if (isAnimating) return;
-
-      setIsAnimating(true);
-      animateFactTransition(() => {
-        setCurrentFactIndex((prev) => (prev + 1) % COFFEE_FACTS.length);
-        setIsAnimating(false);
-      });
+      if (!isAnimating) {
+        setIsAnimating(true);
+        animateFactTransition(() => {
+          setCurrentFactIndex((prev) => (prev + 1) % COFFEE_FACTS.length);
+          setIsAnimating(false);
+        });
+      }
     }, 15000); // Longer interval for better UX
 
     return () => clearInterval(factInterval);
-  }, [isAnimating, animateFactTransition]);
+  }, [animateFactTransition]);
 
   // Initial data loading
   useEffect(() => {
