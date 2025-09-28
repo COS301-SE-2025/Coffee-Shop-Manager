@@ -46,6 +46,19 @@ interface UserStats {
   totalOrders: number;
   loyaltyPoints: number;
   currentStreak: number;
+  totalSpent: number;
+}
+
+interface UserProfile {
+  user_id: string;
+  favourite_product_id: string | null;
+  total_orders: number;
+  total_spent: number;
+  date_of_birth: string;
+  phone_number: string;
+  loyalty_points: number;
+  role: string;
+  display_name: string;
 }
 
 interface Order {
@@ -272,17 +285,19 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
-  const [allProducts, setAllProducts] = useState<ApiProduct[]>([]); // Store all products once
+  const [allProducts, setAllProducts] = useState<ApiProduct[]>([]);
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>({ 
     totalOrders: 0, 
     loyaltyPoints: 0, 
-    currentStreak: 0 
+    currentStreak: 0,
+    totalSpent: 0
   });
   const [userName, setUserName] = useState("Coffee Lover");
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   
-  // FIXED: Simplified recommendation state
+  // Recommendation state
   const [recommendations, setRecommendations] = useState<Recommendation | null>(null);
   const [recommendationProducts, setRecommendationProducts] = useState<FeaturedItem[]>([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
@@ -334,17 +349,47 @@ export default function HomeScreen() {
     return 'cloudy-outline';
   }, []);
 
-  // Calculate points from orders
-  const calculatePointsFromOrders = useCallback((orders: Order[]) => {
-    try {
-      return orders.reduce((total, order) => {
-        const pointsEarned = Math.round(order.total_price * 0.05 * 100);
-        return total + pointsEarned;
-      }, 0);
-    } catch (error) {
-      console.error('Error calculating points:', error);
-      return 0;
+  // Helper function to convert recommendation score into meaningful text
+  const getRecommendationReason = useCallback((score: number, recommendations: Recommendation | null) => {
+    // High confidence recommendations (score > 0.8)
+    if (score > 0.8) {
+      return "Perfect for you";
     }
+    
+    // Good recommendations (score > 0.6)
+    if (score > 0.6) {
+      // Use weather context if available
+      if (recommendations?.weather) {
+        const temp = recommendations.weather.temperature;
+        if (temp < 15) {
+          return "Great for cold weather";
+        } else if (temp > 25) {
+          return "Perfect for hot days";
+        }
+      }
+      
+      // Use time context
+      if (recommendations?.time_period) {
+        const timePeriod = recommendations.time_period.toLowerCase();
+        if (timePeriod.includes("morning")) {
+          return "Morning favorite";
+        } else if (timePeriod.includes("afternoon")) {
+          return "Afternoon pick-me-up";
+        } else if (timePeriod.includes("evening")) {
+          return "Evening treat";
+        }
+      }
+      
+      return "Highly recommended";
+    }
+    
+    // Moderate recommendations (score > 0.4)
+    if (score > 0.4) {
+      return "Worth trying";
+    }
+    
+    // Lower confidence
+    return "Suggested for you";
   }, []);
 
   // Calculate streak from orders
@@ -390,7 +435,44 @@ export default function HomeScreen() {
     }
   }, []);
 
-  // FIXED: Optimized data fetch function with proper user filtering
+  // FIXED: Fetch user profile data from the correct API endpoint
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const userId = await AsyncStorage.getItem("user_id");
+      if (!userId) {
+        console.log('No user ID found');
+        return null;
+      }
+
+      console.log('Fetching user profile for ID:', userId);
+      
+      const profileData = await apiCall(`${API_BASE_URL}/user/${userId}`);
+      
+      if (profileData.success && profileData.profile) {
+        console.log('User profile loaded:', profileData.profile);
+        setUserProfile(profileData.profile);
+        setUserName(profileData.profile.display_name || "Coffee Lover");
+        
+        // Set correct user stats from profile
+        setUserStats({
+          totalOrders: profileData.profile.total_orders,
+          loyaltyPoints: profileData.profile.loyalty_points,
+          currentStreak: 0, // Will be calculated from orders
+          totalSpent: profileData.profile.total_spent
+        });
+        
+        return profileData.profile;
+      } else {
+        console.error('Failed to fetch user profile:', profileData);
+        return null;
+      }
+    } catch (error) {
+      console.error('Error fetching user profile:', error);
+      return null;
+    }
+  }, [apiCall]);
+
+  // FIXED: Updated data fetch function to use user profile API and correct orders endpoint
   const fetchAllData = useCallback(async () => {
     if (dataLoaded && !refreshing) return;
     
@@ -408,33 +490,16 @@ export default function HomeScreen() {
 
       console.log('Fetching data for user ID:', userId);
 
-      // FIXED: Make only 2 API calls instead of 4+
-      const accessToken = await AsyncStorage.getItem("access_token");
+      // Fetch user profile first to get correct stats
+      const profile = await fetchUserProfile();
       
-      // Get products (no change needed)
+      // Get products
       const productsResponse = await apiCall(`${API_BASE_URL}/product`);
       
-      // FIXED: Use POST with filters to get only current user's orders
-      const ordersResponse = await fetch(`${API_BASE_URL}/get_orders`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({
-          offset: 0,
-          limit: 100,
-          orderBy: "created_at",
-          orderDirection: "desc",
-          filters: {
-            user_id: userId  // This ensures we only get the current user's orders
-          }
-        })
-      });
+      // FIXED: Use the correct GET /order endpoint
+      const ordersData = await apiCall(`${API_BASE_URL}/order`);
       
-      const ordersData = await ordersResponse.json();
-      
-      // Handle products the same way (no change needed)
+      // Handle products
       if (productsResponse) {
         const products = productsResponse;
         console.log('Products loaded:', products.length, products.slice(0, 2)); 
@@ -457,22 +522,22 @@ export default function HomeScreen() {
         setFeaturedItems(featuredProducts);
       }
 
-      // FIXED: Handle user-specific orders
-      if (ordersResponse.ok) {
-        // Get only this user's orders
-        const orders = ordersData.orders || [];
-        console.log('User-specific orders loaded:', orders.length);
+      // FIXED: Handle orders from the correct endpoint and calculate streak
+      if (ordersData && ordersData.orders) {
+        const orders = ordersData.orders;
+        console.log('User orders loaded:', orders.length);
+        console.log('Total orders from API:', ordersData.count);
         
         const currentStreak = calculateStreak(orders);
-        const calculatedPoints = calculatePointsFromOrders(orders);
 
-        setUserStats({
-          totalOrders: orders.length,
-          loyaltyPoints: calculatedPoints,
+        // Update stats with actual order count from API and calculated streak
+        setUserStats(prevStats => ({
+          ...prevStats,
+          totalOrders: ordersData.count, // Use the count from API response
           currentStreak: currentStreak,
-        });
+        }));
       } else {
-        console.error('Failed to fetch orders:', ordersData.error || "Unknown error");
+        console.error('Failed to fetch orders or no orders data');
       }
 
       setDataLoaded(true);
@@ -481,9 +546,9 @@ export default function HomeScreen() {
     } finally {
       setFeaturedLoading(false);
     }
-  }, [apiCall, calculateStreak, calculatePointsFromOrders, getIconForProduct, dataLoaded, refreshing]);
+  }, [apiCall, calculateStreak, getIconForProduct, dataLoaded, refreshing, fetchUserProfile]);
 
-  // FIXED: Recommendations fetch - now correctly matches product IDs
+  // Recommendations fetch
   const fetchRecommendations = useCallback(async () => {
     if (!dataLoaded || recommendationsLoading || recommendations) return;
     
@@ -501,14 +566,10 @@ export default function HomeScreen() {
       if (data.success && data.recommendations) {
         setRecommendations(data.recommendations);
         
-        // FIXED: Match products by ID (not name) since API returns product IDs
         if (data.recommendations.suggestions && allProducts.length > 0) {
           const suggestedProductIds = data.recommendations.suggestions;
           console.log('Suggested product IDs:', suggestedProductIds);
-          console.log('Available products count:', allProducts.length);
-          console.log('Sample product IDs:', allProducts.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
           
-          // Filter products by matching IDs
           const matchedProducts = allProducts.filter((product: ApiProduct) => {
             const isMatch = suggestedProductIds.includes(product.id);
             if (isMatch) {
@@ -518,22 +579,15 @@ export default function HomeScreen() {
           });
 
           console.log('Total matched products:', matchedProducts.length);
-          
-          if (matchedProducts.length === 0) {
-            console.log('❌ No products matched! Checking for ID format issues...');
-            console.log('Expected IDs:', suggestedProductIds);
-            console.log('Available IDs:', allProducts.slice(0, 5).map(p => p.id));
-          }
 
-          // Sort by recommendation scores if available
           const sortedProducts = matchedProducts.sort((a, b) => {
             const scoreA = data.recommendations.scores?.[a.id] || 0;
             const scoreB = data.recommendations.scores?.[b.id] || 0;
-            return scoreB - scoreA; // Higher scores first
+            return scoreB - scoreA;
           });
 
           const recommendationItems: FeaturedItem[] = sortedProducts
-            .slice(0, 4) // Show up to 4 recommendations
+            .slice(0, 4)
             .map((item: ApiProduct) => ({
               id: item.id,
               name: item.name,
@@ -543,18 +597,12 @@ export default function HomeScreen() {
               icon: getIconForProduct(item.name),
               popular: false,
               rating: "",
-              score: data.recommendations.scores?.[item.id] || 0, // Add confidence score
+              score: data.recommendations.scores?.[item.id] || 0,
             }));
 
           console.log('Final recommendation items:', recommendationItems.length, recommendationItems.map(i => i.name));
           setRecommendationProducts(recommendationItems);
-        } else {
-          console.log('❌ Missing suggestions or products not loaded yet');
-          console.log('Suggestions:', data.recommendations.suggestions);
-          console.log('Products loaded:', allProducts.length);
         }
-      } else {
-        console.log('❌ Invalid recommendations response:', data);
       }
     } catch (error) {
       console.error("Failed to fetch recommendations:", error);
@@ -570,6 +618,7 @@ export default function HomeScreen() {
     setDataLoaded(false);
     setRecommendations(null);
     setRecommendationProducts([]);
+    setUserProfile(null);
     
     // Clear cache on refresh
     apiCache.clear();
@@ -582,7 +631,7 @@ export default function HomeScreen() {
     });
   }, [fetchAllData, setError]);
 
-  // FIXED: Simplified effects - fewer dependencies
+  // Effects
   useEffect(() => {
     startInitialAnimations();
   }, []);
@@ -591,27 +640,25 @@ export default function HomeScreen() {
     return startPulseAnimation();
   }, []);
 
-  // FIXED: Single effect for initial data loading
   useEffect(() => {
     fetchAllData();
   }, []);
 
-  // FIXED: Load recommendations only after main data is loaded
   useEffect(() => {
     if (dataLoaded && allProducts.length > 0) {
       const timer = setTimeout(() => {
         fetchRecommendations();
-      }, 2000); // Delayed to avoid overwhelming the API
+      }, 2000);
 
       return () => clearTimeout(timer);
     }
   }, [dataLoaded, allProducts.length]);
 
-  // Time update effect (less frequent)
+  // Time update effect
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 300000); // Update every 5 minutes instead of 1 minute
+    }, 300000);
 
     return () => clearInterval(timeInterval);
   }, []);
@@ -626,7 +673,7 @@ export default function HomeScreen() {
         setCurrentFactIndex((prev) => (prev + 1) % COFFEE_FACTS.length);
         setIsAnimating(false);
       });
-    }, 20000); // Longer interval
+    }, 20000);
 
     return () => clearInterval(factInterval);
   }, [isAnimating, animateFactTransition]);
@@ -728,7 +775,7 @@ export default function HomeScreen() {
     </Animated.View>
   ));
 
-  // Stats section component (memoized)
+  // FIXED: Stats section now shows correct data from user profile
   const StatsSection = React.memo(() => (
     <View style={styles.statsSection}>
       <Pressable 
@@ -906,7 +953,7 @@ export default function HomeScreen() {
     </View>
   ));
 
-  // FIXED: Enhanced recommendations section with better info display
+  // Enhanced recommendations section with better info display
   const RecommendationsSection = React.memo(() => {
     if (!recommendations && !recommendationsLoading) return null;
 
@@ -980,10 +1027,12 @@ export default function HomeScreen() {
                         <Ionicons name="sparkles" size={12} color="#f59e0b" />
                       </View>
 
-                      {/* Score indicator */}
+                      {/* Recommendation reason indicator */}
                       {item.score && (
-                        <View style={styles.scoreIndicator}>
-                          <Text style={styles.scoreText}>{Math.round(item.score * 100)}%</Text>
+                        <View style={styles.recommendationBadge}>
+                          <Text style={styles.recommendationText}>
+                            {getRecommendationReason(item.score, recommendations)}
+                          </Text>
                         </View>
                       )}
 
@@ -1462,6 +1511,22 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontSize: 10,
     fontWeight: "600",
+  },
+  recommendationBadge: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "#10b981",
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+    maxWidth: 120,
+  },
+  recommendationText: {
+    color: "#fff",
+    fontSize: 9,
+    fontWeight: "600",
+    textAlign: "center",
   },
   recommendationItemName: {
     fontSize: 13,
