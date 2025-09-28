@@ -174,7 +174,7 @@ export default function LoginPage() {
             Welcome back
           </p>
 
-          {/* Google Sign-in Button */}
+          {/* Google Sign-in Button
           <div className="mb-6">
             <button
               type="button"
@@ -226,7 +226,7 @@ export default function LoginPage() {
                 </span>
               </div>
             </div>
-          </div>
+          </div> */}
 
           <form
             className="space-y-5 relative"
