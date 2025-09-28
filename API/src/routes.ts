@@ -50,6 +50,7 @@ import { updateStockHandler } from "./endpoints/legacy/updateStock";
 
 // PAYMENT
 import { initiatePaymentHandler } from "../src/endpoints/payment/paymentHandler";
+import { paymentNotificationHandler } from "./endpoints/payment/paymentNotification";
 
 const router = Router();
 
@@ -113,6 +114,7 @@ router.post("/update_stock", authMiddleware, updateStockHandler);
 
 // PAYMENT
 router.post("/initiate-payment", authMiddleware, initiatePaymentHandler);
+router.post("/payment/notify", paymentNotificationHandler);
 
 // Catch for undefined routes
 router.use((req, res) => {

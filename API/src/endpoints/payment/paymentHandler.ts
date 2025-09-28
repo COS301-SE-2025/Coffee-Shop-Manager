@@ -3,7 +3,7 @@ import PaymentService from "../../payment.service";
 
 export async function initiatePaymentHandler(req: Request, res: Response): Promise<void> {
     try {
-        const { orderNumber, total, customerInfo } = req.body;
+        const { orderNumber, total, customerInfo, returnUrl, cancelUrl } = req.body;
 
         // More specific validation
         if (!orderNumber) {
@@ -40,10 +40,22 @@ export async function initiatePaymentHandler(req: Request, res: Response): Promi
             return;
         }
 
+        // Use the provided URLs if available, otherwise use default from env
+        const finalReturnUrl = returnUrl || process.env.PAYFAST_RETURN_URL;
+        const finalCancelUrl = cancelUrl || process.env.PAYFAST_CANCEL_URL;
+        const notifyUrl = process.env.PAYFAST_NOTIFY_URL;
+        
+        console.log("Return URL:", finalReturnUrl);
+        console.log("Cancel URL:", finalCancelUrl);
+        console.log("Notify URL:", notifyUrl);
+
         const paymentResult = await PaymentService.initiatePayment(
             orderNumber,
             total,
-            customerInfo
+            customerInfo,
+            finalReturnUrl,
+            finalCancelUrl,
+            notifyUrl
         );
 
         if (paymentResult.success) {
