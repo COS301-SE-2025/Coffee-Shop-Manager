@@ -29,8 +29,8 @@ getAdminTest:
 	npx playwright test tests/working/getTestAdmin.spec.ts
 
 teste2e: logintest
-# 	@$(MAKE) getAdminTest
-# 	@$(MAKE) posTest
+	@$(MAKE) getAdminTest
+	@$(MAKE) posTest
 	@$(MAKE) managerTest
 
 
