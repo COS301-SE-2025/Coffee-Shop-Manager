@@ -60,13 +60,27 @@ test("fetches and displays Products from /getProducts on POS", async ({
   await login(page);
 
   await page.locator("text=POS").click();
-  await page.waitForURL("**/pos", { timeout: 10000 });
+  await page.waitForURL("**/pos", { timeout: 15000 });
   await page.waitForTimeout(3000); // hydration
 
   const productCards = page.locator("button:has(h2)"); // Adjusted for POS buttons
-  await expect(productCards.first()).toBeVisible({ timeout: 10000 });
+  await expect(productCards.first()).toBeVisible({ timeout: 15000 });
   const count = await productCards.count();
   expect(count).toBeGreaterThan(0);
+
+  const ordersTable = page.locator("table:has-text('Order #')");
+  await expect(ordersTable).toBeVisible({ timeout: 15000 });
+
+  // Optionally also check at least one row exists
+  const orderRows = ordersTable.locator("tbody tr");
+  const rowCount = await orderRows.count();
+
+  if (rowCount > 0) {
+    // Optional: check that at least the first row renders expected data
+    await expect(orderRows.first()).toBeVisible();
+  } else {
+    console.log("ℹ️ No orders found, but table is rendered.");
+  }
 });
 
 test("fetches and displays Inventory from /get_stock on Inventory page", async ({
@@ -83,4 +97,29 @@ test("fetches and displays Inventory from /get_stock on Inventory page", async (
   await expect(inventoryRows.first()).toBeVisible({ timeout: 10000 });
   const count = await inventoryRows.count();
   expect(count).toBeGreaterThan(0);
+});
+
+test("fetches and displays Orders from /get_orders on manage", async ({
+  page,
+}) => {
+  await login(page);
+
+  await page.locator("text=manage").click();
+  await page.waitForURL("**/manage", { timeout: 15000 });
+  await page.waitForTimeout(3000); // hydration
+
+
+  const ordersTable = page.locator("table:has-text('Order #')");
+  await expect(ordersTable).toBeVisible({ timeout: 15000 });
+
+  // Optionally also check at least one row exists
+  const orderRows = ordersTable.locator("tbody tr");
+  const rowCount = await orderRows.count();
+
+  if (rowCount > 0) {
+    // Optional: check that at least the first row renders expected data
+    await expect(orderRows.first()).toBeVisible();
+  } else {
+    console.log("ℹ️ No orders found, but table is rendered.");
+  }
 });

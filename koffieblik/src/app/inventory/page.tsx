@@ -27,6 +27,7 @@ export default function InventoryPage() {
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
   const [formData, setFormData] = useState({
     item: "",
+    id: "",
     quantity: "",
     unit_type: "",
     max_capacity: "",
@@ -81,24 +82,24 @@ export default function InventoryPage() {
     };
 
     try {
-      const response = await fetch(`${API_BASE_URL}/update_stock`, {
-        method: "POST",
+      const response = await fetch(`${API_BASE_URL}/stock`, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify(
-          isUpdating
-            ? { updates: [{ item: payload.item, fields: payload }] }
-            : { creates: [payload] },
-        ),
+        body: JSON.stringify({
+          id: formData.id || undefined,
+          ...payload,
+          reference: "manual update",
+        }),
       });
 
       const result = await response.json();
 
       if (result.success) {
         if (isUpdating) {
-          alert(`Updated: ${result.updatedItems?.join(", ")}`);
+          // alert(`Updated: ${result.updatedItems?.join(", ")}`);
           setItems((prev) =>
             prev.map((i) =>
               i.item === payload.item
@@ -132,6 +133,7 @@ export default function InventoryPage() {
 
         setFormData({
           item: "",
+          id: "",
           quantity: "",
           unit_type: "",
           max_capacity: "",
@@ -153,6 +155,7 @@ export default function InventoryPage() {
   const handleEdit = (item: InventoryItem) => {
     setFormData({
       item: item.item,
+      id: item.id,
       quantity: item.quantity.toString(),
       unit_type: item.unit_type,
       max_capacity: item.max_capacity?.toString() ?? "",
@@ -180,6 +183,7 @@ export default function InventoryPage() {
             setShowForm((prev) => !prev);
             setFormData({
               item: "",
+              id: "",
               quantity: "",
               unit_type: "",
               max_capacity: "",

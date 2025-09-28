@@ -4,8 +4,8 @@ test.describe("Login Flow", () => {
   // user test
   test("Login works with valid credentials user", async ({ page }) => {
     await page.goto("http://localhost:3000/login");
-    await page.fill("#email", "user9@coffee.com");
-    await page.fill("#password", "P@ssword123");
+    await page.fill("#email", "user@coffee.com");
+    await page.fill("#password", "user");
 
     await Promise.all([
       page.waitForURL("**/userdashboard"),

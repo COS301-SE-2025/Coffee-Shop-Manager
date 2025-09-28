@@ -9,6 +9,7 @@ interface Order {
   id: string;
   number: number;
   order_number: number;
+  paid_status:string,
   status: string;
   total_price: number;
   created_at: string;
@@ -265,12 +266,16 @@ export default function DashboardPage() {
 
   const getStatusStyle = (status: string) => {
     const baseClasses = "px-3 py-1 rounded-full text-xs font-semibold";
-    switch (status.toLowerCase()) {
+    const normalized = (status || "").toLowerCase();
+
+    switch (normalized) {
       case "completed":
+      case "paid":
         return `${baseClasses} bg-green-100 text-green-800`;
       case "pending":
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
       case "cancelled":
+      case "unpaid":
         return `${baseClasses} bg-red-100 text-red-800`;
       default:
         return `${baseClasses} bg-gray-100 text-gray-800`;
@@ -536,6 +541,12 @@ export default function DashboardPage() {
                           className="text-left px-6 py-4 font-semibold"
                           style={{ color: "var(--primary-2)" }}
                         >
+                          Paid
+                        </th>
+                        <th
+                          className="text-left px-6 py-4 font-semibold"
+                          style={{ color: "var(--primary-2)" }}
+                        >
                           Date
                         </th>
                       </tr>
@@ -564,6 +575,9 @@ export default function DashboardPage() {
                             <span className={getStatusStyle(order.status)}>
                               {order.status}
                             </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={getStatusStyle(order.paid_status)}>{order.paid_status}</span>
                           </td>
                           <td className="px-6 py-4">
                             {new Date(order.created_at).toLocaleDateString(
