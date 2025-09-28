@@ -54,29 +54,34 @@ test("fetches and displays orders from /get_orders on dashboard", async ({
   }
 });
 
-test("fetches and displays Products from /getProducts on POS", async ({
-  page,
-}) => {
+test("fetches and displays Products from /getProducts on POS", async ({ page }) => {
   await login(page);
+
+  // Navigate to dashboard → POS
+  await page.goto("http://localhost:3000/dashboard");
+  await page.waitForLoadState("networkidle");
+  await page.waitForTimeout(2000);
 
   await page.locator("text=POS").click();
   await page.waitForURL("**/pos", { timeout: 15000 });
-  await page.waitForTimeout(3000); // hydration
+  await page.waitForTimeout(2000);
 
-  const productCards = page.locator("button:has(h2)"); // Adjusted for POS buttons
+  // Products: each has data-testid="product-card"
+  const productCards = page.locator('[data-testid="product-card"]');
   await expect(productCards.first()).toBeVisible({ timeout: 15000 });
+
   const count = await productCards.count();
   expect(count).toBeGreaterThan(0);
 
-  const ordersTable = page.locator("table:has-text('Order #')");
+  // Orders table: has "Order #" in the header
+  const ordersTable = page.locator("table >> text=Order #");
   await expect(ordersTable).toBeVisible({ timeout: 15000 });
 
-  // Optionally also check at least one row exists
+  // Ensure at least 0+ rows render
   const orderRows = ordersTable.locator("tbody tr");
   const rowCount = await orderRows.count();
 
   if (rowCount > 0) {
-    // Optional: check that at least the first row renders expected data
     await expect(orderRows.first()).toBeVisible();
   } else {
     console.log("ℹ️ No orders found, but table is rendered.");
