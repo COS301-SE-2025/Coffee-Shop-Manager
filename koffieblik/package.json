@@ -12,7 +12,8 @@
     "test:coverage": "jest --coverage"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.49.8",
+    "@supabase/auth-helpers-nextjs": "^0.10.0",
+    "@supabase/supabase-js": "^2.58.0",
     "@types/pg": "^8.15.2",
     "lottie-react": "^2.4.1",
     "next": "^15.3.4",

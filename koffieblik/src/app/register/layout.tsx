@@ -6,7 +6,7 @@ export const metadata = {
   description:
     "Create an account for DieKoffieBlik coffee shop management system",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
   },
 };
 

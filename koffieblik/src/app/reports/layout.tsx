@@ -5,7 +5,7 @@ export const metadata = {
   title: "Reports - DieKoffieBlik",
   description: "Reports dashboard for managing DieKoffieBlik coffee shop",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
   },
 };
 

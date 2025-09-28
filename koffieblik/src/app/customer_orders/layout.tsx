@@ -1,10 +1,10 @@
 import Navbar from "@/app/components/Navbar";
 
 export const metadata = {
-  title: "Customer Orders - DieKoffieBlik",
-  description: "Manage and review customer orders at DieKoffieBlik",
+  title: "Inventory - DieKoffieBlik",
+  description: "Manage the inventory system of a coffee shop",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
   },
 };
 

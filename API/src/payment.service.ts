@@ -17,6 +17,9 @@ class PaymentService {
     orderNumber: string,
     total: number,
     customerInfo: CustomerInfo,
+    returnUrl?: string,
+    cancelUrl?: string,
+    notifyUrl?: string,
   ) {
     try {
       // Log environment variables for debugging
@@ -36,9 +39,9 @@ class PaymentService {
       const paymentData = {
         merchant_id: this.MERCHANT_ID,
         merchant_key: this.MERCHANT_KEY,
-        return_url: this.RETURN_URL,
-        cancel_url: this.CANCEL_URL,
-        notify_url: this.NOTIFY_URL,
+        return_url: returnUrl || this.RETURN_URL,
+        cancel_url: cancelUrl || this.CANCEL_URL,
+        notify_url: notifyUrl || this.NOTIFY_URL,
         name_first: firstName,
         name_last: lastName,
         email_address: email,

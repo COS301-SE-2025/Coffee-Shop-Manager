@@ -2,11 +2,11 @@
 // This remains a Server Component (no "use client" directive)
 
 export const metadata = {
-  title: "Login - DieKoffieBlik",
+  title: "Register - DieKoffieBlik",
   description:
-    "Log into an existing account for DieKoffieBlik coffee shop management system",
+    "Create an account for DieKoffieBlik coffee shop management system",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/icon.svg",
   },
 };
 

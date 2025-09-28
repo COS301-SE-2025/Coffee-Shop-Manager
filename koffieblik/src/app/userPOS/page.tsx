@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
-import { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import CoffeeBackground from "assets/coffee-background";
 
@@ -27,7 +26,7 @@ interface OrderSummary {
 export default function OrderPage() {
   const [menu, setMenu] = useState<MenuItem[]>([]);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState<string>(""); // Replace activeCategory with searchQuery
+  const [searchQuery, setSearchQuery] = useState<string>("");
   const [orderStatus, setOrderStatus] = useState<
     "ordering" | "selecting-payment" | "confirming" | "placed"
   >("ordering");
@@ -46,6 +45,7 @@ export default function OrderPage() {
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
+  // IMPORTANT: All useEffect hooks must be at the top level, before any conditional returns
   useEffect(() => {
     const role = localStorage.getItem("role");
     if (role !== "user") {
@@ -61,7 +61,6 @@ export default function OrderPage() {
           credentials: "include",
         });
         const data = await res.json();
-        // Update to handle the direct array response from your API
         if (Array.isArray(data)) {
           setMenu(data);
         } else if (data.success && data.products) {
@@ -82,6 +81,69 @@ export default function OrderPage() {
     };
 
     fetchProducts();
+  }, [API_BASE_URL]);
+
+  // Combined effect to handle all PayFast return scenarios
+  useEffect(() => {
+    const checkPayment = async () => {
+      // Check for our custom return parameter
+      const urlParams = new URLSearchParams(window.location.search);
+      const payfastReturn = urlParams.get('payfast_return');
+      const orderIdFromUrl = urlParams.get('order');
+      const pendingOrderId = localStorage.getItem("pendingOrder");
+      
+      console.log("PayFast return:", payfastReturn);
+      console.log("Order from URL:", orderIdFromUrl);
+      console.log("Pending order:", pendingOrderId);
+      
+      // If returning from PayFast with success parameter
+      if (payfastReturn === 'success' && orderIdFromUrl) {
+        try {
+          // Mark the order as paid
+          const updateRes = await fetch(`${API_BASE_URL}/order/pay/${orderIdFromUrl}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include'
+          });
+          
+          const updateResult = await updateRes.json();
+          console.log("Payment update result:", updateResult);
+          
+          if (updateRes.ok && updateResult.success) {
+            setOrderStatus("placed");
+            setSelectedPaymentMethod("card");
+            setMessage("Payment successful! Your order has been paid.");
+            localStorage.removeItem("pendingOrder");
+            localStorage.removeItem("paymentInitiated");
+            
+            // Clear the URL parameters to prevent duplicate processing on refresh
+            window.history.replaceState({}, document.title, window.location.pathname);
+          } else {
+            console.error("Failed to update payment status:", updateResult);
+            setMessage("Payment was received but order status update failed.");
+          }
+        } catch (err) {
+          console.error("Error updating payment status:", err);
+          setMessage("Error updating payment status. Please contact support.");
+        }
+      }
+      
+      // If returning with cancelled parameter
+      if (payfastReturn === 'cancelled') {
+        setOrderStatus("ordering");
+        setMessage("Payment was cancelled. Please try again or choose a different payment method.");
+        localStorage.removeItem("pendingOrder");
+        localStorage.removeItem("paymentInitiated");
+        
+        // Clear the URL parameters
+        window.history.replaceState({}, document.title, window.location.pathname);
+      }
+    };
+    
+    // Check for PayFast return parameters
+    if (window.location.search.includes('payfast_return')) {
+      checkPayment();
+    }
   }, [API_BASE_URL]);
 
   const addToCart = (item: MenuItem) => {
@@ -143,7 +205,6 @@ export default function OrderPage() {
     setMessage("");
   };
 
-  // Update the handlePaymentMethodSelect function
   const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
     setSelectedPaymentMethod(paymentMethod);
     
@@ -182,16 +243,19 @@ export default function OrderPage() {
 
         console.log("Order created:", orderResult); // Debug log
 
-        // Then initiate PayFast payment
+        // Then initiate PayFast payment - add custom return URL with parameter
         const paymentPayload = {
-          orderNumber: orderResult.order_id, // Make sure this matches the backend response
+          orderNumber: orderResult.order_id,
           total: getOrderSummary().total,
           customerInfo: {
             name: customerInfo.name,
             phone: customerInfo.phone || "",
             email: customerInfo.email,
             notes: specialInstructions || ""
-          }
+          },
+          // Add these custom return URLs with parameters
+          returnUrl: `${window.location.origin}/userPOS?payfast_return=success&order=${orderResult.order_id}`,
+          cancelUrl: `${window.location.origin}/userPOS?payfast_return=cancelled&order=${orderResult.order_id}`
         };
 
         console.log("Payment payload:", paymentPayload); // Debug log
@@ -214,6 +278,7 @@ export default function OrderPage() {
 
         // Store order info before redirect
         localStorage.setItem("pendingOrder", orderResult.order_id);
+        localStorage.setItem("paymentInitiated", Date.now().toString());
 
         // Redirect to PayFast payment page
         window.location.href = paymentResult.paymentUrl;
