@@ -26,6 +26,7 @@ interface Order {
   status: string;
   total_price: number;
   created_at: string;
+  order_number: number; // Add this field that exists in API
   order_products: {
     quantity: number;
     price: number;
@@ -96,7 +97,8 @@ export default function OrderHistoryScreen() {
       const data = await response.json();
       console.log("Orders API response:", data);
 
-      if (response.ok && data.orders) {
+      // Check for the correct success field (it's "sucess" in the API, not "success")
+      if (response.ok && (data.sucess || data.success) && data.orders) {
         setOrders(data.orders);
         console.log("Fetched orders:", data.orders.length);
       } else {
@@ -131,7 +133,7 @@ export default function OrderHistoryScreen() {
       total: `R ${order.total_price.toFixed(2)}`,
       restaurant: "Die Koffieblik Café",
       items_detail: itemsDetail,
-      orderNumber: order.number,
+      orderNumber: order.order_number, // Use the correct field from API
     };
   };
 

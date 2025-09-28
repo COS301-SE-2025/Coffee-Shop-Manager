@@ -970,57 +970,60 @@ const styles = StyleSheet.create({
   },
 
   // Cart Control Styles - Fixed positioning
-  cartControls: {
-    alignItems: "center",
-    justifyContent: "center",
-    width: 60,
-    flexShrink: 0,
-  },
-  quantityControls: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "#f8fafc",
-    borderRadius: 20,
-    padding: 4,
-    borderWidth: 1,
-    borderColor: "#e2e8f0",
-    width: 100,
-    justifyContent: "space-between",
-  },
-  quantityButton: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-    backgroundColor: "#fff",
-    alignItems: "center",
-    justifyContent: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.05,
-    shadowOffset: { width: 0, height: 1 },
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  quantityText: {
-    paddingHorizontal: 8,
-    fontSize: 14,
-    fontWeight: "700",
-    color: "#78350f",
-    minWidth: 20,
-    textAlign: "center",
-  },
-  addButton: {
-    backgroundColor: "#78350f",
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    alignItems: "center",
-    justifyContent: "center",
-    elevation: 3,
-    shadowColor: "#78350f",
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
-  },
+ cartControls: {
+  alignItems: "center",
+  justifyContent: "center",
+  width: 80, // Increased from 60
+  flexShrink: 0,
+  paddingLeft: 8, // Add some padding to separate from price
+},
+quantityControls: {
+  flexDirection: "row",
+  alignItems: "center",
+  backgroundColor: "#f8fafc",
+  borderRadius: 20,
+  padding: 4,
+  borderWidth: 1,
+  borderColor: "#e2e8f0",
+  width: 90, // Reduced from 100 to fit better
+  justifyContent: "space-between",
+},
+quantityButton: {
+  width: 24, // Reduced from 28
+  height: 24, // Reduced from 28
+  borderRadius: 12, // Adjusted for new size
+  backgroundColor: "#fff",
+  alignItems: "center",
+  justifyContent: "center",
+  shadowColor: "#000",
+  shadowOpacity: 0.05,
+  shadowOffset: { width: 0, height: 1 },
+  shadowRadius: 2,
+  elevation: 1,
+},
+quantityText: {
+  paddingHorizontal: 6, // Reduced from 8
+  fontSize: 14,
+  fontWeight: "700",
+  color: "#78350f",
+  minWidth: 18, // Reduced from 20
+  textAlign: "center",
+},
+addButton: {
+  backgroundColor: "#78350f",
+  width: 32, // Reduced from 36
+  height: 32, // Reduced from 36
+  borderRadius: 16, // Adjusted for new size
+  alignItems: "center",
+  justifyContent: "center",
+  elevation: 3,
+  shadowColor: "#78350f",
+  shadowOpacity: 0.3,
+  shadowOffset: { width: 0, height: 2 }, 
+  shadowRadius: 4,
+},
+
+
   disabledButton: {
     backgroundColor: "#cbd5e1",
     shadowOpacity: 0.1,

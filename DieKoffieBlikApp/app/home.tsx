@@ -31,6 +31,7 @@ interface FeaturedItem {
   popular: boolean;
   rating: string;
   image?: string;
+  score?: number; // Add score for recommendations
 }
 
 interface ApiProduct {
@@ -68,6 +69,22 @@ interface ProductWithStats extends ApiProduct {
   totalQuantity: number;
 }
 
+interface Recommendation {
+  suggestions: string[];
+  reasoning: string;
+  weather?: {
+    temperature: number;
+    windspeed: number;
+    weathercode: number;
+    time: string;
+  };
+  confidence: 'low' | 'medium' | 'high';
+  scores?: { [productId: string]: number };
+  target_time?: string;
+  weekday?: string;
+  time_period?: string;
+}
+
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
 const { width, height } = Dimensions.get("window");
@@ -96,24 +113,27 @@ const COFFEE_FACTS = [
   "A typical coffee tree can live up to 100 years",
   "There are two main coffee species: Arabica and Robusta",
   "Coffee can enhance physical performance by increasing adrenaline levels",
-  "Black coffee contains almost zero calories",
-  "The smell of coffee alone can help reduce stress",
-  "Vietnam is the world's second-largest coffee producer",
-  "There are over 25 million coffee farmers around the world",
-  "The most expensive coffee comes from elephant dung",
-  "Decaf coffee still contains small amounts of caffeine",
-  "Coffee is the second most traded commodity after oil",
-  "Adding milk to coffee can slow down the effects of caffeine",
-  "Instant coffee was invented in 1901 by Japanese scientist Satori Kato",
-  "Turkey has one of the oldest coffee brewing methods: Turkish coffee",
 ];
 
-// Custom hook for managing API state
+// FIXED: Simple cache to prevent duplicate API calls
+const apiCache = new Map();
+const CACHE_DURATION = 60000; // 1 minute cache
+
+// Custom hook for managing API state with caching
 const useApiData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const apiCall = useCallback(async (url: string, options?: RequestInit) => {
+    // Check cache first
+    const cacheKey = `${url}_${JSON.stringify(options)}`;
+    const cached = apiCache.get(cacheKey);
+    
+    if (cached && Date.now() - cached.timestamp < CACHE_DURATION) {
+      console.log('Using cached data for:', url);
+      return cached.data;
+    }
+
     try {
       setIsLoading(true);
       setError(null);
@@ -136,7 +156,15 @@ const useApiData = () => {
         throw new Error(`API call failed: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      
+      // Cache the result
+      apiCache.set(cacheKey, {
+        data,
+        timestamp: Date.now()
+      });
+
+      return data;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
@@ -247,6 +275,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [featuredItems, setFeaturedItems] = useState<FeaturedItem[]>([]);
+  const [allProducts, setAllProducts] = useState<ApiProduct[]>([]); // Store all products once
   const [featuredLoading, setFeaturedLoading] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [userStats, setUserStats] = useState<UserStats>({ 
@@ -255,6 +284,12 @@ export default function HomeScreen() {
     currentStreak: 0 
   });
   const [userName, setUserName] = useState("Coffee Lover");
+  
+  // FIXED: Simplified recommendation state
+  const [recommendations, setRecommendations] = useState<Recommendation | null>(null);
+  const [recommendationProducts, setRecommendationProducts] = useState<FeaturedItem[]>([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [dataLoaded, setDataLoaded] = useState(false);
 
   // Memoized greeting calculation
   const greeting = useMemo(() => {
@@ -267,7 +302,7 @@ export default function HomeScreen() {
   // Memoized random quote
   const currentQuote = useMemo(() => 
     COFFEE_QUOTES[Math.floor(Math.random() * COFFEE_QUOTES.length)], 
-    [refreshing] // Re-calculate on refresh
+    [refreshing]
   );
 
   // Helper functions
@@ -285,75 +320,49 @@ export default function HomeScreen() {
     return "cafe-outline";
   }, []);
 
-  // Error handling with user feedback
-  const handleError = useCallback((error: Error, context: string) => {
-    console.error(`Error in ${context}:`, error);
-    
-    // Show user-friendly error messages for critical failures
-    if (context === 'fetchUserData' || context === 'fetchFeaturedItems') {
-      Alert.alert(
-        'Connection Issue',
-        'Unable to load some content. Please check your connection and try again.',
-        [{ text: 'OK' }]
-      );
-    }
-  }, []);
-
-  // Calculate points from orders (improved with error handling)
+  // Calculate points from orders
   const calculatePointsFromOrders = useCallback((orders: Order[]) => {
     try {
-      const processedOrderIds = new Set();
-      let totalPoints = 0;
-
-      orders.forEach((order) => {
-        if (processedOrderIds.has(order.id)) return;
-        processedOrderIds.add(order.id);
-
+      return orders.reduce((total, order) => {
         const pointsEarned = Math.round(order.total_price * 0.05 * 100);
-        totalPoints += pointsEarned;
-      });
-
-      return totalPoints;
+        return total + pointsEarned;
+      }, 0);
     } catch (error) {
       console.error('Error calculating points:', error);
       return 0;
     }
   }, []);
 
-  // Calculate streak from orders (improved with error handling)
+  // Calculate streak from orders
   const calculateStreak = useCallback((orders: Order[]) => {
     try {
       if (orders.length === 0) return 0;
       
-      const sortedOrders = orders
+      const completedOrders = orders
         .filter(order => order.status.toLowerCase() === 'completed')
         .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 
-      if (sortedOrders.length === 0) return 0;
+      if (completedOrders.length === 0) return 0;
 
       let streak = 0;
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const latestOrder = new Date(sortedOrders[0].created_at);
-      latestOrder.setHours(0, 0, 0, 0);
-      
-      const daysDiff = Math.floor((today.getTime() - latestOrder.getTime()) / (1000 * 60 * 60 * 24));
-      
-      if (daysDiff > 1) return 0;
-
       const orderDates = new Set(
-        sortedOrders.map(order => {
+        completedOrders.map(order => {
           const date = new Date(order.created_at);
           return date.toDateString();
         })
       );
 
       let currentDate = new Date(today);
+      const latestOrder = new Date(completedOrders[0].created_at);
+      latestOrder.setHours(0, 0, 0, 0);
       
-      if (daysDiff === 1) {
-        currentDate.setDate(currentDate.getDate() - 1);
-      }
+      const daysDiff = Math.floor((today.getTime() - latestOrder.getTime()) / (1000 * 60 * 60 * 24));
+      
+      if (daysDiff > 1) return 0;
+      if (daysDiff === 1) currentDate.setDate(currentDate.getDate() - 1);
 
       while (orderDates.has(currentDate.toDateString())) {
         streak++;
@@ -367,48 +376,19 @@ export default function HomeScreen() {
     }
   }, []);
 
-  // Calculate product popularity from order data (improved)
-  const calculateProductPopularity = useCallback((orders: any[]) => {
+  // FIXED: Single data fetch function to reduce API calls
+  const fetchAllData = useCallback(async () => {
+    if (dataLoaded && !refreshing) return;
+    
     try {
-      const productStats: { [productId: string]: { orderCount: number; totalQuantity: number } } = {};
+      setFeaturedLoading(true);
       
-      const completedOrders = orders.filter((order: any) => 
-        order.status && order.status.toLowerCase() === 'completed'
-      );
-      
-      completedOrders.forEach((order: any) => {
-        if (order.order_products && Array.isArray(order.order_products)) {
-          order.order_products.forEach((orderProduct: any) => {
-            if (orderProduct.products && orderProduct.products.id) {
-              const productId = orderProduct.products.id;
-              const quantity = orderProduct.quantity || 0;
-              
-              if (!productStats[productId]) {
-                productStats[productId] = { orderCount: 0, totalQuantity: 0 };
-              }
-              
-              productStats[productId].orderCount += 1;
-              productStats[productId].totalQuantity += quantity;
-            }
-          });
-        }
-      });
-      
-      return productStats;
-    } catch (error) {
-      console.error('Error calculating product popularity:', error);
-      return {};
-    }
-  }, []);
-
-  // Fetch user data (improved with error handling)
-  const fetchUserData = useCallback(async () => {
-    try {
       const userEmail = await AsyncStorage.getItem("email");
       const userId = await AsyncStorage.getItem("user_id");
       
       if (!userEmail || !userId) {
         console.log('Missing user credentials');
+        setFeaturedLoading(false);
         return;
       }
 
@@ -482,103 +462,205 @@ export default function HomeScreen() {
         apiCall(`${API_BASE_URL}/order`)
       ]);
 
-      if (productsData.status !== 'fulfilled') {
-        throw new Error('Failed to fetch products');
+      // FIXED: Handle products - API returns array directly, not nested
+      if (productsResponse.status === 'fulfilled') {
+        const products = productsResponse.value;
+        console.log('Products loaded:', products.length, products.slice(0, 2)); // Debug log
+        setAllProducts(products);
+
+        // Create featured items (first 6 products)
+        const featuredProducts: FeaturedItem[] = products
+          .slice(0, 6)
+          .map((item: ApiProduct) => ({
+            id: item.id,
+            name: item.name,
+            price: item.price,
+            description: item.description,
+            stock_quantity: item.stock_quantity,
+            icon: getIconForProduct(item.name),
+            popular: false, // Simplified - no complex popularity calculation
+            rating: "",
+          }));
+
+        console.log('Featured products:', featuredProducts.length);
+        setFeaturedItems(featuredProducts);
+      } else {
+        console.error('Failed to fetch products:', productsResponse.reason);
       }
 
-      const products = productsData.value;
-      const orders = ordersData.status === 'fulfilled' ? ordersData.value.orders || [] : [];
+      // FIXED: Handle orders - check for correct structure
+      if (ordersResponse.status === 'fulfilled') {
+        const ordersData = ordersResponse.value;
+        console.log('Orders response structure:', Object.keys(ordersData)); // Debug log
+        
+        // Check if orders are nested under .orders property or direct array
+        const orders = ordersData.orders || ordersData || [];
+        console.log('Orders loaded:', orders.length);
+        
+        const currentStreak = calculateStreak(orders);
+        const calculatedPoints = calculatePointsFromOrders(orders);
 
-      // Calculate product popularity
-      const productPopularity = calculateProductPopularity(orders);
-      
-      // Get all products with their popularity stats
-      const productsWithStats: ProductWithStats[] = products.map((item: ApiProduct) => {
-        const popularity = productPopularity[item.id] || { orderCount: 0, totalQuantity: 0 };
-        return {
-          ...item,
-          totalQuantity: popularity.totalQuantity,
-        };
-      });
+        setUserStats({
+          totalOrders: orders.length,
+          loyaltyPoints: calculatedPoints,
+          currentStreak: currentStreak,
+        });
+      } else {
+        console.error('Failed to fetch orders:', ordersResponse.reason);
+      }
 
-      // Sort by popularity and determine top 25%
-      const sortedByPopularity = productsWithStats.sort((a: ProductWithStats, b: ProductWithStats) => 
-        b.totalQuantity - a.totalQuantity
-      );
-      const topPercentileThreshold = Math.ceil(sortedByPopularity.length * 0.2);
-      const popularProductIds = new Set(
-        sortedByPopularity.slice(0, topPercentileThreshold).map((p: ProductWithStats) => p.id)
-      );
-
-      const featuredProducts: FeaturedItem[] = products
-        .slice(0, 6) // Show more items
-        .map((item: ApiProduct) => ({
-          id: item.id,
-          name: item.name,
-          price: item.price,
-          description: item.description,
-          stock_quantity: item.stock_quantity,
-          icon: getIconForProduct(item.name),
-          popular: popularProductIds.has(item.id),
-          rating: "",
-        }));
-
-      setFeaturedItems(featuredProducts);
+      setDataLoaded(true);
     } catch (error) {
-      handleError(error as Error, 'fetchFeaturedItems');
+      console.error('Error fetching data:', error);
     } finally {
       setFeaturedLoading(false);
     }
-  }, [apiCall, calculateProductPopularity, getIconForProduct, handleError]);
+  }, [apiCall, calculateStreak, calculatePointsFromOrders, getIconForProduct, dataLoaded, refreshing]);
 
-  // Refresh handler (improved)
+  // FIXED: Recommendations fetch - now correctly matches product IDs
+  const fetchRecommendations = useCallback(async () => {
+    if (!dataLoaded || recommendationsLoading || recommendations) return;
+    
+    try {
+      setRecommendationsLoading(true);
+      
+      console.log('Fetching recommendations...');
+      
+      const data = await apiCall(
+        `${API_BASE_URL}/user/recommendation?lat=${PRETORIA_COORDINATES.latitude}&lon=${PRETORIA_COORDINATES.longitude}`
+      );
+      
+      console.log('Recommendations response:', data);
+      
+      if (data.success && data.recommendations) {
+        setRecommendations(data.recommendations);
+        
+        // FIXED: Match products by ID (not name) since API returns product IDs
+        if (data.recommendations.suggestions && allProducts.length > 0) {
+          const suggestedProductIds = data.recommendations.suggestions;
+          console.log('Suggested product IDs:', suggestedProductIds);
+          console.log('Available products count:', allProducts.length);
+          console.log('Sample product IDs:', allProducts.slice(0, 3).map(p => ({ id: p.id, name: p.name })));
+          
+          // Filter products by matching IDs
+          const matchedProducts = allProducts.filter((product: ApiProduct) => {
+            const isMatch = suggestedProductIds.includes(product.id);
+            if (isMatch) {
+              console.log(`✅ Matched product: ${product.name} (${product.id})`);
+            }
+            return isMatch;
+          });
+
+          console.log('Total matched products:', matchedProducts.length);
+          
+          if (matchedProducts.length === 0) {
+            console.log('❌ No products matched! Checking for ID format issues...');
+            console.log('Expected IDs:', suggestedProductIds);
+            console.log('Available IDs:', allProducts.slice(0, 5).map(p => p.id));
+          }
+
+          // Sort by recommendation scores if available
+          const sortedProducts = matchedProducts.sort((a, b) => {
+            const scoreA = data.recommendations.scores?.[a.id] || 0;
+            const scoreB = data.recommendations.scores?.[b.id] || 0;
+            return scoreB - scoreA; // Higher scores first
+          });
+
+          const recommendationItems: FeaturedItem[] = sortedProducts
+            .slice(0, 4) // Show up to 4 recommendations
+            .map((item: ApiProduct) => ({
+              id: item.id,
+              name: item.name,
+              price: item.price,
+              description: item.description,
+              stock_quantity: item.stock_quantity,
+              icon: getIconForProduct(item.name),
+              popular: false,
+              rating: "",
+              score: data.recommendations.scores?.[item.id] || 0, // Add confidence score
+            }));
+
+          console.log('Final recommendation items:', recommendationItems.length, recommendationItems.map(i => i.name));
+          setRecommendationProducts(recommendationItems);
+        } else {
+          console.log('❌ Missing suggestions or products not loaded yet');
+          console.log('Suggestions:', data.recommendations.suggestions);
+          console.log('Products loaded:', allProducts.length);
+        }
+      } else {
+        console.log('❌ Invalid recommendations response:', data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch recommendations:", error);
+    } finally {
+      setRecommendationsLoading(false);
+    }
+  }, [apiCall, dataLoaded, recommendationsLoading, recommendations, allProducts, getIconForProduct]);
+
+  // FIXED: Optimized refresh handler
   const onRefresh = useCallback(() => {
     setRefreshing(true);
     setError(null);
-    fadeAnim.setValue(1);
-    slideAnim.setValue(0);
+    setDataLoaded(false);
+    setRecommendations(null);
+    setRecommendationProducts([]);
+    
+    // Clear cache on refresh
+    apiCache.clear();
 
-    Promise.allSettled([
-      fetchFeaturedItems(),
-      fetchUserData(),
-    ]).finally(() => {
+    fetchAllData().finally(() => {
       setTimeout(() => {
         setRefreshing(false);
         setCurrentFactIndex(Math.floor(Math.random() * COFFEE_FACTS.length));
-      }, 1500);
+      }, 1000);
     });
-  }, [fetchFeaturedItems, fetchUserData, fadeAnim, slideAnim, setError]);
+  }, [fetchAllData, setError]);
 
-  // Animation effects
+  // FIXED: Simplified effects - fewer dependencies
   useEffect(() => {
-    const timer = setTimeout(startInitialAnimations, 100);
-    return () => clearTimeout(timer);
-  }, [startInitialAnimations]);
+    startInitialAnimations();
+  }, []);
 
   useEffect(() => {
     return startPulseAnimation();
-  }, [startPulseAnimation]);
+  }, []);
 
-  // Time update effect
+  // FIXED: Single effect for initial data loading
+  useEffect(() => {
+    fetchAllData();
+  }, []);
+
+  // FIXED: Load recommendations only after main data is loaded
+  useEffect(() => {
+    if (dataLoaded && allProducts.length > 0) {
+      const timer = setTimeout(() => {
+        fetchRecommendations();
+      }, 2000); // Delayed to avoid overwhelming the API
+
+      return () => clearTimeout(timer);
+    }
+  }, [dataLoaded, allProducts.length]);
+
+  // Time update effect (less frequent)
   useEffect(() => {
     const timeInterval = setInterval(() => {
       setCurrentTime(new Date());
-    }, 60000);
+    }, 300000); // Update every 5 minutes instead of 1 minute
 
     return () => clearInterval(timeInterval);
   }, []);
 
-  // Coffee fact rotation effect (improved)
+  // Coffee fact rotation effect
   useEffect(() => {
     const factInterval = setInterval(() => {
-      if (!isAnimating) {
-        setIsAnimating(true);
-        animateFactTransition(() => {
-          setCurrentFactIndex((prev) => (prev + 1) % COFFEE_FACTS.length);
-          setIsAnimating(false);
-        });
-      }
-    }, 15000); // Longer interval for better UX
+      if (isAnimating) return;
+
+      setIsAnimating(true);
+      animateFactTransition(() => {
+        setCurrentFactIndex((prev) => (prev + 1) % COFFEE_FACTS.length);
+        setIsAnimating(false);
+      });
+    }, 20000); // Longer interval
 
     return () => clearInterval(factInterval);
   }, [animateFactTransition]);
@@ -728,7 +810,7 @@ export default function HomeScreen() {
     </View>
   ));
 
-  // Quick actions component (improved with better layout)
+  // Quick actions component
   const QuickActions = React.memo(() => {
     const quickActions = [
       {
@@ -755,7 +837,6 @@ export default function HomeScreen() {
         description: "View past orders",
         color: "#724204ff",
       },
-      
     ];
 
     return (
@@ -815,7 +896,7 @@ export default function HomeScreen() {
       );
     });
 
-  // Featured items component (improved with better performance)
+  // Featured items component
   const FeaturedItems = React.memo(() => (
     <View style={styles.featuredSection}>
       <View style={styles.sectionHeader}>
@@ -837,7 +918,7 @@ export default function HomeScreen() {
           contentContainerStyle={styles.featuredScrollContent}
           removeClippedSubviews={true}
         >
-          {featuredItems.map((item, index) => (
+          {featuredItems.map((item) => (
             <Animated.View
               key={item.id}
               style={[
@@ -868,18 +949,6 @@ export default function HomeScreen() {
                   />
                 </View>
 
-                {item.popular && (
-                  <View style={styles.popularBadge}>
-                    <Text style={styles.popularText}>Popular</Text>
-                  </View>
-                )}
-
-                {item.stock_quantity !== undefined && item.stock_quantity < 5 && (
-                  <View style={styles.lowStockBadge}>
-                    <Text style={styles.lowStockText}>Low Stock</Text>
-                  </View>
-                )}
-
                 <Text style={styles.featuredItemName} numberOfLines={2}>
                   {item.name}
                 </Text>
@@ -891,6 +960,119 @@ export default function HomeScreen() {
       )}
     </View>
   ));
+
+  // FIXED: Enhanced recommendations section with better info display
+  const RecommendationsSection = React.memo(() => {
+    if (!recommendations && !recommendationsLoading) return null;
+
+    return (
+      <View style={styles.recommendationsSection}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.recommendationHeaderLeft}>
+            <Ionicons name="sparkles" size={20} color="#78350f" />
+            <Text style={styles.sectionTitle}>Recommended for You</Text>
+          </View>
+          {recommendations && (
+            <View style={[
+              styles.confidenceBadge,
+              { backgroundColor: getConfidenceColor(recommendations.confidence) }
+            ]}>
+              <Text style={styles.confidenceText}>{recommendations.confidence}</Text>
+            </View>
+          )}
+        </View>
+
+        {recommendationsLoading ? (
+          <View style={styles.loadingContainer}>
+            <CoffeeLoading visible={recommendationsLoading} />
+            <Text style={styles.loadingText}>Getting personalized recommendations...</Text>
+          </View>
+        ) : recommendations ? (
+          <>
+            {/* Recommendation Info */}
+            <View style={styles.recommendationInfo}>
+              <Text style={styles.reasoningText}>{recommendations.reasoning}</Text>
+              {recommendations.weather && (
+                <View style={styles.weatherInfo}>
+                  <Ionicons 
+                    name={getWeatherIcon(recommendations.weather.weathercode)} 
+                    size={16} 
+                    color="#6b7280" 
+                  />
+                  <Text style={styles.weatherText}>
+                    {recommendations.weather.temperature}°C • {recommendations.time_period} • {recommendations.weekday}
+                  </Text>
+                </View>
+              )}
+            </View>
+
+            {/* Recommended Products */}
+            {recommendationProducts.length > 0 ? (
+              <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.recommendationScroll}
+                contentContainerStyle={styles.recommendationScrollContent}
+                removeClippedSubviews={true}
+              >
+                {recommendationProducts.map((item, index) => (
+                  <View key={item.id} style={styles.recommendationCard}>
+                    <Pressable
+                      style={styles.recommendationCardContent}
+                      android_ripple={{ color: "#78350f20" }}
+                      onPress={() => router.push("/order")}
+                      accessibilityLabel={`Recommended: ${item.name} - R${item.price.toFixed(2)}`}
+                    >
+                      <View style={styles.recommendationIconContainer}>
+                        <Ionicons
+                          name={item.icon as IoniconName}
+                          size={28}
+                          color="#78350f"
+                        />
+                      </View>
+
+                      <View style={styles.sparkleIndicator}>
+                        <Ionicons name="sparkles" size={12} color="#f59e0b" />
+                      </View>
+
+                      {/* Score indicator */}
+                      {item.score && (
+                        <View style={styles.scoreIndicator}>
+                          <Text style={styles.scoreText}>{Math.round(item.score * 100)}%</Text>
+                        </View>
+                      )}
+
+                      <Text style={styles.recommendationItemName} numberOfLines={2}>
+                        {item.name}
+                      </Text>
+                      <Text style={styles.recommendationItemPrice}>
+                        R{item.price.toFixed(2)}
+                      </Text>
+                    </Pressable>
+                  </View>
+                ))}
+              </ScrollView>
+            ) : (
+              <View style={styles.noRecommendationsContainer}>
+                <Ionicons name="cafe-outline" size={32} color="#9ca3af" />
+                <Text style={styles.noRecommendationsText}>
+                  No matching products found for your preferences
+                </Text>
+                <Pressable
+                  style={styles.browseMenuBtn}
+                  onPress={() => router.push("/order")}
+                  android_ripple={{ color: "#78350f20" }}
+                  accessibilityLabel="Browse full menu"
+                >
+                  <Text style={styles.browseMenuText}>Browse Full Menu</Text>
+                </Pressable>
+              </View>
+            )}
+          </>
+        ) : null}
+      </View>
+    );
+  });
 
   // Coffee fact card (memoized)
   const CoffeeFactCard = React.memo(() => (
@@ -913,25 +1095,6 @@ export default function HomeScreen() {
       </LinearGradient>
     </View>
   ));
-
-  // Error boundary component
-  const ErrorDisplay = React.memo(() => {
-    if (!apiError) return null;
-
-    return (
-      <View style={styles.errorContainer}>
-        <Ionicons name="warning-outline" size={24} color="#ef4444" />
-        <Text style={styles.errorText}>Unable to load some content</Text>
-        <Pressable
-          style={styles.retryButton}
-          onPress={onRefresh}
-          android_ripple={{ color: "#78350f20" }}
-        >
-          <Text style={styles.retryText}>Retry</Text>
-        </Pressable>
-      </View>
-    );
-  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -962,7 +1125,6 @@ export default function HomeScreen() {
           scrollEventThrottle={16}
           removeClippedSubviews={true}
         >
-          <ErrorDisplay />
           <HeroSection />
           <StatsSection />
           <QuickActions />
@@ -1249,6 +1411,153 @@ const styles = StyleSheet.create({
     color: "#fed7aa",
   },
 
+  // Recommendations Section
+  recommendationsSection: {
+    paddingHorizontal: 20,
+    marginTop: 32,
+  },
+  recommendationHeaderLeft: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  confidenceBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  confidenceText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+    textTransform: "uppercase",
+  },
+  recommendationInfo: {
+    backgroundColor: "#fff",
+    padding: 16,
+    borderRadius: 12,
+    marginBottom: 16,
+    elevation: 2,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  reasoningText: {
+    fontSize: 14,
+    color: "#374151",
+    marginBottom: 8,
+    lineHeight: 20,
+  },
+  weatherInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  weatherText: {
+    fontSize: 12,
+    color: "#6b7280",
+    marginLeft: 4,
+  },
+  recommendationScroll: {
+    overflow: "visible",
+  },
+  recommendationScrollContent: {
+    paddingRight: 0,
+  },
+  recommendationCard: {
+    marginRight: 12,
+    borderRadius: 16,
+    overflow: "hidden",
+    elevation: 4,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+  },
+  recommendationCardContent: {
+    backgroundColor: "#fff",
+    width: 150,
+    padding: 14,
+    paddingBottom: 20,
+    alignItems: "center",
+    position: "relative",
+  },
+  recommendationIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: "#fff7ed",
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 10,
+    marginTop: 6,
+    elevation: 2,
+  },
+  sparkleIndicator: {
+    position: "absolute",
+    top: 8,
+    right: 8,
+    backgroundColor: "#fef3c7",
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  scoreIndicator: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    backgroundColor: "#10b981",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+  },
+  scoreText: {
+    color: "#fff",
+    fontSize: 10,
+    fontWeight: "600",
+  },
+  recommendationItemName: {
+    fontSize: 13,
+    fontWeight: "600",
+    color: "#78350f",
+    textAlign: "center",
+    marginBottom: 8,
+    lineHeight: 16,
+  },
+  recommendationItemPrice: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#78350f",
+    marginBottom: 10,
+  },
+  noRecommendationsContainer: {
+    alignItems: "center",
+    padding: 24,
+    backgroundColor: "#fff",
+    borderRadius: 12,
+    elevation: 2,
+  },
+  noRecommendationsText: {
+    fontSize: 14,
+    color: "#6b7280",
+    textAlign: "center",
+    marginTop: 8,
+    marginBottom: 12,
+    lineHeight: 20,
+  },
+  browseMenuBtn: {
+    backgroundColor: "#78350f",
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderRadius: 20,
+  },
+  browseMenuText: {
+    color: "#fff",
+    fontSize: 14,
+    fontWeight: "600",
+  },
+
   // Featured Items
   featuredSection: {
     paddingLeft: 20,
@@ -1288,34 +1597,6 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     marginTop: 8,
     elevation: 2,
-  },
-  popularBadge: {
-    position: "absolute",
-    top: 12,
-    right: 12,
-    backgroundColor: "#ef4444",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  popularText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
-  },
-  lowStockBadge: {
-    position: "absolute",
-    top: 12,
-    left: 12,
-    backgroundColor: "#f59e0b",
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 10,
-  },
-  lowStockText: {
-    color: "#fff",
-    fontSize: 10,
-    fontWeight: "600",
   },
   featuredItemName: {
     fontSize: 14,
@@ -1374,39 +1655,17 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
 
-  // Error handling
-  errorContainer: {
-    backgroundColor: "#fef2f2",
-    margin: 20,
-    padding: 16,
-    borderRadius: 12,
-    flexDirection: "row",
-    alignItems: "center",
-    elevation: 2,
-  },
-  errorText: {
-    color: "#ef4444",
-    fontSize: 14,
-    flex: 1,
-    marginLeft: 12,
-  },
-  retryButton: {
-    backgroundColor: "#ef4444",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-  retryText: {
-    color: "#fff",
-    fontSize: 12,
-    fontWeight: "600",
-  },
-
   // Loading
   loadingContainer: {
-    height: 150,
+    height: 100,
     justifyContent: "center",
     alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 14,
+    color: "#78350f",
+    marginTop: 8,
+    fontWeight: "500",
   },
 
   // Footer
