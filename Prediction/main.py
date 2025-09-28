@@ -2,6 +2,8 @@ from collections import Counter
 from datetime import datetime
 from typing import Dict, Any, Optional
 import requests
+import json
+import sys
 
 
 class CoffeeRecommendationEngine:
@@ -316,9 +318,45 @@ def main():
         target_time=datetime(2025, 9, 18, 8, 30)
     )
 
-    print("Recommendations:", recommendations)
+    # print("Recommendations:", recommendations)
+    print(json.dumps(recommendations))
     return recommendations
 
+def main_cli():
+    if len(sys.argv) < 5:
+        print(json.dumps({"error": "Missing arguments"}))
+        sys.exit(1)
+    user_id = sys.argv[1]
+    lat = float(sys.argv[2])
+    lon = float(sys.argv[3])
+    use_json = "--json" in sys.argv
+
+    if use_json:
+        # Read JSON from stdin
+        input_json = sys.stdin.read()
+        try:
+            InputData = json.loads(input_json)
+        except Exception as e:
+            print(json.dumps({"error": f"Invalid JSON input: {str(e)}"}))
+            sys.exit(1)
+    else:
+        # fallback to hardcoded data
+        InputData = {
+            "data": [
+                # ...existing sample data...
+            ]
+        }
+
+    engine = CoffeeRecommendationEngine()
+    engine.add_orders(InputData)
+    recommendations = engine.get_recommendations(lat=lat, lon=lon)
+    print(json.dumps(recommendations))
 
 if __name__ == "__main__":
-    main()
+    if len(sys.argv) > 1:
+        main_cli()
+    else:
+        main()
+
+# if __name__ == "__main__":
+    # main()

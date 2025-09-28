@@ -48,9 +48,11 @@ services:
     volumes:
       - ./API:/app
       - ./API/node_modules:/app/node_modules
+      - ./Prediction:/app/Prediction
     ports:
       - "${API_PORT}:5000"
     command: npx ts-node src/server.ts
+    # command: /bin/bash -c "apt-get update && apt-get install -y python3 python3-pip python3-requests && npx ts-node src/server.ts"
     env_file:
       - ${ENV_FILE}
     # depends_on:
