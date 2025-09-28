@@ -65,6 +65,9 @@ export default function OrderHistoryScreen() {
 
     try {
       const accessToken = await AsyncStorage.getItem("access_token");
+      const userId = await AsyncStorage.getItem("user_id");
+      
+      console.log("Fetching orders for user:", userId);
       
       if (!accessToken) {
         Alert.alert("Session Expired", "Please log in again");
@@ -72,15 +75,26 @@ export default function OrderHistoryScreen() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/order`, {
-        method: "GET",
+      // Use the same endpoint and filtering approach as the web app
+      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          "Authorization": `Bearer ${accessToken}`,
         },
+        body: JSON.stringify({
+          offset: 0,
+          limit: 100,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            user_id: userId
+          }
+        })
       });
 
       const data = await response.json();
+      console.log("Orders API response:", data);
 
       if (response.ok && data.orders) {
         setOrders(data.orders);

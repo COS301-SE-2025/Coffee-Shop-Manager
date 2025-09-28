@@ -63,6 +63,7 @@ export default function LoginScreen({
         const sessionData = await AsyncStorage.getItem("user_session");
         const accessToken = await AsyncStorage.getItem("access_token");
         const userId = await AsyncStorage.getItem("user_id");
+        console.log(userId);
 
         if (sessionData && accessToken && userId) {
           const { email: storedEmail } = JSON.parse(sessionData);
