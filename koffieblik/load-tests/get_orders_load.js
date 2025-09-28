@@ -56,7 +56,7 @@ export default function (data) {
     });
 
     check(res, {
-        "order request succeeded": (r) => r.status === 200 || r.status === 201,
+        "get_orders request succeeded": (r) => r.status === 200 || r.status === 201,
     });
 
 

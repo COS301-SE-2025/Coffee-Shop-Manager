@@ -6,8 +6,16 @@ const TEST_EMAIL = __ENV.TEST_EMAIL || "admin@coffee.com";
 const TEST_PASSWORD = __ENV.TEST_PASSWORD || "admin";
 
 export const options = {
-    vus: 50,          // 50 concurrent users
-    duration: "30s",  // run for 30 seconds
+  stages: [
+    { duration: "30s", target: 50 },   
+    { duration: "1m", target: 100 },    
+    { duration: "1m", target: 150 },   
+    { duration: "30s", target: 0 },    
+  ],
+  thresholds: {
+    http_req_failed: ["rate<0.05"], // less than 5% failures is acceptable
+    http_req_duration: ["p(95)<2000"], // 95% of requests < 2s
+  },
 };
 
 // Will run once before the load test starts

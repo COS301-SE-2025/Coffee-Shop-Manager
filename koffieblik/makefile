@@ -39,6 +39,8 @@ teste2e: logintest
 
 
 
+
+
 createOrdesLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/create_order_load.js
@@ -47,15 +49,34 @@ getOrdesLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/get_orders_load.js
 
-getProductsLoadTest:
+getProductLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/getProducts_load.js
+
+
+
 
 load:
 	@$(MAKE) createOrdesLoadTest
 	@$(MAKE) getOrdesLoadTest
 	@$(MAKE) getProductsLoadTest
 
+createOrdesStressTest:
+	@echo "Running stress test with k6..."
+	k6 run load_stress_testing/create_order_stress.js
+
+getOrdersStressTest:
+	@echo "Running stress test with k6..."
+	k6 run load_stress_testing/get_orders_stress.js
+
+getProductsStressTest:
+	@echo "Running stress test with k6..."
+	k6 run load_stress_testing/getProducts_stress.js
+
+stress:
+	@$(MAKE) createOrdesStressTest
+	@$(MAKE) getOrdersStressTest
+	@$(MAKE) getProductsStressTest
 
 
 
