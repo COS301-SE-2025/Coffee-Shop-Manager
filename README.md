@@ -12,6 +12,7 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## 🚀 Demo & Docs
 
+- 📑 [Requirements Specification V4 (SRS)](docs/SRS-Coffee_Shop_Manager_V4.pdf)
 - 📑 [Requirements Specification V3 (SRS)](docs/SRS-Coffee_Shop_Manager_V3.pdf)
 - 📑 [Requirements Specification V2 (SRS)](docs/SRS-Coffee_Shop_Manager_V2.pdf)
 - 📑 [Requirements Specification (SRS)](docs/SRS-Coffee_Shop_Manager.pdf)
