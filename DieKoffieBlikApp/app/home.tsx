@@ -14,7 +14,7 @@ import {
   Alert,
   Image,
 } from "react-native";
-import { useRouter, useLocalSearchParams } from "expo-router";
+import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
@@ -91,6 +91,7 @@ const { width, height } = Dimensions.get("window");
 const CARD_WIDTH = (width - 60) / 2;
 
 // Memoized constants
+const PRETORIA_COORDINATES = { latitude: -25.7479, longitude: 28.2293 };
 const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 const COFFEE_QUOTES = [
@@ -230,14 +231,13 @@ const useAnimations = () => {
       useNativeDriver: true,
     }).start(() => {
       callback();
-      // Use requestAnimationFrame instead of setTimeout
-      requestAnimationFrame(() => {
+      setTimeout(() => {
         Animated.timing(factFadeAnim, {
           toValue: 1,
           duration: 300,
           useNativeDriver: true,
         }).start();
-      });
+      }, 50);
     });
   }, [factFadeAnim]);
 
@@ -255,9 +255,6 @@ const useAnimations = () => {
 
 export default function HomeScreen() {
   const router = useRouter();
-  const params = useLocalSearchParams(); // Move this to component level
-  const paymentStatus = params.paymentStatus as string | undefined;
-  
   const { apiCall, isLoading: apiLoading, error: apiError, setError } = useApiData();
   const {
     fadeAnim,
@@ -320,6 +317,23 @@ export default function HomeScreen() {
     return "cafe-outline";
   }, []);
 
+  const getConfidenceColor = useCallback((confidence: string) => {
+    switch (confidence) {
+      case 'high': return '#10b981';
+      case 'medium': return '#f59e0b';
+      case 'low': return '#ef4444';
+      default: return '#6b7280';
+    }
+  }, []);
+
+  const getWeatherIcon = useCallback((weathercode: number): IoniconName => {
+    if (weathercode === 0) return 'sunny-outline';
+    if (weathercode <= 3) return 'partly-sunny-outline';
+    if (weathercode <= 67) return 'rainy-outline';
+    if (weathercode <= 77) return 'snow-outline';
+    return 'cloudy-outline';
+  }, []);
+
   // Calculate points from orders
   const calculatePointsFromOrders = useCallback((orders: Order[]) => {
     try {
@@ -376,7 +390,7 @@ export default function HomeScreen() {
     }
   }, []);
 
-  // FIXED: Single data fetch function to reduce API calls
+  // FIXED: Optimized data fetch function with proper user filtering
   const fetchAllData = useCallback(async () => {
     if (dataLoaded && !refreshing) return;
     
@@ -392,10 +406,15 @@ export default function HomeScreen() {
         return;
       }
 
-      // Use the same endpoint and filtering approach as history.tsx
+      console.log('Fetching data for user ID:', userId);
+
+      // FIXED: Make only 2 API calls instead of 4+
       const accessToken = await AsyncStorage.getItem("access_token");
       
-      // Fetch user's orders with proper filtering
+      // Get products (no change needed)
+      const productsResponse = await apiCall(`${API_BASE_URL}/product`);
+      
+      // FIXED: Use POST with filters to get only current user's orders
       const ordersResponse = await fetch(`${API_BASE_URL}/get_orders`, {
         method: "POST",
         headers: {
@@ -408,64 +427,17 @@ export default function HomeScreen() {
           orderBy: "created_at",
           orderDirection: "desc",
           filters: {
-            user_id: userId
+            user_id: userId  // This ensures we only get the current user's orders
           }
         })
       });
-
+      
       const ordersData = await ordersResponse.json();
       
-      // Fetch user profile
-      const profileResponse = await apiCall(`${API_BASE_URL}/user/${userId}`);
-
-      let fetchedOrders: Order[] = [];
-      if (ordersResponse.ok && ordersData.orders) {
-        fetchedOrders = ordersData.orders;
-        console.log(`Fetched ${fetchedOrders.length} orders for user ${userId}`);
-      }
-
-      if (profileResponse.success && profileResponse.profile) {
-        setUserName(profileResponse.profile.display_name || "Coffee Lover");
-      }
-
-      // Calculate stats from fetched orders
-      const completedOrders = fetchedOrders.filter(order => 
-        order.status.toLowerCase() === 'completed'
-      );
-      
-      const currentStreak = calculateStreak(fetchedOrders);
-      const calculatedPoints = calculatePointsFromOrders(fetchedOrders);
-
-      setUserStats({
-        totalOrders: fetchedOrders.length,
-        loyaltyPoints: calculatedPoints,
-        currentStreak: currentStreak,
-      });
-    } catch (error) {
-      handleError(error as Error, 'fetchUserData');
-      // Set default values in case of error
-      setUserStats({
-        totalOrders: 0,
-        loyaltyPoints: 0,
-        currentStreak: 0
-      });
-    }
-  }, [calculateStreak, calculatePointsFromOrders, handleError]);
-
-  // Fetch featured items (improved)
-  const fetchFeaturedItems = useCallback(async () => {
-    try {
-      setFeaturedLoading(true);
-
-      const [productsData, ordersData] = await Promise.allSettled([
-        apiCall(`${API_BASE_URL}/product`),
-        apiCall(`${API_BASE_URL}/order`)
-      ]);
-
-      // FIXED: Handle products - API returns array directly, not nested
-      if (productsResponse.status === 'fulfilled') {
-        const products = productsResponse.value;
-        console.log('Products loaded:', products.length, products.slice(0, 2)); // Debug log
+      // Handle products the same way (no change needed)
+      if (productsResponse) {
+        const products = productsResponse;
+        console.log('Products loaded:', products.length, products.slice(0, 2)); 
         setAllProducts(products);
 
         // Create featured items (first 6 products)
@@ -478,24 +450,18 @@ export default function HomeScreen() {
             description: item.description,
             stock_quantity: item.stock_quantity,
             icon: getIconForProduct(item.name),
-            popular: false, // Simplified - no complex popularity calculation
+            popular: false,
             rating: "",
           }));
 
-        console.log('Featured products:', featuredProducts.length);
         setFeaturedItems(featuredProducts);
-      } else {
-        console.error('Failed to fetch products:', productsResponse.reason);
       }
 
-      // FIXED: Handle orders - check for correct structure
-      if (ordersResponse.status === 'fulfilled') {
-        const ordersData = ordersResponse.value;
-        console.log('Orders response structure:', Object.keys(ordersData)); // Debug log
-        
-        // Check if orders are nested under .orders property or direct array
-        const orders = ordersData.orders || ordersData || [];
-        console.log('Orders loaded:', orders.length);
+      // FIXED: Handle user-specific orders
+      if (ordersResponse.ok) {
+        // Get only this user's orders
+        const orders = ordersData.orders || [];
+        console.log('User-specific orders loaded:', orders.length);
         
         const currentStreak = calculateStreak(orders);
         const calculatedPoints = calculatePointsFromOrders(orders);
@@ -506,7 +472,7 @@ export default function HomeScreen() {
           currentStreak: currentStreak,
         });
       } else {
-        console.error('Failed to fetch orders:', ordersResponse.reason);
+        console.error('Failed to fetch orders:', ordersData.error || "Unknown error");
       }
 
       setDataLoaded(true);
@@ -663,28 +629,7 @@ export default function HomeScreen() {
     }, 20000); // Longer interval
 
     return () => clearInterval(factInterval);
-  }, [animateFactTransition]);
-
-  // Initial data loading
-  useEffect(() => {
-    fetchFeaturedItems();
-    fetchUserData();
-  }, []);
-
-  // Payment status check effect
-  useEffect(() => {
-    if (paymentStatus === "success") {
-      Alert.alert(
-        "Payment Successful",
-        "Your order has been paid successfully and is being prepared."
-      );
-    } else if (paymentStatus === "cancelled") {
-      Alert.alert(
-        "Payment Cancelled",
-        "Your payment was cancelled. Your order will be available for payment at the counter."
-      );
-    }
-  }, [paymentStatus]); // Depend on paymentStatus
+  }, [isAnimating, animateFactTransition]);
 
   // Header opacity animation
   const headerOpacity = scrollY.interpolate({
@@ -890,11 +835,11 @@ export default function HomeScreen() {
                 </Text>
               </LinearGradient>
             </Pressable>
-            ))}
-          </View>
+          ))}
         </View>
-      );
-    });
+      </View>
+    );
+  });
 
   // Featured items component
   const FeaturedItems = React.memo(() => (
@@ -1128,6 +1073,7 @@ export default function HomeScreen() {
           <HeroSection />
           <StatsSection />
           <QuickActions />
+          <RecommendationsSection />
           <FeaturedItems />
           <CoffeeFactCard />
 
