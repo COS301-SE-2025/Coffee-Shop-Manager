@@ -66,6 +66,9 @@ jobs:
             fi
             sleep 3
           done
+      - name: Install Playwright Browsers
+        working-directory: ./koffieblik
+        run: npx playwright install
 
       - name: Run Playwright Tests via Makefile
         working-directory: ./koffieblik
