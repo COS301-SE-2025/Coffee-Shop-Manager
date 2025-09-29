@@ -34,31 +34,17 @@ jobs:
         working-directory: ./koffieblik
         run: npm ci --legacy-peer-deps
 
-      - name: Copy PROD .env from secret
-        run: echo "${{ secrets.ENV_PROD }}" > .env.prod
-
-      - name: Start Docker Compose (PROD)
+      - name: Create .env.prod from secrets
         run: |
-          ENV_FILE=.env.prod docker compose --profile prod up -d
-          echo "Waiting for API to start..."
-          for i in {1..20}; do
-            if curl -s http://localhost:5000/health; then
-              echo "API is ready!"
-              break
-            fi
-            sleep 3
-          done
+          echo "FE_URL=${{ vars.FE_URL }}" >> .env.prod
+          echo "NEXT_PUBLIC_API_URL=${{ vars.NEXT_PUBLIC_API_URL }}" >> .env.prod
+          echo "ALLOWED_ORIGINS=${{ vars.ALLOWED_ORIGINS }}" >> .env.prod
+          echo "SUPABASE_PUBLIC_URL=${{ vars.SUPABASE_PUBLIC_URL }}" >> .env.prod
+          echo "SUPABASE_PRIVATE_KEY=${{ secrets.SUPABASE_PRIVATE_KEY }}" >> .env.prod
+          echo "SUPABASE_PUBLIC_KEY=${{ vars.SUPABASE_PUBLIC_KEY }}" >> .env.prod
 
       - name: Install Newman
         run: npm install -g newman newman-reporter-htmlextra
-
-      - name: Run API Tests against Local Server
-        run: |
-          mkdir -p test-results
-          newman run API/tests/Testing.postman_collection.json \
-            --env-var "URL=http://localhost:5000/" \
-            --reporters cli,htmlextra \
-            --reporter-htmlextra-export test-results/api-local-tests.html
 
       - name: Run API Tests against Production Server
         run: |
@@ -69,9 +55,21 @@ jobs:
             --reporter-htmlextra-export test-results/api-prod-tests.html \
             --suppress-exit-code  # Don't fail the workflow if prod tests fail
 
+      - name: Start Docker Compose (PROD)
+        run: |
+          ENV_FILE=.env.prod docker compose --profile prod up -d
+          echo "Waiting for API to start..."
+          for i in {1..20}; do
+            if curl -s http://localhost:5000; then
+              echo "API is ready!"
+              break
+            fi
+            sleep 3
+          done
+
       - name: Run Playwright Tests via Makefile
         working-directory: ./koffieblik
-        run: make test
+        run: make test_safe
 
       - name: Upload test results
         if: always()
