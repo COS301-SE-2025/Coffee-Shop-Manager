@@ -352,53 +352,15 @@ export default function POSPage() {
     }
 
     try {
-      // Get user profile first to get both points and user_id
-      const response = await fetch(`${API_BASE_URL}/user/${selectedEmail}`, {
-        credentials: "include",
-      });
-      
-      const userData = await response.json();
-      if (!response.ok || !userData.success) {
-        setMessage("❌ Failed to retrieve customer information.");
-        return;
-      }
-
-      const userId = userData.profile.user_id; // Get the correct user_id from profile
-      const pointsNeeded = Math.round(total * 100); // Convert total to points
-
-      if (userData.profile.loyalty_points < pointsNeeded) {
-        setMessage(`❌ Not enough points. Needed: ${pointsNeeded}, Available: ${userData.profile.loyalty_points}`);
-        return;
-      }
-
-      // Call the redeem points endpoint with the correct user_id
-      const redeemRes = await fetch(`${API_BASE_URL}/user/points`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          user_id: userId,
-          points: pointsNeeded,
-          description: `Payment for order - ${cart.map(item => `${item.name} x${item.quantity}`).join(", ")}`
-        }),
-      });
-
-      const redeemData = await redeemRes.json();
-      if (!redeemRes.ok) {
-        setMessage(`❌ Failed to redeem points: ${redeemData.error || "Unknown error"}`);
-        return;
-      }
-
-      // Create the order with the correct user_id
+      // First create the order
       const orderPayload = {
         products: cart.map((item) => ({
           product: item.name,
           quantity: item.quantity,
         })),
         email: selectedEmail,
-        paymentMethod: "points",
-        user_id: userId,
-        pointsRedeemed: pointsNeeded
+        payment_method: "points",
+        special_instructions: "Paid with loyalty points"
       };
 
       const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
@@ -409,17 +371,64 @@ export default function POSPage() {
       });
 
       const orderResult = await orderRes.json();
-
-      if (orderRes.ok && orderResult.success) {
-        setCart([]);
-        setMessage("✅ Order successfully submitted using loyalty points!");
-        fetchOrders();
-      } else {
+      if (!orderRes.ok || !orderResult.success) {
         setMessage(`❌ Failed to create order: ${orderResult.message || "Unknown error"}`);
+        return;
       }
+
+      // Then redeem points using email instead of user_id
+      const pointsNeeded = Math.round(total * 100);
+      const redeemRes = await fetch(`${API_BASE_URL}/user/points`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: selectedEmail,
+          points: pointsNeeded,
+          description: `Payment for order #${orderResult.order_id}`
+        }),
+      });
+
+      if (!redeemRes.ok) {
+        setMessage("❌ Failed to redeem points. Please contact support.");
+        return;
+      }
+
+      // Mark order as paid
+      const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderResult.order_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+
+      if (!paymentRes.ok) {
+        setMessage("❌ Order created but failed to mark as paid. Please contact support.");
+        return;
+      }
+
+      // Update order status to completed since it's paid
+      const statusRes = await fetch(`${API_BASE_URL}/update_order_status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          order_id: orderResult.order_id,
+          status: "pending"
+        }),
+      });
+
+      if (!statusRes.ok) {
+        setMessage("❌ Order paid but failed to mark as completed. Please check order status.");
+        return;
+      }
+
+      // Success! Clear cart and show success message
+      setCart([]);
+      setMessage("✅ Order successfully placed and paid with loyalty points!");
+      fetchOrders(); // Refresh orders list
     } catch (err) {
       console.error("Order error:", err);
-      setMessage("❌ Failed to submit order. Please try again.");
+      setMessage("❌ Failed to process order. Please try again.");
     }
   };
 
