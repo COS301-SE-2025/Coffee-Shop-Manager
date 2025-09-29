@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test.describe("Login Flow", () => {
   // user test
   test("Login works with valid credentials user", async ({ page }) => {
-    await page.goto("http://localhost:3000/login");
+    await page.goto("https://www.diekoffieblik.co.za/login");
     await page.fill("#email", "user@coffee.com");
     await page.fill("#password", "user");
 
@@ -19,7 +19,7 @@ test.describe("Login Flow", () => {
   });
 
   test("Login works with valid credentials admin", async ({ page }) => {
-    await page.goto("http://localhost:3000/login");
+    await page.goto("https://www.diekoffieblik.co.za/login");
     await page.fill("#email", "admin@coffee.com");
     await page.fill("#password", "admin");
 
@@ -35,7 +35,7 @@ test.describe("Login Flow", () => {
   });
 
   test("Shows error for invalid credentials", async ({ page }) => {
-    await page.goto("http://localhost:3000/login");
+    await page.goto("https://www.diekoffieblik.co.za/login");
     await page.fill("#email", "invalid@example.com");
     await page.fill("#password", "WrongPas@sword123");
     await page.click('button[type="submit"]');

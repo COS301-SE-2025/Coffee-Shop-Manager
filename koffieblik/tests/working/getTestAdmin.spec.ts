@@ -4,7 +4,7 @@ const email = "admin@coffee.com";
 const password = "admin";
 
 async function login(page: Page) {
-  await page.goto("http://localhost:3000/login");
+  await page.goto("https://www.diekoffieblik.co.za/login");
   await page.waitForLoadState("networkidle");
 
   await page.waitForTimeout(3000); // wait for hydration
@@ -35,7 +35,7 @@ test("fetches and displays orders from /get_orders on dashboard", async ({
   page,
 }) => {
   await login(page);
-  await page.goto("http://localhost:3000/dashboard");
+  await page.goto("https://www.diekoffieblik.co.za/dashboard");
   await page.waitForLoadState("networkidle");
   await page.waitForTimeout(3000); // hydration
 
@@ -57,7 +57,7 @@ test("fetches and displays orders from /get_orders on dashboard", async ({
 //   await login(page);
 
 //   // Navigate to dashboard → POS
-//   await page.goto("http://localhost:3000/dashboard");
+//   await page.goto("https://www.diekoffieblik.co.za/dashboard");
 //   await page.waitForLoadState("networkidle");
 //   await page.waitForTimeout(2000);
 
