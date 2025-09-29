@@ -29,6 +29,7 @@ import { startStockTakeHandler } from "./endpoints/stock/stock_take/startStockTa
 import { saveStockTakeItemsHandler } from "./endpoints/stock/stock_take/saveStockTakeItems";
 import { completeStockTakeHandler } from "./endpoints/stock/stock_take/completeStockTake";
 import { getStockAdjustmentsHandler } from "./endpoints/stock/getStockAdjustments";
+import { deleteStockHandler } from "./endpoints/stock/deleteStock";
 
 // ORDERS
 import { getOrdersHandler } from "./endpoints/order/getOrders";
@@ -89,6 +90,7 @@ router.post("/stock/take/complete", authMiddleware, completeStockTakeHandler);
 router.put("/stock", authMiddleware, updateStockByIdOrNameHandler);
 router.put("/stock/batch", authMiddleware, batchUpdateStockHandler);
 router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
+router.delete("/stock/:id", authMiddleware, deleteStockHandler);
 
 // ORDERS
 router.get("/order", authMiddleware, getOrdersHandler);
