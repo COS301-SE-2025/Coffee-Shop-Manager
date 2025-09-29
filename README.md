@@ -12,15 +12,20 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## 🚀 Demo & Docs
 
+- 📑 [Requirements Specification V4 (SRS)](docs/SRS-Coffee_Shop_Manager_V4.pdf)
 - 📑 [Requirements Specification V3 (SRS)](docs/SRS-Coffee_Shop_Manager_V3.pdf)
 - 📑 [Requirements Specification V2 (SRS)](docs/SRS-Coffee_Shop_Manager_V2.pdf)
 - 📑 [Requirements Specification (SRS)](docs/SRS-Coffee_Shop_Manager.pdf)
 - 📋 [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/119/views/1)
 - 👥 [User Manual V1](docs/User_Manual_V1.pdf)
 - 👥 [User Manual Website V2](docs/User_Manual_V2.pdf)
+- 👥 [User Manual Website V3](docs/User_Manual_V3.pdf)
+- 👥 [User Manual Website V4](docs/User_Manual_V4.pdf)
 - 📱 [User Manual Mobile App](docs/DieKoffieBlikApp_User_Manual.pdf)
 - ✅ [Coding Standards Document](docs/DieKoffieBlik_Coding_Standards.pdf)
 - 🛠 [Technical Installation](docs/Technical_installation.pdf)
+- 🛠 [Technical Installation V2](docs/Technical_installation_V2.pdf)
+- 📋 [Testing Policy](docs/Testing_Policy_Document.pdf)
 
 ---
 
@@ -31,17 +36,37 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ---
 
-## 🛠 Technologies Used
+## Tech Stack
 
-| Area               | Tech Stack                    |
-|--------------------|-------------------------------|
-| Frontend (Web)     | Next.js                       |
-| Frontend (Mobile)  | React Native                  |
-| Backend            | Node.js                       |
-| Database           | PostgreSQL                    |
-| DevOps / CI/CD     | GitHub Actions, Docker        |
-| Testing            | Jest, React Testing Library   |
-| Version Control    | Git, GitHub                   |
+**Frontend:**  
+
+- React
+- HTML5, CSS3
+
+**Backend:**  
+
+- Node.js
+- RESTful APIs
+
+**Database:**  
+
+- PostgreSQL (Through Supabase)
+
+**Authentication & Security:**  
+
+- JWT (JSON Web Tokens)
+
+**DevOps & Deployment:**  
+
+- Docker (containerization)
+- GitHub Actions (CI/CD)
+- Cloud Hosting (Render)
+
+**Other Tools:**  
+
+- TypeScript
+- ESLint, Prettier (code quality)
+- Postman (API documentation)
 
 ---
 

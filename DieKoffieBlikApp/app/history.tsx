@@ -18,7 +18,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface Order {
   id: string;
@@ -26,6 +26,7 @@ interface Order {
   status: string;
   total_price: number;
   created_at: string;
+  order_number: number; // Add this field that exists in API
   order_products: {
     quantity: number;
     price: number;
@@ -65,6 +66,9 @@ export default function OrderHistoryScreen() {
 
     try {
       const accessToken = await AsyncStorage.getItem("access_token");
+      const userId = await AsyncStorage.getItem("user_id");
+      
+      console.log("Fetching orders for user:", userId);
       
       if (!accessToken) {
         Alert.alert("Session Expired", "Please log in again");
@@ -72,17 +76,29 @@ export default function OrderHistoryScreen() {
         return;
       }
 
-      const response = await fetch(`${API_BASE_URL}/order`, {
-        method: "GET",
+      // Use the same endpoint and filtering approach as the web app
+      const response = await fetch(`${API_BASE_URL}/get_orders`, {
+        method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
+          "Authorization": `Bearer ${accessToken}`,
         },
+        body: JSON.stringify({
+          offset: 0,
+          limit: 100,
+          orderBy: "created_at",
+          orderDirection: "desc",
+          filters: {
+            user_id: userId
+          }
+        })
       });
 
       const data = await response.json();
+      console.log("Orders API response:", data);
 
-      if (response.ok && data.orders) {
+      // Check for the correct success field (it's "sucess" in the API, not "success")
+      if (response.ok && (data.sucess || data.success) && data.orders) {
         setOrders(data.orders);
         console.log("Fetched orders:", data.orders.length);
       } else {
@@ -117,7 +133,7 @@ export default function OrderHistoryScreen() {
       total: `R ${order.total_price.toFixed(2)}`,
       restaurant: "Die Koffieblik Café",
       items_detail: itemsDetail,
-      orderNumber: order.number,
+      orderNumber: order.order_number, // Use the correct field from API
     };
   };
 

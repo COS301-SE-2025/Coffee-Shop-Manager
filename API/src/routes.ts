@@ -16,6 +16,7 @@ import { getUserProfileHandler } from "./endpoints/user/getUser";
 import { updateUserProfileHandler } from "./endpoints/user/updateUser";
 import { getUserEmailsHandler } from "./endpoints/user/getUserEmails";
 import { getUserPointsHistoryHandler } from "./endpoints/user/getPointsHistory";
+import { redeemLoyaltyPointsHandler } from "./endpoints/user/redeemPoints";
 import { getRecommendationsHandler } from "./endpoints/user/getRecommendation";
 
 // STOCK
@@ -28,6 +29,7 @@ import { startStockTakeHandler } from "./endpoints/stock/stock_take/startStockTa
 import { saveStockTakeItemsHandler } from "./endpoints/stock/stock_take/saveStockTakeItems";
 import { completeStockTakeHandler } from "./endpoints/stock/stock_take/completeStockTake";
 import { getStockAdjustmentsHandler } from "./endpoints/stock/getStockAdjustments";
+import { deleteStockHandler } from "./endpoints/stock/deleteStock";
 
 // ORDERS
 import { getOrdersHandler } from "./endpoints/order/getOrders";
@@ -67,6 +69,7 @@ router.get("/leaderboard", authMiddleware, getLeaderboardHandler);
 // USERS
 router.get("/user/recommendation", authMiddleware, getRecommendationsHandler);
 router.get("/user/points", authMiddleware, getUserPointsHistoryHandler);
+router.post("/user/points", authMiddleware, redeemLoyaltyPointsHandler);
 router.get("/user/emails", authMiddleware, getUserEmailsHandler);
 router.get("/user/:id", getUserProfileHandler);
 router.post("/login", loginHandler);
@@ -87,6 +90,7 @@ router.post("/stock/take/complete", authMiddleware, completeStockTakeHandler);
 router.put("/stock", authMiddleware, updateStockByIdOrNameHandler);
 router.put("/stock/batch", authMiddleware, batchUpdateStockHandler);
 router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
+router.delete("/stock/:id", authMiddleware, deleteStockHandler);
 
 // ORDERS
 router.get("/order", authMiddleware, getOrdersHandler);

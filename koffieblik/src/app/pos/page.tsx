@@ -104,6 +104,7 @@ export default function POSPage() {
     switch (normalized) {
       case "completed":
       case "paid":
+      case "points": // Add this case for orders paid with points
         return `${baseClasses} bg-green-100 text-green-800`;
       case "pending":
         return `${baseClasses} bg-yellow-100 text-yellow-800`;
@@ -163,21 +164,49 @@ export default function POSPage() {
     if (!prevOrder) return;
 
     try {
+      // Update the order status
       const res = await fetch(`${API_BASE_URL}/update_order_status`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
         credentials: "include",
-        body: JSON.stringify({ order_id: orderId, status: newStatus }),
+        body: JSON.stringify({ 
+          order_id: orderId, 
+          status: newStatus
+        }),
       });
 
       const data = await res.json();
 
+      // If status updated successfully and new status is "completed", update payment status
+      if (data.success && newStatus === "completed") {
+        // Call the dedicated payment API endpoint
+        const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderId}`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include"
+        });
+        
+        const paymentData = await paymentRes.json();
+        if (!paymentRes.ok) {
+          console.error("Failed to update payment status:", paymentData.message);
+        }
+      }
+
       if (data.success) {
         setOrders((prev) =>
           prev.map((order) =>
-            order.id === orderId ? { ...order, status: newStatus } : order,
+            order.id === orderId 
+              ? { 
+                  ...order, 
+                  status: newStatus,
+                  // Also update paid_status in local state when completed
+                  paid_status: newStatus === "completed" ? "paid" : order.paid_status 
+                } 
+              : order
           ),
         );
 
@@ -187,7 +216,6 @@ export default function POSPage() {
           setToast(null);
           fetchOrders();
         }, 5000);
-
       } else {
         console.error("❌ Failed to update order status:", data.message || data.error);
       }
@@ -308,6 +336,173 @@ export default function POSPage() {
     }
   };
 
+  // Add this with your other state variables
+  const [selectedUserPoints, setSelectedUserPoints] = useState(0);
+
+  // Add this function after your existing completeOrder function
+  const completeOrderWithPoints = async () => {
+    if (cart.length === 0) {
+      setMessage("Please add products to the cart first.");
+      return;
+    }
+
+    if (!selectedEmail) {
+      setMessage("Please select a customer to use loyalty points.");
+      return;
+    }
+
+    try {
+      // First create the order
+      const orderPayload = {
+        products: cart.map((item) => ({
+          product: item.name,
+          quantity: item.quantity,
+        })),
+        email: selectedEmail,
+        payment_method: "points",
+        special_instructions: "Paid with loyalty points"
+      };
+
+      const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(orderPayload),
+      });
+
+      const orderResult = await orderRes.json();
+      if (!orderRes.ok || !orderResult.success) {
+        setMessage(`❌ Failed to create order: ${orderResult.message || "Unknown error"}`);
+        return;
+      }
+
+      // Then redeem points using email instead of user_id
+      const pointsNeeded = Math.round(total * 100);
+      const redeemRes = await fetch(`${API_BASE_URL}/user/points`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          email: selectedEmail,
+          points: pointsNeeded,
+          description: `Payment for order #${orderResult.order_id}`
+        }),
+      });
+
+      if (!redeemRes.ok) {
+        setMessage("❌ Failed to redeem points. Please contact support.");
+        return;
+      }
+
+      // Mark order as paid
+      const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderResult.order_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include"
+      });
+
+      if (!paymentRes.ok) {
+        setMessage("❌ Order created but failed to mark as paid. Please contact support.");
+        return;
+      }
+
+      // Update order status to completed since it's paid
+      const statusRes = await fetch(`${API_BASE_URL}/update_order_status`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          order_id: orderResult.order_id,
+          status: "pending"
+        }),
+      });
+
+      if (!statusRes.ok) {
+        setMessage("❌ Order paid but failed to mark as completed. Please check order status.");
+        return;
+      }
+
+      // Success! Clear cart and show success message
+      setCart([]);
+      setMessage("✅ Order successfully placed and paid with loyalty points!");
+      fetchOrders(); // Refresh orders list
+    } catch (err) {
+      console.error("Order error:", err);
+      setMessage("❌ Failed to process order. Please try again.");
+    }
+  };
+
+  // Add this useEffect to fetch user points when email changes
+  useEffect(() => {
+    const fetchUserDetails = async () => {
+      if (!selectedEmail) {
+        setSelectedUserPoints(0);
+        return;
+      }
+      
+      try {
+        // Use query parameters instead of path parameters
+        const response = await fetch(`${API_BASE_URL}/user/byEmail?email=${encodeURIComponent(selectedEmail)}`, {
+          credentials: "include",
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setSelectedUserPoints(data.user.loyalty_points || 0);
+          console.log(`User has ${data.user.loyalty_points} loyalty points`);
+        } else {
+          console.error("Failed to fetch user details:", data.error);
+          setSelectedUserPoints(0);
+        }
+      } catch (err) {
+        console.error("Error fetching user details:", err);
+        setSelectedUserPoints(0);
+      }
+    };
+    
+    fetchUserDetails();
+  }, [selectedEmail, API_BASE_URL]);
+
+  // Add to your state variables
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+
+  // Add this useEffect to fetch user points
+  useEffect(() => {
+    const fetchLoyaltyPoints = async () => {
+      if (!selectedEmail) {
+        setLoyaltyPoints(0);
+        return;
+      }
+      
+      try {
+        // Get user_id from localStorage
+        const userId = localStorage.getItem("user_id");
+        if (!userId) {
+          console.error("No user ID found in localStorage");
+          return;
+        }
+        
+        // Call the user profile endpoint with the ID
+        const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+          credentials: "include",
+        });
+        
+        const data = await response.json();
+        if (response.ok && data.success && data.profile) {
+          const points = data.profile.loyalty_points || 0;
+          setLoyaltyPoints(points);
+          console.log(`User has ${points} loyalty points (${points/100} value)`);
+        } else {
+          console.error("Failed to fetch user profile:", data.error || "Unknown error");
+        }
+      } catch (err) {
+        console.error("Error fetching user profile:", err);
+      }
+    };
+    
+    fetchLoyaltyPoints();
+  }, [selectedEmail, API_BASE_URL]);
+
   return (
     <main className="relative min-h-full bg-transparent">
       <div className="p-8">
@@ -396,12 +591,14 @@ export default function POSPage() {
                     borderColor: "var(--primary-2)"
                   }}
                 >
-                  <p
-                    className="text-sm"
-                    style={{ color: "var(--primary-2)" }}
-                  >
+                  <p className="text-sm" style={{ color: "var(--primary-2)" }}>
                     Selected: <span className="font-semibold">{selectedEmail}</span>
                   </p>
+                  {selectedUserPoints > 0 && (
+                    <p className="text-sm mt-1" style={{ color: "var(--primary-2)" }}>
+                      <span className="font-semibold">⭐ {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
+                    </p>
+                  )}
                 </div>
               )}
             </div>
@@ -571,12 +768,43 @@ export default function POSPage() {
                       </div>
                     )}
 
+                    {/* Complete Order Button - Improved Theme */}
                     <button
                       onClick={completeOrder}
-                      className="w-full py-4 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg"
-                      style={{ backgroundColor: "var(--primary-2)" }}
+                      className="w-full py-4 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                      style={{ 
+                        background: "linear-gradient(135deg, #5a2e14ff, #5a2e14ff)",
+                        boxShadow: "0 4px 12px rgba(120, 53, 15, 0.3)",
+                        border: "1px solid #5a2e14ff" 
+                      }}
                     >
+                      <span className="text-lg">🛒</span> 
                       Complete Order
+                    </button>
+
+                    {/* Pay with Loyalty Points Button - Fixed Logic and Styled to Theme */}
+                    <button
+                      onClick={completeOrderWithPoints}
+                      disabled={!selectedEmail || (loyaltyPoints < total * 100)} 
+                      className="w-full mt-3 py-4 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                      style={{ 
+                        background: (selectedEmail && loyaltyPoints >= total * 100) ? 
+                          "linear-gradient(135deg, #92400e, #b45309)" : 
+                          "linear-gradient(to right, #d1d5db, #e5e7eb)",
+                        boxShadow: (selectedEmail && loyaltyPoints >= total * 100) ? 
+                          "0 4px 12px rgba(120, 53, 15, 0.2)" : "none",
+                        border: (selectedEmail && loyaltyPoints >= total * 100) ?
+                          "1px solid #b45309" : "1px solid #d1d5db",
+                        color: (selectedEmail && loyaltyPoints >= total * 100) ? "white" : "#6b7280",
+                        opacity: (selectedEmail && loyaltyPoints >= total * 100) ? 1 : 0.7,
+                        cursor: (selectedEmail && loyaltyPoints >= total * 100) ? "pointer" : "not-allowed"
+                      }}
+                    >
+                      <span className="text-lg">⭐</span> 
+                      Pay with Loyalty Points
+                      {loyaltyPoints >= total * 100 ? 
+                        "" : 
+                        ` (Need ${Math.ceil(total*100 - loyaltyPoints)} more points)`}
                     </button>
                   </div>
                 </div>

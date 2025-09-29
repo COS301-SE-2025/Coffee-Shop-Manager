@@ -40,10 +40,13 @@ export default function OrderPage() {
     email: "",
     notes: specialInstructions
   });
+  const [userPoints, setUserPoints] = useState(0);
   const router = useRouter();
 
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
+
+  const userId = localStorage.getItem("user_id");
 
   // IMPORTANT: All useEffect hooks must be at the top level, before any conditional returns
   useEffect(() => {
@@ -145,6 +148,26 @@ export default function OrderPage() {
       checkPayment();
     }
   }, [API_BASE_URL]);
+
+  useEffect(() => {
+    const fetchUserPoints = async () => {
+      if (!userId) return;
+      
+      try {
+        const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+          credentials: "include",
+        });
+        const data = await response.json();
+        if (response.ok && data.success) {
+          setUserPoints(data.profile.loyalty_points);
+        }
+      } catch (err) {
+        console.error("Failed to fetch user points:", err);
+      }
+    };
+
+    fetchUserPoints();
+  }, [userId, API_BASE_URL]);
 
   const addToCart = (item: MenuItem) => {
     setCart((prevCart) => {
@@ -349,18 +372,84 @@ export default function OrderPage() {
 
   // Payment Method Selection Modal
   if (orderStatus === "selecting-payment") {
+    async function handlePayWithPoints(event: React.MouseEvent<HTMLButtonElement, MouseEvent>): Promise<void> {
+      event.preventDefault();
+      if (userPoints < Math.round(orderSummary.total * 100)) {
+        setMessage("You do not have enough points to pay for this order.");
+        return;
+      }
+      setMessage("");
+      setOrderStatus("confirming");
+      try {
+        const payload = {
+          products: cart.map((item) => ({
+            product: item.name,
+            quantity: item.quantity,
+          })),
+          special_instructions: specialInstructions,
+          payment_method: "points",
+        };
+        const res = await fetch(`${API_BASE_URL}/create_order`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify(payload),
+        });
+        const result = await res.json();
+        if (res.ok && result.success) {
+          // First deduct points
+          const pointsRes = await fetch(`${API_BASE_URL}/user/points`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              points: Math.round(orderSummary.total * 100),
+              user_id: userId,
+            }),
+          });
+          const pointsResult = await pointsRes.json();
+          
+          if (pointsRes.ok && pointsResult.success) {
+            // Then mark order as paid
+            const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${result.order_id}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              credentials: "include"
+            });
+
+            if (paymentRes.ok) {
+              setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
+              setOrderStatus("placed");
+              setCart([]);
+              setSelectedPaymentMethod(null);
+              setMessage("Order placed and paid with loyalty points!");
+            } else {
+              setOrderStatus("ordering");
+              setMessage("Order created and points deducted, but failed to mark as paid. Please contact support.");
+            }
+          } else {
+            setOrderStatus("ordering");
+            setMessage("Order created, but failed to redeem points. Please contact support.");
+          }
+        } else {
+          setOrderStatus("ordering");
+          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
+        }
+      } catch (err) {
+        setOrderStatus("ordering");
+        setMessage("Failed to process points payment. Please try again.");
+      }
+    }
+
     return (
-      <div className="min-h-screen w-full">
+      <div className="min-h-screen w-full overflow-y-auto"> {/* Added overflow-y-auto */}
         <div className="fixed inset-0 w-full h-full">
           <CoffeeBackground />
         </div>
 
-        <div className="fixed inset-0 z-10 flex items-center justify-center p-4 top-[250px]">
-          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative z-20">
-            <h2
-              className="text-2xl font-bold mb-6 text-center"
-              style={{ color: "var(--primary-3)" }}
-            >
+        <div className="fixed inset-0 z-10 flex items-start justify-center p-4 overflow-y-auto"> 
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full p-8 relative z-20 mt-[200px]"> {/* Changed my-4 to mt-[200px] */}
+            <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: "var(--primary-3)" }}>
               Choose Payment Method
             </h2>
             
@@ -463,11 +552,31 @@ export default function OrderPage() {
                 </svg>
                 <span className="text-lg font-semibold">Cash Payment</span>
               </button>
+
+              {/* Add Loyalty Points Button */}
+              <button
+                onClick={handlePayWithPoints}
+                className="w-full p-4 border-2 rounded-lg hover:shadow-md transition-all duration-200 flex items-center justify-center space-x-3"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  backgroundColor: "white",
+                  color: "var(--primary-3)",
+                }}
+                disabled={userPoints < Math.round(orderSummary.total * 100)}
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-lg font-semibold">Pay with Points ({Math.round(orderSummary.total * 100)} points)</span>
+              </button>
             </div>
 
             <div className="text-center">
-              <p className="text-lg font-semibold mb-4" style={{ color: "var(--primary-3)" }}>
-                Total: R{getOrderSummary().total.toFixed(2)}
+              <p className="text-lg font-semibold mb-2" style={{ color: "var(--primary-3)" }}>
+                Total: R{orderSummary.total.toFixed(2)}
+              </p>
+              <p className="text-sm mb-4" style={{ color: "var(--primary-3)" }}>
+                Available Points: {userPoints}
               </p>
               
               <button

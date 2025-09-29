@@ -5,6 +5,7 @@ import {
   StyleSheet,
   SafeAreaView,
   StatusBar,
+  Platform,
   Pressable,
   ScrollView,
   Switch,
@@ -18,7 +19,7 @@ import CoffeeBackground from "../assets/coffee-background";
 import CoffeeLoading from "../assets/loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 interface UpdateProfileData {
   display_name: string;
@@ -283,19 +284,19 @@ export default function AccountSettingsScreen() {
     );
   }
 
-  // Error state
+  // Error state - Fixed the JSX issue
   if (error) {
     return (
       <SafeAreaView style={[styles.container, styles.centerContent]}>
-        <View
-          style={{ flex: 1, justifyContent: "center", alignItems: "center" }}
-        >
-          <Ionicons name="alert-circle" size={48} color="#ef4444" />
-          <Text style={styles.errorText}>{error ?? "An error occurred"}</Text>
-          <Pressable style={styles.retryButton} onPress={fetchUserData}>
-            <Text style={styles.retryButtonText}>Try Again</Text>
-          </Pressable>
-        </View>
+        <CoffeeBackground>
+          <View style={styles.errorContainer}>
+            <Ionicons name="alert-circle" size={48} color="#ef4444" />
+            <Text style={styles.errorText}>{error}</Text>
+            <Pressable style={styles.retryButton} onPress={fetchUserData}>
+              <Text style={styles.retryButtonText}>Try Again</Text>
+            </Pressable>
+          </View>
+        </CoffeeBackground>
       </SafeAreaView>
     );
   }
@@ -315,13 +316,18 @@ export default function AccountSettingsScreen() {
             <Ionicons name="arrow-back" size={24} color="#78350f" />
           </Pressable>
           <Text style={styles.navTitle}>Account Settings</Text>
-          <View style={{ width: 24 }}></View> {/* Spacer for alignment */}
+          <View style={{ width: 24 }} />
         </View>
 
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {/* Profile Section */}
           <View style={styles.profileSection}>
-            <Ionicons name="person-circle" size={80} color="#78350f" />
+            <View style={styles.profileImageContainer}>
+              <Ionicons name="person-circle" size={80} color="#78350f" />
+              <View style={styles.editImageButton}>
+                <Ionicons name="camera" size={16} color="#78350f" />
+              </View>
+            </View>
             <Text style={styles.profileName}>{name || "User"}</Text>
             <Text style={styles.profileEmail}>{email || "No email"}</Text>
           </View>
@@ -331,18 +337,19 @@ export default function AccountSettingsScreen() {
             <Text style={styles.sectionTitle}>Personal Information</Text>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Name</Text>
+              <Text style={styles.inputLabel}>Display Name</Text>
               <TextInput
                 style={styles.input}
                 value={name}
                 onChangeText={setName}
-                placeholder="Enter your name"
+                placeholder="Enter your display name"
                 placeholderTextColor="#9ca3af"
+                autoCapitalize="words"
               />
             </View>
 
             <View style={styles.inputGroup}>
-              <Text style={styles.inputLabel}>Email</Text>
+              <Text style={styles.inputLabel}>Email Address</Text>
               <TextInput
                 style={[styles.input, styles.inputDisabled]}
                 value={email}
@@ -362,10 +369,13 @@ export default function AccountSettingsScreen() {
                 value={phone}
                 onChangeText={validatePhoneNumber}
                 keyboardType="phone-pad"
-                placeholder="10-digit phone number"
+                placeholder="0123456789"
                 placeholderTextColor="#9ca3af"
                 maxLength={10}
               />
+              <Text style={styles.inputNote}>
+                Must be 10 digits starting with 0
+              </Text>
             </View>
 
             <View style={styles.inputGroup}>
@@ -376,7 +386,11 @@ export default function AccountSettingsScreen() {
                 onChangeText={setDateOfBirth}
                 placeholder="YYYY-MM-DD"
                 placeholderTextColor="#9ca3af"
+                maxLength={10}
               />
+              <Text style={styles.inputNote}>
+                Format: YYYY-MM-DD (e.g., 1990-12-25)
+              </Text>
             </View>
 
             <View style={styles.inputGroup}>
@@ -385,35 +399,22 @@ export default function AccountSettingsScreen() {
                 style={styles.input}
                 value={password}
                 onChangeText={setPassword}
-                placeholder="Enter new password (min 8 characters)"
+                placeholder="Enter new password"
                 placeholderTextColor="#9ca3af"
                 secureTextEntry
                 autoCapitalize="none"
+                autoCorrect={false}
               />
+              <Text style={styles.inputNote}>
+                Minimum 8 characters. Leave blank to keep current password.
+              </Text>
             </View>
           </View>
 
-          {/* Preferences Section */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Preferences</Text>
+         
 
-            <View style={styles.preferenceRow}>
-              <View style={styles.preferenceLeft}>
-                <Text style={styles.preferenceText}>Enable Notifications</Text>
-                <Text style={styles.preferenceSubtext}>
-                  Get updates about your orders
-                </Text>
-              </View>
-              <Switch
-                value={notificationsEnabled}
-                onValueChange={setNotificationsEnabled}
-                trackColor={{ false: "#d1d5db", true: "#fbbf24" }}
-                thumbColor={notificationsEnabled ? "#78350f" : "#f4f3f4"}
-              />
-            </View>
-
-            
-          </View>
+         
+          
 
           {/* Save Button */}
           <Pressable
@@ -425,22 +426,27 @@ export default function AccountSettingsScreen() {
             {isSaving ? (
               <View style={styles.savingContainer}>
                 <ActivityIndicator size="small" color="#fff" />
-                <Text style={styles.saveButtonText}>Saving...</Text>
+                <Text style={styles.saveButtonText}>Saving Changes...</Text>
               </View>
             ) : (
               <Text style={styles.saveButtonText}>Save Changes</Text>
             )}
           </Pressable>
 
-          {/* Logout */}
+          {/* Logout Button */}
           <Pressable
             style={styles.logoutButton}
             onPress={handleLogout}
-            android_ripple={{ color: "#78350f20" }}
+            android_ripple={{ color: "#ef444420" }}
           >
-            <Ionicons name="log-out-outline" size={20} color="#b91c1c" />
-            <Text style={styles.logoutText}>Log Out</Text>
+            <Ionicons name="log-out-outline" size={20} color="#ef4444" />
+            <Text style={styles.logoutText}>Sign Out</Text>
           </Pressable>
+
+          {/* App Version */}
+          <View style={styles.versionContainer}>
+            <Text style={styles.versionText}>DieKoffieBlik v1.0.0</Text>
+          </View>
         </ScrollView>
       </CoffeeBackground>
     </SafeAreaView>
@@ -457,10 +463,11 @@ const styles = StyleSheet.create({
     alignItems: "center",
     padding: 20,
   },
-  loadingText: {
-    marginTop: 16,
-    fontSize: 16,
-    color: "#78350f",
+  errorContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
   },
   errorText: {
     marginTop: 16,
@@ -468,12 +475,18 @@ const styles = StyleSheet.create({
     color: "#ef4444",
     textAlign: "center",
     marginBottom: 20,
+    lineHeight: 24,
   },
   retryButton: {
     backgroundColor: "#78350f",
     paddingHorizontal: 24,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 12,
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
   retryButtonText: {
     color: "#fff",
@@ -500,6 +513,7 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     alignItems: "center",
     justifyContent: "center",
+    backgroundColor: "#fff7ed",
   },
   navTitle: {
     fontSize: 18,
@@ -508,48 +522,69 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     padding: 20,
+    paddingBottom: 40,
   },
   profileSection: {
     alignItems: "center",
     marginBottom: 32,
+    paddingVertical: 20,
+  },
+  profileImageContainer: {
+    position: "relative",
+    marginBottom: 12,
+  },
+  editImageButton: {
+    position: "absolute",
+    bottom: 0,
+    right: 0,
+    backgroundColor: "#fff",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
   },
   profileName: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#78350f",
-    marginTop: 8,
+    marginBottom: 4,
   },
   profileEmail: {
     fontSize: 14,
     color: "#9ca3af",
-    marginTop: 4,
   },
   section: {
     marginBottom: 32,
   },
   sectionTitle: {
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
     color: "#78350f",
     marginBottom: 16,
   },
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
   },
   inputLabel: {
     fontSize: 14,
     color: "#b45309",
-    marginBottom: 6,
-    fontWeight: "500",
+    marginBottom: 8,
+    fontWeight: "600",
   },
   input: {
     backgroundColor: "#fff",
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: "#e5e7eb",
-    fontSize: 14,
+    fontSize: 16,
     color: "#78350f",
     shadowColor: "#000",
     shadowOpacity: 0.05,
@@ -564,8 +599,9 @@ const styles = StyleSheet.create({
   inputNote: {
     fontSize: 12,
     color: "#9ca3af",
-    marginTop: 4,
+    marginTop: 6,
     fontStyle: "italic",
+    lineHeight: 16,
   },
   preferenceRow: {
     flexDirection: "row",
@@ -584,23 +620,46 @@ const styles = StyleSheet.create({
   },
   preferenceLeft: {
     flex: 1,
+    marginRight: 16,
   },
   preferenceText: {
     fontSize: 16,
     color: "#78350f",
     fontWeight: "600",
-    marginBottom: 2,
+    marginBottom: 4,
   },
   preferenceSubtext: {
-    fontSize: 12,
+    fontSize: 13,
     color: "#9ca3af",
+    lineHeight: 18,
+  },
+  actionButton: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#fff",
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    borderRadius: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  actionButtonText: {
+    flex: 1,
+    fontSize: 16,
+    color: "#78350f",
+    fontWeight: "500",
+    marginLeft: 12,
   },
   saveButton: {
     backgroundColor: "#78350f",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
-    marginBottom: 24,
+    marginBottom: 16,
     shadowColor: "#78350f",
     shadowOpacity: 0.3,
     shadowOffset: { width: 0, height: 4 },
@@ -625,17 +684,27 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    paddingVertical: 12,
+    paddingVertical: 14,
     paddingHorizontal: 16,
-    borderRadius: 8,
+    borderRadius: 12,
     backgroundColor: "#fff",
     borderWidth: 1,
     borderColor: "#fecaca",
+    marginBottom: 24,
   },
   logoutText: {
-    color: "#b91c1c",
-    fontSize: 14,
+    color: "#ef4444",
+    fontSize: 16,
     fontWeight: "600",
-    marginLeft: 6,
+    marginLeft: 8,
+  },
+  versionContainer: {
+    alignItems: "center",
+    paddingTop: 16,
+  },
+  versionText: {
+    fontSize: 12,
+    color: "#9ca3af",
+    fontStyle: "italic",
   },
 });

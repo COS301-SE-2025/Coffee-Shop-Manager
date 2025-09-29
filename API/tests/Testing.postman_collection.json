@@ -59,63 +59,6 @@
 			"name": "Users",
 			"item": [
 				{
-					"name": "Login Exisitng User",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"let response = pm.response.json();\r",
-									"\r",
-									"pm.test(\"Status code [200]\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Content-Type is JSON\", function () {\r",
-									"    pm.response.to.have.header(\"Content-Type\");\r",
-									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response has fields ['success', 'username', 'role]\", function () {\r",
-									"    pm.expect(response).to.have.property(\"success\");\r",
-									"    pm.expect(response).to.have.property(\"username\");\r",
-									"    // pm.expect(response).to.have.property(\"role\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"'success' should be true\", function () {\r",
-									"    pm.expect(response.success).to.eql(true);\r",
-									"});"
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\r\n    \"email\":\"user@coffee.com\",\r\n    \"password\":\"user\"\r\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{URL}}/login",
-							"host": [
-								"{{URL}}"
-							],
-							"path": [
-								"login"
-							]
-						}
-					},
-					"response": []
-				},
-				{
 					"name": "Signup New User",
 					"event": [
 						{
@@ -147,7 +90,7 @@
 									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
 									"});\r",
 									"\r",
-									"pm.test(\"Response has fields ['success', 'message', 'user]\", function () {\r",
+									"pm.test(\"Response has fields ['success', 'message', 'user']\", function () {\r",
 									"    pm.expect(response).to.have.property(\"success\");\r",
 									"    pm.expect(response).to.have.property(\"message\");\r",
 									"    pm.expect(response).to.have.property(\"user\");\r",
@@ -261,6 +204,345 @@
 					"response": []
 				},
 				{
+					"name": "Get User by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'profile']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"profile\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'profile' should be an object\", function () {\r",
+									"    pm.expect(response.profile).to.be.an(\"object\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'user_id' should match\", function () {\r",
+									"    pm.expect(response.profile.user_id).to.eql(pm.collectionVariables.get(\"signupUserId\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'display_name' should be 'testing'\", function () {\r",
+									"    pm.expect(response.profile.display_name).to.eql(\"testing\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'profile' object has correct structure\", function () {\r",
+									"    const expectedKeys = [\r",
+									"        \"user_id\",\r",
+									"        \"favourite_product_id\",\r",
+									"        \"total_orders\",\r",
+									"        \"total_spent\",\r",
+									"        \"date_of_birth\",\r",
+									"        \"phone_number\",\r",
+									"        \"loyalty_points\",\r",
+									"        \"role\",\r",
+									"        \"display_name\"\r",
+									"    ];\r",
+									"    pm.expect(Object.keys(response.profile)).to.have.members(expectedKeys);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/user/{{signupUserId}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"{{signupUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update User by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'profile']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"profile\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'profile' should be an object\", function () {\r",
+									"    pm.expect(response.profile).to.be.an(\"object\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'user_id' should match\", function () {\r",
+									"    pm.expect(response.profile.user_id).to.eql(pm.collectionVariables.get(\"signupUserId\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'display_name' should be match expected value\", function () {\r",
+									"    pm.expect(response.profile.display_name).to.eql(\"testing update\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'date_of_birth' should match expected value\", function () {\r",
+									"    pm.expect(response.profile.date_of_birth).to.eql(\"1990-01-01\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'phone_number' should match expected value\", function () {\r",
+									"    pm.expect(response.profile.phone_number).to.eql(\"+27123456789\");\r",
+									"});\r",
+									"\r",
+									"\r",
+									"pm.test(\"'profile' object has correct structure\", function () {\r",
+									"    const expectedKeys = [\r",
+									"        \"user_id\",\r",
+									"        \"favourite_product_id\",\r",
+									"        \"total_orders\",\r",
+									"        \"total_spent\",\r",
+									"        \"date_of_birth\",\r",
+									"        \"phone_number\",\r",
+									"        \"loyalty_points\",\r",
+									"        \"role\",\r",
+									"        \"display_name\"\r",
+									"    ];\r",
+									"    pm.expect(Object.keys(response.profile)).to.have.members(expectedKeys);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"display_name\": \"testing update\",\r\n  \"date_of_birth\": \"1990-01-01\",\r\n  \"phone_number\": \"+27123456789\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/user/{{signupUserId}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"{{signupUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Redeem Points",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [400]\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"user_id\":\"{{signupUserId}}\",\r\n    \"points\": 10\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/user/points",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"points"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Points History",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'history']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"history\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'history' should be an array\", function () {\r",
+									"    pm.expect(response.history).to.be.an(\"array\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/user/points",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"points"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Recommendation",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'recommendations']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"recommendations\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'recommendations' should have expected keys\", function () {\r",
+									"    pm.expect(response.recommendations).to.have.property(\"suggestions\");\r",
+									"    pm.expect(response.recommendations).to.have.property(\"reasoning\");\r",
+									"    pm.expect(response.recommendations).to.have.property(\"weather\");\r",
+									"    pm.expect(response.recommendations).to.have.property(\"confidence\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/user/recommendation?lat=-25.75&lon=28.23",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"recommendation"
+							],
+							"query": [
+								{
+									"key": "lat",
+									"value": "-25.75"
+								},
+								{
+									"key": "lon",
+									"value": "28.23"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Delete New User",
 					"event": [
 						{
@@ -318,6 +600,118 @@
 							"path": [
 								"user",
 								"{{signupUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login Exisitng User",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'username', 'role]\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"username\");\r",
+									"    // pm.expect(response).to.have.property(\"role\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":\"user@coffee.com\",\r\n    \"password\":\"user\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/login",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"login"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'emails']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"emails\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'emails' should be an array\", function () {\r",
+									"    pm.expect(response.emails).to.be.an(\"array\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/user/emails",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"emails"
 							]
 						}
 					},
@@ -534,25 +928,14 @@
 									""
 								],
 								"type": "text/javascript",
-								"packages": {}
+								"packages": {},
+								"requests": {}
 							}
 						}
 					],
-					"protocolProfileBehavior": {
-						"disableBodyPruning": true
-					},
 					"request": {
 						"method": "GET",
 						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
 						"url": {
 							"raw": "{{URL}}/product",
 							"host": [
@@ -617,6 +1000,96 @@
 							"path": [
 								"product",
 								"{{productId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Products with Stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response is an array\", function () {\r",
+									"    pm.expect(response).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Array is not empty\", function () {\r",
+									"    pm.expect(response.length).to.be.above(0);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each item has correct structure\", function () {\r",
+									"    response.forEach(item => {\r",
+									"        pm.expect(item).to.have.property(\"id\").that.is.a(\"string\");\r",
+									"        pm.expect(item).to.have.property(\"name\").that.is.a(\"string\");\r",
+									"        pm.expect(item).to.have.property(\"description\").that.is.a(\"string\");\r",
+									"        pm.expect(item).to.have.property(\"price\").that.is.a(\"number\");\r",
+									"        pm.expect(item).to.have.property(\"stock_quantity\").that.is.a(\"number\");\r",
+									"        pm.expect(item).to.have.property(\"ingredients\").that.is.an(\"array\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Price and stock are positive numbers\", function () {\r",
+									"    response.forEach(item => {\r",
+									"        pm.expect(item.price).to.be.above(0);\r",
+									"        pm.expect(item.stock_quantity).to.be.at.least(0);\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"// Check if the created product exists in response\r",
+									"pm.test(\"Created Product ID should exist\", function () {\r",
+									"    const productId = pm.collectionVariables.get(\"productId\");\r",
+									"    const found = response.some(item => item.id === productId);\r",
+									"    pm.expect(found).to.be.true;\r",
+									"});\r",
+									"\r",
+									"// Compare ingredients for created product\r",
+									"pm.test(\"Ingredients match the created product stock items\", function () {\r",
+									"    const productId = pm.collectionVariables.get(\"productId\");\r",
+									"    const createdStockItems = JSON.parse(pm.collectionVariables.get(\"createdStockItems\") || \"[]\");\r",
+									"\r",
+									"    const product = response.find(item => item.id === productId);\r",
+									"    pm.expect(product).to.not.be.undefined;\r",
+									"\r",
+									"    if (product) {\r",
+									"        const ingredients = product.ingredients || [];\r",
+									"        createdStockItems.forEach(stockItem => {\r",
+									"            const match = ingredients.find(ing => ing.item === stockItem.item && ing.quantity === stockItem.quantity);\r",
+									"            pm.expect(match, `Ingredient ${stockItem.item} should exist with correct quantity`).to.not.be.undefined;\r",
+									"        });\r",
+									"    }\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/product/stock",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"product",
+								"stock"
 							]
 						}
 					},
@@ -727,96 +1200,6 @@
 							],
 							"path": [
 								"product"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get Products with Stock",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"let response = pm.response.json();\r",
-									"\r",
-									"pm.test(\"Status code [200]\", function () {\r",
-									"    pm.response.to.have.status(200);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Content-Type is JSON\", function () {\r",
-									"    pm.response.to.have.header(\"Content-Type\");\r",
-									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Response is an array\", function () {\r",
-									"    pm.expect(response).to.be.an(\"array\");\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Array is not empty\", function () {\r",
-									"    pm.expect(response.length).to.be.above(0);\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Each item has correct structure\", function () {\r",
-									"    response.forEach(item => {\r",
-									"        pm.expect(item).to.have.property(\"id\").that.is.a(\"string\");\r",
-									"        pm.expect(item).to.have.property(\"name\").that.is.a(\"string\");\r",
-									"        pm.expect(item).to.have.property(\"description\").that.is.a(\"string\");\r",
-									"        pm.expect(item).to.have.property(\"price\").that.is.a(\"number\");\r",
-									"        pm.expect(item).to.have.property(\"stock_quantity\").that.is.a(\"number\");\r",
-									"        pm.expect(item).to.have.property(\"ingredients\").that.is.an(\"array\");\r",
-									"    });\r",
-									"});\r",
-									"\r",
-									"pm.test(\"Price and stock are positive numbers\", function () {\r",
-									"    response.forEach(item => {\r",
-									"        pm.expect(item.price).to.be.above(0);\r",
-									"        pm.expect(item.stock_quantity).to.be.at.least(0);\r",
-									"    });\r",
-									"});\r",
-									"\r",
-									"// Check if the created product exists in response\r",
-									"pm.test(\"Created Product ID should exist\", function () {\r",
-									"    const productId = pm.collectionVariables.get(\"productId\");\r",
-									"    const found = response.some(item => item.id === productId);\r",
-									"    pm.expect(found).to.be.true;\r",
-									"});\r",
-									"\r",
-									"// Compare ingredients for created product\r",
-									"pm.test(\"Ingredients match the created product stock items\", function () {\r",
-									"    const productId = pm.collectionVariables.get(\"productId\");\r",
-									"    const createdStockItems = JSON.parse(pm.collectionVariables.get(\"createdStockItems\") || \"[]\");\r",
-									"\r",
-									"    const product = response.find(item => item.id === productId);\r",
-									"    pm.expect(product).to.not.be.undefined;\r",
-									"\r",
-									"    if (product) {\r",
-									"        const ingredients = product.ingredients || [];\r",
-									"        createdStockItems.forEach(stockItem => {\r",
-									"            const match = ingredients.find(ing => ing.item === stockItem.item && ing.quantity === stockItem.quantity);\r",
-									"            pm.expect(match, `Ingredient ${stockItem.item} should exist with correct quantity`).to.not.be.undefined;\r",
-									"        });\r",
-									"    }\r",
-									"});\r",
-									""
-								],
-								"type": "text/javascript",
-								"packages": {}
-							}
-						}
-					],
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": "{{URL}}/product/stock",
-							"host": [
-								"{{URL}}"
-							],
-							"path": [
-								"product",
-								"stock"
 							]
 						}
 					},
@@ -948,11 +1331,984 @@
 		},
 		{
 			"name": "Orders",
-			"item": []
+			"item": [
+				{
+					"name": "Get all orders",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/order",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get orders sort filter",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"filters\": { \"status\": \"completed\" },\r\n  \"orderBy\": \"created_at\",\r\n  \"orderDirection\": \"desc\"\r\n}\r\n",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/order",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create Email Order",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [201]\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'message', 'order_id']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"message\");\r",
+									"    pm.expect(response).to.have.property(\"order_id\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"// Save id\r",
+									"if (response.order_id) {\r",
+									"    pm.collectionVariables.set(\"orderId\", response.order_id);\r",
+									"} else {\r",
+									"    console.warn(\"No order id found in response\");\r",
+									"}\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"products\": [\r\n    {\r\n      \"product\": \"Iced Coffee\",\r\n      \"quantity\": 1,\r\n      \"custom\": { \"note\": \"Put milk before hot water\" }\r\n    },\r\n    {\r\n      \"product\": \"Latte\",\r\n      \"quantity\": 1\r\n    }\r\n  ],\r\n  \"email\":\"admin@coffee.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/order",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"order"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Pay Order",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/order/pay/{{orderId}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"order",
+								"pay",
+								"{{orderId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		},
 		{
 			"name": "Stock",
-			"item": []
+			"item": [
+				{
+					"name": "Create New Stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [201]\", function () {\r",
+									"\tpm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"\tpm.response.to.have.header(\"Content-Type\");\r",
+									"\tpm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'createdItems']\", function () {\r",
+									"\tpm.expect(response).to.have.property(\"success\");\r",
+									"\tpm.expect(response).to.have.property(\"createdItems\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"\tpm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'createdItems' should contain the created item names\", function () {\r",
+									"\tpm.expect(response.createdItems).to.be.an(\"array\");\r",
+									"\tpm.expect(response.createdItems).to.include(\"TestItem\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "[\r\n  {\r\n    \"item\": \"TestItem\",\r\n    \"quantity\": 100,\r\n    \"unit_type\": \"kg\",\r\n    \"max_capacity\": 200,\r\n    \"reserved_quantity\": 10\r\n  }\r\n]",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/stock",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Stock",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'stock']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"stock\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'stock' should be an array\", function () {\r",
+									"    pm.expect(response.stock).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each stock item has required fields\", function () {\r",
+									"    response.stock.forEach((item) => {\r",
+									"        pm.expect(item).to.have.property(\"id\");\r",
+									"        pm.expect(item).to.have.property(\"item\");\r",
+									"        pm.expect(item).to.have.property(\"quantity\");\r",
+									"        pm.expect(item).to.have.property(\"unit_type\");\r",
+									"        pm.expect(item).to.have.property(\"max_capacity\");\r",
+									"        pm.expect(item).to.have.property(\"reserved_quantity\");\r",
+									"        pm.expect(item).to.have.property(\"percentage_left\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"TestItem has correct values\", function () {\r",
+									"    const item = response.stock.find(i => i.item === \"TestItem\");\r",
+									"    pm.expect(item).to.exist;\r",
+									"    pm.expect(item.quantity).to.eql(100);\r",
+									"    pm.expect(item.max_capacity).to.eql(200);\r",
+									"    pm.expect(item.reserved_quantity).to.eql(10);\r",
+									"\r",
+									"    pm.collectionVariables.set(\"itemId\", item.id);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get new Item",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'stock']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"stock\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'id' should be correct\", function () {\r",
+									"    pm.expect(response.stock.id).to.eql(pm.collectionVariables.get(\"itemId\"));\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each stock item has required fields\", function () {\r",
+									"    let item = response.stock;\r",
+									"\r",
+									"    pm.expect(item).to.have.property(\"id\");\r",
+									"    pm.expect(item).to.have.property(\"item\");\r",
+									"    pm.expect(item).to.have.property(\"quantity\");\r",
+									"    pm.expect(item).to.have.property(\"unit_type\");\r",
+									"    pm.expect(item).to.have.property(\"max_capacity\");\r",
+									"    pm.expect(item).to.have.property(\"reserved_quantity\");\r",
+									"    pm.expect(item).to.have.property(\"percentage_left\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"TestItem has correct values\", function () {\r",
+									"    const item = response.stock;\r",
+									"\r",
+									"    pm.expect(item).to.exist;\r",
+									"    pm.expect(item.quantity).to.eql(100);\r",
+									"    pm.expect(item.max_capacity).to.eql(200);\r",
+									"    pm.expect(item.reserved_quantity).to.eql(10);\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/{{itemId}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update by ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'updatedItem']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"updatedItem\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'updatedItem' should be TestItem\", function () {\r",
+									"    pm.expect(response.updatedItem).to.eql(\"TestItem\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"quantity\": 80,\r\n  \"reserved_quantity\": 15,\r\n  \"reference\":\"testing\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/stock/{{itemId}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Log Adjustments",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'data']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"data\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'data' should be an array\", function () {\r",
+									"    pm.expect(response.data).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each item has required fields\", function () {\r",
+									"    response.data.forEach((item) => {\r",
+									"        pm.expect(item).to.have.property(\"id\");\r",
+									"        pm.expect(item).to.have.property(\"stock_id\");\r",
+									"        pm.expect(item).to.have.property(\"adjustment_qty\");\r",
+									"        pm.expect(item).to.have.property(\"reference\");\r",
+									"        pm.expect(item).to.have.property(\"reference_type\");\r",
+									"        pm.expect(item).to.have.property(\"reference_id\");\r",
+									"        pm.expect(item).to.have.property(\"created_at\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"TestItem has correct values\", function () {\r",
+									"    const itemId = pm.collectionVariables.get(\"itemId\");\r",
+									"    const item = response.data.find(i => i.stock_id === itemId);\r",
+									"\r",
+									"    pm.expect(item).to.exist;\r",
+									"    pm.expect(item.adjustment_qty).to.eql(-20);\r",
+									"    pm.expect(item.reference).to.eql(\"testing\");\r",
+									"    pm.expect(item.reference_type).to.eql(\"user\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/log",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"log"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update By Name",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'updatedItem']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"updatedItem\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'updatedItem' should be TestItem\", function () {\r",
+									"    pm.expect(response.updatedItem).to.eql(\"TestItem\");\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"item\": \"TestItem\",\r\n  \"quantity\": 100,\r\n  \"reference\": \"testingname\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/stock",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Stock Item",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/{{itemId}}",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"{{itemId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Stock Take",
+			"item": [
+				{
+					"name": "Start Take",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [201]\", function () {\r",
+									"    pm.response.to.have.status(201);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'stockTake',]\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"stockTake\");\r",
+									"    pm.collectionVariables.set(\"stockTake\", response.stockTake);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/take",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"take"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update Take",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has field 'results'\", function () {\r",
+									"    pm.expect(response).to.have.property(\"results\");\r",
+									"    pm.expect(response.results).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each result item has required fields\", function () {\r",
+									"    response.results.forEach(function (item) {\r",
+									"        pm.expect(item).to.have.property(\"item\");\r",
+									"        pm.expect(item).to.have.property(\"action\");\r",
+									"        pm.expect(item).to.have.property(\"success\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"All 'action' fields are 'updated'\", function () {\r",
+									"    response.results.forEach(function (item) {\r",
+									"        pm.expect(item.action).to.eql(\"updated\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Success values are boolean\", function () {\r",
+									"    response.results.forEach(function (item) {\r",
+									"        pm.expect(item.success).to.be.a(\"boolean\");\r",
+									"    });\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"items\": [\r\n    { \"item\": \"Sugar\", \"quantity\": 100 },\r\n    { \"item\": \"84ee5914-7091-43f3-a1ba-e9c7f891ca16\", \"quantity\": 100 }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/stock/take",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"take"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Incomplete Take",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [400]\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has field ['success', 'error'']\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"error\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be false\", function () {\r",
+									"    pm.expect(response.success).to.eql(false);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'error' should be valid\", function () {\r",
+									"    pm.expect(response.error).to.eql('Cannot complete stock take: not all items have counted_qty entered');\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/take/complete",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"take",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Try Two Takes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [400]\", function () {\r",
+									"    pm.response.to.have.status(400);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields 'error'\", function () {\r",
+									"    pm.expect(response).to.have.property(\"error\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'error' should be valid\", function () {\r",
+									"    pm.expect(response.error).to.eql(\"A stock take is already in progress\");\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/take",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"take"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Update Take",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has field 'results'\", function () {\r",
+									"    pm.expect(response).to.have.property(\"results\");\r",
+									"    pm.expect(response.results).to.be.an(\"array\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Each result item has required fields\", function () {\r",
+									"    response.results.forEach(function (item) {\r",
+									"        pm.expect(item).to.have.property(\"item\");\r",
+									"        pm.expect(item).to.have.property(\"action\");\r",
+									"        pm.expect(item).to.have.property(\"success\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"All 'action' fields are 'updated'\", function () {\r",
+									"    response.results.forEach(function (item) {\r",
+									"        pm.expect(item.action).to.eql(\"updated\");\r",
+									"    });\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Success values are boolean\", function () {\r",
+									"    response.results.forEach(function (item) {\r",
+									"        pm.expect(item.success).to.be.a(\"boolean\");\r",
+									"    });\r",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n  \"items\": [\r\n    { \"item\": \"Water\", \"quantity\": 100 },\r\n    { \"item\": \"Coffee Beans\", \"quantity\": 55 },\r\n    { \"item\": \"Ice\", \"quantity\": 3000 },\r\n    { \"item\": \"Milk\", \"quantity\": 1000 }\r\n  ]\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{URL}}/stock/take",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"take"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Complete Take",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"let response = pm.response.json();\r",
+									"\r",
+									"pm.test(\"Status code [200]\", function () {\r",
+									"    pm.response.to.have.status(200);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Content-Type is JSON\", function () {\r",
+									"    pm.response.to.have.header(\"Content-Type\");\r",
+									"    pm.expect(pm.response.headers.get(\"Content-Type\")).to.include(\"application/json\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"Response has fields ['success', 'stockTake',]\", function () {\r",
+									"    pm.expect(response).to.have.property(\"success\");\r",
+									"    pm.expect(response).to.have.property(\"stockTake\");\r",
+									"});\r",
+									"\r",
+									"pm.test(\"'success' should be true\", function () {\r",
+									"    pm.expect(response.success).to.eql(true);\r",
+									"});\r",
+									"\r",
+									"pm.test(\"IDs should match\", function () {\r",
+									"    pm.expect(response.stockTake).to.eql(pm.collectionVariables.get(\"stockTake\"));\r",
+									"});\r",
+									""
+								],
+								"type": "text/javascript",
+								"packages": {}
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/stock/take/complete",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"stock",
+								"take",
+								"complete"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Gamification",
+			"item": [
+				{
+					"name": "Get Stats",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/user/stats",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"stats"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Badges",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/user/badges",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"user",
+								"badges"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get Leaderboard",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{URL}}/leaderboard",
+							"host": [
+								"{{URL}}"
+							],
+							"path": [
+								"leaderboard"
+							]
+						}
+					},
+					"response": []
+				}
+			]
 		}
 	],
 	"event": [
@@ -990,6 +2346,14 @@
 	],
 	"variable": [
 		{
+			"key": "stockTake",
+			"value": ""
+		},
+		{
+			"key": "itemId",
+			"value": ""
+		},
+		{
 			"key": "signupUserId",
 			"value": ""
 		},
@@ -999,6 +2363,10 @@
 		},
 		{
 			"key": "productId",
+			"value": ""
+		},
+		{
+			"key": "orderId",
 			"value": ""
 		}
 	]

@@ -17,7 +17,7 @@ import CoffeeLoading from "../assets/loading";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeBackground from "../assets/coffee-background";
 
-const API_BASE_URL = "http://192.168.0.97:5000";
+const API_BASE_URL = "https://api.diekoffieblik.co.za";
 
 // Validation functions (you can move these to separate files)
 const validateEmail = (email: string): string | null => {
@@ -63,6 +63,7 @@ export default function LoginScreen({
         const sessionData = await AsyncStorage.getItem("user_session");
         const accessToken = await AsyncStorage.getItem("access_token");
         const userId = await AsyncStorage.getItem("user_id");
+        console.log(userId);
 
         if (sessionData && accessToken && userId) {
           const { email: storedEmail } = JSON.parse(sessionData);

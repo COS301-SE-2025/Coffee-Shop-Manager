@@ -14,30 +14,31 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 		// Base query
 		let query = supabase.from("orders").select(
 			`id,
-		status,
-		paid_status,
-		total_price,
-		created_at,
-		updated_at,
-		order_number,
-		order_products (
-			quantity,
-			price,
-			product_id,
-			products:product_id (
-				name,
-				description,
-				price
-			)
-		),
-		payments (
-			id,
-			method,
-			amount,
+			user_id,
 			status,
-			transaction_id,
-			created_at
-		)`);
+			paid_status,
+			total_price,
+			created_at,
+			updated_at,
+			order_number,
+			order_products (
+				quantity,
+				price,
+				product_id,
+				products:product_id (
+					name,
+					description,
+					price
+				)
+			),
+			payments (
+				id,
+				method,
+				amount,
+				status,
+				transaction_id,
+				created_at
+			)`);
 
 		// Apply filters if provided
 		if (filters && typeof filters === "object") {
