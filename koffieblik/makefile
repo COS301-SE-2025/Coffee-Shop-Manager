@@ -50,21 +50,35 @@ createOrdesLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/create_order_load.js
 
+createOrdesLoadTestMultiple:
+	@echo "Running load test with k6..."
+	k6 run load-tests/create_order_load_multiple_users.js
+
 getOrdesLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/get_orders_load.js
+getOrdesLoadTestMultiple:
+	@echo "Running load test with k6..."
+	k6 run load-tests/get_orders_load_multiple_users.js
 
 getProductLoadTest:
 	@echo "Running load test with k6..."
 	k6 run load-tests/getProducts_load.js
 
+getProductLoadTestMultiple:
+	@echo "Running load test with k6..."
+	k6 run load-tests/getProducts_load_multiple_users.js
+
 
 
 
 load:
-	@$(MAKE) createOrdesLoadTest
-	@$(MAKE) getOrdesLoadTest
-	@$(MAKE) getProductLoadTest
+# 	@$(MAKE) createOrdesLoadTest
+# 	@$(MAKE) getOrdesLoadTest
+	@$(MAKE) getOrdesLoadTestMultiple
+# 	@$(MAKE) createOrdesLoadTestMultiple
+# 	@$(MAKE) getProductLoadTestMultiple
+# 	@$(MAKE) getProductLoadTest
 
 createOrdesStressTest:
 	@echo "Running stress test with k6..."
