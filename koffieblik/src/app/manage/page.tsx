@@ -513,7 +513,7 @@ export default function ManageOrdersPage() {
                           {order.status === "pending" && (
                             <div className="flex gap-2">
                               <button
-                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-700"
                                 onClick={(e) => {
                                   e.stopPropagation(); // prevent row toggle
                                   updateOrderStatus(order.id, "completed");
@@ -522,7 +522,7 @@ export default function ManageOrdersPage() {
                                 <FaCheck />
                               </button>
                               <button
-                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   updateOrderStatus(order.id, "cancelled");
