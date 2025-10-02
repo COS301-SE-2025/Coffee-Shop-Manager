@@ -35,9 +35,9 @@ export default function OrderPage() {
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
   const [specialInstructions, setSpecialInstructions] = useState("");
   const [customerInfo, setCustomerInfo] = useState({
-    name: "",
+    name: localStorage.getItem("username"),
     phone: "",
-    email: "",
+    email: localStorage.getItem("email"),
     notes: specialInstructions
   });
   const [userPoints, setUserPoints] = useState(0);
@@ -452,8 +452,59 @@ export default function OrderPage() {
             <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: "var(--primary-3)" }}>
               Choose Payment Method
             </h2>
+
+            {/* Add payment info form */}
+              <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    value={customerInfo.name ?? ""}
+                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    style={{ 
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-3)",
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    value={customerInfo.email ?? ""}
+                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    style={{ 
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-3)",  // Add this line
+                    }}
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                    Phone (Optional)
+                  </label>
+                  <input
+                    type="tel"
+                    value={customerInfo.phone}
+                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 border rounded-lg text-sm"
+                    style={{ 
+                      borderColor: "var(--primary-4)",
+                      color: "var(--primary-3)",  // Add this line
+                    }}
+                  />
+                </div>
+              </div>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-6 mt-6">  {/* Add mt-6 here */}
               <button
                 onClick={() => {
                   if (!customerInfo.name || !customerInfo.email) {
@@ -480,57 +531,6 @@ export default function OrderPage() {
                 </svg>
                 <span className="text-lg font-semibold">Card Payment</span>
               </button>
-
-              {/* Add payment info form */}
-              <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Phone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                  />
-                </div>
-              </div>
 
               <button
                 onClick={() => handlePaymentMethodSelect("cash")}
