@@ -86,6 +86,9 @@ export default function LoginPage() {
     if (isEmailValid) {
       setIsLoading(true);
       try {
+        console.log("🔗 Making request to:", `${API_BASE_URL}/login`);
+        console.log("🌍 API_BASE_URL:", API_BASE_URL);
+        
         const response = await fetch(`${API_BASE_URL}/login`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -93,7 +96,11 @@ export default function LoginPage() {
           credentials: "include",
         });
 
+        console.log("📡 Response status:", response.status);
+        console.log("📡 Response headers:", response.headers);
+
         const result = await response.json();
+        console.log("📄 Response data:", result);
 
         if (result.success && result.user) {
           const username =
@@ -122,7 +129,7 @@ export default function LoginPage() {
           setLoginError(result.message || "Invalid login response.");
         }
       } catch (err) {
-        console.error("Login error:", err);
+        console.error("❌ Login error:", err);
         setLoginError("Could not connect to the server.");
       } finally {
         setIsLoading(false);

@@ -3,9 +3,8 @@
 import React, { useEffect, useState } from "react";
 
 import { useRouter } from "next/navigation";
-import { Router } from "express";
-
-
+import { FaCheck, FaTimes } from "react-icons/fa";
+import CoffeeBackground from "assets/coffee-background";
 
 interface OrderProduct {
   product_id: string;
@@ -242,330 +241,337 @@ export default function ManageOrdersPage() {
     fetchOrders();
   }, [offSetStart, statusFilter, startDate, endDate]);
   return (
-    <main
-      className="relative min-h-full bg-transparent overflow-x-hidden p-8"
-      style={{
-
-        color: "var(--primary-3)",
-      }}
-    >
-      <h1 className="text-4xl font-bold mb-6">📦 Manage Orders</h1>
-
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 border-b-2" style={{
-        borderColor: "var(--primary-4)",
-        backgroundColor: "var(--primary-3)",
-      }}>
-        <div className="flex items-center gap-3">
-          <div
-            className="w-8 h-8 rounded-lg flex items-center justify-center"
-            style={{ backgroundColor: "var(--primary-4)" }}
-          >
-            <span
-              className="text-sm"
-              style={{ color: "var(--primary-2)" }}
-            >
-              📋
-            </span>
-          </div>
-          <h2
-            className="text-xl font-bold"
-            style={{ color: "var(--primary-2)" }}
-          >
-            Recent Orders
-          </h2>
-        </div>
-        <div
-          className="p-6 border-b-2"
-          style={{
-            borderColor: "var(--primary-4)",
-            backgroundColor: "var(--primary-3)",
-          }}
-        >
-          {/* Heading */}
-
-
-          {/* Top row: Pagination + Filter */}
-          {/* Pagination controls */}
-          <div className="flex justify-center items-center gap-3 w-full">
-            <button
-              onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
-              disabled={offSetStart === 0}
-              className="px-3 py-1 rounded-lg border"
-              style={{
-                borderColor: "var(--primary-4)",
-                color: offSetStart === 0 ? "gray" : "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-                opacity: offSetStart === 0 ? 0.5 : 1,
-              }}
-            >
-              ⬅
-            </button>
-
-            <span style={{ color: "var(--primary-2)" }}>
-              {offSetStart + 1} – {offSetStart + limit}
-            </span>
-
-            <button
-              onClick={() => setOffsetStart((prev) => prev + limit)}
-              className="px-3 py-1 rounded-lg border"
-              style={{
-                borderColor: "var(--primary-4)",
-                color: "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-              }}
-            >
-              ➡
-            </button>
-          </div>
-
-
-          {/* Status Buttons Row */}
-          <div className="flex justify-start gap-3 mt-6">
-            <button
-              className="px-4 py-1 rounded-lg border text-xs font-medium"
-              style={{
-                borderColor: "var(--primary-4)",
-                color: "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-              }}
-              onClick={() => {
-                setStatusFilter("pending");
-                setOffsetStart(0);
-              }}
-            >
-              pending
-            </button>
-            <button
-              className="px-4 py-1 rounded-lg border text-xs font-medium"
-              style={{
-                borderColor: "var(--primary-4)",
-                color: "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-              }}
-              onClick={() => {
-                setStatusFilter("completed");
-                setOffsetStart(0);
-              }}
-            >
-              completed
-            </button>
-            <button
-              className="px-4 py-1 rounded-lg border text-xs font-medium"
-              style={{
-                borderColor: "var(--primary-4)",
-                color: "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-              }}
-              onClick={() => {
-                setStatusFilter("cancelled");
-                setOffsetStart(0);
-              }}
-            >
-              cancelled
-            </button>
-          </div>
-        </div>
-
-        {/* Filter */}
-        <div className="flex flex-wrap gap-3">
-          <select
-            className={`${dateInputStyle} text-[var(--primary-2)]`}
-            style={{
-              backgroundColor: "var(--primary-3)",
-              borderColor: "var(--primary-4)",
-              boxShadow: "0 0 0 0 transparent",
-            }}
-            value={filter}
-            onChange={(e) => setFilter(e.target.value)}
-          >
-            <option>Today</option>
-            <option>This Week</option>
-            <option>This Month</option>
-            <option>Custom Range</option>
-          </select>
-
-          {filter === "Custom Range" && (
-            <>
-              <input
-                type="date"
-                className={dateInputStyle}
-                value={startDate}
-                onChange={(e) => setStartDate(e.target.value)}
-                style={{
-                  backgroundColor: "var(--primary-3)",
-                  borderColor: "var(--primary-4)",
-                  color: "var(--primary-2)",
-                  boxShadow: "0 0 0 0 transparent",
-                }}
-              />
-              <span
-                className="flex items-center font-medium"
-                style={{ color: "var(--primary-2)" }}
-              >
-                to
-              </span>
-              <input
-                type="date"
-                className={dateInputStyle}
-                value={endDate}
-                onChange={(e) => setEndDate(e.target.value)}
-                style={{
-                  backgroundColor: "var(--primary-3)",
-                  borderColor: "var(--primary-4)",
-                  color: "var(--primary-2)",
-                  boxShadow: "0 0 0 0 transparent",
-                }}
-              />
-            </>
-          )}
-        </div>
+    <main className="relative min-h-full bg-transparent overflow-x-hidden p-8">
+      {/* Coffee Background */}
+      <div className="fixed inset-0 z-0">
+        <CoffeeBackground />
       </div>
 
-      {
-        loading ? (
-          <p className="text-gray-600">Loading orders...</p>
-        ) : orders.length === 0 ? (
-          <p className="text-gray-600">No orders found.</p>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
-              <thead className="border-b"
+      {/* Main content above background */}
+      <div className="relative z-10">
+        <h1
+          className="text-4xl font-bold mb-6"
+          style={{ color: "var(--primary-3)" }}
+        >
+          Manage Orders
+        </h1>
+
+        <div className="rounded-t-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-6 border-b-2" style={{
+          borderColor: "var(--primary-4)",
+          backgroundColor: "var(--primary-3)",
+        }}>
+          <div className="flex items-center gap-3">
+            {/* <div
+              className="w-8 h-8 rounded-lg flex items-center justify-center"
+              style={{ backgroundColor: "var(--primary-4)" }}
+            >
+              <span
+                className="text-sm"
+                style={{ color: "var(--primary-2)" }}
+              >
+                📋
+              </span>
+            </div> */}
+            <h2
+              className="text-2xl"
+              style={{ color: "var(--primary-2)" }}
+            >
+              Recent Orders
+            </h2>
+          </div>
+          <div
+            className="p-6 border-b-2"
+            style={{
+              borderColor: "var(--primary-4)",
+              backgroundColor: "var(--primary-3)",
+            }}
+          >
+            {/* Heading */}
+
+
+            {/* Top row: Pagination + Filter */}
+            {/* Pagination controls */}
+            <div className="flex justify-center items-center gap-3 w-full">
+              <button
+                onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
+                disabled={offSetStart === 0}
+                className="px-3 py-1 rounded-lg border"
                 style={{
+                  borderColor: "var(--primary-4)",
+                  color: offSetStart === 0 ? "gray" : "var(--primary-2)",
                   backgroundColor: "var(--primary-3)",
-                  borderColor: "var(--primary-2)",
-                }}>
-                <tr>
-                  <th
-                    className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    Order #
-                  </th>
-                  <th
-                    className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    Status
-                  </th>
-                  <th
-                    className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    Paid
-                  </th>
-                  <th
-                    className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    Date
-                  </th>
-                  {/* <th
-                    className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    Items
-                  </th> */}
-                  <th
-                    className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    Total
-                  </th>
+                  opacity: offSetStart === 0 ? 0.5 : 1,
+                }}
+              >
+                ⬅
+              </button>
+
+              <span style={{ color: "var(--primary-2)" }}>
+                {offSetStart + 1} – {offSetStart + limit}
+              </span>
+
+              <button
+                onClick={() => setOffsetStart((prev) => prev + limit)}
+                className="px-3 py-1 rounded-lg border"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+              >
+                ➡
+              </button>
+            </div>
 
 
-                  <th className="text-left px-6 py-4 font-semibold"
-                    style={{ color: "var(--primary-2)" }}>
-                    Actions
-                  </th>
+            {/* Status Buttons Row */}
+            <div className="flex justify-start gap-3 mt-6">
+              <button
+                className="px-4 py-1 rounded-lg border text-xs font-medium"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+                onClick={() => {
+                  setStatusFilter("pending");
+                  setOffsetStart(0);
+                }}
+              >
+                pending
+              </button>
+              <button
+                className="px-4 py-1 rounded-lg border text-xs font-medium"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+                onClick={() => {
+                  setStatusFilter("completed");
+                  setOffsetStart(0);
+                }}
+              >
+                completed
+              </button>
+              <button
+                className="px-4 py-1 rounded-lg border text-xs font-medium"
+                style={{
+                  borderColor: "var(--primary-4)",
+                  color: "var(--primary-2)",
+                  backgroundColor: "var(--primary-3)",
+                }}
+                onClick={() => {
+                  setStatusFilter("cancelled");
+                  setOffsetStart(0);
+                }}
+              >
+                cancelled
+              </button>
+            </div>
+          </div>
 
-                </tr>
-              </thead>
-              <tbody>
-                {orders.map((order) => (
-                  <React.Fragment key={order.id}>
-                    {/* Main row */}
-                    <tr
-                      className={`border-b cursor-pointer ${order.status === "completed"
-                        ? "bg-green-50"
-                        : order.status === "cancelled"
-                          ? "bg-red-50"
-                          : "bg-white"
-                        }`}
-                      onClick={() => toggleExpand(order.id)}
+          {/* Filter */}
+          <div className="flex flex-wrap gap-3">
+            <select
+              className={`${dateInputStyle} text-[var(--primary-2)]`}
+              style={{
+                backgroundColor: "var(--primary-3)",
+                borderColor: "var(--primary-4)",
+                boxShadow: "0 0 0 0 transparent",
+              }}
+              value={filter}
+              onChange={(e) => setFilter(e.target.value)}
+            >
+              <option>Today</option>
+              <option>This Week</option>
+              <option>This Month</option>
+              <option>Custom Range</option>
+            </select>
+
+            {filter === "Custom Range" && (
+              <>
+                <input
+                  type="date"
+                  className={dateInputStyle}
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  style={{
+                    backgroundColor: "var(--primary-3)",
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-2)",
+                    boxShadow: "0 0 0 0 transparent",
+                  }}
+                />
+                <span
+                  className="flex items-center font-medium"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  to
+                </span>
+                <input
+                  type="date"
+                  className={dateInputStyle}
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  style={{
+                    backgroundColor: "var(--primary-3)",
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-2)",
+                    boxShadow: "0 0 0 0 transparent",
+                  }}
+                />
+              </>
+            )}
+          </div>
+        </div>
+
+        {
+          loading ? (
+            <p className="text-gray-600">Loading orders...</p>
+          ) : orders.length === 0 ? (
+            <p className="text-gray-600">No orders found.</p>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full text-sm">
+                <thead className="border-b"
+                  style={{
+                    backgroundColor: "var(--primary-3)",
+                    borderColor: "var(--primary-2)",
+                  }}>
+                  <tr>
+                    <th
+                      className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}
                     >
-                      <td className="p-3 font-semibold">#{order.order_number}</td>
-                      <td className="p-3">
-                        <span className={getStatusStyle(order.status)}>{order.status}</span>
-                      </td>
-                      <td className="p-3">
-                        <span className={getStatusStyle(order.paid_status)}>{order.paid_status}</span>
-                      </td>
-                      <td className="p-3 text-sm text-gray-500">
-                        {new Date(order.created_at).toLocaleString()}
-                      </td>
-                      <td className="p-3 font-bold">R{order.total_price}</td>
-                      <td className="p-3">
-                        {order.status === "pending" && (
-                          <div className="flex gap-2">
+                      Order #
+                    </th>
+                    <th
+                      className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      Status
+                    </th>
+                    <th
+                      className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      Paid
+                    </th>
+                    <th
+                      className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      Date
+                    </th>
+                    {/* <th
+                      className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      Items
+                    </th> */}
+                    <th
+                      className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      Total
+                    </th>
+
+
+                    <th className="text-left px-6 py-4 font-semibold"
+                      style={{ color: "var(--primary-2)" }}>
+                      Actions
+                    </th>
+
+                  </tr>
+                </thead>
+                <tbody>
+                  {orders.map((order) => (
+                    <React.Fragment key={order.id}>
+                      {/* Main row */}
+                      <tr
+                        className={`border-b cursor-pointer ${order.status === "completed"
+                          ? "bg-green-50"
+                          : order.status === "cancelled"
+                            ? "bg-red-50"
+                            : "bg-white"
+                          }`}
+                        onClick={() => toggleExpand(order.id)}
+                      >
+                        <td className="p-3 font-semibold">#{order.order_number}</td>
+                        <td className="p-3">
+                          <span className={getStatusStyle(order.status)}>{order.status}</span>
+                        </td>
+                        <td className="p-3">
+                          <span className={getStatusStyle(order.paid_status)}>{order.paid_status}</span>
+                        </td>
+                        <td className="p-3 text-sm text-gray-500">
+                          {new Date(order.created_at).toLocaleString()}
+                        </td>
+                        <td className="p-3 font-bold">R{order.total_price}</td>
+                        <td className="p-3">
+                          {order.status === "pending" && (
+                            <div className="flex gap-2">
+                              <button
+                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                onClick={(e) => {
+                                  e.stopPropagation(); // prevent row toggle
+                                  updateOrderStatus(order.id, "completed");
+                                }}
+                              >
+                                <FaCheck />
+                              </button>
+                              <button
+                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  updateOrderStatus(order.id, "cancelled");
+                                }}
+                              >
+                                <FaTimes />
+                              </button>
+                            </div>
+                          )}
+                          {order.status === "completed" && (
                             <button
-                              className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
-                              onClick={(e) => {
-                                e.stopPropagation(); // prevent row toggle
-                                updateOrderStatus(order.id, "completed");
-                              }}
-                            >
-                              ✅ Complete
-                            </button>
-                            <button
-                              className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                              className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
                               onClick={(e) => {
                                 e.stopPropagation();
-                                updateOrderStatus(order.id, "cancelled");
+                                updateOrderStatus(order.id, "pending");
                               }}
                             >
-                              ❌ Cancel
+                              🔄 Revert
                             </button>
-                          </div>
-                        )}
-                        {order.status === "completed" && (
-                          <button
-                            className="px-3 py-1 bg-yellow-600 text-white rounded hover:bg-yellow-700"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              updateOrderStatus(order.id, "pending");
-                            }}
-                          >
-                            🔄 Revert
-                          </button>
-                        )}
-                      </td>
-                    </tr>
-
-                    {/* Expanded items row */}
-                    {expandedOrderId === order.id && (
-                      <tr className="bg-gray-50">
-                        <td colSpan={6} className="p-4">
-                          <h4 className="font-semibold mb-2">🛒 Items</h4>
-
-                          <ul className="list-disc list-inside space-y-1">
-                            {order.order_products.map((item, idx) => (
-                              <li key={idx}>
-                                {item.products.name} × {item.quantity} — R
-                                {(item.price * item.quantity).toFixed(2)}
-                              </li>
-                            ))}
-                          </ul>
+                          )}
                         </td>
                       </tr>
-                    )}
-                  </React.Fragment>
-                ))}
-              </tbody>
 
-            </table>
-          </div>
-        )
-      }
+                      {/* Expanded items row */}
+                      {expandedOrderId === order.id && (
+                        <tr className="bg-gray-50">
+                          <td colSpan={6} className="p-4">
+                            <h4 className="font-semibold mb-2">🛒 Items</h4>
+
+                            <ul className="list-disc list-inside space-y-1">
+                              {order.order_products.map((item, idx) => (
+                                <li key={idx}>
+                                  {item.products.name} × {item.quantity} — R
+                                  {(item.price * item.quantity).toFixed(2)}
+                                </li>
+                              ))}
+                            </ul>
+                          </td>
+                        </tr>
+                      )}
+                    </React.Fragment>
+                  ))}
+                </tbody>
+
+              </table>
+            </div>
+          )
+        }
+      </div>
     </main >
   );
 }

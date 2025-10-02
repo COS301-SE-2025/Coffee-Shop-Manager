@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Loader from "../loaders/loader";
+import { FaCheck, FaTimes } from "react-icons/fa";
+import CoffeeBackground from "assets/coffee-background";
 
 interface MenuItem {
   id: string;
@@ -505,608 +507,616 @@ export default function POSPage() {
 
   return (
     <main className="relative min-h-full bg-transparent">
-      <div className="p-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3">
-            <div
-              className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
-              style={{ backgroundColor: "var(--primary-4)" }}
-            >
-              <span
-                className="font-bold text-xl"
-                style={{ color: "var(--primary-2)" }}
+      {/* Coffee Background - positioned behind everything */}
+      <div className="fixed inset-0 z-0">
+        <CoffeeBackground />
+      </div>
+      {/* Content container with proper z-index */}
+      <div className="relative z-10">
+        <div className="p-8">
+          {/* Header */}
+          <div className="mb-8">
+            <div className="flex items-center gap-3">
+              {/* <div
+                className="w-12 h-12 rounded-xl flex items-center justify-center shadow-lg"
+                style={{ backgroundColor: "var(--primary-4)" }}
               >
-                🛒
-              </span>
-            </div>
-            <div>
-              <h1
-                className="text-3xl font-bold"
-                style={{ color: "var(--primary-2)" }}
-              >
-                Point of Sale
-              </h1>
-              <p style={{ color: "var(--primary-2)" }}>
-                Process orders and manage transactions
-              </p>
+                <span
+                  className="font-bold text-xl"
+                  style={{ color: "var(--primary-2)" }}
+                >
+                  🛒
+                </span>
+              </div> */}
+              <div>
+                <h1
+                  className="text-4xl font-bold"
+                  style={{ color: "var(--primary-3)" }}
+                >
+                  Point of Sale
+                </h1>
+                <p className="text-lg"
+                  style={{ color: "var(--primary-3)" }}>
+                  Process orders and manage transactions
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* LEFT COLUMN - Menu & Cart */}
-          <div className="space-y-6">
-            {/* User Selection */}
-            <div
-              className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
-              style={{
-                backgroundColor: "var(--primary-3)",
-                borderColor: "var(--primary-4)"
-              }}
-            >
-              <div className="flex items-center gap-3 mb-4">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "var(--primary-4)" }}
-                >
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    👤
-                  </span>
-                </div>
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: "var(--primary-2)" }}
-                >
-                  Customer Selection
-                </h2>
-              </div>
-
-              <select
-                value={selectedEmail}
-                onChange={(e) => setSelectedEmail(e.target.value)}
-                className="w-full p-4 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* LEFT COLUMN - Menu & Cart */}
+            <div className="space-y-6">
+              {/* User Selection */}
+              <div
+                className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
                 style={{
                   backgroundColor: "var(--primary-3)",
-                  borderColor: "var(--primary-4)",
-                  color: "var(--primary-2)"
+                  borderColor: "var(--primary-4)"
                 }}
               >
-                <option value="">-- Choose a customer --</option>
-                {userEmails.map((email, idx) => (
-                  <option key={idx} value={email}>
-                    {email}
-                  </option>
-                ))}
-              </select>
+                <div className="flex items-center gap-3 mb-4">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--primary-4)" }}
+                  >
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      👤
+                    </span>
+                  </div>
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Customer Selection
+                  </h2>
+                </div>
 
-              {selectedEmail && (
-                <div
-                  className="mt-3 p-3 rounded-lg border"
+                <select
+                  value={selectedEmail}
+                  onChange={(e) => setSelectedEmail(e.target.value)}
+                  className="w-full p-4 border rounded-xl focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
                   style={{
-                    backgroundColor: "var(--primary-4)",
-                    borderColor: "var(--primary-2)"
+                    backgroundColor: "var(--primary-3)",
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-2)"
                   }}
                 >
-                  <p className="text-sm" style={{ color: "var(--primary-2)" }}>
-                    Selected: <span className="font-semibold">{selectedEmail}</span>
-                  </p>
-                  {selectedUserPoints > 0 && (
-                    <p className="text-sm mt-1" style={{ color: "var(--primary-2)" }}>
-                      <span className="font-semibold">⭐ {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
-
-            {/* Menu Items */}
-            <div
-              className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
-              style={{
-                backgroundColor: "var(--primary-3)",
-                borderColor: "var(--primary-4)"
-              }}
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "var(--primary-4)" }}
-                >
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    ☕
-                  </span>
-                </div>
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: "var(--primary-2)" }}
-                >
-                  Menu Items
-                </h2>
-              </div>
-
-              {loading ? (
-                <div className="flex justify-center items-center py-20">
-                  <Loader />
-                </div>
-              ) : (
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                  {menu.map((item) => (
-                    <button
-                      key={item.id}
-                      data-testid="product-card"
-                      onClick={() => addToCart(item)}
-                      className="group rounded-xl p-4 border transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
-                      style={{
-                        backgroundColor: "#F5F5DC",
-                        borderColor: "var(--primary-2)",
-                        color: "#8B4513"
-                      }}
-                    >
-                      <div className="text-center">
-                        <h3 className="font-semibold text-sm mb-1 text-amber-900">
-                          {item.name}
-                        </h3>
-                        <p className="text-lg font-bold text-amber-800">
-                          R{item.price}
-                        </p>
-                        <div className="mt-2 text-xs text-amber-700">
-                          Stock: {item.stock_quantity}
-                        </div>
-                      </div>
-                    </button>
+                  <option value="">-- Choose a customer --</option>
+                  {userEmails.map((email, idx) => (
+                    <option key={idx} value={email}>
+                      {email}
+                    </option>
                   ))}
-                </div>
-              )}
-            </div>
+                </select>
 
-            {/* Cart */}
-            <div
-              className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
-              style={{
-                backgroundColor: "var(--primary-3)",
-                borderColor: "var(--primary-4)"
-              }}
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "var(--primary-4)" }}
-                >
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    🛒
-                  </span>
-                </div>
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: "var(--primary-2)" }}
-                >
-                  Shopping Cart
-                </h2>
-              </div>
-
-              {cart.length === 0 ? (
-                <div className="text-center py-8">
-                  <div className="text-6xl mb-4 opacity-30">🛒</div>
-                  <p style={{ color: "var(--primary-2)" }}>Cart is empty</p>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {cart.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between p-4 rounded-xl border"
-                      style={{
-                        backgroundColor: "#F5F5DC",
-                        borderColor: "var(--primary-2)"
-                      }}
-                    >
-                      <div className="flex-1">
-                        <h4 className="font-semibold text-amber-900">
-                          {item.name}
-                        </h4>
-                        <p className="text-sm text-amber-800">
-                          Qty: {item.quantity} × R{item.price}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className="font-bold text-amber-900">
-                          R{item.price * item.quantity}
-                        </span>
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors duration-200 flex items-center justify-center"
-                        >
-                          ×
-                        </button>
-                      </div>
-                    </div>
-                  ))}
-
+                {selectedEmail && (
                   <div
-                    className="border-t pt-4"
-                    style={{ borderColor: "var(--primary-2)" }}
+                    className="mt-3 p-3 rounded-lg border"
+                    style={{
+                      backgroundColor: "var(--primary-4)",
+                      borderColor: "var(--primary-2)"
+                    }}
                   >
-                    <div className="flex justify-between items-center mb-4">
-                      <span
-                        className="text-xl font-bold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        Total:
-                      </span>
-                      <span
-                        className="text-2xl font-bold"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        R{total}
-                      </span>
-                    </div>
+                    <p className="text-sm" style={{ color: "var(--primary-2)" }}>
+                      Selected: <span className="font-semibold">{selectedEmail}</span>
+                    </p>
+                    {selectedUserPoints > 0 && (
+                      <p className="text-sm mt-1" style={{ color: "var(--primary-2)" }}>
+                        <span className="font-semibold">⭐ {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
 
-                    {message && (
-                      <div
-                        className="mb-4 p-3 border rounded-lg"
+              {/* Menu Items */}
+              <div
+                className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
+                style={{
+                  backgroundColor: "var(--primary-3)",
+                  borderColor: "var(--primary-4)"
+                }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--primary-4)" }}
+                  >
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      ☕
+                    </span>
+                  </div>
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Menu Items
+                  </h2>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center items-center py-20">
+                    <Loader />
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                    {menu.map((item) => (
+                      <button
+                        key={item.id}
+                        data-testid="product-card"
+                        onClick={() => addToCart(item)}
+                        className="group rounded-xl p-4 border transition-all duration-200 transform hover:scale-105 hover:shadow-lg"
                         style={{
-                          backgroundColor: "var(--primary-4)",
+                          backgroundColor: "#F5F5DC",
+                          borderColor: "var(--primary-2)",
+                          color: "#8B4513"
+                        }}
+                      >
+                        <div className="text-center">
+                          <h3 className="font-semibold text-sm mb-1 text-amber-900">
+                            {item.name}
+                          </h3>
+                          <p className="text-lg font-bold text-amber-800">
+                            R{item.price}
+                          </p>
+                          <div className="mt-2 text-xs text-amber-700">
+                            Stock: {item.stock_quantity}
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Cart */}
+              <div
+                className="backdrop-blur-sm rounded-2xl shadow-xl border p-6"
+                style={{
+                  backgroundColor: "var(--primary-3)",
+                  borderColor: "var(--primary-4)"
+                }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--primary-4)" }}
+                  >
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      🛒
+                    </span>
+                  </div>
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Shopping Cart
+                  </h2>
+                </div>
+
+                {cart.length === 0 ? (
+                  <div className="text-center py-8">
+                    <div className="text-6xl mb-4 opacity-30">🛒</div>
+                    <p style={{ color: "var(--primary-2)" }}>Cart is empty</p>
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {cart.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-center justify-between p-4 rounded-xl border"
+                        style={{
+                          backgroundColor: "#F5F5DC",
                           borderColor: "var(--primary-2)"
                         }}
                       >
-                        <p
-                          className="text-sm"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          {message}
-                        </p>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-amber-900">
+                            {item.name}
+                          </h4>
+                          <p className="text-sm text-amber-800">
+                            Qty: {item.quantity} × R{item.price}
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-3">
+                          <span className="font-bold text-amber-900">
+                            R{item.price * item.quantity}
+                          </span>
+                          <button
+                            onClick={() => removeFromCart(item.id)}
+                            className="w-8 h-8 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors duration-200 flex items-center justify-center"
+                          >
+                            ×
+                          </button>
+                        </div>
                       </div>
-                    )}
+                    ))}
 
-                    {/* Complete Order Button - Improved Theme */}
-                    <button
-                      onClick={completeOrder}
-                      className="w-full py-4 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
-                      style={{ 
-                        background: "linear-gradient(135deg, #5a2e14ff, #5a2e14ff)",
-                        boxShadow: "0 4px 12px rgba(120, 53, 15, 0.3)",
-                        border: "1px solid #5a2e14ff" 
-                      }}
+                    <div
+                      className="border-t pt-4"
+                      style={{ borderColor: "var(--primary-2)" }}
                     >
-                      <span className="text-lg">🛒</span> 
-                      Complete Order
-                    </button>
-
-                    {/* Pay with Loyalty Points Button - Fixed Logic and Styled to Theme */}
-                    <button
-                      onClick={completeOrderWithPoints}
-                      disabled={!selectedEmail || (loyaltyPoints < total * 100)} 
-                      className="w-full mt-3 py-4 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
-                      style={{ 
-                        background: (selectedEmail && loyaltyPoints >= total * 100) ? 
-                          "linear-gradient(135deg, #92400e, #b45309)" : 
-                          "linear-gradient(to right, #d1d5db, #e5e7eb)",
-                        boxShadow: (selectedEmail && loyaltyPoints >= total * 100) ? 
-                          "0 4px 12px rgba(120, 53, 15, 0.2)" : "none",
-                        border: (selectedEmail && loyaltyPoints >= total * 100) ?
-                          "1px solid #b45309" : "1px solid #d1d5db",
-                        color: (selectedEmail && loyaltyPoints >= total * 100) ? "white" : "#6b7280",
-                        opacity: (selectedEmail && loyaltyPoints >= total * 100) ? 1 : 0.7,
-                        cursor: (selectedEmail && loyaltyPoints >= total * 100) ? "pointer" : "not-allowed"
-                      }}
-                    >
-                      <span className="text-lg">⭐</span> 
-                      Pay with Loyalty Points
-                      {loyaltyPoints >= total * 100 ? 
-                        "" : 
-                        ` (Need ${Math.ceil(total*100 - loyaltyPoints)} more points)`}
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* RIGHT COLUMN - Orders */}
-          <div
-            className="backdrop-blur-sm rounded-2xl shadow-xl border"
-            style={{
-              backgroundColor: "var(--primary-3)",
-              borderColor: "var(--primary-4)"
-            }}
-          >
-            {/* Header */}
-            <div
-              className="p-6 border-b"
-              style={{ borderColor: "var(--primary-2)" }}
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div
-                  className="w-8 h-8 rounded-lg flex items-center justify-center"
-                  style={{ backgroundColor: "var(--primary-4)" }}
-                >
-                  <span
-                    className="text-sm"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    📋
-                  </span>
-                </div>
-                <h2
-                  className="text-xl font-bold"
-                  style={{ color: "var(--primary-2)" }}
-                >
-                  Recent Orders
-                </h2>
-              </div>
-
-              {/* Controls */}
-              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                {/* Pagination */}
-                <div className="flex items-center gap-3">
-                  <button
-                    onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
-                    disabled={offSetStart === 0}
-                    className="px-4 py-2 rounded-lg border transition-colors duration-200"
-                    style={{
-                      backgroundColor: offSetStart === 0 ? "var(--primary-4)" : "var(--primary-3)",
-                      borderColor: "var(--primary-4)",
-                      color: offSetStart === 0 ? "gray" : "var(--primary-2)",
-                      opacity: offSetStart === 0 ? 0.5 : 1,
-                    }}
-                  >
-                    ←
-                  </button>
-                  <span
-                    className="font-medium"
-                    style={{ color: "var(--primary-2)" }}
-                  >
-                    {offSetStart + 1} – {offSetStart + limit}
-                  </span>
-                  <button
-                    onClick={() => setOffsetStart((prev) => prev + limit)}
-                    className="px-4 py-2 rounded-lg border transition-colors duration-200"
-                    style={{
-                      backgroundColor: "var(--primary-3)",
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-2)"
-                    }}
-                  >
-                    →
-                  </button>
-                </div>
-
-                {/* Filter */}
-                <div className="flex flex-wrap gap-3">
-                  <select
-                    className={`${dateInputStyle}`}
-                    style={{
-                      backgroundColor: "var(--primary-3)",
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-2)"
-                    }}
-                    value={filter}
-                    onChange={(e) => setFilter(e.target.value)}
-                  >
-                    <option>Today</option>
-                    <option>This Week</option>
-                    <option>This Month</option>
-                    <option>Custom Range</option>
-                  </select>
-
-                  {filter === "Custom Range" && (
-                    <>
-                      <input
-                        type="date"
-                        className={dateInputStyle}
-                        value={startDate}
-                        onChange={(e) => setStartDate(e.target.value)}
-                        style={{
-                          backgroundColor: "var(--primary-3)",
-                          borderColor: "var(--primary-4)",
-                          color: "var(--primary-2)"
-                        }}
-                      />
-                      <span
-                        className="flex items-center font-medium"
-                        style={{ color: "var(--primary-2)" }}
-                      >
-                        to
-                      </span>
-                      <input
-                        type="date"
-                        className={dateInputStyle}
-                        value={endDate}
-                        onChange={(e) => setEndDate(e.target.value)}
-                        style={{
-                          backgroundColor: "var(--primary-3)",
-                          borderColor: "var(--primary-4)",
-                          color: "var(--primary-2)"
-                        }}
-                      />
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Status Filters */}
-              <div className="flex gap-3 mt-6">
-                {["pending", "completed", "cancelled"].map((status) => (
-                  <button
-                    key={status}
-                    className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
-                    style={{
-                      backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
-                      color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
-                    }}
-                    onClick={() => {
-                      setStatusFilter(status);
-                      setOffsetStart(0);
-                    }}
-                  >
-                    {status.charAt(0).toUpperCase() + status.slice(1)}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Orders Table */}
-            <div className="p-6">
-              {loadingOrders ? (
-                <div className="flex justify-center items-center py-20">
-                  <Loader />
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm">
-                    <thead>
-                      <tr
-                        className="border-b"
-                        style={{ borderColor: "var(--primary-2)" }}
-                      >
-                        <th
-                          className="text-left py-3 font-semibold"
+                      <div className="flex justify-between items-center mb-4">
+                        <span
+                          className="text-xl font-bold"
                           style={{ color: "var(--primary-2)" }}
                         >
-                          Order #
-                        </th>
-                        <th
-                          className="text-left py-3 font-semibold"
+                          Total:
+                        </span>
+                        <span
+                          className="text-2xl font-bold"
                           style={{ color: "var(--primary-2)" }}
                         >
-                          Items
-                        </th>
-                        <th
-                          className="text-left py-3 font-semibold"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          Total
-                        </th>
-                        <th
-                          className="text-left py-3 font-semibold"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          Status
-                        </th>
-                        <th
-                          className="text-left py-3 font-semibold"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          Paid
-                        </th>
-                        <th
-                          className="text-left py-3 font-semibold"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          Date
-                        </th>
-                        <th
-                          className="text-left py-3 font-semibold"
-                          style={{ color: "var(--primary-2)" }}
-                        >
-                          Actions
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody
-                      className="divide-y"
-                      style={{ borderColor: "var(--primary-4)" }}
-                    >
-                      {filteredOrders.map((order) => (
-                        <tr
-                          key={order.id}
-                          className="hover:bg-opacity-50 transition-colors duration-200"
+                          R{total}
+                        </span>
+                      </div>
+
+                      {message && (
+                        <div
+                          className="mb-4 p-3 border rounded-lg"
                           style={{
-                            backgroundColor: "#F5F5DC"
+                            backgroundColor: "var(--primary-4)",
+                            borderColor: "var(--primary-2)"
                           }}
                         >
-                          <td className="py-4 font-medium text-amber-900">
-                            #{order.order_number}
-                          </td>
-                          <td className="py-4 text-amber-800">
-                            {order.order_products
-                              .map((p) => `${p.products.name} x${p.quantity}`)
-                              .join(", ")}
-                          </td>
-                          <td className="py-4 font-semibold text-amber-900">
-                            R{order.total_price}
-                          </td>
-                          <td className="py-4">
-                            <span className={getStatusStyle(order.status)}>{order.status}</span>
-                          </td>
-                          <td className="py-4">
-                            <span className={getStatusStyle(order.paid_status)}>{order.paid_status}</span>
-                          </td>
-                          <td className="py-4 text-amber-800">
-                            {new Date(order.created_at).toLocaleDateString("en-ZA")}
-                          </td>
-                          <td className="py-4">
-                            {order.status === "pending" && (
-                              <div className="flex gap-2">
-                                <button
-                                  className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors duration-200"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateOrderStatus(order.id, "completed");
-                                  }}
-                                >
-                                  Complete
-                                </button>
-                                <button
-                                  className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors duration-200"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    updateOrderStatus(order.id, "cancelled");
-                                  }}
-                                >
-                                  Cancel
-                                </button>
-                              </div>
-                            )}
-                            {order.status === "completed" && (
-                              <button
-                                className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg transition-colors duration-200"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  updateOrderStatus(order.id, "pending");
-                                }}
-                              >
-                                Revert
-                              </button>
-                            )}
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
+                          <p
+                            className="text-sm"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            {message}
+                          </p>
+                        </div>
+                      )}
 
-        {/* Toast Notification */}
-        {toast && (
-          <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-4 z-50">
-            <span>
-              Order <strong>{toast.orderId}</strong> marked as <strong>{toast.newStatus}</strong>
-            </span>
-            <button
-              className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg transition-colors duration-200"
-              onClick={() => {
-                updateOrderStatus(toast.orderId, toast.prevStatus as any);
-                setToast(null);
+                      {/* Complete Order Button - Improved Theme */}
+                      <button
+                        onClick={completeOrder}
+                        className="w-full py-4 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                        style={{ 
+                          background: "linear-gradient(135deg, #5a2e14ff, #5a2e14ff)",
+                          boxShadow: "0 4px 12px rgba(120, 53, 15, 0.3)",
+                          border: "1px solid #5a2e14ff" 
+                        }}
+                      >
+                        <span className="text-lg">🛒</span> 
+                        Complete Order
+                      </button>
+
+                      {/* Pay with Loyalty Points Button - Fixed Logic and Styled to Theme */}
+                      <button
+                        onClick={completeOrderWithPoints}
+                        disabled={!selectedEmail || (loyaltyPoints < total * 100)} 
+                        className="w-full mt-3 py-4 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                        style={{ 
+                          background: (selectedEmail && loyaltyPoints >= total * 100) ? 
+                            "linear-gradient(135deg, #92400e, #b45309)" : 
+                            "linear-gradient(to right, #d1d5db, #e5e7eb)",
+                          boxShadow: (selectedEmail && loyaltyPoints >= total * 100) ? 
+                            "0 4px 12px rgba(120, 53, 15, 0.2)" : "none",
+                          border: (selectedEmail && loyaltyPoints >= total * 100) ?
+                            "1px solid #b45309" : "1px solid #d1d5db",
+                          color: (selectedEmail && loyaltyPoints >= total * 100) ? "white" : "#6b7280",
+                          opacity: (selectedEmail && loyaltyPoints >= total * 100) ? 1 : 0.7,
+                          cursor: (selectedEmail && loyaltyPoints >= total * 100) ? "pointer" : "not-allowed"
+                        }}
+                      >
+                        <span className="text-lg">⭐</span> 
+                        Pay with Loyalty Points
+                        {loyaltyPoints >= total * 100 ? 
+                          "" : 
+                          ` (Need ${Math.ceil(total*100 - loyaltyPoints)} more points)`}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* RIGHT COLUMN - Orders */}
+            <div
+              className="backdrop-blur-sm rounded-2xl shadow-xl border"
+              style={{
+                backgroundColor: "var(--primary-3)",
+                borderColor: "var(--primary-4)"
               }}
             >
-              Undo
-            </button>
+              {/* Header */}
+              <div
+                className="p-6 border-b"
+                style={{ borderColor: "var(--primary-2)" }}
+              >
+                <div className="flex items-center gap-3 mb-6">
+                  <div
+                    className="w-8 h-8 rounded-lg flex items-center justify-center"
+                    style={{ backgroundColor: "var(--primary-4)" }}
+                  >
+                    <span
+                      className="text-sm"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      📋
+                    </span>
+                  </div>
+                  <h2
+                    className="text-xl font-bold"
+                    style={{ color: "var(--primary-2)" }}
+                  >
+                    Recent Orders
+                  </h2>
+                </div>
+
+                {/* Controls */}
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                  {/* Pagination */}
+                  <div className="flex items-center gap-3">
+                    <button
+                      onClick={() => setOffsetStart((prev) => Math.max(prev - limit, 0))}
+                      disabled={offSetStart === 0}
+                      className="px-4 py-2 rounded-lg border transition-colors duration-200"
+                      style={{
+                        backgroundColor: offSetStart === 0 ? "var(--primary-4)" : "var(--primary-3)",
+                        borderColor: "var(--primary-4)",
+                        color: offSetStart === 0 ? "gray" : "var(--primary-2)",
+                        opacity: offSetStart === 0 ? 0.5 : 1,
+                      }}
+                    >
+                      ←
+                    </button>
+                    <span
+                      className="font-medium"
+                      style={{ color: "var(--primary-2)" }}
+                    >
+                      {offSetStart + 1} – {offSetStart + limit}
+                    </span>
+                    <button
+                      onClick={() => setOffsetStart((prev) => prev + limit)}
+                      className="px-4 py-2 rounded-lg border transition-colors duration-200"
+                      style={{
+                        backgroundColor: "var(--primary-3)",
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)"
+                      }}
+                    >
+                      →
+                    </button>
+                  </div>
+
+                  {/* Filter */}
+                  <div className="flex flex-wrap gap-3">
+                    <select
+                      className={`${dateInputStyle}`}
+                      style={{
+                        backgroundColor: "var(--primary-3)",
+                        borderColor: "var(--primary-4)",
+                        color: "var(--primary-2)"
+                      }}
+                      value={filter}
+                      onChange={(e) => setFilter(e.target.value)}
+                    >
+                      <option>Today</option>
+                      <option>This Week</option>
+                      <option>This Month</option>
+                      <option>Custom Range</option>
+                    </select>
+
+                    {filter === "Custom Range" && (
+                      <>
+                        <input
+                          type="date"
+                          className={dateInputStyle}
+                          value={startDate}
+                          onChange={(e) => setStartDate(e.target.value)}
+                          style={{
+                            backgroundColor: "var(--primary-3)",
+                            borderColor: "var(--primary-4)",
+                            color: "var(--primary-2)"
+                          }}
+                        />
+                        <span
+                          className="flex items-center font-medium"
+                          style={{ color: "var(--primary-2)" }}
+                        >
+                          to
+                        </span>
+                        <input
+                          type="date"
+                          className={dateInputStyle}
+                          value={endDate}
+                          onChange={(e) => setEndDate(e.target.value)}
+                          style={{
+                            backgroundColor: "var(--primary-3)",
+                            borderColor: "var(--primary-4)",
+                            color: "var(--primary-2)"
+                          }}
+                        />
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {/* Status Filters */}
+                <div className="flex gap-3 mt-6">
+                  {["pending", "completed", "cancelled"].map((status) => (
+                    <button
+                      key={status}
+                      className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
+                      style={{
+                        backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
+                        color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
+                      }}
+                      onClick={() => {
+                        setStatusFilter(status);
+                        setOffsetStart(0);
+                      }}
+                    >
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Orders Table */}
+              <div className="p-6">
+                {loadingOrders ? (
+                  <div className="flex justify-center items-center py-20">
+                    <Loader />
+                  </div>
+                ) : (
+                  <div className="overflow-x-auto rounded-xl">
+                    <table className="w-full text-sm rounded-2xl overflow-hidden">
+                      <thead>
+                        <tr
+                          className="border-b"
+                          style={{ borderColor: "var(--primary-2)" }}
+                        >
+                          <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Order
+                          </th>
+                          <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Items
+                          </th>
+                          <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Total
+                          </th>
+                          <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Status
+                          </th>
+                          <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Paid
+                          </th>
+                          {/* <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Date
+                          </th> */}
+                          <th
+                            className="text-left py-3 font-semibold"
+                            style={{ color: "var(--primary-2)" }}
+                          >
+                            Actions
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody
+                        className="divide-y"
+                        style={{ borderColor: "var(--primary-4)" }}
+                      >
+                        {filteredOrders.map((order) => (
+                          <tr
+                            key={order.id}
+                            className="hover:bg-opacity-50 transition-colors duration-200"
+                            style={{
+                              backgroundColor: "#F5F5DC"
+                            }}
+                          >
+                            <td className="py-4 font-medium text-amber-900">
+                              #{order.order_number}
+                            </td>
+                            <td className="py-4 text-amber-800">
+                              {order.order_products
+                                .map((p) => `${p.products.name} x${p.quantity}`)
+                                .join(", ")}
+                            </td>
+                            <td className="py-4 font-semibold text-amber-900">
+                              R{order.total_price}
+                            </td>
+                            <td className="py-4">
+                              <span className={getStatusStyle(order.status)}>{order.status}</span>
+                            </td>
+                            <td className="py-4">
+                              <span className={getStatusStyle(order.paid_status)}>{order.paid_status}</span>
+                            </td>
+                            {/* <td className="py-4 text-amber-800">
+                              {new Date(order.created_at).toLocaleDateString("en-ZA")}
+                            </td> */}
+                            <td className="py-4">
+                              {order.status === "pending" && (
+                                <div className="flex gap-2">
+                                  <button
+                                    className="px-3 py-2 bg-green-500 hover:bg-green-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateOrderStatus(order.id, "completed");
+                                    }}
+                                  >
+                                    <FaCheck />
+                                  </button>
+                                  <button
+                                    className="px-3 py-2 bg-red-500 hover:bg-red-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      updateOrderStatus(order.id, "cancelled");
+                                    }}
+                                  >
+                                    <FaTimes />
+                                  </button>
+                                </div>
+                              )}
+                              {order.status === "completed" && (
+                                <button
+                                  className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-white text-xs rounded-lg transition-colors duration-200"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    updateOrderStatus(order.id, "pending");
+                                  }}
+                                >
+                                  Revert
+                                </button>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-        )}
+
+          {/* Toast Notification */}
+          {toast && (
+            <div className="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-4 rounded-xl shadow-xl flex items-center gap-4 z-50">
+              <span>
+                Order <strong>{toast.orderId}</strong> marked as <strong>{toast.newStatus}</strong>
+              </span>
+              <button
+                className="px-3 py-1 bg-yellow-500 hover:bg-yellow-600 text-black rounded-lg transition-colors duration-200"
+                onClick={() => {
+                  updateOrderStatus(toast.orderId, toast.prevStatus as any);
+                  setToast(null);
+                }}
+              >
+                Undo
+              </button>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );
