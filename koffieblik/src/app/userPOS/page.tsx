@@ -231,7 +231,7 @@ export default function OrderPage() {
   const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
     setSelectedPaymentMethod(paymentMethod);
     
-    if (paymentMethod === "card") {
+    if (paymentMethod === "card" || paymentMethod === "cash") {
       // Validate required fields first
       if (!customerInfo.name || !customerInfo.email) {
         setMessage("Please fill in your name and email for card payment");
@@ -453,56 +453,67 @@ export default function OrderPage() {
               Choose Payment Method
             </h2>
 
-            {/* Add payment info form */}
-              <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={customerInfo.name ?? ""}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={customerInfo.email ?? ""}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Phone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                  />
-                </div>
+            {/* Add message display */}
+            {message && (
+              <div className={`mb-4 p-3 rounded-lg ${
+                message.includes("Failed") || message.includes("error")
+                  ? "bg-red-100 text-red-700"
+                  : "bg-green-100 text-green-700"
+              }`}>
+                {message}
               </div>
+            )}
+
+            {/* Rest of the payment form */}
+            <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={customerInfo.name ?? ""}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{ 
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-3)",
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={customerInfo.email ?? ""}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{ 
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-3)",  // Add this line
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                  Phone (Optional)
+                </label>
+                <input
+                  type="tel"
+                  value={customerInfo.phone}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{ 
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-3)",  // Add this line
+                  }}
+                />
+              </div>
+            </div>
             
             <div className="space-y-4 mb-6 mt-6">  {/* Add mt-6 here */}
               <button
