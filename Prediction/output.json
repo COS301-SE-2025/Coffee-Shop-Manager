@@ -1,0 +1,19 @@
+{
+  "suggestions": ["cappuccino", "espresso", "cafe_latte"],
+  "scores": {
+    "cappuccino": 0.5,
+    "espresso": 0.3,
+    "cafe_latte": 0.217
+  },
+  "reasoning": "Based on time preference, weather conditions",
+  "confidence": "medium",
+  "weather": {
+    "temperature": 15.4,
+    "windspeed": 17.7,
+    "weathercode": 3,
+    "time": "2025-09-25T07:15"
+  },
+  "target_time": "2025-09-18 08:30",
+  "weekday": "Thursday",
+  "time_period": "morning"
+}

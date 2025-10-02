@@ -130,9 +130,16 @@ export default function HelpPage() {
                 maxHeight: openIndex === index ? "500px" : "0",
                 opacity: openIndex === index ? 1 : 0,
                 overflow: "hidden",
+                backgroundColor: "var(--primary-4)", // Add this line for background color
               }}
             >
-              <div className="p-4 pt-0" style={{ color: "var(--primary-2)" }}>
+              <div
+                className="p-4 pt-0"
+                style={{
+                  color: "var(--primary-1)", // Change text color to primary-1
+                  borderTop: "1px solid var(--primary-2)", // Optional: adds a separator line
+                }}
+              >
                 {faq.answer}
               </div>
             </div>

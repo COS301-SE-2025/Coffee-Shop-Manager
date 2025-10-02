@@ -57,7 +57,7 @@ jobs:
 
       - name: Start Docker Compose (PROD)
         run: |
-          ENV_FILE=.env.prod docker compose --profile prod up -d
+          ENV_FILE=.env.prod docker compose --profile prod up -d --quiet-pull
           echo "Waiting for API to start..."
           for i in {1..20}; do
             if curl -s http://localhost:5000; then
@@ -67,13 +67,17 @@ jobs:
             sleep 3
           done
 
+      - name: Install Playwright Browsers
+        working-directory: ./koffieblik
+        run: npx playwright install
+
       - name: Run Playwright Tests via Makefile
         working-directory: ./koffieblik
         run: make test_safe
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-results
           path: test-results
