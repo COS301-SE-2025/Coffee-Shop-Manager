@@ -29,7 +29,7 @@ interface MenuItem {
   name: string;
   price: number;
   description: string;
-  stock_quantity: number;
+  //stock_quantity: number;
   category?: "hot" | "cold" | "pastry" | "special";
   image?: string;
   prepTime?: string;
@@ -41,7 +41,6 @@ interface MenuItem {
 }
 
 interface EnhancedMenuItem extends MenuItem {
-  stock: number; // This comes from stock_quantity
   category: "hot" | "cold" | "pastry" | "special"; // Required after enhancement
   image: string; // Required after enhancement
   prepTime: string; // Required after enhancement
@@ -148,7 +147,6 @@ const enhanceMenuItem = (apiItem: MenuItem): EnhancedMenuItem => {
 
   return {
     ...apiItem,
-    stock: apiItem.stock_quantity, // Map stock_quantity to stock
     ...defaults,
     category: detectedCategory as "hot" | "cold" | "pastry" | "special", // Override with detected category
   };
@@ -191,28 +189,29 @@ export default function OrderScreen() {
 
       try {
         const response = await fetch(`${API_BASE_URL}/product`, {
-          method: "GET",
           headers: {
+            "Authorization": `Bearer ${accessToken}`,
             "Content-Type": "application/json",
-            Authorization: `Bearer ${accessToken}`,
           },
         });
-
-        console.log(response);
-
-        if (!response.ok) throw new Error("Failed to fetch menu items");
-
         const data = await response.json();
-        const enhancedItems = data.map(enhanceMenuItem);
-        setMenuItems(enhancedItems);
+        
+        // Check if data has products property and it's an array
+        if (data && data.products && Array.isArray(data.products)) {
+          const enhancedItems = data.products.map(enhanceMenuItem);
+          setMenuItems(enhancedItems);
+        } else {
+          console.error('Invalid response format:', data);
+          setMenuItems([]);
+        }
       } catch (err) {
         console.error(err);
-        setError("Failed to load menu items. Please try again.");
+        setMenuItems([]);
       } finally {
         setLoading(false);
       }
     };
-
+    
     fetchMenuItems();
   }, []);
 
@@ -287,15 +286,22 @@ export default function OrderScreen() {
   }, [selectedCategory, searchQuery]);
 
   const addToCart = useCallback((itemId: string) => {
-    if (Platform.OS === "ios") {
+    if (Platform.OS === "ios" || Platform.OS === "android") {
       Vibration.vibrate(50);
     }
 
-    setCart((prev) => ({
-      ...prev,
-      [itemId]: (prev[itemId] || 0) + 1,
-    }));
-  }, []);
+    const item = menuItems.find(item => item.id === itemId);
+
+    setCart(prevCart => {
+      const currentQuantity = prevCart[itemId] || 0;
+      const newQuantity = currentQuantity + 1;
+      
+      return {
+        ...prevCart,
+        [itemId]: newQuantity
+      };
+    });
+  }, [menuItems]);
 
   const removeFromCart = useCallback((itemId: string) => {
     setCart((prev) => {
@@ -453,30 +459,18 @@ export default function OrderScreen() {
               <Text style={styles.quantityText}>{cart[item.id]}</Text>
 
               <TouchableOpacity
-                style={[
-                  styles.quantityButton,
-                  item.stock === 0 && styles.disabledButton,
-                ]}
-                onPress={() => item.stock > 0 && addToCart(item.id)}
-                activeOpacity={item.stock > 0 ? 0.7 : 0.3}
-                disabled={item.stock === 0}
+                style={styles.quantityButton}
+                onPress={() => addToCart(item.id)}
+                activeOpacity={0.7}
               >
-                <Ionicons
-                  name="add"
-                  size={16}
-                  color={item.stock > 0 ? "#78350f" : "#cbd5e1"}
-                />
+                <Ionicons name="add" size={16} color="#78350f" />
               </TouchableOpacity>
             </View>
           ) : (
             <TouchableOpacity
-              style={[
-                styles.addButton,
-                item.stock === 0 && styles.disabledButton,
-              ]}
-              onPress={() => item.stock > 0 && addToCart(item.id)}
-              activeOpacity={item.stock > 0 ? 0.8 : 0.3}
-              disabled={item.stock === 0}
+              style={styles.addButton}
+              onPress={() => addToCart(item.id)}
+              activeOpacity={0.8}
             >
               <Ionicons name="add" size={20} color="#fff" />
             </TouchableOpacity>

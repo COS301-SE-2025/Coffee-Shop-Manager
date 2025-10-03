@@ -233,11 +233,19 @@ export default function CheckoutScreen() {
       }
 
       const data = await response.json();
-      console.log("Fetched menu items for checkout:", data.length);
-      setMenuItems(data);
+      
+      // Check if data has products property and it's an array
+      if (data && data.products && Array.isArray(data.products)) {
+        console.log("Fetched menu items for checkout:", data.products.length);
+        setMenuItems(data.products); // Set the products array
+      } else {
+        console.error('Invalid response format:', data);
+        setMenuItems([]);
+      }
     } catch (error) {
       console.error("Error fetching menu items:", error);
       Alert.alert("Error", "Failed to load menu items. Please try again.");
+      setMenuItems([]); // Set empty array on error
     } finally {
       setLoadingItems(false);
     }
@@ -348,7 +356,7 @@ export default function CheckoutScreen() {
 
   // Calculate cart items using dynamic menu data
   const cartItems = useMemo(() => {
-    if (loadingItems || menuItems.length === 0) return [];
+    if (loadingItems || !Array.isArray(menuItems) || menuItems.length === 0) return [];
     
     return Object.entries(cart)
       .map(([itemId, quantity]) => {
