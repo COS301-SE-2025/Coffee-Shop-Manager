@@ -4,12 +4,12 @@
     "slug": "DieKoffieBlikApp",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/coffee-background.jpg",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "scheme": "diekoffieblik",
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/coffee-background.jpg",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -18,7 +18,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/coffee-background.jpg",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true
@@ -27,8 +27,15 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "SUPABASE_PUBLIC_URL": "https://your-project.supabase.co",
-      "SERVICE_ROLE_KEY": "your-anon-key"
-    }
+      "router": {}
+    },
+    "plugins": [
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "Allow DieKoffieBlik to use your location to provide personalized recommendations"
+        }
+      ]
+    ]
   }
 }

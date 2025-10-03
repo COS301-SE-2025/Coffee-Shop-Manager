@@ -296,6 +296,8 @@ export default function RegisterScreen() {
             email: email.trim().toLowerCase(),
             password,
             username: firstName,
+            phone_number: phoneNumber,
+            date_of_birth: dateOfBirth,
           }),
           credentials: "include",
         });

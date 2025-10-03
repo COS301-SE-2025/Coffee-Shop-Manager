@@ -20,6 +20,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import CoffeeBackground from "../assets/coffee-background";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import CoffeeLoading from "../assets/loading";
+import * as Location from 'expo-location';
 
 interface FeaturedItem {
   id: string;
@@ -183,6 +184,7 @@ const useApiData = () => {
       const errorMessage = err instanceof Error ? err.message : 'An error occurred';
       setError(errorMessage);
       console.error('API Error:', errorMessage);
+      console.log(url);
       throw err;
     } finally {
       setIsLoading(false);
@@ -302,6 +304,10 @@ export default function HomeScreen() {
   const [recommendationProducts, setRecommendationProducts] = useState<FeaturedItem[]>([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [dataLoaded, setDataLoaded] = useState(false);
+
+  // Location state
+  const [location, setLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   // Memoized greeting calculation
   const greeting = useMemo(() => {
@@ -446,7 +452,7 @@ export default function HomeScreen() {
 
       console.log('Fetching user profile for ID:', userId);
       
-      const profileData = await apiCall(`${API_BASE_URL}/user/${userId}`);
+      const profileData = await apiCall(`${API_BASE_URL}/user`);
       
       if (profileData.success && profileData.profile) {
         console.log('User profile loaded:', profileData.profile);
@@ -495,31 +501,34 @@ export default function HomeScreen() {
       
       // Get products
       const productsResponse = await apiCall(`${API_BASE_URL}/product`);
+      console.log(productsResponse);
       
       // FIXED: Use the correct GET /order endpoint
       const ordersData = await apiCall(`${API_BASE_URL}/order`);
       
       // Handle products
-      if (productsResponse) {
-        const products = productsResponse;
-        console.log('Products loaded:', products.length, products.slice(0, 2)); 
+      if (productsResponse && productsResponse.success) {
+        const products = productsResponse.products; // Access the products array from the response
+        console.log('Products loaded:', products.length, products.slice(0, 2));
         setAllProducts(products);
 
         // Create featured items (first 6 products)
-        const featuredProducts: FeaturedItem[] = products
-          .slice(0, 6)
-          .map((item: ApiProduct) => ({
-            id: item.id,
-            name: item.name,
-            price: item.price,
-            description: item.description,
-            stock_quantity: item.stock_quantity,
-            icon: getIconForProduct(item.name),
-            popular: false,
-            rating: "",
-          }));
+        const featuredProducts: FeaturedItem[] = products.slice(0, 6).map((item: ApiProduct) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          description: item.description,
+          stock_quantity: item.stock_quantity,
+          icon: getIconForProduct(item.name),
+          popular: false,
+          rating: "",
+        }));
 
         setFeaturedItems(featuredProducts);
+      } else {
+        console.error('Invalid products response:', productsResponse);
+        setAllProducts([]);
+        setFeaturedItems([]);
       }
 
       // FIXED: Handle orders from the correct endpoint and calculate streak
@@ -555,10 +564,13 @@ export default function HomeScreen() {
     try {
       setRecommendationsLoading(true);
       
-      console.log('Fetching recommendations...');
+      // Use actual location or fallback to default
+      const userLocation = location || PRETORIA_COORDINATES;
+      
+      console.log('Fetching recommendations for location:', userLocation);
       
       const data = await apiCall(
-        `${API_BASE_URL}/user/recommendation?lat=${PRETORIA_COORDINATES.latitude}&lon=${PRETORIA_COORDINATES.longitude}`
+        `${API_BASE_URL}/user/recommendation?lat=${userLocation.latitude}&lon=${userLocation.longitude}`
       );
       
       console.log('Recommendations response:', data);
@@ -609,7 +621,7 @@ export default function HomeScreen() {
     } finally {
       setRecommendationsLoading(false);
     }
-  }, [apiCall, dataLoaded, recommendationsLoading, recommendations, allProducts, getIconForProduct]);
+  }, [apiCall, dataLoaded, recommendationsLoading, recommendations, allProducts, getIconForProduct, location]);
 
   // FIXED: Optimized refresh handler
   const onRefresh = useCallback(() => {
@@ -630,6 +642,31 @@ export default function HomeScreen() {
       }, 1000);
     });
   }, [fetchAllData, setError]);
+
+  // Get user location
+  const getUserLocation = useCallback(async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setLocationError('Permission to access location was denied');
+        // Fallback to default Pretoria coordinates
+        setLocation(PRETORIA_COORDINATES);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      setLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude
+      });
+      setLocationError(null);
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setLocationError('Could not get your location');
+      // Fallback to default Pretoria coordinates
+      setLocation(PRETORIA_COORDINATES);
+    }
+  }, []);
 
   // Effects
   useEffect(() => {
@@ -653,6 +690,11 @@ export default function HomeScreen() {
       return () => clearTimeout(timer);
     }
   }, [dataLoaded, allProducts.length]);
+
+  // Location effect
+  useEffect(() => {
+    getUserLocation();
+  }, [getUserLocation]);
 
   // Time update effect
   useEffect(() => {

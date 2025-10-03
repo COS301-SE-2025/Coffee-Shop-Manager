@@ -1,0 +1,27 @@
+{
+  "build": {
+    "preview": {
+      "android": {
+        "buildType": "apk"
+      }
+    },
+    "preview2": {
+      "android": {
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "preview3": {
+      "developmentClient": true
+    },
+    "preview4": {
+      "distribution": "internal"
+    },
+    "diekoffieblikapp": {
+      "android": {
+        "buildType": "apk",
+        "gradleCommand": ":app:assembleRelease"
+      }
+    },
+    "production": {}
+  }
+}

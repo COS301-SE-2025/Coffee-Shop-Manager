@@ -55,6 +55,7 @@ export default function LoginScreen({
   const [passwordError, setPasswordError] = useState("");
   const [formSubmitted, setFormSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string>("");
   const router = useRouter();
 
   React.useEffect(() => {
@@ -126,7 +127,21 @@ export default function LoginScreen({
 
       if (!response.ok) {
         console.error("❌ Login failed:", data.message);
-        Alert.alert("Login failed", data.message || "Invalid credentials");
+        
+        // Set specific error messages based on status code
+        switch (response.status) {
+          case 401:
+            setErrorMessage("Invalid email or password");
+            break;
+          case 404:
+            setErrorMessage("Account not found");
+            break;
+          case 429:
+            setErrorMessage("Too many login attempts. Please try again later");
+            break;
+          default:
+            setErrorMessage(data.message || "Login failed. Please try again");
+        }
         return;
       }
 
@@ -365,6 +380,13 @@ export default function LoginScreen({
                 ) : null}
               </View>
 
+              {/* Error message container */}
+              {errorMessage ? (
+                <View style={styles.errorContainer}>
+                  <Text style={styles.errorMessage}>{errorMessage}</Text>
+                </View>
+              ) : null}
+
               {/* Remember me checkbox */}
               <TouchableOpacity
                 style={styles.checkboxContainer}
@@ -550,6 +572,19 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: "#ef4444",
     marginTop: 4,
+  },
+  errorContainer: {
+    marginBottom: 16,
+    padding: 12,
+    backgroundColor: '#fef2f2',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ef4444',
+  },
+  errorMessage: {
+    color: '#dc2626',
+    fontSize: 14,
+    textAlign: 'center',
   },
   checkboxContainer: {
     flexDirection: "row",
