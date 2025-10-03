@@ -1,37 +1,69 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
+import crypto from "crypto";
+
+function validatePayFastSignature(reqBody: any, passphrase: string): boolean {
+  // 1. Sort keys alphabetically, build query string (excluding signature)
+  const keys = Object.keys(reqBody).filter(k => k !== "signature").sort();
+  const query = keys.map(k => `${k}=${encodeURIComponent(reqBody[k])}`).join("&");
+  const signatureString = passphrase ? `${query}&passphrase=${encodeURIComponent(passphrase)}` : query;
+  // 2. Generate md5 hash
+  const hash = crypto.createHash("md5").update(signatureString).digest("hex");
+  // 3. Compare with provided signature
+  return hash === reqBody.signature;
+}
 
 export async function paymentNotificationHandler(
   req: Request,
   res: Response,
 ): Promise<void> {
   try {
-    // Log the entire request for debugging
     console.log("PayFast notification received:", req.body);
-    
-    const { payment_status, m_payment_id } = req.body;
-    
+
+    const supabase = req.supabase!;
+
+    const PAYFAST_PASSPHRASE = process.env.PAYFAST_PASSPHRASE || "";
+    if (!validatePayFastSignature(req.body, PAYFAST_PASSPHRASE)) {
+      console.error("PayFast notification - Invalid signature");
+      res.status(200).send("OK");
+      return;
+    }
+
+    const { payment_status, m_payment_id, pf_payment_id, amount_gross } = req.body;
+
     if (payment_status === "COMPLETE" && m_payment_id) {
-      // Update the order status in the database
-      const { data, error } = await supabase
-        .from("orders")
-        .update({ paid_status: "paid" })
-        .eq("id", m_payment_id)
-        .select("*")
+      // Find the payment record for this order
+      const { data: payment, error: paymentError } = await supabase
+        .from("payments")
+        .select("id, amount, order_id, status")
+        .eq("order_id", m_payment_id)
         .maybeSingle();
-        
-      if (error) {
-        console.error("PayFast notification - Supabase update error:", error);
+
+      if (paymentError || !payment) {
+        console.error("PayFast notification - Payment not found for order:", m_payment_id);
       } else {
-        console.log("PayFast notification - Order marked as paid:", m_payment_id);
+        // Check amount matches
+        if (parseFloat(payment.amount) !== parseFloat(amount_gross)) {
+          console.warn("PayFast notification - Amount mismatch!", { expected: payment.amount, received: amount_gross });
+        }
+
+        // Update payment status and transaction id
+        const { error: updatePaymentError } = await supabase
+          .from("payments")
+          .update({ status: "completed", transaction_id: pf_payment_id })
+          .eq("id", payment.id);
+
+        if (updatePaymentError) {
+          console.error("PayFast notification - Payment update error:", updatePaymentError);
+        } else {
+          console.log("PayFast notification - Payment marked as completed:", payment.id);
+        }
       }
     }
-    
+
     // Always return 200 OK to PayFast
     res.status(200).send("OK");
   } catch (err) {
     console.error("PayFast notification error:", err);
-    // Always return 200 OK to PayFast even if there's an error
     res.status(200).send("OK");
   }
 }

@@ -1,83 +1,97 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
-export async function updateStockByIdOrNameHandler(
-  req: Request,
-  res: Response,
+export async function updateStockHandler(
+	req: Request,
+	res: Response,
 ): Promise<void> {
-  try {
-    const userId = (req as any).user?.id;
-    if (!userId) {
-      res.status(401).json({ error: "Unauthorized" });
-      return;
-    }
+	try {
+		const supabase = req.supabase!;
+		const userId = req.user!.id;
 
-    const { id, item, reference, ...fields } = req.body;
+		// Prefer id from URL, then from body
+		const urlId = req.params.id;
+		const { id: bodyId, lookup_item, reference, ...fields } = req.body;
 
-    if (!id && item) {
-      delete fields.item;
-    }
+		const id = urlId || bodyId;
 
-    if (!id && !item) {
-      res.status(400).json({ error: "Either id or item must be specified" });
-      return;
-    }
+		if (!id && !lookup_item) {
+			res.status(400).json({ error: "Either id (in URL or body) or lookup_item must be specified" });
+			return;
+		}
 
-    if (Object.keys(fields).length === 0) {
-      res.status(400).json({ error: "No fields to update provided" });
-      return;
-    }
+		// Only allow certain fields to be updated
+		const allowedFields = ['item', 'quantity', 'unit_type', 'max_capacity'];
+		const updateFields = Object.fromEntries(
+			Object.entries(fields).filter(([key]) => allowedFields.includes(key))
+		);
 
-    // Query for existing item
-    let query: any = supabase.from("stock").select("id, item, quantity");
+		if (Object.keys(updateFields).length === 0) {
+			res.status(400).json({ error: "No fields to update provided" });
+			return;
+		}
 
-    if (id) {
-      query = query.eq("id", id).single();
-    } else {
-      query = query.eq("item", item).single();
-    }
+		// Query for existing item
+		let query = supabase.from("stock").select("*");
+		if (id) {
+			query = query.eq("id", id);
+		} else {
+			query = query.eq("item", lookup_item);
+		}
 
-    const { data: existing, error: fetchError } = await query;
+		const { data: existing, error: fetchError } = await query.single();
 
-    if (!existing || fetchError) {
-      res.status(404).json({ error: "Item not found" });
-      return;
-    }
+		if (!existing || fetchError) {
+			res.status(404).json({ error: "Item not found" });
+			return;
+		}
 
-    // Update
-    let updateQuery = supabase.from("stock").update(fields);
+		// If quantity is being updated, require reference
+		if (
+			updateFields.quantity !== undefined &&
+			updateFields.quantity !== existing.quantity &&
+			(!reference || typeof reference !== "string")
+		) {
+			res.status(400).json({ error: "Reference reason is required when updating quantity" });
+			return;
+		}
 
-    if (id) {
-      updateQuery = updateQuery.eq("id", id);
-    } else {
-      updateQuery = updateQuery.eq("item", item);
-    }
+		// Update
+		let updateQuery = supabase.from("stock").update(updateFields);
+		if (id) {
+			updateQuery = updateQuery.eq("id", id);
+		} else {
+			updateQuery = updateQuery.eq("item", lookup_item);
+		}
 
-    const { error: updateError } = await updateQuery;
+		const { error: updateError } = await updateQuery;
+		if (updateError) throw updateError;
 
-    if (updateError) throw updateError;
+		// Log adjustment if quantity changed
+		if (
+			typeof updateFields.quantity === "number" &&
+			typeof existing.quantity === "number" &&
+			updateFields.quantity !== existing.quantity
+		) {
+			const adjustmentQty = updateFields.quantity - existing.quantity;
 
-    if (fields.quantity !== undefined && fields.quantity !== existing.quantity) {
-      const adjustmentQty = fields.quantity - existing.quantity;
+			const { error: logError } = await supabase
+				.from("stock_adjustments")
+				.insert({
+					stock_id: existing.id,
+					adjustment_qty: adjustmentQty,
+					reference,
+					reference_type: "user",
+					reference_id: userId,
+				});
 
-      const { error: logError } = await supabase
-        .from("stock_adjustments")
-        .insert({
-          stock_id: existing.id,
-          adjustment_qty: adjustmentQty,
-          reference,
-          reference_type: "user",
-          reference_id: userId,
-        });
+			if (logError) {
+				console.error("Adjustment log failed:", logError.message);
+			}
+		}
 
-      if (logError) {
-        console.error("Adjustment log failed:", logError.message);
-      }
-    }
-
-    res.status(200).json({ success: true, updatedItem: existing.item });
-  } catch (error: any) {
-    console.error("Update stock error:", error);
-    res.status(500).json({ error: error.message || "Internal server error" });
-  }
+		res.status(200).json({ success: true, updatedItem: existing.item });
+	} catch (error: any) {
+		console.error("Update stock error:", error);
+		res.status(500).json({ error: error.message || "Internal server error" });
+	}
 }

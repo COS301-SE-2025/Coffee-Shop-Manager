@@ -1,22 +1,17 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 export async function getStockHandler(
 	req: Request,
 	res: Response,
 ): Promise<void> {
 	try {
-		const userId = (req as any).user?.id;
-		if (!userId) {
-			res.status(401).json({ error: "Unauthorized" });
-			return;
-		}
+		const supabase = req.supabase!;
 
 		const stockId = req.params.id; // retrieve the ID from route params
 
 		let query = supabase
 			.from("stock")
-			.select("id, item, quantity, unit_type, max_capacity, reserved_quantity");
+			.select("*");
 
 		if (stockId) {
 			// fetch single item if ID is provided
@@ -30,16 +25,17 @@ export async function getStockHandler(
 				throw error;
 			}
 
-			const percentage_left =
+			const percentage_raw =
 				data.max_capacity && data.max_capacity > 0
 					? (Number(data.quantity) / Number(data.max_capacity)) * 100
 					: 100;
+			const percentage_left = Math.min(Math.round(percentage_raw * 100) / 100, 100);
 
 			res.status(200).json({
 				success: true,
 				stock: {
 					...data,
-					percentage_left: Math.round(percentage_left * 100) / 100
+					percentage_left
 				},
 			});
 			return;
@@ -51,14 +47,15 @@ export async function getStockHandler(
 		if (error) throw error;
 
 		const stockWithPercentage = stockItems.map((stock) => {
-			const percentage_left =
+			const percentage_raw =
 				stock.max_capacity && stock.max_capacity > 0
 					? (Number(stock.quantity) / Number(stock.max_capacity)) * 100
 					: 100;
+			const percentage_left = Math.min(Math.round(percentage_raw * 100) / 100, 100);
 
 			return {
 				...stock,
-				percentage_left: Math.round(percentage_left * 100) / 100
+				percentage_left
 			};
 		});
 

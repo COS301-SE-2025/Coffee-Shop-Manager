@@ -1,19 +1,23 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 export async function getUserEmailsHandler(req: Request, res: Response): Promise<void> {
-    try {
-        const { data, error } = await supabase.auth.admin.listUsers();
-        if (error) throw error;
+	try {
+		const supabase = req.supabase!;
 
-        const emails = data.users.map(user => user.email);
+		const { data, error } = await supabase
+			.from("user_profiles")
+			.select("email");
 
-        res.status(200).json({
-            success: true,
-            emails
-        });
-    } catch (error: any) {
-        console.error("Get user emails error:", error);
-        res.status(500).json({ error: error.message || "Internal server error" });
-    }
+		if (error) throw error;
+
+		const emails = data?.map(profile => profile.email).filter(Boolean) || [];
+
+		res.status(200).json({
+			success: true,
+			emails,
+		});
+	} catch (error: any) {
+		console.error("Get user emails error:", error);
+		res.status(500).json({ error: error.message || "Internal server error" });
+	}
 }

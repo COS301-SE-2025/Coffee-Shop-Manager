@@ -258,7 +258,7 @@ export default function CheckoutScreen() {
       }
 
       // Fetch user profile from API
-      const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/user`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${accessToken}`,

@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 export async function getProductsHandler_old(
   req: Request,
@@ -11,6 +10,8 @@ export async function getProductsHandler_old(
       res.status(401).json({ error: "Unauthorized" });
       return;
     }
+
+    const supabase = (req as any).supabase;
 
     const { data: products, error } = await supabase
       .from("products")

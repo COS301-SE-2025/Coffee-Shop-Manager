@@ -174,8 +174,52 @@ export default function UserPage() {
 
   // Fetch favorite drink from orders API
   const fetchFavoriteDrink = async () => {
+    // try {
+    //   const response = await fetch(`${API_BASE_URL}/order`, {
+    //     method: "GET",
+    //     headers: {
+    //       "Content-Type": "application/json",
+    //     },
+    //     credentials: "include",
+    //   });
+
+    //   const data = await response.json();
+
+    //   if (response.ok && data.sucess && data.orders) {
+    //     // Calculate most frequent drink
+    //     const drinkCounts: { [key: string]: number } = {};
+        
+    //     data.orders.forEach((order: any) => {
+    //       order.order_products.forEach((orderProduct: any) => {
+    //         const drinkName = orderProduct.products.name;
+    //         drinkCounts[drinkName] = (drinkCounts[drinkName] || 0) + orderProduct.quantity;
+    //       });
+    //     });
+
+    //     // Find most frequent drink
+    //     let maxCount = 0;
+    //     let mostFrequentDrink = "None";
+        
+    //     Object.entries(drinkCounts).forEach(([drink, count]) => {
+    //       if (count > maxCount) {
+    //         maxCount = count;
+    //         mostFrequentDrink = drink;
+    //       }
+    //     });
+
+    //     setFavoriteDrink(mostFrequentDrink);
+    //   } else {
+    //     console.warn("Failed to fetch orders for favorite drink:", data.error || "Unknown error");
+    //     setFavoriteDrink("None");
+    //   }
+    
+    // } catch (error: any) {
+      // console.error("Error fetching favorite drink:", error);
+      // setFavoriteDrink("None");
+    // }
     try {
-      const response = await fetch(`${API_BASE_URL}/order`, {
+      // 1. Get user profile
+      const response = await fetch(`${API_BASE_URL}/user`, {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
@@ -185,36 +229,37 @@ export default function UserPage() {
 
       const data = await response.json();
 
-      if (response.ok && data.sucess && data.orders) {
-        // Calculate most frequent drink
-        const drinkCounts: { [key: string]: number } = {};
-        
-        data.orders.forEach((order: any) => {
-          order.order_products.forEach((orderProduct: any) => {
-            const drinkName = orderProduct.products.name;
-            drinkCounts[drinkName] = (drinkCounts[drinkName] || 0) + orderProduct.quantity;
+      if (response.ok && data.success && data.profile) {
+        const favProductId = data.profile.favourite_product_id;
+
+        if (favProductId) {
+          // 2. Fetch favourite product details
+          const productResponse = await fetch(`${API_BASE_URL}/product/${favProductId}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            credentials: "include",
           });
-        });
 
-        // Find most frequent drink
-        let maxCount = 0;
-        let mostFrequentDrink = "None";
-        
-        Object.entries(drinkCounts).forEach(([drink, count]) => {
-          if (count > maxCount) {
-            maxCount = count;
-            mostFrequentDrink = drink;
+          const productData = await productResponse.json();
+
+          if (productResponse.ok) {
+            // 3. Store favourite product name as favourite drink
+            console.log("productData:", productData);
+            setFavoriteDrink(productData.product.name);
+          } else {
+            setFavoriteDrink("None");
           }
-        });
-
-        setFavoriteDrink(mostFrequentDrink);
+        } else {
+          // No favourite set
+          setFavoriteDrink("None");
+        }
       } else {
-        console.warn("Failed to fetch orders for favorite drink:", data.error || "Unknown error");
-        setFavoriteDrink("None");
+        console.error("Failed to fetch user profile:", data);
       }
-    } catch (error: any) {
-      console.error("Error fetching favorite drink:", error);
-      setFavoriteDrink("None");
+    } catch (error) {
+      console.error("Error fetching user or favourite product:", error);
     }
   };
 
@@ -416,7 +461,7 @@ export default function UserPage() {
       }
 
       // Use the correct endpoint with user ID
-      const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+      const response = await fetch(`${API_BASE_URL}/user`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",

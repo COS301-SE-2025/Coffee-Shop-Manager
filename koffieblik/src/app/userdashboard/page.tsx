@@ -106,7 +106,7 @@ export default function DashboardPage() {
           orderDirection: "desc",
           filters: {
             // Add user_id filter here if needed
-            user_id: localStorage.getItem("user_id"), // Make sure you store user_id in localStorage during login
+            // user_id: localStorage.getItem("user_id"), // Make sure you store user_id in localStorage during login
           },
         }),
       });

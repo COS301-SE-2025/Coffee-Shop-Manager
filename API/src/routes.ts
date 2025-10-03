@@ -18,12 +18,13 @@ import { getUserEmailsHandler } from "./endpoints/user/getUserEmails";
 import { getUserPointsHistoryHandler } from "./endpoints/user/getPointsHistory";
 import { redeemLoyaltyPointsHandler } from "./endpoints/user/redeemPoints";
 import { getRecommendationsHandler } from "./endpoints/user/getRecommendation";
+import { getUserProfileByEmailHandler } from "./endpoints/user/getUserByEmail";
 
 // STOCK
 import { getStockHandler } from "./endpoints/stock/getStock";
 import { createStockHandler } from "./endpoints/stock/createStock";
 import { updateStockByIdHandler } from "./endpoints/stock/updateStockId";
-import { updateStockByIdOrNameHandler } from "./endpoints/stock/updateStockItem";
+import { updateStockHandler } from "./endpoints/stock/updateStockItem";
 import { batchUpdateStockHandler } from "./endpoints/stock/updateStockBatch";
 import { startStockTakeHandler } from "./endpoints/stock/stock_take/startStockTake";
 import { saveStockTakeItemsHandler } from "./endpoints/stock/stock_take/saveStockTakeItems";
@@ -43,12 +44,13 @@ import { getProductsHandler } from "./endpoints/product/getProducts";
 import { getProductsWithStockHandler } from "./endpoints/product/getProducts";
 import { updateProductHandler } from "./endpoints/product/updateProduct";
 import { deleteProductHandler } from "./endpoints/product/deleteProduct";
+import { getProductAvailabilityHandler } from "./endpoints/product/getAvailability";
 
 // LEGACY
 import { checkTokenHandler } from "./endpoints/legacy/check-token";
 import { getProductsHandler_old } from "./endpoints/legacy/getProducts_old";
 import { updateOrderStatusHandler } from "./endpoints/legacy/update_order_status";
-import { updateStockHandler } from "./endpoints/legacy/updateStock";
+import { updateStockHandler_old } from "./endpoints/legacy/updateStock";
 
 // PAYMENT
 import { initiatePaymentHandler } from "../src/endpoints/payment/paymentHandler";
@@ -67,17 +69,19 @@ router.get("/user/badges", authMiddleware, getUserBadgesHandler);
 router.get("/leaderboard", authMiddleware, getLeaderboardHandler); 
 
 // USERS
-router.get("/user/recommendation", authMiddleware, getRecommendationsHandler);
-router.get("/user/points", authMiddleware, getUserPointsHistoryHandler);
-router.post("/user/points", authMiddleware, redeemLoyaltyPointsHandler);
-router.get("/user/emails", authMiddleware, getUserEmailsHandler);
-router.get("/user/:id", getUserProfileHandler);
 router.post("/login", loginHandler);
 router.post("/signup", signupHandler);
 router.post("/logout", logoutHandler);
-router.delete("/user/:id", deleteUserHandler);
-router.delete("/user", deleteUserHandler);
-router.put("/user/:id", updateUserProfileHandler);
+// router.get("/user/recommendation", authMiddleware, getRecommendationsHandler);
+router.get("/user/points", authMiddleware, getUserPointsHistoryHandler);
+router.post("/user/points", authMiddleware, redeemLoyaltyPointsHandler);
+router.get("/user/emails", authMiddleware, getUserEmailsHandler);
+router.get("/user", authMiddleware, getUserProfileHandler);
+router.get("/user/email/:email", authMiddleware, getUserProfileByEmailHandler);
+router.get("/user/:id", authMiddleware, getUserProfileHandler);
+router.put("/user", authMiddleware, updateUserProfileHandler);
+router.delete("/user", authMiddleware, deleteUserHandler);
+router.delete("/user/:id", authMiddleware, deleteUserHandler);
 
 // STOCK
 router.get("/stock/log", authMiddleware, getStockAdjustmentsHandler);
@@ -87,18 +91,22 @@ router.post("/stock", authMiddleware, createStockHandler);
 router.post("/stock/take", authMiddleware, startStockTakeHandler);
 router.put("/stock/take", authMiddleware, saveStockTakeItemsHandler);
 router.post("/stock/take/complete", authMiddleware, completeStockTakeHandler);
-router.put("/stock", authMiddleware, updateStockByIdOrNameHandler);
-router.put("/stock/batch", authMiddleware, batchUpdateStockHandler);
-router.put("/stock/:id", authMiddleware, updateStockByIdHandler);
+router.put("/stock", authMiddleware, updateStockHandler);
+router.put("/stock/:id", authMiddleware, updateStockHandler);
+// router.put("/stock/batch", authMiddleware, batchUpdateStockHandler);
 router.delete("/stock/:id", authMiddleware, deleteStockHandler);
 
 // ORDERS
 router.get("/order", authMiddleware, getOrdersHandler);
+router.post("/order/filter", authMiddleware, getOrdersHandler);
 router.post("/order", authMiddleware, createOrderHandler);
-router.post("/order/email", authMiddleware, createOrderByEmailHandler);
-router.post("/order/pay/:id", authMiddleware, updateOrderPaidStatusHandler);
+router.get("/order/:id", authMiddleware, getOrdersHandler);
+// router.post("/order/email", authMiddleware, createOrderByEmailHandler);--
+// router.post("/order/pay/:id", authMiddleware, updateOrderPaidStatusHandler);
 
 // PRODUCTS
+router.get("/product/availability", authMiddleware, getProductAvailabilityHandler);
+router.get("/product/availability/:id", authMiddleware, getProductAvailabilityHandler);
 router.get("/product/stock", authMiddleware, getProductsWithStockHandler);
 router.get("/product/stock/:id", authMiddleware, getProductsWithStockHandler);
 router.get("/product", authMiddleware, getProductsHandler);
@@ -114,7 +122,7 @@ router.get("/check-token", checkTokenHandler);
 router.get("/getProducts", authMiddleware, getProductsHandler_old);
 router.put("/update_order_status", authMiddleware, updateOrderStatusHandler);
 router.get("/get_stock", authMiddleware, getStockHandler);
-router.post("/update_stock", authMiddleware, updateStockHandler);
+router.post("/update_stock", authMiddleware, updateStockHandler_old);
 
 // PAYMENT
 router.post("/initiate-payment", authMiddleware, initiatePaymentHandler);

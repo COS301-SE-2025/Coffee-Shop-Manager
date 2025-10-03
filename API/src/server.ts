@@ -1,3 +1,4 @@
+/// <reference path="./types/express/index.d.ts" />
 import app from "./app";
 
 // Logging for env vars
