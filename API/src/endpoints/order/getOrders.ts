@@ -1,22 +1,17 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 export async function getOrdersHandler(req: Request, res: Response): Promise<void> {
 	try {
-		const userId = (req as any).user?.id;
-		if (!userId) {
-			res.status(401).json({ error: "Unauthorized" });
-			return;
-		}
+		const supabase = req.supabase!;
+		const order_id = req.params.id;
 
 		const { filters, orderBy, orderDirection, offset, limit, start_Date, end_Date } = req.body || {};
 
 		// Base query
-		let query = supabase.from("orders").select(
-			`id,
+		const selectString = `
+			id,
 			user_id,
 			status,
-			paid_status,
 			total_price,
 			created_at,
 			updated_at,
@@ -25,7 +20,7 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 				quantity,
 				price,
 				product_id,
-				products:product_id (
+				products (
 					name,
 					description,
 					price
@@ -38,7 +33,28 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 				status,
 				transaction_id,
 				created_at
-			)`);
+			)
+		`;
+
+		if (order_id) {
+			const { data, error } = await supabase
+				.from("orders")
+				.select(selectString)
+				.eq("id", order_id)
+				.maybeSingle();
+
+			if (error) throw error;
+
+			if (!data) {
+				res.status(404).json({ error: "Order not found" });
+				return;
+			}
+
+			res.status(200).json({ success: true, order: data });
+			return;
+		}
+
+		let query = supabase.from("orders").select(selectString);
 
 		// Apply filters if provided
 		if (filters && typeof filters === "object") {
@@ -60,8 +76,6 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			query = query.lt("created_at", new Date(new Date(end_Date).setDate(new Date(end_Date).getDate() + 1)).toISOString());
 		}
 
-
-
 		// Apply ordering if provided
 		if (orderBy) {
 			query = query.order(orderBy, { ascending: orderDirection !== "desc" });
@@ -79,14 +93,10 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 
 		if (error) throw error;
 
-
-
 		const numberedOrders = data.map((data, index) => ({
 			...data,
 			number: index + 1,
 		}));
-
-
 
 		// --extra for Admin Dash
 
@@ -153,8 +163,6 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 		const statusForSum =
 			filters && filters.status ? filters.status : "pending";
 
-
-
 		const { data: sumFiltered, error: sumFilteredError } =
 			await supabase.rpc("get_total_sales_by_status", {
 				order_status: statusForSum,
@@ -163,10 +171,6 @@ export async function getOrdersHandler(req: Request, res: Response): Promise<voi
 			});
 
 		if (sumFilteredError) throw sumFilteredError;
-
-		// --extra for Admin Dash
-
-
 
 		res.status(200).json({ sucess: true, orders: numberedOrders, count, filteredOrders, topProducts, sumFiltered });
 	} catch (error: any) {

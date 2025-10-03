@@ -1,16 +1,12 @@
 import { Request, Response } from "express";
-import { supabase } from "../../../supabase/client";
 
 export async function completeStockTakeHandler(
 	req: Request,
 	res: Response
 ): Promise<void> {
 	try {
-		const userId = (req as any).user?.id;
-		if (!userId) {
-			res.status(401).json({ error: "Unauthorized" });
-			return;
-		}
+		const supabase = req.supabase!;
+		const userId = req.user!.id;
 
 		let { stockTakeId }: { stockTakeId?: string } = req.body ?? {};
 

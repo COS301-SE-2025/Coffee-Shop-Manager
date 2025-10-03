@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 export async function deleteStockHandler(
 	req: Request,
 	res: Response,
 ): Promise<void> {
 	try {
+		const supabase = req.supabase!;
 		const { id } = req.params;
 
 		if (!id) {

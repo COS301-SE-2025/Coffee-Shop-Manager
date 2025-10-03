@@ -217,7 +217,12 @@ export default function ManageOrdersPage() {
 
       if (response.ok) {
         console.log("Fetched data:", data);
-        setOrders(data.orders);
+        // Derive paid_status from payments array
+        const validated = data.orders.map((order: any) => ({
+          ...order,
+          paid_status: order.payments?.some((p: any) => p.status === "completed") ? "paid" : "unpaid",
+        }));
+        setOrders(validated);
         // setTotalOrders(data.count);
         // setFilteredOrdersTotal(data.filteredOrders);
       } else {

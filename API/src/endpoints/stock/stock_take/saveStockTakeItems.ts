@@ -1,5 +1,4 @@
 import { Request, Response } from "express";
-import { supabase } from "../../../supabase/client";
 
 type StockItemInput = {
 	item: string; // can be name or id
@@ -11,11 +10,8 @@ export async function saveStockTakeItemsHandler(
 	res: Response
 ): Promise<void> {
 	try {
-		const userId = (req as any).user?.id;
-		if (!userId) {
-			res.status(401).json({ error: "Unauthorized" });
-			return;
-		}
+		const supabase = req.supabase!;
+		const userId = req.user!.id;
 
 		const { stockTakeId, items }: { stockTakeId?: string; items: StockItemInput[] } =
 			req.body;

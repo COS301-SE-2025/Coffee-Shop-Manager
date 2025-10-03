@@ -84,8 +84,9 @@ export default function InventoryPage() {
     };
 
     try {
+      const method = isUpdating ? "PUT" : "POST";
       const response = await fetch(`${API_BASE_URL}/stock`, {
-        method: "PUT",
+        method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -118,7 +119,7 @@ export default function InventoryPage() {
             ),
           );
         } else {
-          alert(`Added: ${result.createdItems?.join(", ")}`);
+          alert(`Added: ${result.createdItem}`);
           setItems((prev) => [
             ...prev,
             {

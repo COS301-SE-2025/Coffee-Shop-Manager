@@ -139,8 +139,12 @@ export default function DashboardPage() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Fetched data:", data);
-        setOrders(data.orders);
+        const validated = data.orders.map((order: any) => ({
+          ...order,
+          paid_status: order.payments?.[0]?.status === "completed" ? "paid" : "unpaid",
+        }));
+        console.log("Fetched data:", validated);
+        setOrders(validated);
         setTotalOrders(data.count);
         setFilteredOrdersTotal(data.filteredOrders);
         settotalAmount(data.sumFiltered);

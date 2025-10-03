@@ -43,7 +43,7 @@ export async function initiatePaymentHandler(req: Request, res: Response): Promi
         // Use the provided URLs if available, otherwise use default from env
         const finalReturnUrl = returnUrl || process.env.PAYFAST_RETURN_URL;
         const finalCancelUrl = cancelUrl || process.env.PAYFAST_CANCEL_URL;
-        const notifyUrl = process.env.PAYFAST_NOTIFY_URL;
+        const notifyUrl = process.env.PAYFAST_NOTIFY_URL || `${process.env.NEXT_PUBLIC_API_URL}/payment/notify`;
         
         console.log("Return URL:", finalReturnUrl);
         console.log("Cancel URL:", finalCancelUrl);

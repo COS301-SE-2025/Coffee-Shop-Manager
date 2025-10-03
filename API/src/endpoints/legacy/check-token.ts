@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
+import { supabaseAdmin } from "../../supabase/client";
 
 export async function checkTokenHandler(
   req: Request,
@@ -14,7 +14,7 @@ export async function checkTokenHandler(
     }
 
     // Validate the token with Supabase
-    const { data, error } = await supabase.auth.getUser(token);
+    const { data, error } = await supabaseAdmin.auth.getUser(token);
 
     if (error || !data.user) {
       res

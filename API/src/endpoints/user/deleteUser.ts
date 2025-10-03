@@ -1,33 +1,46 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
+import { supabaseAdmin } from "../../supabase/client";
 
 export async function deleteUserHandler(
-  req: Request,
-  res: Response,
+	req: Request,
+	res: Response,
 ): Promise<void> {
-  try {
-    const userId = req.params.id || req.body.user_id;
+	try {
+		const supabase = req.supabase!;
+		const userId = req.params.id || req.user!.id;
 
-    if (!userId) {
-      res.status(400).json({ success: false, message: "User ID is required" });
-      return;
-    }
+		if (!userId) {
+			res.status(400).json({ success: false, message: "User ID is required" });
+			return;
+		}
 
-    const { data, error } = await supabase.auth.admin.deleteUser(userId);
+		// Try to delete from user_profiles first (RLS will enforce permissions)
+		const { error: profileError } = await supabase
+			.from("user_profiles")
+			.delete()
+			.eq("user_id", userId);
 
-    if (error) {
-      res.status(400).json({ success: false, message: error.message });
-      return;
-    }
+		if (profileError) {
+			// If RLS blocks, error.code may be '42501' (insufficient privilege)
+			res.status(403).json({ success: false, message: "Not authorized to delete this user." });
+			return;
+		}
 
-    res.status(200).json({
-      success: true,
-      message: `User ${userId} deleted successfully.`,
-    });
-    return;
-  } catch (err) {
-    console.error("Delete user error:", err);
-    res.status(500).json({ success: false, message: "Internal server error" });
-    return;
-  }
+		// Now delete from Supabase Auth (admin privilege required)
+		
+		const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+
+		if (error) {
+			res.status(400).json({ success: false, message: error.message });
+			return;
+		}
+
+		res.status(200).json({
+			success: true,
+			message: `User ${userId} deleted successfully.`,
+		});
+	} catch (err) {
+		console.error("Delete user error:", err);
+		res.status(500).json({ success: false, message: "Internal server error" });
+	}
 }

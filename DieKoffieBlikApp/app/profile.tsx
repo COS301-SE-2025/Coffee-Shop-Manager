@@ -149,7 +149,7 @@ export default function ProfileScreen() {
 
       // Fetch user profile, stats, and orders simultaneously like the website
       const [profileResponse, statsResponse, ordersResponse] = await Promise.all([
-        fetch(`${API_BASE_URL}/user/${userId}`, {
+        fetch(`${API_BASE_URL}/user`, {
           method: "GET",
           headers: {
             Authorization: `Bearer ${accessToken}`,

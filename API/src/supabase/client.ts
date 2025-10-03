@@ -1,9 +1,22 @@
-import { createClient } from "@supabase/supabase-js";
-import dotenv from "dotenv";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 
-dotenv.config();
+export function getClient(accessToken: string): SupabaseClient {
+	if (!accessToken) throw new Error("Missing access token for Supabase client");
+    if (!process.env.SUPABASE_PUBLIC_URL) throw new Error("Missing SUPABASE_PUBLIC_URL");
+    if (!process.env.SUPABASE_PUBLIC_KEY) throw new Error("Missing SUPABASE_PUBLIC_KEY");
+	
+	// Client with token
+	return createClient(
+		process.env.SUPABASE_PUBLIC_URL!,
+		process.env.SUPABASE_PUBLIC_KEY!,
+		{
+			global: { headers: { Authorization: `Bearer ${accessToken}` } }
+		}
+	);
+}
 
-const URL = process.env.SUPABASE_PUBLIC_URL!;
-const KEY = process.env.SUPABASE_PRIVATE_KEY!;
-
-export const supabase = createClient(URL, KEY);
+// Service client
+export const supabaseAdmin = createClient(
+	process.env.SUPABASE_PUBLIC_URL!,
+	process.env.SUPABASE_PRIVATE_KEY!
+);

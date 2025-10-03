@@ -1,38 +1,32 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
-
-interface ModificationInput {
-    stock_item: string; // name or id
-    action: "add" | "remove" | "replace";
-    quantity?: number;
-}
 
 interface ProductInput {
     product: string; // name or id
     quantity: number;
-    custom?: any;
-    modifications?: ModificationInput[];
 }
 
 export async function createOrderHandler(req: Request, res: Response): Promise<void> {
     try {
-        const { email, products }: { email?: string; products: ProductInput[] } = req.body;
+		const supabase = req.supabase!;
+
+        const { email, products, custom }: { email?: string; products: ProductInput[]; custom?: any } = req.body;
 
         // Determine user ID
         let userId: string | undefined;
         if (email) {
-            // Lookup user by email
-            const { data: users, error: userError } = await supabase.auth.admin.listUsers();
-            if (userError) throw userError;
+            const { data: userProfile, error: profileError } = await supabase
+                .from("user_profiles")
+                .select("user_id")
+                .ilike("email", email.trim())
+                .single();
 
-            const matchedUser = users.users.find((u) => u.email === email);
-            if (!matchedUser) {
+            if (profileError || !userProfile) {
                 res.status(404).json({ error: "User not found with provided email" });
                 return;
             }
-            userId = matchedUser.id;
+            userId = userProfile.user_id;
         } else {
-            userId = (req as any).user?.id;
+            userId = req.user!.id;
             if (!userId) {
                 res.status(401).json({ error: "Unauthorized" });
                 return;
@@ -61,7 +55,7 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
 
         const resolvedProducts = products.map((p) => {
             const match = allProducts.find(
-                (prod) => prod.id === p.product || prod.name === p.product
+                (prod: { id: string; name: string }) => prod.id === p.product || prod.name === p.product
             );
             if (!match) throw new Error(`Product not found: ${p.product}`);
             return { ...p, product_id: match.id };
@@ -70,96 +64,38 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
         // Create order
         const { data: order, error: orderError } = await supabase
             .from("orders")
-            .insert([{ user_id: userId }])
+            .insert([{ user_id: userId, custom }])
             .select("id")
             .single();
         if (orderError || !order) throw orderError;
 
-        // Build order_products insert array
+        // Build order_products insert array (no price)
         const orderProductsToInsert: {
             order_id: string;
             product_id: string;
             quantity: number;
-            custom: any;
-        }[] = [];
-        const orderProductToOriginalIndexMap: number[] = [];
-
-        for (let i = 0; i < resolvedProducts.length; i++) {
-            const p = resolvedProducts[i];
-            for (let j = 0; j < p.quantity; j++) {
-                orderProductsToInsert.push({
-                    order_id: order.id,
-                    product_id: p.product_id,
-                    quantity: 1,
-                    custom: p.custom ?? {},
-                });
-                orderProductToOriginalIndexMap.push(i);
-            }
-        }
-
-        // Insert order_products
-        const { data: insertedOrderProducts, error: insertOrderError } =
-            await supabase
-                .from("order_products")
-                .insert(orderProductsToInsert)
-                .select("id");
-        if (insertOrderError || !insertedOrderProducts) throw insertOrderError;
-
-        // Resolve stock items
-        const allStockItems = resolvedProducts
-            .flatMap((p) => p.modifications ?? [])
-            .map((m) => m.stock_item);
-        const { data: stockData, error: stockError } = await supabase
-            .from("stock")
-            .select("id, item");
-        if (stockError || !stockData) throw stockError;
-
-        // Insert modifications
-        const modificationsToInsert: {
-            order_product_id: string;
-            stock_id: string;
-            action: "add" | "remove" | "replace";
-            quantity?: number;
         }[] = [];
 
-        insertedOrderProducts.forEach((op, idx) => {
-            const originalIdx = orderProductToOriginalIndexMap[idx];
-            const product = resolvedProducts[originalIdx];
-            const mods = product.modifications || [];
-
-            for (const mod of mods) {
-                const matchedStock = stockData.find(
-                    (s) => s.id === mod.stock_item || s.item === mod.stock_item
-                );
-                if (!matchedStock) {
-                    throw new Error(`Stock item not found: ${mod.stock_item}`);
-                }
-
-                modificationsToInsert.push({
-                    order_product_id: op.id,
-                    stock_id: matchedStock.id,
-                    action: mod.action,
-                    quantity: mod.quantity,
-                });
-            }
-        });
-
-        if (modificationsToInsert.length > 0) {
-            const { error: modsError } = await supabase
-                .from("custom_order_modifications")
-                .insert(modificationsToInsert);
-            if (modsError) throw modsError;
+        for (const p of resolvedProducts) {
+            orderProductsToInsert.push({
+                order_id: order.id,
+                product_id: p.product_id,
+                quantity: p.quantity,
+            });
         }
 
-        // Recalculate total
-        await supabase.rpc("recalc_order_total", { order_id: order.id });
+        // Insert order_products (price will be set by trigger)
+        const { error: insertOrderError } = await supabase
+            .from("order_products")
+            .insert(orderProductsToInsert);
+        if (insertOrderError) throw insertOrderError;
 
         res.status(201).json({
             success: true,
             order_id: order.id,
             message: email
                 ? `Order created for ${email}`
-                : "Order created with customizations",
+                : "Order created",
         });
     } catch (err: any) {
         console.error("Order creation failed:", err);

@@ -204,9 +204,11 @@ export default function Navbar() {
               {/* Updated tabs section with better highlighting */}
               <div className="flex flex-wrap gap-2"> {/* Reduced gap from 3 to 2 */}
                 {tabs.map((tab) => {
-                  const isActive = pathname.includes(tab.toLowerCase()) || 
-                                 (tab === "Dashboard" && pathname === "/") ||
-                                 (tab === selectedTab);
+                  const href = getUserHref();
+                  const isActive =
+                    pathname === href ||
+                    (tab === "Dashboard" && pathname === "/") ||
+                    (tab === selectedTab);
                   const isLogout = tab === "Logout";
                   const isUsername = tab === username;
 

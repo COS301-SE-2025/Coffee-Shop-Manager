@@ -104,17 +104,15 @@ export default function LoginPage() {
 
         if (result.success && result.user) {
           const username =
-            result.user.user_metadata?.display_name ?? result.user.email;
-          const role = result.user.user_metadata?.role ?? "guest";
+            // result.user.user_metadata?.display_name ?? result.user.email;
+            result.user.display_name ?? "Unkown";
+          const role = result.user.role ?? "user";
           const token = result.session?.access_token ?? "N/A";
-          const userId = result.user.id; // Get the user ID
+          const userId = result.user.user_id; // Get the user ID
 
           // Store values in localStorage
           localStorage.setItem("username", username);
-          localStorage.setItem(
-            "role",
-            result.user.user_metadata?.role ?? "user",
-          );
+          localStorage.setItem("role", role);
           localStorage.setItem("user_id", userId); // Store the user ID
           localStorage.setItem("email", email);
 

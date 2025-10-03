@@ -1,169 +1,169 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 interface ModificationInput {
-    stock_item: string; // name or id
-    action: "add" | "remove" | "replace";
-    quantity?: number;
+	stock_item: string; // name or id
+	action: "add" | "remove" | "replace";
+	quantity?: number;
 }
 
 interface ProductInput {
-    product: string; // name or id
-    quantity: number;
-    custom?: any;
-    modifications?: ModificationInput[];
+	product: string; // name or id
+	quantity: number;
+	custom?: any;
+	modifications?: ModificationInput[];
 }
 
 export async function createOrderByEmailHandler(req: Request, res: Response): Promise<void> {
-    try {
-        const { email, products }: { email: string; products: ProductInput[] } = req.body;
+	try {
+		const supabase = req.supabase!;
 
-        if (!email) {
-            res.status(400).json({ error: "Email is required" });
-            return;
-        }
+		const { email, products }: { email: string; products: ProductInput[] } = req.body;
 
-        if (!products || !Array.isArray(products) || products.length === 0) {
-            res.status(400).json({ error: "Products list is required" });
-            return;
-        }
+		if (!email) {
+			res.status(400).json({ error: "Email is required" });
+			return;
+		}
 
-        // Lookup user by email
-        const { data: users, error: userError } = await supabase.auth.admin.listUsers();
-        if (userError) throw userError;
+		if (!products || !Array.isArray(products) || products.length === 0) {
+			res.status(400).json({ error: "Products list is required" });
+			return;
+		}
 
-        const matchedUser = users.users.find((u) => u.email === email);
-        if (!matchedUser) {
-            res.status(404).json({ error: "User not found with provided email" });
-            return;
-        }
+		// Lookup user by email in user_profiles
+		const { data: userProfile, error: profileError } = await supabase
+			.from("user_profiles")
+			.select("user_id")
+			.ilike("email", email.trim())
+			.single();
 
-        const userId = matchedUser.id;
+		if (profileError || !userProfile) {
+			res.status(404).json({ error: "User not found with provided email" });
+			return;
+		}
 
-        // Validate products
-        for (const p of products) {
-            if (!p.product || !p.quantity || p.quantity <= 0) {
-                res.status(400).json({
-                    error: "Each product must have a name or ID and a valid quantity",
-                });
-                return;
-            }
-        }
+		const userId = userProfile.user_id;
 
-        // Resolve product IDs
-        const { data: allProducts, error: productFetchError } = await supabase
-            .from("products")
-            .select("id, name");
+		// Validate products
+		for (const p of products) {
+			if (!p.product || !p.quantity || p.quantity <= 0) {
+				res.status(400).json({
+					error: "Each product must have a name or ID and a valid quantity",
+				});
+				return;
+			}
+		}
 
-        if (productFetchError || !allProducts) throw productFetchError;
+		// Resolve product IDs
+		const { data: allProducts, error: productFetchError } = await supabase
+			.from("products")
+			.select("id, name");
 
-        const resolvedProducts = products.map((p) => {
-            const match = allProducts.find(
-                (prod) => prod.id === p.product || prod.name === p.product
-            );
-            if (!match) throw new Error(`Product not found: ${p.product}`);
-            return { ...p, product_id: match.id };
-        });
+		if (productFetchError || !allProducts) throw productFetchError;
 
-        // Create order
-        const { data: order, error: orderError } = await supabase
-            .from("orders")
-            .insert([{ user_id: userId }])
-            .select("id")
-            .single();
+		const resolvedProducts = products.map((p) => {
+			const match = allProducts.find(
+				(prod) => prod.id === p.product || prod.name === p.product
+			);
+			if (!match) throw new Error(`Product not found: ${p.product}`);
+			return { ...p, product_id: match.id };
+		});
 
-        if (orderError || !order) throw orderError;
+		// Create order
+		const { data: order, error: orderError } = await supabase
+			.from("orders")
+			.insert([{ user_id: userId }])
+			.select("id")
+			.single();
 
-        // Build order_products inserts
-        const orderProductsToInsert: {
-            order_id: string;
-            product_id: string;
-            quantity: number;
-            custom: any;
-        }[] = [];
+		if (orderError || !order) throw orderError;
 
-        const orderProductToOriginalIndexMap: number[] = [];
+		// Build order_products inserts
+		const orderProductsToInsert: {
+			order_id: string;
+			product_id: string;
+			quantity: number;
+			custom: any;
+		}[] = [];
 
-        for (let i = 0; i < resolvedProducts.length; i++) {
-            const p = resolvedProducts[i];
-            for (let j = 0; j < p.quantity; j++) {
-                orderProductsToInsert.push({
-                    order_id: order.id,
-                    product_id: p.product_id,
-                    quantity: 1,
-                    custom: p.custom ?? {},
-                });
-                orderProductToOriginalIndexMap.push(i);
-            }
-        }
+		const orderProductToOriginalIndexMap: number[] = [];
 
-        // Insert order_products
-        const { data: insertedOrderProducts, error: insertOrderError } =
-            await supabase
-                .from("order_products")
-                .insert(orderProductsToInsert)
-                .select("id");
+		for (let i = 0; i < resolvedProducts.length; i++) {
+			const p = resolvedProducts[i];
+			for (let j = 0; j < p.quantity; j++) {
+				orderProductsToInsert.push({
+					order_id: order.id,
+					product_id: p.product_id,
+					quantity: 1,
+					custom: p.custom ?? {},
+				});
+				orderProductToOriginalIndexMap.push(i);
+			}
+		}
 
-        if (insertOrderError || !insertedOrderProducts) throw insertOrderError;
+		// Insert order_products
+		const { data: insertedOrderProducts, error: insertOrderError } =
+			await supabase
+				.from("order_products")
+				.insert(orderProductsToInsert)
+				.select("id");
 
-        // Resolve stock items
-        const allStockItems = resolvedProducts
-            .flatMap((p) => p.modifications ?? [])
-            .map((m) => m.stock_item);
-        const { data: stockData, error: stockError } = await supabase
-            .from("stock")
-            .select("id, item");
+		if (insertOrderError || !insertedOrderProducts) throw insertOrderError;
 
-        if (stockError || !stockData) throw stockError;
+		// Resolve stock items
+		const { data: stockData, error: stockError } = await supabase
+			.from("stock")
+			.select("id, item");
 
-        // Insert modifications
-        const modificationsToInsert: {
-            order_product_id: string;
-            stock_id: string;
-            action: "add" | "remove" | "replace";
-            quantity?: number;
-        }[] = [];
+		if (stockError || !stockData) throw stockError;
 
-        insertedOrderProducts.forEach((op, idx) => {
-            const originalIdx = orderProductToOriginalIndexMap[idx];
-            const product = resolvedProducts[originalIdx];
-            const mods = product.modifications || [];
+		// Insert modifications
+		const modificationsToInsert: {
+			order_product_id: string;
+			stock_id: string;
+			action: "add" | "remove" | "replace";
+			quantity?: number;
+		}[] = [];
 
-            for (const mod of mods) {
-                const matchedStock = stockData.find(
-                    (s) => s.id === mod.stock_item || s.item === mod.stock_item
-                );
-                if (!matchedStock) {
-                    throw new Error(`Stock item not found: ${mod.stock_item}`);
-                }
+		insertedOrderProducts.forEach((op, idx) => {
+			const originalIdx = orderProductToOriginalIndexMap[idx];
+			const product = resolvedProducts[originalIdx];
+			const mods = product.modifications || [];
 
-                modificationsToInsert.push({
-                    order_product_id: op.id,
-                    stock_id: matchedStock.id,
-                    action: mod.action,
-                    quantity: mod.quantity,
-                });
-            }
-        });
+			for (const mod of mods) {
+				const matchedStock = stockData.find(
+					(s) => s.id === mod.stock_item || s.item === mod.stock_item
+				);
+				if (!matchedStock) {
+					throw new Error(`Stock item not found: ${mod.stock_item}`);
+				}
 
-        if (modificationsToInsert.length > 0) {
-            const { error: modsError } = await supabase
-                .from("custom_order_modifications")
-                .insert(modificationsToInsert);
+				modificationsToInsert.push({
+					order_product_id: op.id,
+					stock_id: matchedStock.id,
+					action: mod.action,
+					quantity: mod.quantity,
+				});
+			}
+		});
 
-            if (modsError) throw modsError;
-        }
+		if (modificationsToInsert.length > 0) {
+			const { error: modsError } = await supabase
+				.from("custom_order_modifications")
+				.insert(modificationsToInsert);
 
-        // Recalculate total
-        await supabase.rpc("recalc_order_total", { order_id: order.id });
+			if (modsError) throw modsError;
+		}
 
-        res.status(201).json({
-            success: true,
-            order_id: order.id,
-            message: `Order created for ${email}`,
-        });
-    } catch (err: any) {
-        console.error("Order creation failed:", err);
-        res.status(500).json({ error: err.message || "Internal server error" });
-    }
+		// Recalculate total
+		await supabase.rpc("recalc_order_total", { order_id: order.id });
+
+		res.status(201).json({
+			success: true,
+			order_id: order.id,
+			message: `Order created for ${email}`,
+		});
+	} catch (err: any) {
+		console.error("Order creation failed:", err);
+		res.status(500).json({ error: err.message || "Internal server error" });
+	}
 }
