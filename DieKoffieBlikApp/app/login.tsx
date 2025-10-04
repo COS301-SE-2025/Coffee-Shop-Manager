@@ -36,7 +36,7 @@ const validatePassword = (password: string): string | null => {
 const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 interface LoginScreenProps {
-  onLogin?: (email: string, password: string, rememberMe: boolean) => void;
+  onLogin?: (email: string, password: string) => void;
   onForgotPassword?: () => void;
   onCreateAccount?: () => void;
 }
@@ -46,7 +46,7 @@ export default function LoginScreen({
   onForgotPassword,
 }: LoginScreenProps) {
   const [passwordVisible, setPasswordVisible] = useState(false);
-  const [rememberMe, setRememberMe] = useState(false);
+
 
   // Form validation states
   const [email, setEmail] = useState("");
@@ -68,7 +68,7 @@ export default function LoginScreen({
         if (sessionData && accessToken && userId) {
           const { email: storedEmail } = JSON.parse(sessionData);
           setEmail(storedEmail);
-          setRememberMe(true);
+ 
           router.replace("/home");
         }
       } catch (error) {
@@ -180,41 +180,15 @@ export default function LoginScreen({
 
       // Call optional onLogin callback
       if (onLogin) {
-        onLogin(email, password, rememberMe);
+        onLogin(email, password);
       } else {
         console.log("Login successful", {
           email,
-          password: "********",
-          rememberMe,
+          password: "********"
         });
       }
 
-      // Handle "Remember Me" storage
-      if (rememberMe) {
-        try {
-          await AsyncStorage.setItem(
-            "user_session",
-            JSON.stringify({
-              email: email,
-              user: data.user,
-              username: data.username,
-              userId: userId, // Include userId in session data
-              loginTime: new Date().toISOString(),
-            }),
-          );
-          console.log("Session stored successfully");
-        } catch (storageError) {
-          console.error("Error storing session:", storageError);
-        }
-      } else {
-        try {
-          await AsyncStorage.removeItem("user_session");
-          console.log("Session removed successfully");
-        } catch (removeError) {
-          console.error("Error removing session:", removeError);
-        }
-      }
-
+      
       // Navigate to home AFTER everything is done
       router.replace("/home");
     } catch (err: unknown) {
@@ -365,23 +339,7 @@ export default function LoginScreen({
                 ) : null}
               </View>
 
-              {/* Remember me checkbox */}
-              <TouchableOpacity
-                style={styles.checkboxContainer}
-                onPress={() => setRememberMe(!rememberMe)}
-              >
-                <View
-                  style={[
-                    styles.checkbox,
-                    rememberMe ? styles.checkboxChecked : null,
-                  ]}
-                >
-                  {rememberMe && (
-                    <Ionicons name="checkmark" size={16} color="white" />
-                  )}
-                </View>
-                <Text style={styles.checkboxLabel}>Remember me</Text>
-              </TouchableOpacity>
+             
 
               {/* Login Button */}
               <TouchableOpacity

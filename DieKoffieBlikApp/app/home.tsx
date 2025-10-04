@@ -501,7 +501,7 @@ export default function HomeScreen() {
       
       // Handle products
       if (productsResponse) {
-        const products = productsResponse;
+         const products = productsResponse.products;
         console.log('Products loaded:', products.length, products.slice(0, 2)); 
         setAllProducts(products);
 

@@ -29,7 +29,7 @@ interface MenuItem {
   name: string;
   price: number;
   description: string;
-  stock_quantity: number;
+  stock_quantity?: number;
   category?: "hot" | "cold" | "pastry" | "special";
   image?: string;
   prepTime?: string;
@@ -41,15 +41,15 @@ interface MenuItem {
 }
 
 interface EnhancedMenuItem extends MenuItem {
-  stock: number; // This comes from stock_quantity
-  category: "hot" | "cold" | "pastry" | "special"; // Required after enhancement
-  image: string; // Required after enhancement
-  prepTime: string; // Required after enhancement
-  calories: number; // Required after enhancement
-  tags: string[]; // Required after enhancement
-  rating: number; // Required after enhancement
-  reviews: number; // Required after enhancement
-  popular: boolean; // Required after enhancement
+  stock: number;
+  category: "hot" | "cold" | "pastry" | "special";
+  image: string;
+  prepTime: string;
+  calories: number;
+  tags: string[];
+  rating: number;
+  reviews: number;
+  popular: boolean;
 }
 
 const menuCategories = [
@@ -59,7 +59,6 @@ const menuCategories = [
   { id: "special", name: "Specials", icon: "star", color: "#7c3aed" },
 ];
 
-// Barebones category defaults
 const categoryDefaults = {
   hot: {
     category: "hot",
@@ -103,11 +102,9 @@ const categoryDefaults = {
   },
 };
 
-// Simple category detection based on name
 const detectCategory = (itemName: string): string => {
   const name = itemName.toLowerCase();
 
-  // Cold drinks keywords
   if (
     name.includes("iced") ||
     name.includes("cold") ||
@@ -116,7 +113,6 @@ const detectCategory = (itemName: string): string => {
     return "cold";
   }
 
-  // Pastry keywords
   if (
     name.includes("muffin") ||
     name.includes("croissant") ||
@@ -126,7 +122,6 @@ const detectCategory = (itemName: string): string => {
     return "pastry";
   }
 
-  // Special keywords
   if (
     name.includes("signature") ||
     name.includes("premium") ||
@@ -136,11 +131,10 @@ const detectCategory = (itemName: string): string => {
     return "special";
   }
 
-  // Default to hot
   return "hot";
 };
 
-// Enhancement function
+// FIXED: Default to high stock if not provided (like web version)
 const enhanceMenuItem = (apiItem: MenuItem): EnhancedMenuItem => {
   const detectedCategory = detectCategory(apiItem.name);
   const defaults =
@@ -148,9 +142,9 @@ const enhanceMenuItem = (apiItem: MenuItem): EnhancedMenuItem => {
 
   return {
     ...apiItem,
-    stock: apiItem.stock_quantity, // Map stock_quantity to stock
+    stock: apiItem.stock_quantity ?? 999,
     ...defaults,
-    category: detectedCategory as "hot" | "cold" | "pastry" | "special", // Override with detected category
+    category: detectedCategory as "hot" | "cold" | "pastry" | "special",
   };
 };
 
@@ -171,7 +165,6 @@ export default function OrderScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Add flatListRef to control scrolling
   const flatListRef = React.useRef<FlatList>(null);
 
   useEffect(() => {
@@ -203,7 +196,10 @@ export default function OrderScreen() {
         if (!response.ok) throw new Error("Failed to fetch menu items");
 
         const data = await response.json();
-        const enhancedItems = data.map(enhanceMenuItem);
+        
+        // FIXED: Handle both response formats
+        const products = data.products || data;
+        const enhancedItems = products.map(enhanceMenuItem);
         setMenuItems(enhancedItems);
       } catch (err) {
         console.error(err);
@@ -216,7 +212,6 @@ export default function OrderScreen() {
     fetchMenuItems();
   }, []);
 
-  // Memoized filtered items
   const filteredItems = useMemo(() => {
     let items = menuItems.filter((item) => item.category === selectedCategory);
 
@@ -231,16 +226,13 @@ export default function OrderScreen() {
       );
     }
 
-    // Apply sorting
     return items.sort((a, b) => {
-      // First sort by price if selected
       if (sortByPrice === "low-to-high") {
         if (a.price !== b.price) return a.price - b.price;
       } else if (sortByPrice === "high-to-low") {
         if (a.price !== b.price) return b.price - a.price;
       }
 
-      // Then by popularity and rating (existing logic)
       if (a.popular && !b.popular) return -1;
       if (!a.popular && b.popular) return 1;
       return b.rating - a.rating;
@@ -276,10 +268,8 @@ export default function OrderScreen() {
     ]).start();
   }, []);
 
-  // Reset scroll position when category or search changes
   useEffect(() => {
     if (flatListRef.current && filteredItems.length > 0) {
-      // Use a small delay to ensure the list has rendered
       setTimeout(() => {
         flatListRef.current?.scrollToOffset({ offset: 0, animated: true });
       }, 100);
@@ -455,16 +445,16 @@ export default function OrderScreen() {
               <TouchableOpacity
                 style={[
                   styles.quantityButton,
-                  item.stock === 0 && styles.disabledButton,
+                  item.stock_quantity === 0 && styles.disabledButton,
                 ]}
-                onPress={() => item.stock > 0 && addToCart(item.id)}
-                activeOpacity={item.stock > 0 ? 0.7 : 0.3}
-                disabled={item.stock === 0}
+                onPress={() => item.stock_quantity !== 0 && addToCart(item.id)}
+                activeOpacity={item.stock_quantity !== 0 ? 0.7 : 0.3}
+                disabled={item.stock_quantity === 0}
               >
                 <Ionicons
                   name="add"
                   size={16}
-                  color={item.stock > 0 ? "#78350f" : "#cbd5e1"}
+                  color={item.stock_quantity !== 0 ? "#78350f" : "#cbd5e1"}
                 />
               </TouchableOpacity>
             </View>
@@ -472,11 +462,11 @@ export default function OrderScreen() {
             <TouchableOpacity
               style={[
                 styles.addButton,
-                item.stock === 0 && styles.disabledButton,
+                item.stock_quantity === 0 && styles.disabledButton,
               ]}
-              onPress={() => item.stock > 0 && addToCart(item.id)}
-              activeOpacity={item.stock > 0 ? 0.8 : 0.3}
-              disabled={item.stock === 0}
+              onPress={() => item.stock_quantity !== 0 && addToCart(item.id)}
+              activeOpacity={item.stock_quantity !== 0 ? 0.8 : 0.3}
+              disabled={item.stock_quantity === 0}
             >
               <Ionicons name="add" size={20} color="#fff" />
             </TouchableOpacity>
@@ -498,7 +488,7 @@ export default function OrderScreen() {
             <Text style={styles.cartItemCount}>
               {cartCount} item{cartCount > 1 ? "s" : ""}
             </Text>
-            <Text style={styles.cartTotal}>R{cartTotal}</Text>
+            <Text style={styles.cartTotal}>R{cartTotal.toFixed(2)}</Text>
           </View>
           <View style={styles.checkoutIconContainer}>
             <Ionicons name="arrow-forward" size={20} color="#fff" />
@@ -507,7 +497,6 @@ export default function OrderScreen() {
       </View>
     );
 
-  // Loading and error states
   if (loading) {
     return (
       <SafeAreaView style={styles.container}>
@@ -534,18 +523,23 @@ export default function OrderScreen() {
               style={styles.retryButton}
               onPress={() => {
                 setError(null);
-                // Trigger refetch
                 const fetchMenuItems = async () => {
                   try {
                     setLoading(true);
-                    console.log(process.env.IP);
-                    const response = await fetch(
-                      `http://${process.env.IP}/product`,
-                    );
+                    const accessToken = await AsyncStorage.getItem("access_token");
+                    const response = await fetch(`${API_BASE_URL}/product`, {
+                      method: "GET",
+                      headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${accessToken}`,
+                      },
+                    });
                     if (!response.ok)
                       throw new Error(`HTTP error! status: ${response.status}`);
                     const apiData = await response.json();
-                    const enhancedItems = apiData.map(enhanceMenuItem);
+                    
+                    const products = apiData.products || apiData;
+                    const enhancedItems = products.map(enhanceMenuItem);
                     setMenuItems(enhancedItems);
                   } catch (err) {
                     setError("Failed to load menu items. Please try again.");
@@ -570,7 +564,6 @@ export default function OrderScreen() {
       <CoffeeBackground>
         <StatusBar barStyle="light-content" backgroundColor="#78350f" />
 
-        {/* Fixed Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -598,7 +591,6 @@ export default function OrderScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Fixed Search Bar */}
         {showSearch && (
           <View style={styles.searchContainer}>
             <TextInput
@@ -618,13 +610,9 @@ export default function OrderScreen() {
           </View>
         )}
 
-        {/* Fixed Categories */}
         <CategorySelector />
-
-        {/* Fixed Sort Options */}
         <SortSelector />
 
-        {/* Menu Items with fixed content area */}
         <View style={styles.contentArea}>
           <FlatList
             ref={flatListRef}
@@ -641,8 +629,8 @@ export default function OrderScreen() {
             windowSize={10}
             initialNumToRender={8}
             getItemLayout={(data, index) => ({
-              length: 140, // Fixed item height
-              offset: 140 * index + (index > 0 ? 16 * index : 0), // Account for margins
+              length: 140,
+              offset: 140 * index + (index > 0 ? 16 * index : 0),
               index,
             })}
             ListEmptyComponent={
@@ -654,7 +642,6 @@ export default function OrderScreen() {
           />
         </View>
 
-        {/* Floating Cart */}
         <FloatingCart />
       </CoffeeBackground>
     </SafeAreaView>
