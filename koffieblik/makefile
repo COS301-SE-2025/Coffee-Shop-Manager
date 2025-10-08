@@ -76,8 +76,8 @@ load:
 # 	@$(MAKE) createOrdesLoadTest
 # 	@$(MAKE) getOrdesLoadTest
 	@$(MAKE) getOrdesLoadTestMultiple
-# 	@$(MAKE) createOrdesLoadTestMultiple
-# 	@$(MAKE) getProductLoadTestMultiple
+	@$(MAKE) createOrdesLoadTestMultiple
+	@$(MAKE) getProductLoadTestMultiple
 # 	@$(MAKE) getProductLoadTest
 
 createOrdesStressTest:

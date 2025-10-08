@@ -10,8 +10,8 @@ const TEST_ACCOUNTS = [
     password: __ENV.TEST_PASSWORD_1 || "user",
   },
   {
-    email: __ENV.TEST_EMAIL_2 || "demo@coffee.com",
-    password: __ENV.TEST_PASSWORD_2 || "Demo123!",
+    email: __ENV.TEST_EMAIL_2 || "user@coffee.com",
+    password: __ENV.TEST_PASSWORD_2 || "user",
   },
 ];
 

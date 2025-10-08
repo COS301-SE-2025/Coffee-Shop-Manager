@@ -10,13 +10,17 @@ const TEST_ACCOUNTS = [
     password: __ENV.TEST_PASSWORD_1 || "admin",
   },
   {
-    email: __ENV.TEST_EMAIL_2 || "demo@coffee.com",
-    password: __ENV.TEST_PASSWORD_2 || "Demo123!",
+    email: __ENV.TEST_EMAIL_2 || "user@coffee.com",
+    password: __ENV.TEST_PASSWORD_2 || "user",
+  },
+   {
+    email: __ENV.TEST_EMAIL_3 || "will@coffee.com",
+    password: __ENV.TEST_PASSWORD_3 || "Password1!",
   },
 ];
 
 export const options = {
-  vus: 2,         // 2 concurrent virtual users
+  vus: 50,         // 2 concurrent virtual users
   duration: "10s" // run for 10 seconds
 };
 
