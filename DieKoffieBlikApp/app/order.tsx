@@ -105,32 +105,43 @@ const categoryDefaults = {
 const detectCategory = (itemName: string): string => {
   const name = itemName.toLowerCase();
 
+  // Check for cold drinks - including "ice" without "d"
   if (
+    name.includes("ice") ||
     name.includes("iced") ||
     name.includes("cold") ||
-    name.includes("frappe")
+    name.includes("frappe") ||
+    name.includes("frozen") ||
+    name.includes("chilled")
   ) {
     return "cold";
   }
 
+  // Check for pastries
   if (
     name.includes("muffin") ||
     name.includes("croissant") ||
     name.includes("cake") ||
-    name.includes("pastry")
+    name.includes("pastry") ||
+    name.includes("cookie") ||
+    name.includes("scone") ||
+    name.includes("bagel")
   ) {
     return "pastry";
   }
 
+  // Check for specials
   if (
     name.includes("signature") ||
     name.includes("premium") ||
     name.includes("special") ||
-    name.includes("blend")
+    name.includes("blend") ||
+    name.includes("exclusive")
   ) {
     return "special";
   }
 
+  // Default to hot coffee
   return "hot";
 };
 
@@ -886,13 +897,13 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
     elevation: 4,
     overflow: "hidden",
-    minHeight: 124, // Fixed minimum height
+    minHeight: 124,
   },
   cardContent: {
     flexDirection: "row",
     padding: 16,
     alignItems: "flex-start",
-    minHeight: 108, // Fixed content height
+    minHeight: 108,
   },
   itemImageContainer: {
     width: 48,
@@ -908,7 +919,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: 12,
     justifyContent: "space-between",
-    minHeight: 76, // Ensure consistent spacing
+    minHeight: 76,
   },
   itemHeader: {
     flexDirection: "row",
@@ -928,13 +939,13 @@ const styles = StyleSheet.create({
     color: "#64748b",
     lineHeight: 18,
     marginBottom: 8,
-    height: 36, // Fixed height for 2 lines
+    height: 36,
   },
   tagsContainer: {
     flexDirection: "row",
     gap: 6,
     flexWrap: "wrap",
-    height: 20, // Fixed height
+    height: 20,
   },
   tag: {
     backgroundColor: "#f1f5f9",
@@ -957,60 +968,58 @@ const styles = StyleSheet.create({
   },
 
   // Cart Control Styles - Fixed positioning
- cartControls: {
-  alignItems: "center",
-  justifyContent: "center",
-  width: 80, // Increased from 60
-  flexShrink: 0,
-  paddingLeft: 8, // Add some padding to separate from price
-},
-quantityControls: {
-  flexDirection: "row",
-  alignItems: "center",
-  backgroundColor: "#f8fafc",
-  borderRadius: 20,
-  padding: 4,
-  borderWidth: 1,
-  borderColor: "#e2e8f0",
-  width: 90, // Reduced from 100 to fit better
-  justifyContent: "space-between",
-},
-quantityButton: {
-  width: 24, // Reduced from 28
-  height: 24, // Reduced from 28
-  borderRadius: 12, // Adjusted for new size
-  backgroundColor: "#fff",
-  alignItems: "center",
-  justifyContent: "center",
-  shadowColor: "#000",
-  shadowOpacity: 0.05,
-  shadowOffset: { width: 0, height: 1 },
-  shadowRadius: 2,
-  elevation: 1,
-},
-quantityText: {
-  paddingHorizontal: 6, // Reduced from 8
-  fontSize: 14,
-  fontWeight: "700",
-  color: "#78350f",
-  minWidth: 18, // Reduced from 20
-  textAlign: "center",
-},
-addButton: {
-  backgroundColor: "#78350f",
-  width: 32, // Reduced from 36
-  height: 32, // Reduced from 36
-  borderRadius: 16, // Adjusted for new size
-  alignItems: "center",
-  justifyContent: "center",
-  elevation: 3,
-  shadowColor: "#78350f",
-  shadowOpacity: 0.3,
-  shadowOffset: { width: 0, height: 2 }, 
-  shadowRadius: 4,
-},
-
-
+  cartControls: {
+    alignItems: "center",
+    justifyContent: "center",
+    width: 80,
+    flexShrink: 0,
+    paddingLeft: 8,
+  },
+  quantityControls: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#f8fafc",
+    borderRadius: 20,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: "#e2e8f0",
+    width: 90,
+    justifyContent: "space-between",
+  },
+  quantityButton: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: "#fff",
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 1 },
+    shadowRadius: 2,
+    elevation: 1,
+  },
+  quantityText: {
+    paddingHorizontal: 6,
+    fontSize: 14,
+    fontWeight: "700",
+    color: "#78350f",
+    minWidth: 18,
+    textAlign: "center",
+  },
+  addButton: {
+    backgroundColor: "#78350f",
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    alignItems: "center",
+    justifyContent: "center",
+    elevation: 3,
+    shadowColor: "#78350f",
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
   disabledButton: {
     backgroundColor: "#cbd5e1",
     shadowOpacity: 0.1,
@@ -1058,4 +1067,4 @@ addButton: {
     alignItems: "center",
     justifyContent: "center",
   },
-});
+}); 

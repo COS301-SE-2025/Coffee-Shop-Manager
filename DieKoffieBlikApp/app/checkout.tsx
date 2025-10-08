@@ -55,13 +55,10 @@ const paymentMethods = [
 
 const CustomerDetails = memo(
   ({ customerInfo, setCustomerInfo, slideAnim }: CustomerDetailsProps) => {
-    // Add phone number validation
     const validatePhoneNumber = (text: string) => {
-      // Only allow numbers and limit to 10 digits
       const numbersOnly = text.replace(/[^0-9]/g, "");
       if (numbersOnly.length > 10) return;
 
-      // Ensure it starts with 0
       if (numbersOnly.length > 0 && !numbersOnly.startsWith("0")) {
         Alert.alert("Invalid Number", "Phone number must start with 0");
         return;
@@ -154,20 +151,16 @@ export default function CheckoutScreen() {
     notes: "",
   });
   
-  // State for dynamic menu items
   const [menuItems, setMenuItems] = useState<any[]>([]);
   const [loadingItems, setLoadingItems] = useState(true);
   
-  // NEW: State for user profile and points
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [pointsToUse, setPointsToUse] = useState(0);
   const [useAllPoints, setUseAllPoints] = useState(false);
 
-  // Points conversion rate: 100 points = R1
   const POINTS_TO_RAND_RATE = 100;
 
-  // NEW: Function to redeem points via API
   const redeemPoints = async (pointsAmount: number, userId: string) => {
     try {
       const accessToken = await AsyncStorage.getItem("access_token");
@@ -207,7 +200,6 @@ export default function CheckoutScreen() {
     }
   };
 
-  // Fetch menu items from API
   const fetchMenuItems = async () => {
     try {
       setLoadingItems(true);
@@ -233,8 +225,11 @@ export default function CheckoutScreen() {
       }
 
       const data = await response.json();
-      console.log("Fetched menu items for checkout:", data.length);
-      setMenuItems(data);
+      
+      // FIXED: Handle both response formats: {products: [...]} or [...]
+      const products = data.products || data;
+      console.log("Fetched menu items for checkout:", products.length);
+      setMenuItems(products);
     } catch (error) {
       console.error("Error fetching menu items:", error);
       Alert.alert("Error", "Failed to load menu items. Please try again.");
@@ -243,7 +238,6 @@ export default function CheckoutScreen() {
     }
   };
 
-  // Load user info and profile from API
   const loadUserInfo = async () => {
     try {
       setLoadingProfile(true);
@@ -257,7 +251,6 @@ export default function CheckoutScreen() {
         return;
       }
 
-      // Fetch user profile from API
       const response = await fetch(`${API_BASE_URL}/user`, {
         method: 'GET',
         headers: {
@@ -281,7 +274,6 @@ export default function CheckoutScreen() {
         const profile = apiResponse.profile;
         setUserProfile(profile);
         
-        // Update customer info with API data
         setCustomerInfo((prev) => ({
           ...prev,
           email: userEmail,
@@ -296,7 +288,6 @@ export default function CheckoutScreen() {
           points: profile.loyalty_points
         });
       } else {
-        // Fallback to stored email only
         setCustomerInfo((prev) => ({
           ...prev,
           email: userEmail || "",
@@ -305,7 +296,6 @@ export default function CheckoutScreen() {
     } catch (error) {
       console.error("Failed to load user info from API:", error);
       
-      // Fallback to stored email only
       const storedEmail = await AsyncStorage.getItem("email");
       setCustomerInfo((prev) => ({
         ...prev,
@@ -346,7 +336,6 @@ export default function CheckoutScreen() {
     ]).start();
   }, [cartParam]);
 
-  // Calculate cart items using dynamic menu data
   const cartItems = useMemo(() => {
     if (loadingItems || menuItems.length === 0) return [];
     
@@ -368,17 +357,15 @@ export default function CheckoutScreen() {
     0
   );
 
-  // NEW: Calculate point discounts and final total
   const maxPointsToUse = Math.min(
     userProfile?.loyalty_points || 0,
-    Math.floor(subtotal * POINTS_TO_RAND_RATE) // Can't use more points than the order total
+    Math.floor(subtotal * POINTS_TO_RAND_RATE)
   );
   
   const actualPointsToUse = useAllPoints ? maxPointsToUse : Math.min(pointsToUse, maxPointsToUse);
   const pointsDiscount = actualPointsToUse / POINTS_TO_RAND_RATE;
   const finalTotal = Math.max(0, subtotal - pointsDiscount);
   
-  // Auto-update points when useAllPoints is toggled
   useEffect(() => {
     if (useAllPoints) {
       setPointsToUse(maxPointsToUse);
@@ -407,7 +394,6 @@ export default function CheckoutScreen() {
       return;
     }
 
-    // NEW: Validate points payment
     if (selectedPayment === "points" && finalTotal > 0) {
       Alert.alert(
         "Insufficient Points", 
@@ -436,14 +422,12 @@ export default function CheckoutScreen() {
         return;
       }
 
-      // NEW: Redeem points first if points are being used
       if (actualPointsToUse > 0) {
         try {
           console.log(`Attempting to redeem ${actualPointsToUse} points for user ${userId}`);
           const redemptionResult = await redeemPoints(actualPointsToUse, userId);
           console.log("Points redemption successful:", redemptionResult);
           
-          // Update user profile with new points balance
           if (userProfile) {
             setUserProfile({
               ...userProfile,
@@ -461,13 +445,11 @@ export default function CheckoutScreen() {
         }
       }
 
-      // Create the payload in the same format as the website
       const payload = {
         products: cartItems.map((item: any) => ({
           product: item!.name,
           quantity: item!.quantity,
         })),
-        // NEW: Add points payment info if applicable
         ...(actualPointsToUse > 0 && {
           points_used: actualPointsToUse,
           points_discount: pointsDiscount,
@@ -477,7 +459,6 @@ export default function CheckoutScreen() {
 
       console.log("Placing order with payload:", payload);
 
-      // Make the same API call as the website
       const response = await fetch(`${API_BASE_URL}/create_order`, {
         method: "POST",
         headers: {
@@ -490,13 +471,10 @@ export default function CheckoutScreen() {
       const result = await response.json();
 
       if (response.ok && result.success) {
-        // Order placed successfully
         const generatedOrderNumber = generateOrderNumber(customerInfo.phone);
         setOrderNumber(generatedOrderNumber);
         
-        // NEW: Handle points-only payment
         if (selectedPayment === "points" || (selectedPayment === "mixed" && finalTotal === 0)) {
-          // If paid entirely with points, show success immediately
           setIsProcessing(false);
           setShowSuccess(true);
           setTimeout(() => {
@@ -506,7 +484,6 @@ export default function CheckoutScreen() {
           return;
         }
         
-        // If cash payment, show success immediately
         if (selectedPayment === "cash") {
           setIsProcessing(false);
           setShowSuccess(true);
@@ -517,12 +494,11 @@ export default function CheckoutScreen() {
           return;
         }
 
-        // If card payment or mixed payment with remaining balance, proceed with PayFast integration
         if (selectedPayment === "card" || (selectedPayment === "mixed" && finalTotal > 0)) {
           try {
             const paymentRes = await PaymentService.initiatePayment(
               generatedOrderNumber,
-              finalTotal, // Use final total after points discount
+              finalTotal,
               customerInfo,
             );
 
@@ -553,12 +529,9 @@ export default function CheckoutScreen() {
           }
         }
       } else {
-        // Order creation failed - need to refund points if they were redeemed
         if (actualPointsToUse > 0) {
           try {
             console.log("Order failed, attempting to refund points...");
-            // Note: You might need to implement a refund points endpoint
-            // For now, we'll just show an error message
             Alert.alert(
               "Order Failed", 
               `Order creation failed but ${actualPointsToUse} points were redeemed. Please contact support for assistance.`
@@ -578,7 +551,6 @@ export default function CheckoutScreen() {
       console.error("Order creation error:", error);
       setIsProcessing(false);
       
-      // If points were redeemed but order failed, we should ideally refund them
       if (actualPointsToUse > 0) {
         Alert.alert(
           "Error",
@@ -642,7 +614,6 @@ export default function CheckoutScreen() {
             <Text style={styles.summaryValue}>R{subtotal.toFixed(2)}</Text>
           </View>
 
-          {/* NEW: Show points discount if applicable */}
           {actualPointsToUse > 0 && (
             <View style={styles.summaryRow}>
               <Text style={[styles.summaryLabel, styles.discountLabel]}>
@@ -663,7 +634,6 @@ export default function CheckoutScreen() {
     </Animated.View>
   );
 
-  // NEW: Points selector component
   const PointsSelector = () => {
     if (selectedPayment !== "points" && selectedPayment !== "mixed") return null;
     
@@ -748,7 +718,6 @@ export default function CheckoutScreen() {
       <Text style={styles.sectionTitle}>Payment Method</Text>
 
       {paymentMethods.map((method) => {
-        // Disable points payment if user doesn't have enough points
         const isDisabled = method.id === "points" && (userProfile?.loyalty_points || 0) < POINTS_TO_RAND_RATE;
         
         return (
@@ -876,7 +845,6 @@ export default function CheckoutScreen() {
       <CoffeeBackground>
         <StatusBar barStyle="light-content" backgroundColor="#78350f" />
 
-        {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity
             onPress={() => router.back()}
@@ -910,7 +878,6 @@ export default function CheckoutScreen() {
           />
         </ScrollView>
 
-        {/* Place Order Button */}
         <View style={styles.bottomContainer}>
           <TouchableOpacity
             style={[
@@ -980,7 +947,6 @@ const styles = StyleSheet.create({
     paddingBottom: 120,
   },
 
-  // Sections
   section: {
     backgroundColor: "#fff",
     margin: 16,
@@ -999,7 +965,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
 
-  // Loading and Empty States
   loadingContainer: {
     padding: 20,
     alignItems: 'center',
@@ -1018,7 +983,6 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
 
-  // Order Summary
   orderItem: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -1091,7 +1055,6 @@ const styles = StyleSheet.create({
     color: "#78350f",
   },
 
-  // Points Section
   pointsBalance: {
     flexDirection: "row",
     alignItems: "center",
@@ -1165,7 +1128,6 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
 
-  // Payment Methods
   paymentCard: {
     flexDirection: "row",
     alignItems: "center",
@@ -1222,7 +1184,6 @@ const styles = StyleSheet.create({
     gap: 8,
   },
 
-  // Customer Details
   inputContainer: {
     flexDirection: "row",
     alignItems: "center",
@@ -1242,7 +1203,6 @@ const styles = StyleSheet.create({
     paddingVertical: 4,
   },
 
-  // Bottom Container
   bottomContainer: {
     backgroundColor: "#fff",
     paddingHorizontal: 20,
@@ -1287,7 +1247,6 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
 
-  // Modals
   modalOverlay: {
     flex: 1,
     backgroundColor: "rgba(0, 0, 0, 0.5)",

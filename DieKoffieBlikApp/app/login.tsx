@@ -58,34 +58,24 @@ export default function LoginScreen({
   const router = useRouter();
 
   React.useEffect(() => {
-    const checkSession = async () => {
-      try {
-        const sessionData = await AsyncStorage.getItem("user_session");
-        const accessToken = await AsyncStorage.getItem("access_token");
-        const userId = await AsyncStorage.getItem("user_id");
-        console.log(userId);
+  const clearOldSession = async () => {
+    try {
+      // Clear all stored authentication data
+      await AsyncStorage.multiRemove([
+        "user_session",
+        "access_token",
+        "refresh_token",
+        "user_id",
+        "email",
+      ]);
+      console.log("✅ Old session data cleared");
+    } catch (error) {
+      console.error("Error clearing session:", error);
+    }
+  };
 
-        if (sessionData && accessToken && userId) {
-          const { email: storedEmail } = JSON.parse(sessionData);
-          setEmail(storedEmail);
- 
-          router.replace("/home");
-        }
-      } catch (error) {
-        console.error("Error checking session:", error);
-        // Clear storage if there's an error
-        await AsyncStorage.multiRemove([
-          "user_session",
-          "access_token",
-          "refresh_token",
-          "user_id",
-          "email",
-        ]);
-      }
-    };
-
-    checkSession();
-  }, []);
+  clearOldSession();
+}, []);
 
   const isFormValid = () => {
     return email !== "" && password !== "" && !emailError && !passwordError;
