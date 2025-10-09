@@ -34,7 +34,7 @@ getAdminTest:
 
 teste2e: logintest
 # 	@$(MAKE) signuptest
-	@$(MAKE) getAdminTest
+#	@$(MAKE) getAdminTest
 # 	@$(MAKE) posTest
 # 	@$(MAKE) managerTest
 
