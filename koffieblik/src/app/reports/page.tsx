@@ -40,7 +40,7 @@ type Order = {
 
 type GetOrdersResponse = {
   success?: boolean;
-  sucess?: boolean; // backend typo
+  sucess?: boolean;
   orders?: Order[];
   message?: string;
 };
@@ -110,7 +110,6 @@ export default function QuickReport() {
   const [selectedMetric, setSelectedMetric] = useState<"sales" | "orders">("sales");
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch real data
   useEffect(() => {
     const ac = new AbortController();
     (async () => {
@@ -145,10 +144,8 @@ export default function QuickReport() {
     return () => ac.abort();
   }, []);
 
-  // Filter orders by time range
   const filtered = useMemo(() => orders.filter(rangeFilter(timeRange)), [orders, timeRange]);
 
-  // Summary metrics
   const { totalSales, ordersToday, busiestDay, topProduct } = useMemo(() => {
     const today = new Date();
     let sum = 0;
@@ -199,7 +196,6 @@ export default function QuickReport() {
     };
   }, [filtered]);
 
-  // Main chart series: adapt to day/week/month/year
   const chartSeries = useMemo(() => {
     const { from, to } = getRange(timeRange);
     const monthShort = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"] as const;
@@ -208,11 +204,9 @@ export default function QuickReport() {
     let keyOf = (d: Date) => "";
 
     if (timeRange === "day") {
-      // 24 hourly buckets
       labels = Array.from({ length: 24 }, (_, h) => `${String(h).padStart(2, "0")}:00`);
       keyOf = (d) => `${String(d.getHours()).padStart(2, "0")}:00`;
     } else if (timeRange === "week") {
-      // Keep Mon..Sun view
       labels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
       const dayNames = ["Sun","Mon","Tue","Wed","Thu","Fri","Sat"];
       keyOf = (d) => {
@@ -220,7 +214,6 @@ export default function QuickReport() {
         return name === "Sun" ? "Sun" : name;
       };
     } else if (timeRange === "month") {
-      // Each day between from..to (inclusive)
       const cur = startOfDay(new Date(from));
       const end = startOfDay(new Date(to));
       while (cur <= end) {
@@ -229,7 +222,6 @@ export default function QuickReport() {
       }
       keyOf = (d) => `${String(d.getDate()).padStart(2,"0")} ${monthShort[d.getMonth()]}`;
     } else {
-      // year → last 12 months (use Month YYYY to avoid collisions across years)
       const end = new Date(to.getFullYear(), to.getMonth(), 1);
       const start = new Date(end.getFullYear(), end.getMonth() - 11, 1);
       const cur = new Date(start);
@@ -267,7 +259,6 @@ export default function QuickReport() {
     year: "This Year",
   };
 
-  // Product mix
   const productMix = useMemo(() => {
     const counts = new Map<string, number>();
     for (const o of filtered) {
@@ -297,7 +288,6 @@ export default function QuickReport() {
     return pie;
   }, [filtered]);
 
-  // Hourly trends (separate small chart)
   const hourly = useMemo(() => {
     const slots = ["06:00","08:00","10:00","12:00","14:00","16:00","18:00","20:00","22:00"];
     const buckets = new Map(slots.map((s) => [s, { time: s, orders: 0, revenue: 0 }]));
@@ -315,7 +305,6 @@ export default function QuickReport() {
     return slots.map((s) => buckets.get(s)!);
   }, [filtered]);
 
-  // Highlights
   const highlights = useMemo(() => {
     if (filtered.length === 0) return [];
     const largest = [...filtered].sort((a, b) => b.total_price - a.total_price)[0];
@@ -339,368 +328,315 @@ export default function QuickReport() {
     return Array.from(set.values()).slice(0, 4);
   }, [filtered]);
 
-  const summaryCards = useMemo(
-    () => [
-      { title: "Top Product", value: topProduct || "—", icon: "☕", trend: "", trendColor: "var(--primary-2)" },
-      { title: "Busiest Day", value: busiestDay || "—", icon: "📈", trend: `${filtered.length} orders`, trendColor: "var(--primary-2)" },
-      { title: "Total Sales", value: currency(totalSales), icon: "💰", trend: "", trendColor: "var(--primary-2)" },
-      { title: "Orders Today", value: String(ordersToday), icon: "🛒", trend: "", trendColor: "var(--primary-2)" },
-    ],
-    [topProduct, busiestDay, totalSales, ordersToday, filtered.length]
-  );
+  if (loading) {
+    return (
+      <main className="relative p-6">
+        <div className="flex items-center justify-center min-h-screen">
+          <p className="text-xl" style={{ color: "var(--primary-3)" }}>Loading reports...</p>
+        </div>
+      </main>
+    );
+  }
 
   return (
-    <main
-      className="relative min-h-full bg-transparent overflow-x-hidden p-8"
-      style={{
-        color: "var(--primary-3)",
-      }}
-    >
-      {/* Header */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
+    <main className="relative p-6">
+      <div className="relative z-10">
+        <div className="mb-8">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
             <div>
-              <h1 className="text-4xl font-bold mb-6" style={{ color: "var(--primary-3)" }}>
-                 Reports Dashboard
+              <h1 className="text-4xl font-bold mb-2" style={{ color: "var(--primary-3)" }}>
+                Reports Dashboard
               </h1>
+              <p className="text-sm opacity-70" style={{ color: "var(--primary-3)" }}>
+                Comprehensive analytics and insights
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value as TimeRange)}
+                className="px-4 py-3 border-2 rounded-xl text-sm font-medium focus:outline-none focus:ring-2 transition-all duration-200"
+                style={{
+                  backgroundColor: "var(--primary-4)",
+                  borderColor: "var(--primary-3)",
+                  color: "var(--primary-3)",
+                }}
+              >
+                <option value="day">Today</option>
+                <option value="week">This Week</option>
+                <option value="month">This Month</option>
+                <option value="year">This Year</option>
+              </select>
+              <button
+                className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
+                style={{
+                  backgroundColor: "var(--primary-4)",
+                  color: "var(--primary-1)",
+                }}
+                onClick={() => {
+                  const header = ["number", "status", "total_price", "created_at"];
+                  const rows = filtered.map((o) => [o.number, o.status, o.total_price, o.created_at]);
+                  const csv = [header, ...rows]
+                    .map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(","))
+                    .join("\n");
+                  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+                  const url = URL.createObjectURL(blob);
+                  const a = document.createElement("a");
+                  a.href = url;
+                  a.download = `orders_${timeRange}.csv`;
+                  a.click();
+                  URL.revokeObjectURL(url);
+                }}
+              >
+                <svg className="inline mr-2" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                  <polyline points="7 10 12 15 17 10"></polyline>
+                  <line x1="12" y1="15" x2="12" y2="3"></line>
+                </svg>
+                Export
+              </button>
             </div>
           </div>
-
-          <div className="flex items-center gap-3">
-            <select
-              value={timeRange}
-              onChange={(e) => setTimeRange(e.target.value as TimeRange)}
-              className="p-3 border rounded-lg text-sm focus:outline-none focus:ring-2 focus:border-transparent transition-all duration-200"
-              style={{
-                backgroundColor: "var(--primary-3)",
-                borderColor: "var(--primary-4)",
-                color: "var(--primary-2)",
-                boxShadow: "0 0 0 0 transparent",
-              }}
-            >
-              <option value="day">Today</option>
-              <option value="week">This Week</option>
-              <option value="month">This Month</option>
-              <option value="year">This Year</option>
-            </select>
-            <button
-              className="px-4 py-2 rounded-lg border font-medium transition-all duration-200"
-              style={{
-                borderColor: "var(--primary-4)",
-                color: "var(--primary-2)",
-                backgroundColor: "var(--primary-3)",
-              }}
-              onClick={() => {
-                const header = ["number", "status", "total_price", "created_at"];
-                const rows = filtered.map((o) => [o.number, o.status, o.total_price, o.created_at]);
-                const csv = [header, ...rows]
-                  .map((r) => r.map((x) => `"${String(x).replace(/"/g, '""')}"`).join(","))
-                  .join("\n");
-                const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = `orders_${timeRange}.csv`;
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-            >
-              Export Report
-            </button>
-          </div>
+          {error && (
+            <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-600">
+              Error: {error}
+            </div>
+          )}
         </div>
-        {loading && <p style={{ color: "var(--primary-2)" }}>Loading orders...</p>}
-        {error && <p className="text-red-600">Error: {error}</p>}
-      </div>
 
-      {/* Summary Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-        {summaryCards.map(({ title, value, icon, trend, trendColor }, index) => (
+        <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          {[
+            { title: "Total Sales", value: currency(totalSales), subtitle: RANGE_TITLES[timeRange] },
+            { title: "Orders Today", value: String(ordersToday), subtitle: `${filtered.length} total orders` },
+            { title: "Top Product", value: topProduct || "—", subtitle: "Best seller" },
+            { title: "Busiest Day", value: busiestDay || "—", subtitle: "Peak traffic" },
+          ].map(({ title, value, subtitle }, index) => (
+            <div
+              key={index}
+              className="p-6 rounded-xl shadow-lg backdrop-blur-sm hover:scale-105 transition-all duration-200"
+              style={{
+                backgroundColor: "var(--primary-2)",
+                border: "2px solid var(--primary-3)",
+              }}
+            >
+              <h2 className="text-sm font-medium mb-2 opacity-70" style={{ color: "var(--primary-3)" }}>
+                {title}
+              </h2>
+              <p className="text-3xl font-bold mb-1" style={{ color: "var(--primary-3)" }}>
+                {value}
+              </p>
+              <p className="text-xs opacity-60" style={{ color: "var(--primary-3)" }}>
+                {subtitle}
+              </p>
+            </div>
+          ))}
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
           <div
-            key={index}
-            className="backdrop-blur-sm p-6 rounded-2xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 border"
-            style={{ 
-              backgroundColor: "var(--primary-3)",
-              borderColor: "var(--primary-4)"
+            className="lg:col-span-2 rounded-xl shadow-lg backdrop-blur-sm"
+            style={{
+              backgroundColor: "var(--primary-2)",
+              border: "2px solid var(--primary-3)",
             }}
           >
-            <div className="flex items-center justify-between mb-3">
-              <div className="text-3xl">
-                {icon}
-              </div>
-              {trend && (
-                <div 
-                  className="text-sm font-semibold px-2 py-1 rounded-full"
-                  style={{ 
-                    color: trendColor,
-                    backgroundColor: "var(--primary-4)"
-                  }}
-                >
-                  {trend}
-                </div>
-              )}
-            </div>
-            <h2 className="text-sm mb-2 font-medium" style={{ color: "var(--primary-2)" }}>
-              {title}
-            </h2>
-            <p 
-              className="text-3xl font-bold"
-              style={{ color: trendColor }}
-            >
-              {value}
-            </p>
-            <div 
-              className="mt-3 h-1 rounded-full"
-              style={{ backgroundColor: "var(--primary-4)" }}
-            />
-          </div>
-        ))}
-      </section>
-
-      {/* Main + Product Mix */}
-      <section className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {/* Main Chart */}
-        <div 
-          className="lg:col-span-2 backdrop-blur-sm rounded-2xl shadow-xl border"
-          style={{ 
-            backgroundColor: "var(--primary-3)",
-            borderColor: "var(--primary-4)"
-          }}
-        >
-          <div 
-            className="p-6 border-b flex items-center justify-between"
-            style={{ borderColor: "var(--primary-4)" }}
-          >
-            <h2 
-              className="text-xl font-bold flex items-center gap-2"
-              style={{ color: "var(--primary-2)" }}
-            >
-              <span className="text-2xl">📈</span> {RANGE_TITLES[timeRange]} Performance
-            </h2>
-            <div className="flex gap-2">
-              {(["sales", "orders"] as const).map((metric) => (
-                <button
-                  key={metric}
-                  onClick={() => setSelectedMetric(metric)}
-                  className={`px-3 py-1.5 text-sm font-medium rounded-lg transition-all duration-200`}
-                  style={{
-                    backgroundColor: selectedMetric === metric ? "var(--primary-2)" : "var(--primary-4)",
-                    color: selectedMetric === metric ? "var(--primary-3)" : "var(--primary-2)"
-                  }}
-                >
-                  {metric[0].toUpperCase() + metric.slice(1)}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div className="p-6">
-            <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={chartSeries}>
-                <defs>
-                  <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
-                    <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1} />
-                  </linearGradient>
-                </defs>
-                <XAxis
-                  dataKey="label"
-                  axisLine={false}
-                  tickLine={false}
-                  interval="preserveStartEnd"
-                />
-                <YAxis axisLine={false} tickLine={false} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "white",
-                    border: "1px solid #F3F4F6",
-                    borderRadius: "12px",
-                    boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
-                  }}
-                  formatter={(value: any) =>
-                    selectedMetric === "sales" ? currency(value) : value
-                  }
-                  labelFormatter={(l) => `${metricLabel} • ${l}`}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="value"
-                  stroke="#F59E0B"
-                  strokeWidth={3}
-                  fill="url(#colorGradient)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Product Distribution */}
-        <div 
-          className="backdrop-blur-sm rounded-2xl shadow-xl border"
-          style={{ 
-            backgroundColor: "var(--primary-3)",
-            borderColor: "var(--primary-4)"
-          }}
-        >
-          <div 
-            className="p-6 border-b"
-            style={{ borderColor: "var(--primary-4)" }}
-          >
-            <h2 
-              className="text-xl font-bold flex items-center gap-2"
-              style={{ color: "var(--primary-2)" }}
-            >
-              <span className="text-2xl">🥧</span> Product Mix
-            </h2>
-          </div>
-          <div className="p-6">
-            <ResponsiveContainer width="100%" height={240}>
-              <PieChart>
-                <Pie
-                  data={productMix}
-                  cx="50%"
-                  cy="50%"
-                  innerRadius={60}
-                  outerRadius={100}
-                  paddingAngle={5}
-                  dataKey="value"
-                >
-                  {productMix.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
+            <div className="p-6 border-b-2" style={{ borderColor: "var(--primary-3)" }}>
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold" style={{ color: "var(--primary-3)" }}>
+                  {RANGE_TITLES[timeRange]} Performance
+                </h2>
+                <div className="flex gap-2">
+                  {(["sales", "orders"] as const).map((metric) => (
+                    <button
+                      key={metric}
+                      onClick={() => setSelectedMetric(metric)}
+                      className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
+                      style={{
+                        backgroundColor: selectedMetric === metric ? "var(--primary-2)" : "var(--primary-4)",
+                        color: selectedMetric === metric ? "var(--primary-1)" : "var(--primary-3)",
+                        border: "2px solid var(--primary-3)"
+                      }}
+                    >
+                      {metric.charAt(0).toUpperCase() + metric.slice(1)}
+                    </button>
                   ))}
-                </Pie>
-                <Tooltip formatter={(v: any) => `${v}%`} />
-              </PieChart>
-            </ResponsiveContainer>
-            <div className="mt-4 space-y-2">
-              {productMix.map((item) => (
-                <div key={item.name} className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} />
-                    <span style={{ color: "var(--primary-2)" }}>{item.name}</span>
-                  </div>
-                  <span className="font-semibold" style={{ color: "var(--primary-2)" }}>
-                    {item.value}%
-                  </span>
                 </div>
-              ))}
+              </div>
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={chartSeries}>
+                  <defs>
+                    <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#F59E0B" stopOpacity={0.8} />
+                      <stop offset="95%" stopColor="#F59E0B" stopOpacity={0.1} />
+                    </linearGradient>
+                  </defs>
+                  <XAxis dataKey="label" axisLine={false} tickLine={false} interval="preserveStartEnd" />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "white",
+                      border: "1px solid #F3F4F6",
+                      borderRadius: "12px",
+                      boxShadow: "0 10px 25px rgba(0,0,0,0.1)",
+                    }}
+                    formatter={(value: any) => selectedMetric === "sales" ? currency(value) : value}
+                    labelFormatter={(l) => `${metricLabel} • ${l}`}
+                  />
+                  <Area type="monotone" dataKey="value" stroke="#F59E0B" strokeWidth={3} fill="url(#colorGradient)" />
+                </AreaChart>
+              </ResponsiveContainer>
             </div>
           </div>
-        </div>
-      </section>
 
-      {/* Secondary Analytics */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Hourly Trends */}
-        <div 
-          className="backdrop-blur-sm rounded-2xl shadow-xl border"
-          style={{ 
-            backgroundColor: "var(--primary-3)",
-            borderColor: "var(--primary-4)"
-          }}
-        >
-          <div 
-            className="p-6 border-b"
-            style={{ borderColor: "var(--primary-4)" }}
+          <div
+            className="rounded-xl shadow-lg backdrop-blur-sm"
+            style={{
+              backgroundColor: "var(--primary-2)",
+              border: "2px solid var(--primary-3)",
+            }}
           >
-            <h2 
-              className="text-xl font-bold flex items-center gap-2"
-              style={{ color: "var(--primary-2)" }}
-            >
-              <span className="text-2xl">⏰</span> Hourly Trends
-            </h2>
-          </div>
-          <div className="p-6">
-            <ResponsiveContainer width="100%" height={200}>
-              <LineChart data={hourly}>
-                <XAxis dataKey="time" />
-                <YAxis />
-                <Tooltip
-                  formatter={(v: any, n: any) => (n === "revenue" ? currency(v) : v)}
-                  labelFormatter={(l) => `Slot ${l}`}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="orders"
-                  stroke="#F59E0B"
-                  strokeWidth={3}
-                  dot={{ fill: "#F59E0B", strokeWidth: 2, r: 4 }}
-                />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </div>
-
-        {/* Notable Orders */}
-        <div 
-          className="backdrop-blur-sm rounded-2xl shadow-xl border"
-          style={{ 
-            backgroundColor: "var(--primary-3)",
-            borderColor: "var(--primary-4)"
-          }}
-        >
-          <div 
-            className="p-6 border-b"
-            style={{ borderColor: "var(--primary-4)" }}
-          >
-            <h2 
-              className="text-xl font-bold flex items-center gap-2"
-              style={{ color: "var(--primary-2)" }}
-            >
-              <span className="text-2xl">⭐</span> Notable Orders
-            </h2>
-          </div>
-          <div className="p-6">
-            <div className="space-y-4">
-              {highlights.map(({ id, note, amount, time, status }) => (
-                <div
-                  key={id}
-                  className="flex items-center justify-between p-4 rounded-xl border hover:shadow-md transition-all duration-200"
-                  style={{
-                    backgroundColor: "var(--primary-2)",
-                    borderColor: "var(--primary-4)"
-                  }}
-                >
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-bold" style={{ color: "var(--primary-3)" }}>
-                        {id}
-                      </span>
-                      <span
-                        className={`text-xs px-2 py-1 rounded-full ${
-                          status === "completed"
-                            ? "bg-green-100 text-green-700"
-                            : status === "pending"
-                            ? "bg-yellow-100 text-yellow-700"
-                            : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {status}
+            <div className="p-6 border-b-2" style={{ borderColor: "var(--primary-3)" }}>
+              <h2 className="text-xl font-bold" style={{ color: "var(--primary-3)" }}>
+                Product Distribution
+              </h2>
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={240}>
+                <PieChart>
+                  <Pie
+                    data={productMix}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {productMix.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip formatter={(v: any) => `${v}%`} />
+                </PieChart>
+              </ResponsiveContainer>
+              <div className="mt-6 space-y-3">
+                {productMix.map((item) => (
+                  <div key={item.name} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-4 h-4 rounded-full" style={{ backgroundColor: item.color }} />
+                      <span className="text-sm font-medium" style={{ color: "var(--primary-3)" }}>
+                        {item.name}
                       </span>
                     </div>
-                    <p className="text-sm mb-1" style={{ color: "var(--primary-3)" }}>
+                    <span className="text-sm font-bold" style={{ color: "var(--primary-3)" }}>
+                      {item.value}%
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div
+            className="rounded-xl shadow-lg backdrop-blur-sm"
+            style={{
+              backgroundColor: "var(--primary-2)",
+              border: "2px solid var(--primary-3)",
+            }}
+          >
+            <div className="p-6 border-b-2" style={{ borderColor: "var(--primary-3)" }}>
+              <h2 className="text-xl font-bold" style={{ color: "var(--primary-3)" }}>
+                Hourly Patterns
+              </h2>
+            </div>
+            <div className="p-6">
+              <ResponsiveContainer width="100%" height={200}>
+                <LineChart data={hourly}>
+                  <XAxis dataKey="time" />
+                  <YAxis />
+                  <Tooltip
+                    formatter={(v: any, n: any) => (n === "revenue" ? currency(v) : v)}
+                    labelFormatter={(l) => `Time ${l}`}
+                  />
+                  <Line
+                    type="monotone"
+                    dataKey="orders"
+                    stroke="#F59E0B"
+                    strokeWidth={3}
+                    dot={{ fill: "#F59E0B", strokeWidth: 2, r: 4 }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+
+          <div
+            className="rounded-xl shadow-lg backdrop-blur-sm"
+            style={{
+              backgroundColor: "var(--primary-2)",
+              border: "2px solid var(--primary-3)",
+            }}
+          >
+            <div className="p-6 border-b-2" style={{ borderColor: "var(--primary-3)" }}>
+              <h2 className="text-xl font-bold" style={{ color: "var(--primary-3)" }}>
+                Notable Orders
+              </h2>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {highlights.map(({ id, note, amount, time, status }) => (
+                  <div
+                    key={id}
+                    className="p-4 rounded-xl hover:scale-102 transition-all duration-200"
+                    style={{
+                      backgroundColor: "var(--primary-4)",
+                      border: "2px solid var(--primary-3)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-lg" style={{ color: "var(--primary-3)" }}>
+                          {id}
+                        </span>
+                        <span
+                          className={`text-xs px-2 py-1 rounded-full font-semibold ${
+                            status === "completed"
+                              ? "bg-green-100 text-green-700"
+                              : status === "pending"
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {status}
+                        </span>
+                      </div>
+                      <span className="text-lg font-bold" style={{ color: "var(--primary-3)" }}>
+                        {amount}
+                      </span>
+                    </div>
+                    <p className="text-sm mb-1 opacity-80" style={{ color: "var(--primary-3)" }}>
                       {note}
                     </p>
-                    <div className="flex items-center gap-3 text-xs" style={{ color: "var(--primary-3)" }}>
-                      <span>🕐 {time}</span>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold" style={{ color: "var(--primary-3)" }}>
-                      {amount}
+                    <p className="text-xs opacity-60" style={{ color: "var(--primary-3)" }}>
+                      {time}
                     </p>
                   </div>
-                </div>
-              ))}
-              {highlights.length === 0 && (
-                <p style={{ color: "var(--primary-2)" }}>
-                  No notable orders in this range.
-                </p>
-              )}
+                ))}
+                {highlights.length === 0 && (
+                  <p className="text-center py-8 opacity-60" style={{ color: "var(--primary-3)" }}>
+                    No notable orders in this period
+                  </p>
+                )}
+              </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
   );
 }

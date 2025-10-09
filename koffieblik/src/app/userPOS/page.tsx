@@ -43,10 +43,23 @@ export default function OrderPage() {
   const [userPoints, setUserPoints] = useState(0);
   const router = useRouter();
 
+  useEffect(() => {
+  setCustomerInfo((prev) => ({
+    ...prev,
+    name: typeof window !== "undefined" ? localStorage.getItem("username") || "" : "",
+    email: typeof window !== "undefined" ? localStorage.getItem("email") || "" : "",
+  }));
+}, []);
+
   const API_BASE_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000";
 
-  const userId = localStorage.getItem("user_id");
+  // const userId = localStorage.getItem("user_id");
+  let userId: string | null = null;
+
+  if (typeof window !== "undefined") {
+    userId = localStorage.getItem("user_id");
+  }
 
   // IMPORTANT: All useEffect hooks must be at the top level, before any conditional returns
   useEffect(() => {
@@ -60,7 +73,7 @@ export default function OrderPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/getProducts`, {
+        const res = await fetch(`${API_BASE_URL}/product`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -89,61 +102,42 @@ export default function OrderPage() {
   // Combined effect to handle all PayFast return scenarios
   useEffect(() => {
     const checkPayment = async () => {
-      // Check for our custom return parameter
       const urlParams = new URLSearchParams(window.location.search);
       const payfastReturn = urlParams.get('payfast_return');
       const orderIdFromUrl = urlParams.get('order');
-      const pendingOrderId = localStorage.getItem("pendingOrder");
-      
-      console.log("PayFast return:", payfastReturn);
-      console.log("Order from URL:", orderIdFromUrl);
-      console.log("Pending order:", pendingOrderId);
-      
-      // If returning from PayFast with success parameter
+
       if (payfastReturn === 'success' && orderIdFromUrl) {
         try {
-          // Mark the order as paid
-          const updateRes = await fetch(`${API_BASE_URL}/order/pay/${orderIdFromUrl}`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+          // Fetch order/payment status from backend
+          const res = await fetch(`${API_BASE_URL}/order/${orderIdFromUrl}`, {
             credentials: 'include'
           });
-          
-          const updateResult = await updateRes.json();
-          console.log("Payment update result:", updateResult);
-          
-          if (updateRes.ok && updateResult.success) {
+          const order = await res.json();
+
+          if (res.ok && order.payments.status === "paid") {
             setOrderStatus("placed");
             setSelectedPaymentMethod("card");
             setMessage("Payment successful! Your order has been paid.");
-            localStorage.removeItem("pendingOrder");
-            localStorage.removeItem("paymentInitiated");
-            
-            // Clear the URL parameters to prevent duplicate processing on refresh
-            window.history.replaceState({}, document.title, window.location.pathname);
           } else {
-            console.error("Failed to update payment status:", updateResult);
-            setMessage("Payment was received but order status update failed.");
+            setMessage("Payment received, but order is not marked as paid yet. Please contact support.");
           }
+          localStorage.removeItem("pendingOrder");
+          localStorage.removeItem("paymentInitiated");
+          window.history.replaceState({}, document.title, window.location.pathname);
         } catch (err) {
-          console.error("Error updating payment status:", err);
-          setMessage("Error updating payment status. Please contact support.");
+          setMessage("Error checking payment status. Please contact support.");
         }
       }
-      
-      // If returning with cancelled parameter
+
       if (payfastReturn === 'cancelled') {
         setOrderStatus("ordering");
         setMessage("Payment was cancelled. Please try again or choose a different payment method.");
         localStorage.removeItem("pendingOrder");
         localStorage.removeItem("paymentInitiated");
-        
-        // Clear the URL parameters
         window.history.replaceState({}, document.title, window.location.pathname);
       }
     };
-    
-    // Check for PayFast return parameters
+
     if (window.location.search.includes('payfast_return')) {
       checkPayment();
     }
@@ -154,7 +148,7 @@ export default function OrderPage() {
       if (!userId) return;
       
       try {
-        const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        const response = await fetch(`${API_BASE_URL}/user`, {
           credentials: "include",
         });
         const data = await response.json();
@@ -247,7 +241,7 @@ export default function OrderPage() {
             product: item.name,
             quantity: item.quantity,
           })),
-          special_instructions: specialInstructions,
+          custom: specialInstructions,
           payment_method: paymentMethod,
         };
 
@@ -386,7 +380,7 @@ export default function OrderPage() {
             product: item.name,
             quantity: item.quantity,
           })),
-          special_instructions: specialInstructions,
+          custom: specialInstructions,
           payment_method: "points",
         };
         const res = await fetch(`${API_BASE_URL}/create_order`, {
@@ -404,29 +398,17 @@ export default function OrderPage() {
             credentials: "include",
             body: JSON.stringify({
               points: Math.round(orderSummary.total * 100),
-              user_id: userId,
+              order_id: result.order_id,
             }),
           });
           const pointsResult = await pointsRes.json();
           
           if (pointsRes.ok && pointsResult.success) {
-            // Then mark order as paid
-            const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${result.order_id}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              credentials: "include"
-            });
-
-            if (paymentRes.ok) {
-              setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
-              setOrderStatus("placed");
-              setCart([]);
-              setSelectedPaymentMethod(null);
-              setMessage("Order placed and paid with loyalty points!");
-            } else {
-              setOrderStatus("ordering");
-              setMessage("Order created and points deducted, but failed to mark as paid. Please contact support.");
-            }
+            setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
+            setOrderStatus("placed");
+            setCart([]);
+            setSelectedPaymentMethod(null);
+            setMessage("Order placed and paid with loyalty points!");
           } else {
             setOrderStatus("ordering");
             setMessage("Order created, but failed to redeem points. Please contact support.");
@@ -452,8 +434,70 @@ export default function OrderPage() {
             <h2 className="text-2xl font-bold mb-6 text-center" style={{ color: "var(--primary-3)" }}>
               Choose Payment Method
             </h2>
+
+            {/* Add message display */}
+            {message && (
+              <div className={`mb-4 p-3 rounded-lg ${
+                message.includes("Failed") || message.includes("error")
+                  ? "bg-red-100 text-red-700"
+                  : "bg-green-100 text-green-700"
+              }`}>
+                {message}
+              </div>
+            )}
+
+            {/* Rest of the payment form */}
+            <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                  Name
+                </label>
+                <input
+                  type="text"
+                  value={customerInfo.name ?? ""}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{ 
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-3)",
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={customerInfo.email ?? ""}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{ 
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-3)",  // Add this line
+                  }}
+                  required
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
+                  Phone (Optional)
+                </label>
+                <input
+                  type="tel"
+                  value={customerInfo.phone}
+                  onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
+                  className="w-full px-3 py-2 border rounded-lg text-sm"
+                  style={{ 
+                    borderColor: "var(--primary-4)",
+                    color: "var(--primary-3)",  // Add this line
+                  }}
+                />
+              </div>
+            </div>
             
-            <div className="space-y-4 mb-6">
+            <div className="space-y-4 mb-6 mt-6">  {/* Add mt-6 here */}
               <button
                 onClick={() => {
                   if (!customerInfo.name || !customerInfo.email) {
@@ -480,57 +524,6 @@ export default function OrderPage() {
                 </svg>
                 <span className="text-lg font-semibold">Card Payment</span>
               </button>
-
-              {/* Add payment info form */}
-              <div className="space-y-3 mt-4 p-4 border-2 rounded-lg" style={{ borderColor: "var(--primary-4)" }}>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    value={customerInfo.name}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, name: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    value={customerInfo.email}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, email: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: "var(--primary-3)" }}>
-                    Phone (Optional)
-                  </label>
-                  <input
-                    type="tel"
-                    value={customerInfo.phone}
-                    onChange={(e) => setCustomerInfo(prev => ({ ...prev, phone: e.target.value }))}
-                    className="w-full px-3 py-2 border rounded-lg text-sm"
-                    style={{ 
-                      borderColor: "var(--primary-4)",
-                      color: "var(--primary-3)",  // Add this line
-                    }}
-                  />
-                </div>
-              </div>
 
               <button
                 onClick={() => handlePaymentMethodSelect("cash")}

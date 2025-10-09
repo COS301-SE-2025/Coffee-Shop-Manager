@@ -1,11 +1,12 @@
 import { Request, Response } from "express";
-import { supabase } from "../../supabase/client";
 
 export async function getStockAdjustmentsHandler(
 	req: Request,
 	res: Response
 ): Promise<void> {
 	try {
+		const supabase = req.supabase!;
+		
 		const { stockId, referenceType, limit = 100, offset = 0 } = req.query;
 
 		let query = supabase

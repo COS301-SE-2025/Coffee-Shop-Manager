@@ -143,8 +143,15 @@ export default function POSPage() {
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Fetched data:", data);
-        setOrders(data.orders);
+        const validated = (data.orders || []).map((order: any) => ({
+          ...order,
+          paid_status:
+            order.payments && order.payments.length > 0 && order.payments.some((p: any) => p.status === "completed")
+              ? "paid"
+              : "unpaid",
+        }));
+        console.log("Fetched data:", validated);
+        setOrders(validated);
       } else {
         console.warn(
           "⚠️ Failed to fetch orders:",
@@ -182,21 +189,21 @@ export default function POSPage() {
       const data = await res.json();
 
       // If status updated successfully and new status is "completed", update payment status
-      if (data.success && newStatus === "completed") {
-        // Call the dedicated payment API endpoint
-        const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderId}`, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include"
-        });
+      // if (data.success && newStatus === "completed") {
+      //   // Call the dedicated payment API endpoint
+      //   const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderId}`, {
+      //     method: "POST",
+      //     headers: {
+      //       "Content-Type": "application/json",
+      //     },
+      //     credentials: "include"
+      //   });
         
-        const paymentData = await paymentRes.json();
-        if (!paymentRes.ok) {
-          console.error("Failed to update payment status:", paymentData.message);
-        }
-      }
+      //   const paymentData = await paymentRes.json();
+      //   if (!paymentRes.ok) {
+      //     console.error("Failed to update payment status:", paymentData.message);
+      //   }
+      // }
 
       if (data.success) {
         setOrders((prev) =>
@@ -238,7 +245,7 @@ export default function POSPage() {
     const fetchProducts = async () => {
       setLoading(true);
       try {
-        const res = await fetch(`${API_BASE_URL}/getProducts`, {
+        const res = await fetch(`${API_BASE_URL}/product`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -362,7 +369,7 @@ export default function POSPage() {
         })),
         email: selectedEmail,
         payment_method: "points",
-        special_instructions: "Paid with loyalty points"
+        custom: "Paid with loyalty points"
       };
 
       const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
@@ -387,24 +394,13 @@ export default function POSPage() {
         body: JSON.stringify({
           email: selectedEmail,
           points: pointsNeeded,
-          description: `Payment for order #${orderResult.order_id}`
+          description: `Payment for order`,
+          order_id: `${orderResult.order_id}`
         }),
       });
 
       if (!redeemRes.ok) {
         setMessage("❌ Failed to redeem points. Please contact support.");
-        return;
-      }
-
-      // Mark order as paid
-      const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderResult.order_id}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include"
-      });
-
-      if (!paymentRes.ok) {
-        setMessage("❌ Order created but failed to mark as paid. Please contact support.");
         return;
       }
 
@@ -443,15 +439,14 @@ export default function POSPage() {
       }
       
       try {
-        // Use query parameters instead of path parameters
-        const response = await fetch(`${API_BASE_URL}/user/byEmail?email=${encodeURIComponent(selectedEmail)}`, {
+        const response = await fetch(`${API_BASE_URL}/user/email/${selectedEmail}`, {
           credentials: "include",
         });
         
         const data = await response.json();
         if (response.ok && data.success) {
-          setSelectedUserPoints(data.user.loyalty_points || 0);
-          console.log(`User has ${data.user.loyalty_points} loyalty points`);
+          setSelectedUserPoints(data.profile.loyalty_points || 0);
+          console.log(`User has ${data.profile.loyalty_points} loyalty points`);
         } else {
           console.error("Failed to fetch user details:", data.error);
           setSelectedUserPoints(0);
@@ -484,8 +479,8 @@ export default function POSPage() {
           return;
         }
         
-        // Call the user profile endpoint with the ID
-        const response = await fetch(`${API_BASE_URL}/user/${userId}`, {
+        // Call the user profile endpoint with the email
+        const response = await fetch(`${API_BASE_URL}/user/email/${selectedEmail}`, {
           credentials: "include",
         });
         
@@ -592,24 +587,19 @@ export default function POSPage() {
                   ))}
                 </select>
 
-                {selectedEmail && (
-                  <div
-                    className="mt-3 p-3 rounded-lg border"
-                    style={{
-                      backgroundColor: "var(--primary-4)",
-                      borderColor: "var(--primary-2)"
-                    }}
-                  >
-                    <p className="text-sm" style={{ color: "var(--primary-2)" }}>
-                      Selected: <span className="font-semibold">{selectedEmail}</span>
-                    </p>
-                    {selectedUserPoints > 0 && (
-                      <p className="text-sm mt-1" style={{ color: "var(--primary-2)" }}>
-                        <span className="font-semibold">⭐ {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
-                      </p>
-                    )}
-                  </div>
-                )}
+                {selectedEmail && selectedUserPoints >= 0 && (
+                <div
+                  className="mt-3 p-3 rounded-lg border"
+                  style={{
+                  backgroundColor: "#F5F5DC",
+                  borderColor: "var(--primary-2)"
+                }}
+                >
+    <p className="text-sm" style={{ color: "var(--primary-3)" }}>
+      <span className="font-semibold"> {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
+    </p>
+  </div>
+)}
               </div>
 
               {/* Menu Items */}
@@ -951,7 +941,7 @@ export default function POSPage() {
                       className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
                       style={{
                         backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
-                        color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
+                        color: statusFilter === status ? "var(--primary-1)" : "var(--primary-1)"
                       }}
                       onClick={() => {
                         setStatusFilter(status);

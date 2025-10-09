@@ -217,7 +217,12 @@ export default function ManageOrdersPage() {
 
       if (response.ok) {
         console.log("Fetched data:", data);
-        setOrders(data.orders);
+        // Derive paid_status from payments array
+        const validated = data.orders.map((order: any) => ({
+          ...order,
+          paid_status: order.payments?.some((p: any) => p.status === "completed") ? "paid" : "unpaid",
+        }));
+        setOrders(validated);
         // setTotalOrders(data.count);
         // setFilteredOrdersTotal(data.filteredOrders);
       } else {
@@ -513,7 +518,7 @@ export default function ManageOrdersPage() {
                           {order.status === "pending" && (
                             <div className="flex gap-2">
                               <button
-                                className="px-3 py-1 bg-green-600 text-white rounded hover:bg-green-700"
+                                className="px-3 py-1 bg-green-500 text-white rounded hover:bg-green-700"
                                 onClick={(e) => {
                                   e.stopPropagation(); // prevent row toggle
                                   updateOrderStatus(order.id, "completed");
@@ -522,7 +527,7 @@ export default function ManageOrdersPage() {
                                 <FaCheck />
                               </button>
                               <button
-                                className="px-3 py-1 bg-red-600 text-white rounded hover:bg-red-700"
+                                className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-700"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   updateOrderStatus(order.id, "cancelled");

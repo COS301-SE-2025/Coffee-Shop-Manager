@@ -106,7 +106,7 @@ export default function DashboardPage() {
           orderDirection: "desc",
           filters: {
             // Add user_id filter here if needed
-            user_id: localStorage.getItem("user_id"), // Make sure you store user_id in localStorage during login
+            // user_id: localStorage.getItem("user_id"), // Make sure you store user_id in localStorage during login
           },
         }),
       });
@@ -833,7 +833,7 @@ export default function DashboardPage() {
             {/* Header */}
             <div className="flex justify-between items-center">
               <h2 className="text-xl font-bold text-[var(--primary-2)]">
-                🎯 Your Loyalty Points
+                 Your Loyalty Points
               </h2>
             </div>
 
@@ -880,7 +880,7 @@ export default function DashboardPage() {
             {/* Recent Activity Section */}
             <div>
               <h3 className="text-lg font-semibold text-[var(--primary-2)] mb-3">
-                📅 Recent Activity
+                 Recent Activity
               </h3>
               <ul className="space-y-2 text-lg">
                 {userStats.recentActivity.map((activity, index) => (
@@ -904,7 +904,7 @@ export default function DashboardPage() {
             {userGamificationStats && (
               <div>
                 <h3 className="text-xl font-semibold text-[var(--primary-2)] mb-3">
-                  🚀 Your Progress
+                   Your Progress
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div

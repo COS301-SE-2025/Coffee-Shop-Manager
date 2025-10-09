@@ -20,8 +20,7 @@ export default function DashboardLayout({
       {/* Background image layer */}
       <div className="fixed inset-0 -z-10">
         <CoffeeBackground />
-        {/* Dark overlay */}
-        <div className="absolute inset-0 bg-black/30" />
+        
       </div>
 
       {/* Optional overlay */}
