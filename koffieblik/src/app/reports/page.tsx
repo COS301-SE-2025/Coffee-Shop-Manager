@@ -371,7 +371,7 @@ export default function QuickReport() {
               <button
                 className="px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
                 style={{
-                  backgroundColor: "var(--primary-3)",
+                  backgroundColor: "var(--primary-4)",
                   color: "var(--primary-1)",
                 }}
                 onClick={() => {
@@ -453,8 +453,9 @@ export default function QuickReport() {
                       onClick={() => setSelectedMetric(metric)}
                       className="px-4 py-2 text-sm font-semibold rounded-lg transition-all duration-200"
                       style={{
-                        backgroundColor: selectedMetric === metric ? "var(--primary-3)" : "var(--primary-4)",
+                        backgroundColor: selectedMetric === metric ? "var(--primary-2)" : "var(--primary-4)",
                         color: selectedMetric === metric ? "var(--primary-1)" : "var(--primary-3)",
+                        border: "2px solid var(--primary-3)"
                       }}
                     >
                       {metric.charAt(0).toUpperCase() + metric.slice(1)}
