@@ -591,7 +591,7 @@ export default function POSPage() {
                 <div
                   className="mt-3 p-3 rounded-lg border"
                   style={{
-                  backgroundColor: "var(--primary-4)",
+                  backgroundColor: "#F5F5DC",
                   borderColor: "var(--primary-2)"
                 }}
                 >
@@ -941,7 +941,7 @@ export default function POSPage() {
                       className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200`}
                       style={{
                         backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)",
-                        color: statusFilter === status ? "var(--primary-3)" : "var(--primary-2)"
+                        color: statusFilter === status ? "var(--primary-1)" : "var(--primary-1)"
                       }}
                       onClick={() => {
                         setStatusFilter(status);
