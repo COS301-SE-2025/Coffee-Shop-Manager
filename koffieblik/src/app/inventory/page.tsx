@@ -214,7 +214,7 @@ export default function InventoryPage() {
             <button
               className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold transition-all duration-200 hover:scale-105 shadow-lg"
               style={{
-                backgroundColor: "var(--primary-3)",
+                backgroundColor: "var(--primary-4)",
                 color: "var(--primary-1)",
               }}
               onClick={() => {
