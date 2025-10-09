@@ -587,24 +587,19 @@ export default function POSPage() {
                   ))}
                 </select>
 
-                {selectedEmail && (
-                  <div
-                    className="mt-3 p-3 rounded-lg border"
-                    style={{
-                      backgroundColor: "var(--primary-4)",
-                      borderColor: "var(--primary-2)"
-                    }}
-                  >
-                    <p className="text-sm" style={{ color: "var(--primary-2)" }}>
-                      Selected: <span className="font-semibold">{selectedEmail}</span>
-                    </p>
-                    {selectedUserPoints > 0 && (
-                      <p className="text-sm mt-1" style={{ color: "var(--primary-2)" }}>
-                        <span className="font-semibold">⭐ {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
-                      </p>
-                    )}
-                  </div>
-                )}
+                {selectedEmail && selectedUserPoints >= 0 && (
+                <div
+                  className="mt-3 p-3 rounded-lg border"
+                  style={{
+                  backgroundColor: "var(--primary-4)",
+                  borderColor: "var(--primary-2)"
+                }}
+                >
+    <p className="text-sm" style={{ color: "var(--primary-3)" }}>
+      <span className="font-semibold"> {selectedUserPoints} points</span> (R{(selectedUserPoints/100).toFixed(2)} value)
+    </p>
+  </div>
+)}
               </div>
 
               {/* Menu Items */}
