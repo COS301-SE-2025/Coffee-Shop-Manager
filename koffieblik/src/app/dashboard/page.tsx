@@ -184,7 +184,7 @@ export default function DashboardPage() {
               <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div className="flex gap-3">
                   {["pending", "completed", "cancelled"].map((status) => (
-                    <button key={status} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200" style={{ backgroundColor: statusFilter === status ? "var(--primary-3)" : "var(--primary-4)", color: statusFilter === status ? "var(--primary-1)" : "var(--primary-3)", border: "2px solid var(--primary-3)" }} onClick={() => { setStatusFilter(status); setOffsetStart(0); }}>
+                    <button key={status} className="px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200" style={{ backgroundColor: statusFilter === status ? "var(--primary-2)" : "var(--primary-4)", color: statusFilter === status ? "var(--primary-1)" : "var(--primary-3)", border: "2px solid var(--primary-3)" }} onClick={() => { setStatusFilter(status); setOffsetStart(0); }}>
                       {status}
                     </button>
                   ))}
