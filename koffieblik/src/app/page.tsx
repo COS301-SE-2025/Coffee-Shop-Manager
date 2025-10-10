@@ -267,7 +267,7 @@ export default function Home() {
           <div className="flex justify-center items-center gap-6">
             <a
               href="/koffieblik/public/app_apk/app-release.apk"
-              download
+              download="DieKoffieBlik.apk"
               className="flex items-center gap-3 px-8 py-4 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
             >
               <svg
