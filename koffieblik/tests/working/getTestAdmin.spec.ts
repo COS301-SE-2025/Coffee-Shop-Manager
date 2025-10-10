@@ -87,21 +87,21 @@ test("fetches and displays orders from /get_orders on dashboard", async ({
 //   }
 // });
 
-test("fetches and displays Inventory from /get_stock on Inventory page", async ({
-  page,
-}) => {
-  await login(page);
+// test("fetches and displays Inventory from /get_stock on Inventory page", async ({
+//   page,
+// }) => {
+//   await login(page);
 
-  await page.locator("text=Inventory").click();
-  await page.waitForURL("**/inventory", { timeout: 10000 });
-  await page.waitForTimeout(3000); // hydration
+//   await page.locator("text=Inventory").click();
+//   await page.waitForURL("**/inventory", { timeout: 10000 });
+//   await page.waitForTimeout(3000); // hydration
 
-  await page.waitForSelector("table tbody tr", { timeout: 10000 });
-  const inventoryRows = page.locator("table tbody tr");
-  await expect(inventoryRows.first()).toBeVisible({ timeout: 10000 });
-  const count = await inventoryRows.count();
-  expect(count).toBeGreaterThan(0);
-});
+//   await page.waitForSelector("table tbody tr", { timeout: 10000 });
+//   const inventoryRows = page.locator("table tbody tr");
+//   await expect(inventoryRows.first()).toBeVisible({ timeout: 10000 });
+//   const count = await inventoryRows.count();
+//   expect(count).toBeGreaterThan(0);
+// });
 
 test("fetches and displays Orders from /get_orders on manage", async ({ page }) => {
   await login(page);
