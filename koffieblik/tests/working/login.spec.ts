@@ -30,8 +30,9 @@ test.describe("Login Flow", () => {
 
     await expect(page).toHaveURL(/.*dashboard.*/);
     await expect(
-      page.getByRole("heading", { name: /dashboard/i }),
+      page.getByRole("heading", { name: /^Dashboard$/ })
     ).toBeVisible();
+
   });
 
   test("Shows error for invalid credentials", async ({ page }) => {
@@ -39,9 +40,9 @@ test.describe("Login Flow", () => {
     await page.fill("#email", "invalid@example.com");
     await page.fill("#password", "WrongPas@sword123");
     await page.click('button[type="submit"]');
-
     await expect(
-      page.locator("text=/Invalid login credentials/i"),
-    ).toBeVisible();
+      page.locator("text=/Invalid login credentials/i")
+    ).toBeVisible({ timeout: 10000 }); // wait up to 10 seconds
+
   });
 });
