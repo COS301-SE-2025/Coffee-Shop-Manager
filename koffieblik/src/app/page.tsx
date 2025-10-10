@@ -255,6 +255,34 @@ export default function Home() {
         </div>
       </section>
 
+      <section className="py-16 px-6 bg-stone-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-6">
+            Get Our Mobile App
+          </h2>
+          <p className="text-xl text-gray-600 mb-8">
+            Experience DieKoffieBlik on the go! Download our Android app for a seamless mobile experience.
+          </p>
+          
+          <div className="flex justify-center items-center gap-6">
+            <a
+              href="/koffieblik/public/app_apk/app-release.apk"
+              download
+              className="flex items-center gap-3 px-8 py-4 bg-stone-900 text-white rounded-lg hover:bg-stone-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
+            >
+              <svg
+                className="w-8 h-8"
+                viewBox="0 0 24 24"
+                fill="currentColor"
+              >
+                <path d="M17.6,9.48l1.84-3.18c0.16-0.31,0.04-0.69-0.26-0.85c-0.29-0.15-0.65-0.06-0.83,0.22l-1.88,3.24 c-2.86-1.21-6.08-1.21-8.94,0L5.65,5.67c-0.19-0.29-0.58-0.38-0.87-0.2C4.5,5.65,4.41,6.01,4.56,6.3L6.4,9.48 C3.3,11.25,1.28,14.44,1,18h22C22.72,14.44,20.7,11.25,17.6,9.48z M7,15.25c-0.69,0-1.25-0.56-1.25-1.25 c0-0.69,0.56-1.25,1.25-1.25S8.25,13.31,8.25,14C8.25,14.69,7.69,15.25,7,15.25z M17,15.25c-0.69,0-1.25-0.56-1.25-1.25 c0-0.69,0.56-1.25,1.25-1.25s1.25,0.56,1.25,1.25C18.25,14.69,17.69,15.25,17,15.25z"/>
+              </svg>
+              Download for Android
+            </a>
+          </div>
+        </div>
+      </section>
+
       {/* Footer */}
       <footer className="py-8 px-6 bg-stone-900 text-stone-100">
         <div className="max-w-6xl mx-auto text-center">
@@ -268,7 +296,7 @@ export default function Home() {
                 className="text-white"
               />
             </div>
-            <span className="text-xl font-bold">KoffieBlik</span>
+            <span className="text-xl font-bold">DieKoffieBlik</span>
           </div>
         </div>
       </footer>
