@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 // Import your actual background and loading components
@@ -10,25 +11,24 @@ import CoffeeLoading from "assets/loading";
 export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
-  const handleNavigation = (path: string) => {
-    setIsLoading(true);
-    // Simulate navigation - replace with actual router.push(path) in your Next.js app
-    setTimeout(() => setIsLoading(false), 1000);
-  };
+  const router = useRouter();
 
   return (
-    <div className="min-h-screen bg-amber-50">
+    <div className="min-h-screen" style={{ backgroundColor: "var(--primary-4)" }}>
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-amber-50/95 backdrop-blur-sm shadow-sm">
+      <header className="sticky top-0 z-40 backdrop-blur-sm shadow-sm" style={{ backgroundColor: "var(--primary-4)" }}>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-4 lg:py-6">
             {/* Logo */}
             <div className="flex items-center gap-2 sm:gap-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-amber-700 flex items-center justify-center">
-                <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
-                </svg>
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center">
+                <Image
+                  src="/icon.svg"
+                  alt="KoffieBlik Logo"
+                  width={24}
+                  height={24}
+                  className="text-white"
+                />
               </div>
               <span className="text-xl sm:text-2xl lg:text-3xl font-bold text-stone-800">
                 DieKoffieBlik
@@ -37,18 +37,28 @@ export default function Home() {
 
             {/* Desktop Navigation */}
             <div className="hidden sm:flex gap-3 lg:gap-4">
-              <button
-                onClick={() => handleNavigation('/login')}
-                className="px-4 py-2 lg:px-6 font-medium border-2 border-amber-700 text-amber-700 rounded-full hover:bg-amber-700 hover:text-white transform hover:-translate-y-0.5 transition-all duration-300"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => handleNavigation('/signup')}
-                className="px-4 py-2 lg:px-6 rounded-full font-medium bg-amber-700 text-amber-50 shadow-lg hover:bg-amber-800 transform hover:-translate-y-0.5 transition-all duration-300"
-              >
-                Get Started
-              </button>
+              <Link href="/login">
+                <button
+                  className="px-4 py-2 lg:px-6 font-medium border-2 rounded-full transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                  style={{
+                    color: "var(--primary-3)",
+                    borderColor: "var(--primary-3)",
+                  }}
+                >
+                  Login
+                </button>
+              </Link>
+              <Link href="/signup">
+                <button
+                  className="px-4 py-2 lg:px-6 rounded-lg font-medium shadow-lg transform hover:-translate-y-1 transition-all duration-300 cursor-pointer"
+                  style={{
+                    backgroundColor: "var(--primary-3)",
+                    color: "var(--primary-2)",
+                  }}
+                >
+                  Get Started
+                </button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -69,18 +79,28 @@ export default function Home() {
           {/* Mobile Menu */}
           {mobileMenuOpen && (
             <div className="sm:hidden pb-4 space-y-2">
-              <button
-                onClick={() => handleNavigation('/login')}
-                className="w-full px-4 py-3 font-medium border-2 border-amber-700 text-amber-700 rounded-lg hover:bg-amber-700 hover:text-white transition-all duration-300"
-              >
-                Login
-              </button>
-              <button
-                onClick={() => handleNavigation('/signup')}
-                className="w-full px-4 py-3 rounded-lg font-medium bg-amber-700 text-amber-50 shadow-lg hover:bg-amber-800 transition-all duration-300"
-              >
-                Get Started
-              </button>
+              <Link href="/login">
+                <button
+                  className="w-full px-4 py-3 font-medium border-2 rounded-lg transition-all duration-300"
+                  style={{
+                    color: "var(--primary-3)",
+                    borderColor: "var(--primary-3)",
+                  }}
+                >
+                  Login
+                </button>
+              </Link>
+              <Link href="/signup">
+                <button
+                  className="w-full px-4 py-3 rounded-lg font-medium shadow-lg transition-all duration-300"
+                  style={{
+                    backgroundColor: "var(--primary-3)",
+                    color: "var(--primary-2)",
+                  }}
+                >
+                  Get Started
+                </button>
+              </Link>
             </div>
           )}
         </div>
@@ -89,12 +109,12 @@ export default function Home() {
       {/* Hero Section */}
       <section className="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-24">
         <div className="max-w-5xl mx-auto text-center">
-          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight text-stone-800">
+          <h1 className="text-4xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-6 leading-tight" style={{ color: "var(--primary-1)" }}>
             Your Complete Coffee Shop
-            <span className="block mt-2">Experience</span>
+            <span className="block mt-2" style={{ color: "var(--primary-1)" }}>Experience</span>
           </h1>
 
-          <p className="text-lg sm:text-xl lg:text-2xl mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed text-stone-700 px-4">
+          <p className="text-lg sm:text-xl lg:text-2xl mb-8 sm:mb-12 max-w-3xl mx-auto leading-relaxed px-4" style={{ color: "var(--primary-1)" }}>
             Order your favourite coffee with ease, or manage your coffee shop operations seamlessly.
           </p>
         </div>
@@ -116,8 +136,8 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                   </svg>
@@ -130,8 +150,8 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
                   </svg>
@@ -144,8 +164,8 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 sm:col-span-2 lg:col-span-1">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -169,8 +189,8 @@ export default function Home() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6zM14 9a1 1 0 00-1 1v6a1 1 0 001 1h2a1 1 0 001-1v-6a1 1 0 00-1-1h-2z" />
                   </svg>
@@ -183,8 +203,8 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
                   </svg>
@@ -197,8 +217,8 @@ export default function Home() {
                 </p>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 sm:p-8 shadow-lg hover:shadow-xl transform hover:-translate-y-2 transition-all duration-300 sm:col-span-2 lg:col-span-1">
-                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg">
+              <div className="text-center group hover:transform hover:-translate-y-2 transition-all duration-300 sm:col-span-2 lg:col-span-1">
+                <div className="w-14 h-14 sm:w-16 sm:h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-2xl mx-auto mb-4 sm:mb-6 flex items-center justify-center shadow-lg group-hover:shadow-xl">
                   <svg className="w-7 h-7 sm:w-8 sm:h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
                     <path d="M2 11a1 1 0 011-1h2a1 1 0 011 1v5a1 1 0 01-1 1H3a1 1 0 01-1-1v-5zM8 7a1 1 0 011-1h2a1 1 0 011 1v9a1 1 0 01-1 1H9a1 1 0 01-1-1V7zM14 4a1 1 0 011-1h2a1 1 0 011 1v12a1 1 0 01-1 1h-2a1 1 0 01-1-1V4z" />
                   </svg>
@@ -242,14 +262,17 @@ export default function Home() {
       <footer className="py-6 sm:py-8 px-4 sm:px-6 bg-stone-900 text-stone-100">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 sm:gap-3 mb-3 sm:mb-4">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-amber-700 flex items-center justify-center">
-              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6z"/>
-              </svg>
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center">
+              <Image
+                src="/icon.svg"
+                alt="KoffieBlik Logo"
+                width={24}
+                height={24}
+                className="text-white"
+              />
             </div>
             <span className="text-lg sm:text-xl font-bold">DieKoffieBlik</span>
           </div>
-          <p className="text-xs sm:text-sm text-stone-400">© 2025 All rights reserved</p>
         </div>
       </footer>
 
