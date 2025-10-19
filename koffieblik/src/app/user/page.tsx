@@ -668,7 +668,7 @@ export default function UserPage() {
                 <div className="text-lg font-bold text-purple-600 mb-2">
                   {favoriteDrink}
                 </div>
-                <div className="text-gray-600">Favourite Drink</div>
+                <div className="text-gray-600">Favourite Product</div>
               </div>
             </div>
 

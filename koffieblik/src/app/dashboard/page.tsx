@@ -85,7 +85,8 @@ export default function DashboardPage() {
       if (response.ok) {
         const validated = data.orders.map((order: any) => ({
           ...order,
-          paid_status: order.payments?.[0]?.status === "completed" ? "paid" : "unpaid",
+          // payments may be an array or a single object (server may normalize single-item arrays)
+          paid_status: (Array.isArray(order.payments) ? order.payments[0]?.status : order.payments?.status) === "completed" ? "paid" : "unpaid",
         }));
         setOrders(validated);
         setTotalOrders(data.count);

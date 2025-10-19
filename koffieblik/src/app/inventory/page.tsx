@@ -11,7 +11,7 @@ interface InventoryItem {
   quantity: number;
   unit_type: string;
   max_capacity: number | null;
-  reserved_quantity: number;
+  // reserved_quantity: number;
   percentage_left: number | null;
 }
 
@@ -33,7 +33,7 @@ export default function InventoryPage() {
     quantity: "",
     unit_type: "",
     max_capacity: "",
-    reserved_quantity: "",
+    // reserved_quantity: "",
   });
 
   useEffect(() => {
@@ -78,9 +78,9 @@ export default function InventoryPage() {
       max_capacity: formData.max_capacity
         ? parseInt(formData.max_capacity)
         : null,
-      reserved_quantity: formData.reserved_quantity
-        ? parseInt(formData.reserved_quantity)
-        : 0,
+      // reserved_quantity: formData.reserved_quantity
+      //   ? parseInt(formData.reserved_quantity)
+      //   : 0,
     };
 
     try {
@@ -128,7 +128,7 @@ export default function InventoryPage() {
                 ? Math.round((payload.quantity / payload.max_capacity) * 100)
                 : null,
               max_capacity: payload.max_capacity ?? null,
-              reserved_quantity: payload.reserved_quantity ?? 0,
+              // reserved_quantity: payload.reserved_quantity ?? 0,
             },
           ]);
         }
@@ -139,7 +139,7 @@ export default function InventoryPage() {
           quantity: "",
           unit_type: "",
           max_capacity: "",
-          reserved_quantity: "",
+          // reserved_quantity: "",
         });
         setIsUpdating(false);
         setShowForm(false);
@@ -161,7 +161,7 @@ export default function InventoryPage() {
       quantity: item.quantity.toString(),
       unit_type: item.unit_type,
       max_capacity: item.max_capacity?.toString() ?? "",
-      reserved_quantity: item.reserved_quantity?.toString() ?? "",
+      // reserved_quantity: item.reserved_quantity?.toString() ?? "",
     });
     setIsUpdating(true);
     setShowForm(true);
@@ -226,7 +226,7 @@ export default function InventoryPage() {
                     quantity: "",
                     unit_type: "",
                     max_capacity: "",
-                    reserved_quantity: "",
+                    // reserved_quantity: "",
                   });
                   setIsUpdating(false);
                 }
@@ -522,7 +522,7 @@ export default function InventoryPage() {
                         {item.max_capacity || "∞"}
                       </p>
                     </div>
-                    <div
+                    {/* <div
                       className="p-3 rounded-lg col-span-2"
                       style={{ backgroundColor: "var(--primary-4)" }}
                     >
@@ -532,7 +532,7 @@ export default function InventoryPage() {
                       <p className="text-lg font-bold" style={{ color: "var(--primary-3)" }}>
                         {item.reserved_quantity} {item.unit_type}
                       </p>
-                    </div>
+                    </div> */}
                   </div>
 
                   {/* Status Badge */}

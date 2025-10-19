@@ -217,10 +217,14 @@ export default function ManageOrdersPage() {
 
       if (response.ok) {
         console.log("Fetched data:", data);
-        // Derive paid_status from payments array
+        // Derive paid_status from payments which may be an array or a single object
         const validated = data.orders.map((order: any) => ({
           ...order,
-          paid_status: order.payments?.some((p: any) => p.status === "completed") ? "paid" : "unpaid",
+          paid_status: (Array.isArray(order.payments)
+            ? order.payments.some((p: any) => p.status === "completed")
+            : (order.payments?.status === "completed"))
+            ? "paid"
+            : "unpaid",
         }));
         setOrders(validated);
         // setTotalOrders(data.count);

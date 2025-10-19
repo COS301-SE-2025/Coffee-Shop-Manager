@@ -11,6 +11,7 @@ interface MenuItem {
   price: number;
   category?: string;
   stock_quantity?: number;
+  available_quantity?: number | null;
 }
 
 interface CartItem extends MenuItem {
@@ -43,6 +44,39 @@ export default function OrderPage() {
   const [userPoints, setUserPoints] = useState(0);
   const router = useRouter();
 
+  // Helper: create order and translate stock errors into friendly messages
+  async function createOrderRequest(payload: any): Promise<{ ok: boolean; error?: string; result?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/create_order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) return { ok: true, result: data };
+
+      // If error mentions stock id, fetch stock item to get name
+      const stockIdMatch = (data.error || "").match(/Not enough stock for item ([0-9a-fA-F-]{36})/);
+      if (stockIdMatch) {
+        const stockId = stockIdMatch[1];
+        try {
+          const stockRes = await fetch(`${API_BASE_URL}/stock/${stockId}`, { credentials: "include" });
+          const stockData = await stockRes.json();
+          if (stockRes.ok && stockData.stock) {
+            return { ok: false, error: `Not enough ${stockData.stock.item} to complete order` };
+          }
+        } catch (err) {
+          // fall through to generic error
+        }
+      }
+
+      return { ok: false, error: data.error || data.message || "Failed to create order" };
+    } catch (err: any) {
+      return { ok: false, error: err.message || "Network error" };
+    }
+  }
+
   useEffect(() => {
   setCustomerInfo((prev) => ({
     ...prev,
@@ -73,7 +107,8 @@ export default function OrderPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/product`, {
+        // fetch products with ingredients and available_quantity
+        const res = await fetch(`${API_BASE_URL}/product/stock`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -112,15 +147,29 @@ export default function OrderPage() {
           const res = await fetch(`${API_BASE_URL}/order/${orderIdFromUrl}`, {
             credentials: 'include'
           });
-          const order = await res.json();
+          const data = await res.json();
 
-          if (res.ok && order.payments.status === "paid") {
-            setOrderStatus("placed");
-            setSelectedPaymentMethod("card");
-            setMessage("Payment successful! Your order has been paid.");
+          if (res.ok && data?.order) {
+            let payment: any = undefined;
+            if (Array.isArray(data.order.payments)) {
+              payment = data.order.payments[0];
+            } else if (data.order.payments && typeof data.order.payments === "object") {
+              payment = data.order.payments;
+            }
+
+            const completed = payment?.status === "completed";
+
+            if (completed) {
+              setOrderStatus("placed");
+              setSelectedPaymentMethod(payment?.method === "cash" ? "cash" : "card");
+              setMessage("Payment successful! Your order has been paid.");
+            } else {
+              setMessage("Payment received, but order is not marked as paid yet. Please contact support.");
+            }
           } else {
-            setMessage("Payment received, but order is not marked as paid yet. Please contact support.");
+            setMessage("Error checking payment status. Please contact support.");
           }
+
           localStorage.removeItem("pendingOrder");
           localStorage.removeItem("paymentInitiated");
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -218,8 +267,41 @@ export default function OrderPage() {
       return;
     }
 
-    setOrderStatus("selecting-payment");
     setMessage("");
+
+    // Validate cart against stock before proceeding to payment selection
+    try {
+      const validateRes = await fetch(`${API_BASE_URL}/order/validate`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ products: cart.map((c) => ({ product: c.id, quantity: c.quantity })) }),
+      });
+      const validateResult = await validateRes.json();
+
+      if (validateRes.ok && validateResult && !validateResult.allOk) {
+        // Adjust cart to allowed quantities
+        const adjustments: Record<string, number> = {};
+        for (const a of validateResult.adjustments || []) {
+          adjustments[a.product_id || a.product] = a.allowed;
+        }
+        setCart((prev) =>
+          prev
+            .map((ci) => ({ ...ci, quantity: adjustments[ci.id] ?? ci.quantity }))
+            .filter((ci) => ci.quantity > 0),
+        );
+        setMessage("Cart adjusted to available stock quantities. Please review before placing the order.");
+        setOrderStatus("ordering");
+        return;
+      }
+
+      // allOk -> proceed to payment selection
+      setOrderStatus("selecting-payment");
+    } catch (err) {
+      console.error("Validation error:", err);
+      setMessage("Failed to validate cart. Please try again.");
+      setOrderStatus("ordering");
+    }
   };
 
   const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
@@ -245,19 +327,14 @@ export default function OrderPage() {
           payment_method: paymentMethod,
         };
 
-        const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(orderPayload),
-        });
-
-        const orderResult = await orderRes.json();
-
-        if (!orderRes.ok || !orderResult.success) {
-          throw new Error(orderResult.message || "Failed to create order");
+        const createResult = await createOrderRequest(orderPayload);
+        if (!createResult.ok) {
+          setOrderStatus("ordering");
+          setMessage(createResult.error ?? "Failed to create order");
+          return;
         }
 
+        const orderResult = createResult.result;
         console.log("Order created:", orderResult); // Debug log
 
         // Then initiate PayFast payment - add custom return URL with parameter
@@ -319,22 +396,14 @@ export default function OrderPage() {
       };
 
       try {
-        const res = await fetch(`${API_BASE_URL}/create_order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        });
-
-        const result = await res.json();
-
-        if (res.ok && result.success) {
+        const createResult = await createOrderRequest(payload);
+        if (createResult.ok) {
           setOrderStatus("placed");
           setCart([]);
           setMessage("Order created! Please proceed to the counter to pay.");
         } else {
           setOrderStatus("ordering");
-          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
+          setMessage(createResult.error ?? "Failed to create order");
         }
       } catch (err) {
         console.error("Order error:", err);
@@ -383,14 +452,9 @@ export default function OrderPage() {
           custom: specialInstructions,
           payment_method: "points",
         };
-        const res = await fetch(`${API_BASE_URL}/create_order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        });
-        const result = await res.json();
-        if (res.ok && result.success) {
+        const createResult = await createOrderRequest(payload);
+        if (createResult.ok) {
+          const result = createResult.result;
           // First deduct points
           const pointsRes = await fetch(`${API_BASE_URL}/user/points`, {
             method: "POST",
@@ -415,7 +479,7 @@ export default function OrderPage() {
           }
         } else {
           setOrderStatus("ordering");
-          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
+          setMessage(createResult.error ?? "Failed to create order");
         }
       } catch (err) {
         setOrderStatus("ordering");
@@ -786,10 +850,10 @@ export default function OrderPage() {
                                 <button
                                   onClick={() => addToCart(item)}
                                   className="btn flex-1"
-                                  disabled={item.stock_quantity === 0}
+                                  disabled={item.available_quantity === 0}
                                 >
                                   <span className="mr-2">+</span>
-                                  {item.stock_quantity === 0
+                                  {item.available_quantity === 0
                                     ? "Out of Stock"
                                     : "Add to Cart"}
                                 </button>
@@ -819,8 +883,8 @@ export default function OrderPage() {
                                       color: "var(--primary-2)",
                                     }}
                                     disabled={
-                                      item.stock_quantity !== undefined &&
-                                      quantity >= item.stock_quantity
+                                      item.available_quantity != null &&
+                                        quantity >= (item.available_quantity as number)
                                     }
                                   >
                                     <span className="text-lg font-bold">+</span>

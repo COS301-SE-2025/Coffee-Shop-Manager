@@ -121,6 +121,7 @@ export default function POSPage() {
   const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
+      
       const response = await fetch(`${API_BASE_URL}/get_orders`, {
         method: "POST",
         headers: {
@@ -145,10 +146,12 @@ export default function POSPage() {
       if (response.ok) {
         const validated = (data.orders || []).map((order: any) => ({
           ...order,
-          paid_status:
-            order.payments && order.payments.length > 0 && order.payments.some((p: any) => p.status === "completed")
-              ? "paid"
-              : "unpaid",
+          // payments may be an array or a single object
+          paid_status: (Array.isArray(order.payments)
+            ? order.payments.some((p: any) => p.status === "completed")
+            : (order.payments?.status === "completed"))
+            ? "paid"
+            : "unpaid",
         }));
         console.log("Fetched data:", validated);
         setOrders(validated);
@@ -336,8 +339,10 @@ export default function POSPage() {
         fetchOrders();
       } else {
         setMessage(
-          `❌ Failed to create order: ${result.message || "Unknown error"}`,
-        );
+            /not enough stock/i.test(result.error)
+            ? "Failed to create order: Not enough stock"
+            : `Failed to create order: ${result.message || "Unknown error"}`
+          );
       }
     } catch (err) {
       console.error("Order error:", err);
@@ -381,7 +386,11 @@ export default function POSPage() {
 
       const orderResult = await orderRes.json();
       if (!orderRes.ok || !orderResult.success) {
-        setMessage(`❌ Failed to create order: ${orderResult.message || "Unknown error"}`);
+        setMessage(
+            /not enough stock/i.test(orderResult.error)
+            ? "Failed to create order: Not enough stock"
+            : `Failed to create order: ${orderResult.message || "Unknown error"}`
+          );
         return;
       }
 
