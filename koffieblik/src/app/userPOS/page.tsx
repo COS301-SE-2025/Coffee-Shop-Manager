@@ -32,6 +32,7 @@ export default function OrderPage() {
     "ordering" | "selecting-payment" | "confirming" | "placed"
   >("ordering");
   const [loading, setLoading] = useState(true);
+  const [orderLoading, setOrderLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
   const [specialInstructions, setSpecialInstructions] = useState("");
@@ -268,39 +269,43 @@ export default function OrderPage() {
     }
 
     setMessage("");
+    setOrderLoading(true);
 
-    // Validate cart against stock before proceeding to payment selection
+    // Create the order immediately - database trigger will handle stock validation
     try {
-      const validateRes = await fetch(`${API_BASE_URL}/order/validate`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({ products: cart.map((c) => ({ product: c.id, quantity: c.quantity })) }),
-      });
-      const validateResult = await validateRes.json();
+      const orderPayload = {
+        products: cart.map((item) => ({
+          product: item.name,
+          quantity: item.quantity,
+        })),
+        custom: specialInstructions,
+      };
 
-      if (validateRes.ok && validateResult && !validateResult.allOk) {
-        // Adjust cart to allowed quantities
-        const adjustments: Record<string, number> = {};
-        for (const a of validateResult.adjustments || []) {
-          adjustments[a.product_id || a.product] = a.allowed;
+      const createResult = await createOrderRequest(orderPayload);
+      if (!createResult.ok) {
+        // Handle stock error specifically
+        if (createResult.error?.includes("Not enough stock for item")) {
+          setMessage("Sorry, we do not have enough stock to complete your order. Your order was not created.");
+        } else {
+          setMessage(createResult.error ?? "Failed to create order");
         }
-        setCart((prev) =>
-          prev
-            .map((ci) => ({ ...ci, quantity: adjustments[ci.id] ?? ci.quantity }))
-            .filter((ci) => ci.quantity > 0),
-        );
-        setMessage("Cart adjusted to available stock quantities. Please review before placing the order.");
         setOrderStatus("ordering");
         return;
       }
 
-      // allOk -> proceed to payment selection
+      // Order created successfully, store order ID and proceed to payment selection
+      const orderId = createResult.result?.order_id;
+      if (orderId) {
+        localStorage.setItem("currentOrderId", orderId);
+      }
+      
       setOrderStatus("selecting-payment");
     } catch (err) {
-      console.error("Validation error:", err);
-      setMessage("Failed to validate cart. Please try again.");
+      console.error("Order creation error:", err);
+      setMessage("Failed to place order. Please try again.");
       setOrderStatus("ordering");
+    } finally {
+      setOrderLoading(false);
     }
   };
 
@@ -317,29 +322,15 @@ export default function OrderPage() {
       setOrderStatus("confirming");
 
       try {
-        // First create the order
-        const orderPayload = {
-          products: cart.map((item) => ({
-            product: item.name,
-            quantity: item.quantity,
-          })),
-          custom: specialInstructions,
-          payment_method: paymentMethod,
-        };
-
-        const createResult = await createOrderRequest(orderPayload);
-        if (!createResult.ok) {
-          setOrderStatus("ordering");
-          setMessage(createResult.error ?? "Failed to create order");
-          return;
+        // Order is already created, get the order ID
+        const orderId = localStorage.getItem("currentOrderId");
+        if (!orderId) {
+          throw new Error("Order ID not found. Please try placing the order again.");
         }
 
-        const orderResult = createResult.result;
-        console.log("Order created:", orderResult); // Debug log
-
-        // Then initiate PayFast payment - add custom return URL with parameter
+        // Initiate PayFast payment - add custom return URL with parameter
         const paymentPayload = {
-          orderNumber: orderResult.order_id,
+          orderNumber: orderId,
           total: getOrderSummary().total,
           customerInfo: {
             name: customerInfo.name,
@@ -348,8 +339,8 @@ export default function OrderPage() {
             notes: specialInstructions || ""
           },
           // Add these custom return URLs with parameters
-          returnUrl: `${window.location.origin}/userPOS?payfast_return=success&order=${orderResult.order_id}`,
-          cancelUrl: `${window.location.origin}/userPOS?payfast_return=cancelled&order=${orderResult.order_id}`
+          returnUrl: `${window.location.origin}/userPOS?payfast_return=success&order=${orderId}`,
+          cancelUrl: `${window.location.origin}/userPOS?payfast_return=cancelled&order=${orderId}`
         };
 
         console.log("Payment payload:", paymentPayload); // Debug log
@@ -371,7 +362,7 @@ export default function OrderPage() {
         }
 
         // Store order info before redirect
-        localStorage.setItem("pendingOrder", orderResult.order_id);
+        localStorage.setItem("pendingOrder", orderId);
         localStorage.setItem("paymentInitiated", Date.now().toString());
 
         // Redirect to PayFast payment page
@@ -385,36 +376,45 @@ export default function OrderPage() {
       return;
     }
 
-    // For cash payments, just create the order and show success
+    // For cash payments, order is already created - just show success
     if (paymentMethod === 'cash') {
-      const payload = {
-        products: cart.map((item) => ({
-          product: item.name,
-          quantity: item.quantity,
-        })),
-        custom: specialInstructions,
-      };
-
-      try {
-        const createResult = await createOrderRequest(payload);
-        if (createResult.ok) {
-          setOrderStatus("placed");
-          setCart([]);
-          setMessage("Order created! Please proceed to the counter to pay.");
-        } else {
-          setOrderStatus("ordering");
-          setMessage(createResult.error ?? "Failed to create order");
-        }
-      } catch (err) {
-        console.error("Order error:", err);
-        setOrderStatus("ordering");
-        setMessage("Failed to submit order. Please try again.");
-      }
+      setOrderStatus("placed");
+      setCart([]);
+      localStorage.removeItem("currentOrderId");
+      setMessage("Order created! Please proceed to the counter to pay.");
       return;
     }
   };
 
-  const handleCancelPayment = () => {
+  const handleCancelPayment = async () => {
+    // Cancel the order in the database and clean up local state
+    const orderId = localStorage.getItem("currentOrderId");
+    
+    if (orderId) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/order/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ order_id: orderId }),
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          setMessage("✅ Order cancelled successfully. Stock has been refunded.");
+        } else {
+          console.error("Failed to cancel order:", result.error);
+          setMessage("Order cancelled locally, but there may have been an issue updating the database.");
+        }
+      } catch (err) {
+        console.error("Error cancelling order:", err);
+        setMessage("Order cancelled locally, but there may have been an issue updating the database.");
+      }
+    }
+    
+    // Clean up local state regardless of API result
+    localStorage.removeItem("currentOrderId");
     setOrderStatus("ordering");
     setSelectedPaymentMethod(null);
   };
@@ -444,42 +444,34 @@ export default function OrderPage() {
       setMessage("");
       setOrderStatus("confirming");
       try {
-        const payload = {
-          products: cart.map((item) => ({
-            product: item.name,
-            quantity: item.quantity,
-          })),
-          custom: specialInstructions,
-          payment_method: "points",
-        };
-        const createResult = await createOrderRequest(payload);
-        if (createResult.ok) {
-          const result = createResult.result;
-          // First deduct points
-          const pointsRes = await fetch(`${API_BASE_URL}/user/points`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-              points: Math.round(orderSummary.total * 100),
-              order_id: result.order_id,
-            }),
-          });
-          const pointsResult = await pointsRes.json();
-          
-          if (pointsRes.ok && pointsResult.success) {
-            setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
-            setOrderStatus("placed");
-            setCart([]);
-            setSelectedPaymentMethod(null);
-            setMessage("Order placed and paid with loyalty points!");
-          } else {
-            setOrderStatus("ordering");
-            setMessage("Order created, but failed to redeem points. Please contact support.");
-          }
+        // Order is already created, get the order ID
+        const orderId = localStorage.getItem("currentOrderId");
+        if (!orderId) {
+          throw new Error("Order ID not found. Please try placing the order again.");
+        }
+
+        // Deduct points for the existing order
+        const pointsRes = await fetch(`${API_BASE_URL}/user/points`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({
+            points: Math.round(orderSummary.total * 100),
+            order_id: orderId,
+          }),
+        });
+        const pointsResult = await pointsRes.json();
+        
+        if (pointsRes.ok && pointsResult.success) {
+          setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
+          setOrderStatus("placed");
+          setCart([]);
+          setSelectedPaymentMethod(null);
+          localStorage.removeItem("currentOrderId");
+          setMessage("Order placed and paid with loyalty points!");
         } else {
           setOrderStatus("ordering");
-          setMessage(createResult.error ?? "Failed to create order");
+          setMessage("Order created, but failed to redeem points. Please contact support.");
         }
       } catch (err) {
         setOrderStatus("ordering");
@@ -996,9 +988,17 @@ export default function OrderPage() {
 
                           <button
                             onClick={handlePlaceOrder}
-                            className="btn w-full text-lg py-3"
+                            disabled={orderLoading}
+                            className="btn w-full text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Place Order
+                            {orderLoading ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Placing Order...
+                              </div>
+                            ) : (
+                              "Place Order"
+                            )}
                           </button>
                         </>
                       )}
