@@ -61,6 +61,67 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
             return { ...p, product_id: match.id };
         });
 
+        // Fetch product_stock rows for involved products
+        const productIds = Array.from(new Set(resolvedProducts.map((r) => r.product_id)));
+        const { data: productStock, error: psErr } = await supabase
+            .from("product_stock")
+            .select("product_id, stock_id, quantity")
+            .in("product_id", productIds as any[]);
+        if (psErr) throw psErr;
+
+        // Fetch stock quantities
+        const stockIds = Array.from(new Set((productStock || []).map((ps: any) => ps.stock_id)));
+        const { data: stocks, error: stockErr } = await supabase
+            .from("stock")
+            .select("id, quantity")
+            .in("id", stockIds as any[]);
+        if (stockErr) throw stockErr;
+
+        const usageMap: Record<string, { [stockId: string]: number }> = {};
+        for (const ps of productStock || []) {
+            if (!usageMap[ps.product_id]) usageMap[ps.product_id] = {};
+            usageMap[ps.product_id][ps.stock_id] = Number(ps.quantity || 0);
+        }
+
+        const stockQtyMap: Record<string, number> = {};
+        for (const s of stocks || []) stockQtyMap[s.id] = Number(s.quantity || 0);
+
+        // Start with requested quantities
+        const allowed: Record<string, number> = {};
+        for (const r of resolvedProducts) allowed[r.product_id] = Math.max(0, Math.floor(r.quantity));
+
+        // Enforce stock constraints using greedy decrement per-stock (same algorithm as validator)
+        for (const stockId of Object.keys(stockQtyMap)) {
+            let stockQty = stockQtyMap[stockId] ?? 0;
+            const users = Object.keys(allowed)
+                .map((pid) => ({ pid, needPerUnit: usageMap[pid]?.[stockId] || 0 }))
+                .filter((u) => u.needPerUnit > 0);
+
+            let totalNeed = users.reduce((sum, u) => sum + allowed[u.pid] * u.needPerUnit, 0);
+            while (totalNeed > stockQty) {
+                let worst: { pid: string; contrib: number } | null = null;
+                for (const u of users) {
+                    const contrib = u.needPerUnit * (allowed[u.pid] || 0);
+                    if (!worst || contrib > worst.contrib) worst = { pid: u.pid, contrib };
+                }
+                if (!worst) break;
+                if ((allowed[worst.pid] || 0) <= 0) break;
+                allowed[worst.pid] = Math.max(0, (allowed[worst.pid] || 0) - 1);
+                totalNeed = users.reduce((sum, u) => sum + allowed[u.pid] * u.needPerUnit, 0);
+            }
+        }
+
+        // Map back and check if any requested > allowed
+        const adjustments = resolvedProducts.map((r) => ({ product_id: r.product_id, requested: r.quantity, allowed: allowed[r.product_id] ?? 0 }));
+        const allOk = adjustments.every((a) => a.allowed >= a.requested);
+        if (!allOk) {
+            // Return specific error and do not create order
+            const firstBad = adjustments.find((a) => a.allowed < a.requested)!;
+            res.status(400).json({ error: `Not enough stock for item ${firstBad.product_id}`, adjustments });
+            return;
+        }
+        // --- end validation ---
+
         // Create order
         const { data: order, error: orderError } = await supabase
             .from("orders")

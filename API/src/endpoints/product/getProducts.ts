@@ -5,7 +5,8 @@ export async function getProductsHandler(
 	res: Response,
 ): Promise<void> {
 	const supabase = req.supabase!;
-	const productId = req.params.id;
+	const productIdRaw = req.params.id;
+	const productId = productIdRaw === undefined || productIdRaw === 'undefined' || productIdRaw === 'null' ? undefined : productIdRaw;
 
 	try {
 		// if Id specified return only that product, else all products
@@ -53,7 +54,8 @@ export async function getProductsWithStockHandler(
 	res: Response,
 ): Promise<void> {
 	const supabase = req.supabase!;
-	const productId = req.params.id;
+	const productIdRaw = req.params.id;
+	const productId = productIdRaw === undefined || productIdRaw === 'undefined' || productIdRaw === 'null' ? undefined : productIdRaw;
 
 	try {
 		// get product(s)
@@ -89,12 +91,22 @@ export async function getProductsWithStockHandler(
 			for (const ps of productStock) {
 				if (productId && ps.product_id !== productId) continue;
 				if (!ingredientMap[ps.product_id]) ingredientMap[ps.product_id] = [];
-				ingredientMap[ps.product_id].push({
-					stock_id: ps.stock.id,
-					item: ps.stock.item,
-					unit_type: ps.stock.unit_type,
-					quantity: ps.quantity,
-				});
+				if (ps && (ps as any).stock) {
+					ingredientMap[ps.product_id].push({
+						stock_id: (ps as any).stock.id,
+						item: (ps as any).stock.item,
+						unit_type: (ps as any).stock.unit_type,
+						quantity: ps.quantity,
+					});
+				} else {
+					// fallback: include stock_id from product_stock row and null metadata
+					ingredientMap[ps.product_id].push({
+						stock_id: (ps as any).stock_id ?? null,
+						item: null,
+						unit_type: null,
+						quantity: ps.quantity,
+					});
+				}
 			}
 		}
 
