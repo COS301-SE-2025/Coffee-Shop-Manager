@@ -1,11 +1,6 @@
 import { Request, Response } from "express";
 import { supabaseAdmin } from "../../supabase/client";
 
-supabaseAdmin.auth.admin.listUsers({ perPage: 1 })
-  .then(() => console.log('SUPABASE_PRIVATE_KEY appears to be service role (admin calls OK)'))
-  .catch(() => console.warn('SUPABASE_PRIVATE_KEY does not appear to be service role — admin calls failed'));
-
-
 export async function redeemLoyaltyPointsHandler(req: Request, res: Response): Promise<void> {
 	try {
 		const supabase = req.supabase!;

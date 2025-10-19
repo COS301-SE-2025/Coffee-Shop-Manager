@@ -58,102 +58,75 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
                 (prod: { id: string; name: string }) => prod.id === p.product || prod.name === p.product
             );
             if (!match) throw new Error(`Product not found: ${p.product}`);
-            return { ...p, product_id: match.id };
+            return { product_id: match.id, quantity: p.quantity };
         });
 
-        // Fetch product_stock rows for involved products
-        const productIds = Array.from(new Set(resolvedProducts.map((r) => r.product_id)));
-        const { data: productStock, error: psErr } = await supabase
-            .from("product_stock")
-            .select("product_id, stock_id, quantity")
-            .in("product_id", productIds as any[]);
-        if (psErr) throw psErr;
+        // Use atomic database function to create order with stock validation
+        // This ensures the entire operation (order + order_products + stock deduction) is atomic
+        const { data: result, error: createError } = await supabase
+            .rpc('create_order_atomic', {
+                p_user_id: userId,
+                p_custom: custom ? JSON.parse(JSON.stringify(custom)) : null,
+                p_products: resolvedProducts
+            });
 
-        // Fetch stock quantities
-        const stockIds = Array.from(new Set((productStock || []).map((ps: any) => ps.stock_id)));
-        const { data: stocks, error: stockErr } = await supabase
-            .from("stock")
-            .select("id, quantity")
-            .in("id", stockIds as any[]);
-        if (stockErr) throw stockErr;
-
-        const usageMap: Record<string, { [stockId: string]: number }> = {};
-        for (const ps of productStock || []) {
-            if (!usageMap[ps.product_id]) usageMap[ps.product_id] = {};
-            usageMap[ps.product_id][ps.stock_id] = Number(ps.quantity || 0);
+        if (createError) {
+            console.error("Database function error:", createError);
+            throw createError;
         }
 
-        const stockQtyMap: Record<string, number> = {};
-        for (const s of stocks || []) stockQtyMap[s.id] = Number(s.quantity || 0);
-
-        // Start with requested quantities
-        const allowed: Record<string, number> = {};
-        for (const r of resolvedProducts) allowed[r.product_id] = Math.max(0, Math.floor(r.quantity));
-
-        // Enforce stock constraints using greedy decrement per-stock (same algorithm as validator)
-        for (const stockId of Object.keys(stockQtyMap)) {
-            let stockQty = stockQtyMap[stockId] ?? 0;
-            const users = Object.keys(allowed)
-                .map((pid) => ({ pid, needPerUnit: usageMap[pid]?.[stockId] || 0 }))
-                .filter((u) => u.needPerUnit > 0);
-
-            let totalNeed = users.reduce((sum, u) => sum + allowed[u.pid] * u.needPerUnit, 0);
-            while (totalNeed > stockQty) {
-                let worst: { pid: string; contrib: number } | null = null;
-                for (const u of users) {
-                    const contrib = u.needPerUnit * (allowed[u.pid] || 0);
-                    if (!worst || contrib > worst.contrib) worst = { pid: u.pid, contrib };
+        // The function returns a single row with order_id, success, error_message
+        const orderResult = result[0];
+        
+        if (!orderResult.success) {
+            // Handle stock insufficiency or other errors from the database function
+            if (orderResult.error_message && orderResult.error_message.includes('Not enough stock for item')) {
+                // Extract stock ID from error message
+                const stockIdMatch = orderResult.error_message.match(/Not enough stock for item ([0-9a-fA-F-]{36})/);
+                if (stockIdMatch) {
+                    const stockId = stockIdMatch[1];
+                    res.status(400).json({ 
+                        error: "Not enough stock for item " + stockId,
+                        type: "INSUFFICIENT_STOCK",
+                        stock_id: stockId
+                    });
+                    return;
                 }
-                if (!worst) break;
-                if ((allowed[worst.pid] || 0) <= 0) break;
-                allowed[worst.pid] = Math.max(0, (allowed[worst.pid] || 0) - 1);
-                totalNeed = users.reduce((sum, u) => sum + allowed[u.pid] * u.needPerUnit, 0);
             }
-        }
-
-        // Map back and check if any requested > allowed
-        const adjustments = resolvedProducts.map((r) => ({ product_id: r.product_id, requested: r.quantity, allowed: allowed[r.product_id] ?? 0 }));
-        const allOk = adjustments.every((a) => a.allowed >= a.requested);
-        if (!allOk) {
-            // Return specific error and do not create order
-            const firstBad = adjustments.find((a) => a.allowed < a.requested)!;
-            res.status(400).json({ error: `Not enough stock for item ${firstBad.product_id}`, adjustments });
+            
+            // Handle product not found errors
+            if (orderResult.error_message && orderResult.error_message.includes('has no stock requirements defined')) {
+                res.status(400).json({ 
+                    error: "Product configuration error. Please contact support.",
+                    type: "PRODUCT_CONFIG_ERROR"
+                });
+                return;
+            }
+            
+            // Handle user input validation errors
+            if (orderResult.error_message && (
+                orderResult.error_message.includes('User ID cannot be null') ||
+                orderResult.error_message.includes('Products array cannot be empty')
+            )) {
+                res.status(400).json({ 
+                    error: "Invalid order data. Please try again.",
+                    type: "VALIDATION_ERROR"
+                });
+                return;
+            }
+            
+            // For any other database errors, log the full error but return a generic message
+            console.error("Order creation failed with database error:", orderResult.error_message);
+            res.status(400).json({ 
+                error: "Unable to create order. Please try again.",
+                type: "ORDER_CREATION_FAILED"
+            });
             return;
         }
-        // --- end validation ---
-
-        // Create order
-        const { data: order, error: orderError } = await supabase
-            .from("orders")
-            .insert([{ user_id: userId, custom }])
-            .select("id")
-            .single();
-        if (orderError || !order) throw orderError;
-
-        // Build order_products insert array (no price)
-        const orderProductsToInsert: {
-            order_id: string;
-            product_id: string;
-            quantity: number;
-        }[] = [];
-
-        for (const p of resolvedProducts) {
-            orderProductsToInsert.push({
-                order_id: order.id,
-                product_id: p.product_id,
-                quantity: p.quantity,
-            });
-        }
-
-        // Insert order_products (price will be set by trigger)
-        const { error: insertOrderError } = await supabase
-            .from("order_products")
-            .insert(orderProductsToInsert);
-        if (insertOrderError) throw insertOrderError;
 
         res.status(201).json({
             success: true,
-            order_id: order.id,
+            order_id: orderResult.order_id,
             message: email
                 ? `Order created for ${email}`
                 : "Order created",
