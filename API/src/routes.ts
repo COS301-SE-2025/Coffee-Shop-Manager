@@ -38,6 +38,7 @@ import { createOrderHandler } from "./endpoints/order/createOrder";
 import { createOrderByEmailHandler } from "./endpoints/order/createOrderByEmail";
 import { updateOrderPaidStatusHandler } from "./endpoints/order/payOrder";
 import { validateOrderHandler } from "./endpoints/order/validateOrder";
+import { cancelOrderHandler } from "./endpoints/order/cancelOrder";
 
 // PRODUCTS
 import { createProductHandler } from "./endpoints/product/createProduct";
@@ -102,6 +103,7 @@ router.get("/order", authMiddleware, getOrdersHandler);
 router.post("/order/filter", authMiddleware, getOrdersHandler);
 router.post("/order", authMiddleware, createOrderHandler);
 router.post("/order/validate", authMiddleware, validateOrderHandler);
+router.post("/order/cancel", authMiddleware, cancelOrderHandler);
 router.get("/order/:id", authMiddleware, getOrdersHandler);
 // router.post("/order/email", authMiddleware, createOrderByEmailHandler);--
 // router.post("/order/pay/:id", authMiddleware, updateOrderPaidStatusHandler);
