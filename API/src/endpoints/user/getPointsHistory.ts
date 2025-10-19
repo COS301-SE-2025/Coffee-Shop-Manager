@@ -14,9 +14,17 @@ export async function getUserPointsHistoryHandler(req: Request, res: Response): 
 
 		if (error) throw error;
 
+		// Compute total points (sum of `points` field). Data may be null.
+		const arr = data ?? [];
+		const total = arr.reduce((sum: number, row: any) => {
+			const pts = Number(row?.points ?? 0);
+			return sum + (Number.isNaN(pts) ? 0 : pts);
+		}, 0);
+
 		res.status(200).json({
 			success: true,
-			history: data
+			history: arr,
+			total,
 		});
 	} catch (error: any) {
 		console.error("Get user points history error:", error);

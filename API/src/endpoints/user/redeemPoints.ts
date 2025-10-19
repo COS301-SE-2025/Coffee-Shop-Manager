@@ -1,4 +1,10 @@
 import { Request, Response } from "express";
+import { supabaseAdmin } from "../../supabase/client";
+
+supabaseAdmin.auth.admin.listUsers({ perPage: 1 })
+  .then(() => console.log('SUPABASE_PRIVATE_KEY appears to be service role (admin calls OK)'))
+  .catch(() => console.warn('SUPABASE_PRIVATE_KEY does not appear to be service role — admin calls failed'));
+
 
 export async function redeemLoyaltyPointsHandler(req: Request, res: Response): Promise<void> {
 	try {
@@ -72,27 +78,28 @@ export async function redeemLoyaltyPointsHandler(req: Request, res: Response): P
 			});
 
 		if (insertError) {
-			console.log(insertError);
+			console.error("RedeemPoints: loyalty_points insert error:", insertError);
 			res.status(500).json({ error: "Failed to log redemption" });
 			return;
 		}
 
-		// 3. Insert payment record
-		const { error: paymentError } = await supabase
-			.from("payments")
-			.insert({
-				order_id: order_id,
-				user_id: userId,
-				amount: 0,
-				method: "points",
-				status: "completed",
-				transaction_id: null,
-			});
+		// Use a trusted DB function to perform the upsert under DB privileges
+		const { data: rpcResult, error: rpcErr } = await supabaseAdmin.rpc("upsert_payment", {
+			p_order_id: order_id,
+			p_user_id: userId,
+			p_amount: 0,
+			p_method: "points",
+			p_status: "completed",
+			p_transaction_id: null,
+		});
 
-		if (paymentError) {
-			res.status(500).json({ error: "Failed to log payment" });
+		if (rpcErr) {
+			console.error("RedeemPoints: upsert_payment RPC error:", rpcErr);
+			res.status(500).json({ error: "Failed to log payment via RPC", details: rpcErr.message });
 			return;
 		}
+
+		console.log("RedeemPoints: upsert_payment RPC succeeded", rpcResult);
 
 		res.status(200).json({
 			success: true,

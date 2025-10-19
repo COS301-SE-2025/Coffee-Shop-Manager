@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabaseAdmin } from "../../supabase/client";
+import { getClient } from "../../supabase/client";
 
 export async function loginHandler(req: Request, res: Response): Promise<void> {
 	try {
@@ -12,7 +12,8 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
 			return;
 		}
 
-		const { data, error } = await supabaseAdmin.auth.signInWithPassword({
+		const publicClient = getClient();
+		const { data, error } = await publicClient.auth.signInWithPassword({
 			email,
 			password,
 		});
@@ -37,7 +38,7 @@ export async function loginHandler(req: Request, res: Response): Promise<void> {
 		res.setHeader("x-access-token", access_token);
 		res.setHeader("x-refresh-token", refresh_token);
 
-		const { data: profile, error: profileError } = await supabaseAdmin
+		const { data: profile, error: profileError } = await publicClient
 			.from("user_profiles")
 			.select("role, display_name")
 			.eq("user_id", data.user.id)
