@@ -17,7 +17,6 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 | 📹 **Demo Video** | [Final Project Demo](https://youtu.be/XXXXXXXXXXX) |
 | 🌐 **Deployed System** | [https://diekoffieblik.co.za](https://diekoffieblik.co.za) |
 | 📱 **Installation & Usage Guide** | [Installation Instructions](./docs/Technical_installation_V2.pdf) |
-| 🤝 **Team & Profiles** | [Team Members](#team) |
 
 ---
 

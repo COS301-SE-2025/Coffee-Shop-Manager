@@ -60,9 +60,8 @@ This page collects all documents, manuals, reports, and resources for the **DieK
 3. Explore the dashboard to manage orders, inventory, and staff.
 
 ### 📱 Mobile App
-1. Download Expo Go from Google Play / App Store.  
-2. Scan the QR code found in the `docs/Technical_installation_V2.pdf`.
-3. Login with your credentials and sync with the backend.
+1. Download the APK from our website (https://diekoffieblik.co.za).
+2. Create an account or sign in using your credentials.
 
 ### 🧰 Technical Setup (Developers)
 Refer to [Technical Installation V2](./Technical_installation_V2.pdf) for environment setup, Docker configuration, and Supabase integration.
