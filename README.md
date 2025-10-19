@@ -25,11 +25,11 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 
 | Member | Role | GitHub | LinkedIn |
 |---------|------|--------|-----------|
-| **Juan Ferreira** | Team Lead & Full-Stack Engineer | [@JuanFerreira22491504](https://github.com/juanferreira) | [LinkedIn](https://www.linkedin.com/in/juan-ferreira-2a11a61b8) |
-| **Phillip Retief** | Frontend & Integration | [@PhillipR09](https://github.com/phillipretief) | [LinkedIn](https://www.linkedin.com/in/phillip-retief-a48b23291) |
-| **Emil Sutherland** | Backend Developer | [@u23543834-Emil](https://github.com/emilsutherland) | [LinkedIn](https://za.linkedin.com/in/emil-sutherland-2a837a356) |
-| **Ulrich Eichstädt** | Mobile Developer | [@u22867377](https://github.com/ulricheichstadt) | [LinkedIn](https://za.linkedin.com/in/ulrich-eichst%C3%A4dt-060705354) |
-| **Willem Visagie** | DevOps & Solution Architect | [@u23524333](https://github.com/willemvisagie) | [LinkedIn](https://www.linkedin.com/in/willem-visagie-a61872235) |
+| **Juan Ferreira** | Team Lead & Full-Stack Engineer | [@JuanFerreira22491504](https://github.com/JuanFerreira22491504) | [LinkedIn](https://www.linkedin.com/in/juan-ferreira-2a11a61b8) |
+| **Phillip Retief** | Frontend & Integration | [@PhillipR09](https://github.com/PhillipR09) | [LinkedIn](https://www.linkedin.com/in/phillip-retief-a48b23291) |
+| **Emil Sutherland** | Backend Developer | [@u23543834-Emil](https://github.com/u23543834-Emil) | [LinkedIn](https://za.linkedin.com/in/emil-sutherland-2a837a356) |
+| **Ulrich Eichstädt** | Mobile Developer | [@u22867377](https://github.com/u22867377) | [LinkedIn](https://za.linkedin.com/in/ulrich-eichst%C3%A4dt-060705354) |
+| **Willem Visagie** | DevOps & Solution Architect | [@u23524333](https://github.com/u23524333) | [LinkedIn](https://www.linkedin.com/in/willem-visagie-a61872235) |
 
 ---
 
