@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { supabaseAdmin } from "../../supabase/client";
+import { getClient } from "../../supabase/client";
 
 export async function signupHandler(
 	req: Request,
@@ -16,7 +16,8 @@ export async function signupHandler(
 			return;
 		}
 
-		const { data, error } = await supabaseAdmin.auth.signUp({
+		const publicClient = getClient();
+		const { data, error } = await publicClient.auth.signUp({
 			email,
 			password,
 			options: {

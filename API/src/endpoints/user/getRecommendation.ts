@@ -1,11 +1,11 @@
 import { Request, Response } from "express";
 import { spawn } from "child_process";
 import path from "path";
-import { supabase } from "../../supabase/client";
 
 export async function getRecommendationsHandler(req: Request, res: Response): Promise<void> {
     try {
-        const userId = (req as any).user?.id;
+        const supabase = req.supabase!;
+        const userId = req.user!.id;
         const { lat, lon } = req.query;
 
         if (!userId || !lat || !lon) {

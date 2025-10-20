@@ -58,41 +58,75 @@ export async function createOrderHandler(req: Request, res: Response): Promise<v
                 (prod: { id: string; name: string }) => prod.id === p.product || prod.name === p.product
             );
             if (!match) throw new Error(`Product not found: ${p.product}`);
-            return { ...p, product_id: match.id };
+            return { product_id: match.id, quantity: p.quantity };
         });
 
-        // Create order
-        const { data: order, error: orderError } = await supabase
-            .from("orders")
-            .insert([{ user_id: userId, custom }])
-            .select("id")
-            .single();
-        if (orderError || !order) throw orderError;
-
-        // Build order_products insert array (no price)
-        const orderProductsToInsert: {
-            order_id: string;
-            product_id: string;
-            quantity: number;
-        }[] = [];
-
-        for (const p of resolvedProducts) {
-            orderProductsToInsert.push({
-                order_id: order.id,
-                product_id: p.product_id,
-                quantity: p.quantity,
+        // Use atomic database function to create order with stock validation
+        // This ensures the entire operation (order + order_products + stock deduction) is atomic
+        const { data: result, error: createError } = await supabase
+            .rpc('create_order_atomic', {
+                p_user_id: userId,
+                p_custom: custom ? JSON.parse(JSON.stringify(custom)) : null,
+                p_products: resolvedProducts
             });
+
+        if (createError) {
+            console.error("Database function error:", createError);
+            throw createError;
         }
 
-        // Insert order_products (price will be set by trigger)
-        const { error: insertOrderError } = await supabase
-            .from("order_products")
-            .insert(orderProductsToInsert);
-        if (insertOrderError) throw insertOrderError;
+        // The function returns a single row with order_id, success, error_message
+        const orderResult = result[0];
+        
+        if (!orderResult.success) {
+            // Handle stock insufficiency or other errors from the database function
+            if (orderResult.error_message && orderResult.error_message.includes('Not enough stock for item')) {
+                // Extract stock ID from error message
+                const stockIdMatch = orderResult.error_message.match(/Not enough stock for item ([0-9a-fA-F-]{36})/);
+                if (stockIdMatch) {
+                    const stockId = stockIdMatch[1];
+                    res.status(400).json({ 
+                        error: "Not enough stock for item " + stockId,
+                        type: "INSUFFICIENT_STOCK",
+                        stock_id: stockId
+                    });
+                    return;
+                }
+            }
+            
+            // Handle product not found errors
+            if (orderResult.error_message && orderResult.error_message.includes('has no stock requirements defined')) {
+                res.status(400).json({ 
+                    error: "Product configuration error. Please contact support.",
+                    type: "PRODUCT_CONFIG_ERROR"
+                });
+                return;
+            }
+            
+            // Handle user input validation errors
+            if (orderResult.error_message && (
+                orderResult.error_message.includes('User ID cannot be null') ||
+                orderResult.error_message.includes('Products array cannot be empty')
+            )) {
+                res.status(400).json({ 
+                    error: "Invalid order data. Please try again.",
+                    type: "VALIDATION_ERROR"
+                });
+                return;
+            }
+            
+            // For any other database errors, log the full error but return a generic message
+            console.error("Order creation failed with database error:", orderResult.error_message);
+            res.status(400).json({ 
+                error: "Unable to create order. Please try again.",
+                type: "ORDER_CREATION_FAILED"
+            });
+            return;
+        }
 
         res.status(201).json({
             success: true,
-            order_id: order.id,
+            order_id: orderResult.order_id,
             message: email
                 ? `Order created for ${email}`
                 : "Order created",

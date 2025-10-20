@@ -1,10 +1,11 @@
 # ☕ DieKoffieBlik – Coffee Shop Management System
 
-A full-stack coffee shop management platform built for the **COS 301 Capstone Project** at the **University of Pretoria**. This system streamlines operations for small coffee shops, enhances the customer experience, and provides actionable business insights.
+A full-stack coffee shop management platform built for the **COS 301 Capstone Project** at the **University of Pretoria**.  
+DieKoffieBlik streamlines operations for small coffee shops, enhances customer experience, and provides business insights through a unified web and mobile system.
 
 ---
 
-## 📄 Project Overview
+## 🔗 Project Resources
 
 **DieKoffieBlik** addresses common challenges faced by small coffee shop owners: manual inventory tracking, fragmented tools, inconsistent customer loyalty tracking, and inefficient staff scheduling. Our platform delivers an all-in-one solution, accessible via web and mobile.
 
@@ -93,19 +94,23 @@ A full-stack coffee shop management platform built for the **COS 301 Capstone Pr
 
 ## 👥 Team
 
-| Name               | Role                         | Responsibility                               | LinkedIn |
-|--------------------|------------------------------|----------------------------------------------|----------|
-| Juan Ferreira      | Team Lead & Engineer         | Project planning, client comms, full-stack dev | [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/juan-ferreira-2a11a61b8) |
-| Phillip Retief     | Frontend & Integration       | React, UI/UX, accessibility, testing          | [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/phillip-retief-a48b23291) |
-| Emil Sutherland    | Backend Developer            | Backend systems, API development, performance | [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://za.linkedin.com/in/emil-sutherland-2a837a356) |
-| Ulrich Eichstadt   | Mobile Developer             | React Native app, animations, offline mode    | [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://za.linkedin.com/in/ulrich-eichst%C3%A4dt-060705354) |
-| Willem Visagie     | DevOps & Solution Architect  | CI/CD, Docker, GitHub Actions, infrastructure | [![LinkedIn](https://img.shields.io/badge/LinkedIn-blue?logo=linkedin&logoColor=white)](https://www.linkedin.com/in/willem-visagie-a61872235) |
+| Member | Role | GitHub | LinkedIn |
+|---------|------|--------|-----------|
+| **Juan Ferreira** | Team Lead & Full-Stack Engineer | [@JuanFerreira22491504](https://github.com/JuanFerreira22491504) | [LinkedIn](https://www.linkedin.com/in/juan-ferreira-2a11a61b8) |
+| **Phillip Retief** | Frontend & Integration | [@PhillipR09](https://github.com/PhillipR09) | [LinkedIn](https://www.linkedin.com/in/phillip-retief-a48b23291) |
+| **Emil Sutherland** | Backend Developer | [@u23543834-Emil](https://github.com/u23543834-Emil) | [LinkedIn](https://za.linkedin.com/in/emil-sutherland-2a837a356) |
+| **Ulrich Eichstädt** | Mobile Developer | [@u22867377](https://github.com/u22867377) | [LinkedIn](https://za.linkedin.com/in/ulrich-eichst%C3%A4dt-060705354) |
+| **Willem Visagie** | DevOps & Solution Architect | [@u23524333](https://github.com/u23524333) | [LinkedIn](https://www.linkedin.com/in/willem-visagie-a61872235) |
 
 ---
 
-## ⚖️ License
+## 🧰 Tech Stack
 
-[![License](https://img.shields.io/github/license/COS301-SE-2025/Coffee-Shop-Manager)](./LICENSE)
+**Frontend:** React, TypeScript  
+**Backend:** Node.js, Express, Supabase (PostgreSQL)  
+**Mobile:** React Native (Expo)  
+**DevOps:** Docker, GitHub Actions, Render  
+**Testing:** Jest, Postman, Supabase Auth  
 
 ---
 

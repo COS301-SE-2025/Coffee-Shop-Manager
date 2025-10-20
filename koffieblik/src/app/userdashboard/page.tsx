@@ -71,13 +71,14 @@ export default function DashboardPage() {
   const [showPoints, setShowPoints] = useState(false);
   const [loading, setLoading] = useState(true); // Changed from false to true
   const [graphFilter, setGraphFilter] = useState<"day" | "month" | "year">(
-    "month",
+    "day",
   );
   const [userGamificationStats, setUserGamificationStats] = useState<
     UserGamificationStats | null
   >(null);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [pointsHistory, setPointsHistory] = useState<PointsHistory[]>([]);
+  const [pointsTotal, setPointsTotal] = useState<number | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -171,7 +172,9 @@ export default function DashboardPage() {
       const data = await response.json();
 
       if (response.ok && data.success) {
-        setPointsHistory(data.history);
+        setPointsHistory(data.history ?? []);
+        // Prefer server-calculated total when available (avoid client re-summing errors)
+        setPointsTotal(typeof data.total === "number" ? data.total : null);
       } else {
         console.warn("Failed to fetch points history:", data.error);
       }
@@ -363,6 +366,11 @@ export default function DashboardPage() {
 
   // Keep the calculateUserStats function focused on the current data
   const userStats = calculateUserStats(pointsHistory);
+  // If the server returned a `total`, trust it (fallback to client calc if not present)
+  const effectiveUserStats: UserStats = {
+    ...userStats,
+    totalPoints: pointsTotal ?? userStats.totalPoints,
+  };
 
   return (
     <main className="relative min-h-full bg-transparent">
@@ -400,7 +408,7 @@ export default function DashboardPage() {
                           Current Points
                         </p>
                         <p className="text-lg font-bold text-green-400">
-                          {userStats.totalPoints.toLocaleString()}
+                          {effectiveUserStats.totalPoints.toLocaleString()}
                         </p>
                       </div>
                       <div className="w-2 h-2 bg-[var(--primary-2)] rounded-full opacity-50"></div>
@@ -943,7 +951,7 @@ export default function DashboardPage() {
                   >
                     <p className="text-sm opacity-70">Total Points</p>
                     <p className="text-3xl font-bold text-purple-400">
-                      {userStats.totalPoints}
+                      {effectiveUserStats.totalPoints}
                     </p>
                   </div>
                 </div>

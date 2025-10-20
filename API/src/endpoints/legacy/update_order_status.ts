@@ -41,6 +41,11 @@ export async function updateOrderStatusHandler(
 		}
 
 		// Success response
+		// If payments is an array with a single element, return it as an object for convenience
+		if (data && Array.isArray((data as any).payments) && (data as any).payments.length === 1) {
+			(data as any).payments = (data as any).payments[0];
+		}
+
 		res.status(200).json({
 			success: true,
 			message: `Order ${order_id} updated to ${status}`,

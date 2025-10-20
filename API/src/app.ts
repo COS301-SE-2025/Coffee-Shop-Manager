@@ -36,6 +36,13 @@ app.use(
 );
 
 app.use(cookieParser());
+app.enable("trust proxy");
+app.use(express.urlencoded({
+  extended: false,
+  verify: (req: any, _res, buf) => {
+    req.rawBody = buf.toString("utf8");
+  }
+}));
 app.use(express.json());
 app.use(routes);
 

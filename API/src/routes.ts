@@ -37,6 +37,8 @@ import { getOrdersHandler } from "./endpoints/order/getOrders";
 import { createOrderHandler } from "./endpoints/order/createOrder";
 import { createOrderByEmailHandler } from "./endpoints/order/createOrderByEmail";
 import { updateOrderPaidStatusHandler } from "./endpoints/order/payOrder";
+import { validateOrderHandler } from "./endpoints/order/validateOrder";
+import { cancelOrderHandler } from "./endpoints/order/cancelOrder";
 
 // PRODUCTS
 import { createProductHandler } from "./endpoints/product/createProduct";
@@ -72,7 +74,7 @@ router.get("/leaderboard", authMiddleware, getLeaderboardHandler);
 router.post("/login", loginHandler);
 router.post("/signup", signupHandler);
 router.post("/logout", logoutHandler);
-// router.get("/user/recommendation", authMiddleware, getRecommendationsHandler);
+router.get("/user/recommendation", authMiddleware, getRecommendationsHandler);
 router.get("/user/points", authMiddleware, getUserPointsHistoryHandler);
 router.post("/user/points", authMiddleware, redeemLoyaltyPointsHandler);
 router.get("/user/emails", authMiddleware, getUserEmailsHandler);
@@ -100,6 +102,8 @@ router.delete("/stock/:id", authMiddleware, deleteStockHandler);
 router.get("/order", authMiddleware, getOrdersHandler);
 router.post("/order/filter", authMiddleware, getOrdersHandler);
 router.post("/order", authMiddleware, createOrderHandler);
+router.post("/order/validate", authMiddleware, validateOrderHandler);
+router.post("/order/cancel", authMiddleware, cancelOrderHandler);
 router.get("/order/:id", authMiddleware, getOrdersHandler);
 // router.post("/order/email", authMiddleware, createOrderByEmailHandler);--
 // router.post("/order/pay/:id", authMiddleware, updateOrderPaidStatusHandler);

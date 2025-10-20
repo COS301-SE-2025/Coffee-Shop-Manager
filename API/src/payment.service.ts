@@ -11,7 +11,7 @@ class PaymentService {
   private static PAYFAST_URL = process.env.PAYFAST_URL || "https://sandbox.payfast.co.za/eng/process";
   private static RETURN_URL = process.env.PAYFAST_RETURN_URL || "http://localhost:3000/userdashboard";
   private static CANCEL_URL = process.env.PAYFAST_CANCEL_URL || "http://localhost:3000/userdashboard";
-  private static NOTIFY_URL = process.env.PAYFAST_NOTIFY_URL || "http://localhost:5000/userdashboard";
+  private static NOTIFY_URL = process.env.PAYFAST_NOTIFY_URL || `${process.env.NEXT_PUBLIC_API_URL}/payment/notify` || "http://localhost:5000/userdashboard";
 
   static async initiatePayment(
     orderNumber: string,
@@ -22,11 +22,6 @@ class PaymentService {
     notifyUrl?: string,
   ) {
     try {
-      // Log environment variables for debugging
-      console.log('Return URL:', this.RETURN_URL);
-      console.log('Cancel URL:', this.CANCEL_URL);
-      console.log('Notify URL:', this.NOTIFY_URL);
-
       // Split customer name into first and last
       const nameParts = customerInfo.name.trim().split(" ");
       const firstName = nameParts[0];

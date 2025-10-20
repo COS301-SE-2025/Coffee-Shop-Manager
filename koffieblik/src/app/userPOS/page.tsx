@@ -11,6 +11,7 @@ interface MenuItem {
   price: number;
   category?: string;
   stock_quantity?: number;
+  available_quantity?: number | null;
 }
 
 interface CartItem extends MenuItem {
@@ -31,6 +32,7 @@ export default function OrderPage() {
     "ordering" | "selecting-payment" | "confirming" | "placed"
   >("ordering");
   const [loading, setLoading] = useState(true);
+  const [orderLoading, setOrderLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | null>(null);
   const [specialInstructions, setSpecialInstructions] = useState("");
@@ -42,6 +44,39 @@ export default function OrderPage() {
   });
   const [userPoints, setUserPoints] = useState(0);
   const router = useRouter();
+
+  // Helper: create order and translate stock errors into friendly messages
+  async function createOrderRequest(payload: any): Promise<{ ok: boolean; error?: string; result?: any }> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/create_order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (res.ok && data.success) return { ok: true, result: data };
+
+      // If error mentions stock id, fetch stock item to get name
+      const stockIdMatch = (data.error || "").match(/Not enough stock for item ([0-9a-fA-F-]{36})/);
+      if (stockIdMatch) {
+        const stockId = stockIdMatch[1];
+        try {
+          const stockRes = await fetch(`${API_BASE_URL}/stock/${stockId}`, { credentials: "include" });
+          const stockData = await stockRes.json();
+          if (stockRes.ok && stockData.stock) {
+            return { ok: false, error: `Not enough ${stockData.stock.item} to complete order` };
+          }
+        } catch (err) {
+          // fall through to generic error
+        }
+      }
+
+      return { ok: false, error: data.error || data.message || "Failed to create order" };
+    } catch (err: any) {
+      return { ok: false, error: err.message || "Network error" };
+    }
+  }
 
   useEffect(() => {
   setCustomerInfo((prev) => ({
@@ -73,7 +108,8 @@ export default function OrderPage() {
     const fetchProducts = async () => {
       try {
         setLoading(true);
-        const res = await fetch(`${API_BASE_URL}/product`, {
+        // fetch products with ingredients and available_quantity
+        const res = await fetch(`${API_BASE_URL}/product/stock`, {
           credentials: "include",
         });
         const data = await res.json();
@@ -112,15 +148,29 @@ export default function OrderPage() {
           const res = await fetch(`${API_BASE_URL}/order/${orderIdFromUrl}`, {
             credentials: 'include'
           });
-          const order = await res.json();
+          const data = await res.json();
 
-          if (res.ok && order.payments.status === "paid") {
-            setOrderStatus("placed");
-            setSelectedPaymentMethod("card");
-            setMessage("Payment successful! Your order has been paid.");
+          if (res.ok && data?.order) {
+            let payment: any = undefined;
+            if (Array.isArray(data.order.payments)) {
+              payment = data.order.payments[0];
+            } else if (data.order.payments && typeof data.order.payments === "object") {
+              payment = data.order.payments;
+            }
+
+            const completed = payment?.status === "completed";
+
+            if (completed) {
+              setOrderStatus("placed");
+              setSelectedPaymentMethod(payment?.method === "cash" ? "cash" : "card");
+              setMessage("Payment successful! Your order has been paid.");
+            } else {
+              setMessage("Payment received, but order is not marked as paid yet. Please contact support.");
+            }
           } else {
-            setMessage("Payment received, but order is not marked as paid yet. Please contact support.");
+            setMessage("Error checking payment status. Please contact support.");
           }
+
           localStorage.removeItem("pendingOrder");
           localStorage.removeItem("paymentInitiated");
           window.history.replaceState({}, document.title, window.location.pathname);
@@ -218,8 +268,45 @@ export default function OrderPage() {
       return;
     }
 
-    setOrderStatus("selecting-payment");
     setMessage("");
+    setOrderLoading(true);
+
+    // Create the order immediately - database trigger will handle stock validation
+    try {
+      const orderPayload = {
+        products: cart.map((item) => ({
+          product: item.name,
+          quantity: item.quantity,
+        })),
+        custom: specialInstructions,
+      };
+
+      const createResult = await createOrderRequest(orderPayload);
+      if (!createResult.ok) {
+        // Handle stock error specifically
+        if (createResult.error?.includes("Not enough stock for item")) {
+          setMessage("Sorry, we do not have enough stock to complete your order. Your order was not created.");
+        } else {
+          setMessage(createResult.error ?? "Failed to create order");
+        }
+        setOrderStatus("ordering");
+        return;
+      }
+
+      // Order created successfully, store order ID and proceed to payment selection
+      const orderId = createResult.result?.order_id;
+      if (orderId) {
+        localStorage.setItem("currentOrderId", orderId);
+      }
+      
+      setOrderStatus("selecting-payment");
+    } catch (err) {
+      console.error("Order creation error:", err);
+      setMessage("Failed to place order. Please try again.");
+      setOrderStatus("ordering");
+    } finally {
+      setOrderLoading(false);
+    }
   };
 
   const handlePaymentMethodSelect = async (paymentMethod: "card" | "cash") => {
@@ -235,34 +322,15 @@ export default function OrderPage() {
       setOrderStatus("confirming");
 
       try {
-        // First create the order
-        const orderPayload = {
-          products: cart.map((item) => ({
-            product: item.name,
-            quantity: item.quantity,
-          })),
-          custom: specialInstructions,
-          payment_method: paymentMethod,
-        };
-
-        const orderRes = await fetch(`${API_BASE_URL}/create_order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(orderPayload),
-        });
-
-        const orderResult = await orderRes.json();
-
-        if (!orderRes.ok || !orderResult.success) {
-          throw new Error(orderResult.message || "Failed to create order");
+        // Order is already created, get the order ID
+        const orderId = localStorage.getItem("currentOrderId");
+        if (!orderId) {
+          throw new Error("Order ID not found. Please try placing the order again.");
         }
 
-        console.log("Order created:", orderResult); // Debug log
-
-        // Then initiate PayFast payment - add custom return URL with parameter
+        // Initiate PayFast payment - add custom return URL with parameter
         const paymentPayload = {
-          orderNumber: orderResult.order_id,
+          orderNumber: orderId,
           total: getOrderSummary().total,
           customerInfo: {
             name: customerInfo.name,
@@ -271,8 +339,8 @@ export default function OrderPage() {
             notes: specialInstructions || ""
           },
           // Add these custom return URLs with parameters
-          returnUrl: `${window.location.origin}/userPOS?payfast_return=success&order=${orderResult.order_id}`,
-          cancelUrl: `${window.location.origin}/userPOS?payfast_return=cancelled&order=${orderResult.order_id}`
+          returnUrl: `${window.location.origin}/userPOS?payfast_return=success&order=${orderId}`,
+          cancelUrl: `${window.location.origin}/userPOS?payfast_return=cancelled&order=${orderId}`
         };
 
         console.log("Payment payload:", paymentPayload); // Debug log
@@ -294,7 +362,7 @@ export default function OrderPage() {
         }
 
         // Store order info before redirect
-        localStorage.setItem("pendingOrder", orderResult.order_id);
+        localStorage.setItem("pendingOrder", orderId);
         localStorage.setItem("paymentInitiated", Date.now().toString());
 
         // Redirect to PayFast payment page
@@ -308,44 +376,45 @@ export default function OrderPage() {
       return;
     }
 
-    // For cash payments, just create the order and show success
+    // For cash payments, order is already created - just show success
     if (paymentMethod === 'cash') {
-      const payload = {
-        products: cart.map((item) => ({
-          product: item.name,
-          quantity: item.quantity,
-        })),
-        custom: specialInstructions,
-      };
-
-      try {
-        const res = await fetch(`${API_BASE_URL}/create_order`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          credentials: "include",
-          body: JSON.stringify(payload),
-        });
-
-        const result = await res.json();
-
-        if (res.ok && result.success) {
-          setOrderStatus("placed");
-          setCart([]);
-          setMessage("Order created! Please proceed to the counter to pay.");
-        } else {
-          setOrderStatus("ordering");
-          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
-        }
-      } catch (err) {
-        console.error("Order error:", err);
-        setOrderStatus("ordering");
-        setMessage("Failed to submit order. Please try again.");
-      }
+      setOrderStatus("placed");
+      setCart([]);
+      localStorage.removeItem("currentOrderId");
+      setMessage("Order created! Please proceed to the counter to pay.");
       return;
     }
   };
 
-  const handleCancelPayment = () => {
+  const handleCancelPayment = async () => {
+    // Cancel the order in the database and clean up local state
+    const orderId = localStorage.getItem("currentOrderId");
+    
+    if (orderId) {
+      try {
+        const res = await fetch(`${API_BASE_URL}/order/cancel`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ order_id: orderId }),
+        });
+        
+        const result = await res.json();
+        
+        if (result.success) {
+          setMessage("✅ Order cancelled successfully. Stock has been refunded.");
+        } else {
+          console.error("Failed to cancel order:", result.error);
+          setMessage("Order cancelled locally, but there may have been an issue updating the database.");
+        }
+      } catch (err) {
+        console.error("Error cancelling order:", err);
+        setMessage("Order cancelled locally, but there may have been an issue updating the database.");
+      }
+    }
+    
+    // Clean up local state regardless of API result
+    localStorage.removeItem("currentOrderId");
     setOrderStatus("ordering");
     setSelectedPaymentMethod(null);
   };
@@ -375,47 +444,34 @@ export default function OrderPage() {
       setMessage("");
       setOrderStatus("confirming");
       try {
-        const payload = {
-          products: cart.map((item) => ({
-            product: item.name,
-            quantity: item.quantity,
-          })),
-          custom: specialInstructions,
-          payment_method: "points",
-        };
-        const res = await fetch(`${API_BASE_URL}/create_order`, {
+        // Order is already created, get the order ID
+        const orderId = localStorage.getItem("currentOrderId");
+        if (!orderId) {
+          throw new Error("Order ID not found. Please try placing the order again.");
+        }
+
+        // Deduct points for the existing order
+        const pointsRes = await fetch(`${API_BASE_URL}/user/points`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           credentials: "include",
-          body: JSON.stringify(payload),
+          body: JSON.stringify({
+            points: Math.round(orderSummary.total * 100),
+            order_id: orderId,
+          }),
         });
-        const result = await res.json();
-        if (res.ok && result.success) {
-          // First deduct points
-          const pointsRes = await fetch(`${API_BASE_URL}/user/points`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            credentials: "include",
-            body: JSON.stringify({
-              points: Math.round(orderSummary.total * 100),
-              order_id: result.order_id,
-            }),
-          });
-          const pointsResult = await pointsRes.json();
-          
-          if (pointsRes.ok && pointsResult.success) {
-            setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
-            setOrderStatus("placed");
-            setCart([]);
-            setSelectedPaymentMethod(null);
-            setMessage("Order placed and paid with loyalty points!");
-          } else {
-            setOrderStatus("ordering");
-            setMessage("Order created, but failed to redeem points. Please contact support.");
-          }
+        const pointsResult = await pointsRes.json();
+        
+        if (pointsRes.ok && pointsResult.success) {
+          setUserPoints((prev) => prev - Math.round(orderSummary.total * 100));
+          setOrderStatus("placed");
+          setCart([]);
+          setSelectedPaymentMethod(null);
+          localStorage.removeItem("currentOrderId");
+          setMessage("Order placed and paid with loyalty points!");
         } else {
           setOrderStatus("ordering");
-          setMessage(`Failed to create order: ${result.message || "Unknown error"}`);
+          setMessage("Order created, but failed to redeem points. Please contact support.");
         }
       } catch (err) {
         setOrderStatus("ordering");
@@ -786,10 +842,10 @@ export default function OrderPage() {
                                 <button
                                   onClick={() => addToCart(item)}
                                   className="btn flex-1"
-                                  disabled={item.stock_quantity === 0}
+                                  disabled={item.available_quantity === 0}
                                 >
                                   <span className="mr-2">+</span>
-                                  {item.stock_quantity === 0
+                                  {item.available_quantity === 0
                                     ? "Out of Stock"
                                     : "Add to Cart"}
                                 </button>
@@ -819,8 +875,8 @@ export default function OrderPage() {
                                       color: "var(--primary-2)",
                                     }}
                                     disabled={
-                                      item.stock_quantity !== undefined &&
-                                      quantity >= item.stock_quantity
+                                      item.available_quantity != null &&
+                                        quantity >= (item.available_quantity as number)
                                     }
                                   >
                                     <span className="text-lg font-bold">+</span>
@@ -932,9 +988,17 @@ export default function OrderPage() {
 
                           <button
                             onClick={handlePlaceOrder}
-                            className="btn w-full text-lg py-3"
+                            disabled={orderLoading}
+                            className="btn w-full text-lg py-3 disabled:opacity-50 disabled:cursor-not-allowed"
                           >
-                            Place Order
+                            {orderLoading ? (
+                              <div className="flex items-center justify-center gap-2">
+                                <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                                Placing Order...
+                              </div>
+                            ) : (
+                              "Place Order"
+                            )}
                           </button>
                         </>
                       )}
