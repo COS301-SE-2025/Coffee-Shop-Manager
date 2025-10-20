@@ -7,80 +7,16 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 
 ## 🔗 Project Resources
 
-**DieKoffieBlik** addresses common challenges faced by small coffee shop owners: manual inventory tracking, fragmented tools, inconsistent customer loyalty tracking, and inefficient staff scheduling. Our platform delivers an all-in-one solution, accessible via web and mobile.
-
----
-
-## 🚀 Demo & Docs
-
-- 📑 [Requirements Specification V4.5 (SRS)](docs/SRS-Coffee_Shop_Manager_V4.5.pdf)
-- 📋 [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/119/views/1)
-- 👥 [User Manual Website V4](docs/User_Manual_V4.pdf)
-- 📱 [User Manual Mobile App](docs/DieKoffieBlikApp_User_Manual.pdf)
-- ✅ [Coding Standards Document](docs/DieKoffieBlik_Coding_Standards.pdf)
-- 🛠 [Technical Installation V2](docs/Technical_installation_V2.pdf)
-- 📋 [Testing Policy](docs/Testing_Policy_Document.pdf)
-
----
-
-## 🌐 Website & API
-
-- **Live Website:** [DieKoffieBlik](https://diekoffieblik.co.za) – Explore the platform, place orders, and see the system in action.
-- **API Endpoint:** [DieKoffieBlik API](https://api.diekoffieblik.co.za) – For backend developers and integration purposes.
-
----
-
-## Tech Stack
-
-**Frontend:**  
-
-- React
-- HTML5, CSS3
-
-**Backend:**  
-
-- Node.js
-- RESTful APIs
-
-**Database:**  
-
-- PostgreSQL (Through Supabase)
-
-**Authentication & Security:**  
-
-- JWT (JSON Web Tokens)
-
-**DevOps & Deployment:**  
-
-- Docker (containerization)
-- GitHub Actions (CI/CD)
-- Cloud Hosting (Render)
-
-**Other Tools:**  
-
-- TypeScript
-- ESLint, Prettier (code quality)
-- Postman (API documentation)
-
----
-
-## 🧠 Features
-
-- ✅ POS system with real-time order queue
-- 📦 Inventory tracking
-- 👥 Employee role management
-- 🎁 Customer loyalty system with gamification
-- 📱 Online/mobile ordering
-- 📊 Analytics dashboard for sales, inventory & customers
-
----
-
-## 🔐 User Roles
-
-- **Customer** – Place mobile/online orders, view rewards
-- **Barista** – Manage order queue, mark as prepared
-- **General Manager** – Oversee orders, inventory, staff
-- **Financial Manager** – Access reports and sales data
+| Category | Link |
+|-----------|------|
+| 📘 **Requirements & Design Docs** | [Project Documentation](./docs/README.md) |
+| 💻 **Coding Standards** | [Coding Standards](./docs/DieKoffieBlik_Coding_Standards.pdf) |
+| 🧪 **Testing Policy, Tools & Reports** | [Testing Overview](./docs/Testing_Policy_Document.pdf) |
+| 📋 **Project Management** | [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/119/views/1) |
+| 👥 **User Manual** | [User Manuals](./docs/User_Manual_V4.pdf) |
+| 📹 **Demo Video** | [Final Project Demo](https://youtu.be/UfOEw-t_K8M) |
+| 🌐 **Deployed System** | [https://diekoffieblik.co.za](https://diekoffieblik.co.za) |
+| 📱 **Installation & Usage Guide** | [Installation Instructions](./docs/Technical_installation_V2.pdf) |
 
 ---
 
@@ -105,16 +41,3 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 **Testing:** Jest, Postman, Supabase Auth  
 
 ---
-
-## ✅ Project Health
-
-[![Code Coverage](https://codecov.io/gh/COS301-SE-2025/Coffee-Shop-Manager/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/Coffee-Shop-Manager)
-[![Dependencies](https://img.shields.io/librariesio/github/COS301-SE-2025/Coffee-Shop-Manager)](https://libraries.io/github/COS301-SE-2025/Coffee-Shop-Manager)
-[![Issues](https://img.shields.io/github/issues/COS301-SE-2025/Coffee-Shop-Manager)](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/issues)
-![GitHub last commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Coffee-Shop-Manager)
-
----
-
-
-
-
