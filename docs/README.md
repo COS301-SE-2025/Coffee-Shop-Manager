@@ -70,7 +70,7 @@ Refer to [Technical Installation V2](./Technical_installation_V2.pdf) for enviro
 
 ## 📹 Demo & Media
 
-- [Final Demo Video (YouTube)](https://youtu.be/XXXXXXXXXXX)
+- [Final Demo Video (YouTube)](https://youtu.be/UfOEw-t_K8M)
 
 ---
 
