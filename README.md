@@ -106,27 +106,15 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 
 ---
 
-## 🌿 Branching Strategy
-
-We use the **GitFlow** model:
-
-- `main` is always deployable.
-- `dev`: Latest integrated features.
-- Feature branches are named `feature/feature-name`.
-- Bug fixes use `fix/issue-name`.
-- Merges require pull requests and CI checks.
-
----
-
 ## ✅ Project Health
 
-[![Build Status](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/actions/workflows/ci.yml/badge.svg)](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/actions)
 [![Code Coverage](https://codecov.io/gh/COS301-SE-2025/Coffee-Shop-Manager/branch/main/graph/badge.svg)](https://codecov.io/gh/COS301-SE-2025/Coffee-Shop-Manager)
 [![Dependencies](https://img.shields.io/librariesio/github/COS301-SE-2025/Coffee-Shop-Manager)](https://libraries.io/github/COS301-SE-2025/Coffee-Shop-Manager)
 [![Issues](https://img.shields.io/github/issues/COS301-SE-2025/Coffee-Shop-Manager)](https://github.com/COS301-SE-2025/Coffee-Shop-Manager/issues)
 ![GitHub last commit](https://img.shields.io/github/last-commit/COS301-SE-2025/Coffee-Shop-Manager)
 
 ---
+
 
 
 
