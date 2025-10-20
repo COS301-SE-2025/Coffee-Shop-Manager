@@ -14,7 +14,7 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 | 🧪 **Testing Policy, Tools & Reports** | [Testing Overview](./docs/Testing_Policy_Document.pdf) |
 | 📋 **Project Management** | [GitHub Project Board](https://github.com/orgs/COS301-SE-2025/projects/119/views/1) |
 | 👥 **User Manual** | [User Manuals](./docs/User_Manual_V4.pdf) |
-| 📹 **Demo Video** | [Final Project Demo](https://youtu.be/XXXXXXXXXXX) |
+| 📹 **Demo Video** | [Final Project Demo](https://youtu.be/UfOEw-t_K8M) |
 | 🌐 **Deployed System** | [https://diekoffieblik.co.za](https://diekoffieblik.co.za) |
 | 📱 **Installation & Usage Guide** | [Installation Instructions](./docs/Technical_installation_V2.pdf) |
 
@@ -41,3 +41,4 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 **Testing:** Jest, Postman, Supabase Auth  
 
 ---
+
