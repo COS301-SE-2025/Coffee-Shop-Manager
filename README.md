@@ -41,3 +41,7 @@ DieKoffieBlik streamlines operations for small coffee shops, enhances customer e
 **Testing:** Jest, Postman, Supabase Auth  
 
 ---
+
+## Assessors
+
+If there is any issue, please contact our team lead at **u22491504@tuks.co.za**
