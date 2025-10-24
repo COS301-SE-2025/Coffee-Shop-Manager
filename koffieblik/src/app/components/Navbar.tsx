@@ -38,6 +38,11 @@ export default function Navbar() {
     }
   }, []);
 
+  // Clear loading state when pathname changes (navigation completed)
+  useEffect(() => {
+    setIsLoading(false);
+  }, [pathname]);
+
   const [selectedTab, setSelectedTab] = useState<string | null>(null);
 
   const [date, setDate] = useState("");
@@ -81,8 +86,19 @@ export default function Navbar() {
   }, []);
 
   const handleNavigation = (href: string) => {
+    // Check if we're already on this page
+    if (pathname === href) {
+      // Don't set loading if we're already on the target page
+      return;
+    }
+    
     setIsLoading(true);
     router.push(href);
+    
+    // Set a timeout to clear loading state in case navigation doesn't complete
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 3000); // 3 second timeout
   };
 
   const handleLogout = async () => {

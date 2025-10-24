@@ -58,6 +58,8 @@ export default function POSPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [loadingOrders, setLoadingOrders] = useState(true);
+  const [orderLoading, setOrderLoading] = useState(false);
+  const [pointsLoading, setPointsLoading] = useState(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL;
 
@@ -121,6 +123,7 @@ export default function POSPage() {
   const fetchOrders = async () => {
     setLoadingOrders(true);
     try {
+      
       const response = await fetch(`${API_BASE_URL}/get_orders`, {
         method: "POST",
         headers: {
@@ -145,10 +148,12 @@ export default function POSPage() {
       if (response.ok) {
         const validated = (data.orders || []).map((order: any) => ({
           ...order,
-          paid_status:
-            order.payments && order.payments.length > 0 && order.payments.some((p: any) => p.status === "completed")
-              ? "paid"
-              : "unpaid",
+          // payments may be an array or a single object
+          paid_status: (Array.isArray(order.payments)
+            ? order.payments.some((p: any) => p.status === "completed")
+            : (order.payments?.status === "completed"))
+            ? "paid"
+            : "unpaid",
         }));
         console.log("Fetched data:", validated);
         setOrders(validated);
@@ -173,7 +178,44 @@ export default function POSPage() {
     if (!prevOrder) return;
 
     try {
-      // Update the order status
+      // Use dedicated cancel endpoint for cancellations (handles stock refund)
+      if (newStatus === "cancelled") {
+        const res = await fetch(`${API_BASE_URL}/order/cancel`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          credentials: "include",
+          body: JSON.stringify({ 
+            order_id: orderId
+          }),
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          setOrders((prev) =>
+            prev.map((order) =>
+              order.id === orderId 
+                ? { ...order, status: "cancelled" } 
+                : order
+            ),
+          );
+
+          setToast({ orderId, prevStatus: prevOrder.status, newStatus: "cancelled" });
+
+          setTimeout(() => {
+            setToast(null);
+            fetchOrders();
+          }, 3000);
+        } else {
+          console.error("❌ Failed to cancel order:", data.error);
+          setMessage(`❌ Failed to cancel order: ${data.error}`);
+        }
+        return;
+      }
+
+      // For other status updates, use the existing endpoint
       const res = await fetch(`${API_BASE_URL}/update_order_status`, {
         method: "PUT",
         headers: {
@@ -187,23 +229,6 @@ export default function POSPage() {
       });
 
       const data = await res.json();
-
-      // If status updated successfully and new status is "completed", update payment status
-      // if (data.success && newStatus === "completed") {
-      //   // Call the dedicated payment API endpoint
-      //   const paymentRes = await fetch(`${API_BASE_URL}/order/pay/${orderId}`, {
-      //     method: "POST",
-      //     headers: {
-      //       "Content-Type": "application/json",
-      //     },
-      //     credentials: "include"
-      //   });
-        
-      //   const paymentData = await paymentRes.json();
-      //   if (!paymentRes.ok) {
-      //     console.error("Failed to update payment status:", paymentData.message);
-      //   }
-      // }
 
       if (data.success) {
         setOrders((prev) =>
@@ -310,6 +335,9 @@ export default function POSPage() {
       return;
     }
 
+    setOrderLoading(true);
+    setMessage("");
+
     const payload = {
       products: cart.map((item) => ({
         product: item.name,
@@ -335,13 +363,16 @@ export default function POSPage() {
         setMessage("✅ Order successfully submitted!");
         fetchOrders();
       } else {
-        setMessage(
-          `❌ Failed to create order: ${result.message || "Unknown error"}`,
-        );
+        const errorMsg = /not enough stock/i.test(result.error)
+          ? "❌ Failed to create order: Not enough stock available. Order was not created."
+          : `❌ Failed to create order: ${result.message || result.error || "Unknown error"}`;
+        setMessage(errorMsg);
       }
     } catch (err) {
       console.error("Order error:", err);
       setMessage("❌ Failed to submit order. Please try again.");
+    } finally {
+      setOrderLoading(false);
     }
   };
 
@@ -359,6 +390,14 @@ export default function POSPage() {
       setMessage("Please select a customer to use loyalty points.");
       return;
     }
+
+    if (loyaltyPoints < total * 100) {
+      setMessage(`Insufficient loyalty points. Need ${Math.ceil(total * 100 - loyaltyPoints)} more points.`);
+      return;
+    }
+
+    setPointsLoading(true);
+    setMessage("");
 
     try {
       // First create the order
@@ -381,7 +420,11 @@ export default function POSPage() {
 
       const orderResult = await orderRes.json();
       if (!orderRes.ok || !orderResult.success) {
-        setMessage(`❌ Failed to create order: ${orderResult.message || "Unknown error"}`);
+        setMessage(
+            /not enough stock/i.test(orderResult.error)
+            ? "Failed to create order: Not enough stock"
+            : `Failed to create order: ${orderResult.message || "Unknown error"}`
+          );
         return;
       }
 
@@ -427,6 +470,8 @@ export default function POSPage() {
     } catch (err) {
       console.error("Order error:", err);
       setMessage("❌ Failed to process order. Please try again.");
+    } finally {
+      setPointsLoading(false);
     }
   };
 
@@ -770,40 +815,60 @@ export default function POSPage() {
                       {/* Complete Order Button - Improved Theme */}
                       <button
                         onClick={completeOrder}
-                        className="w-full py-4 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                        disabled={orderLoading || pointsLoading}
+                        className="w-full py-4 text-white font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         style={{ 
-                          background: "linear-gradient(135deg, #5a2e14ff, #5a2e14ff)",
-                          boxShadow: "0 4px 12px rgba(120, 53, 15, 0.3)",
-                          border: "1px solid #5a2e14ff" 
+                          background: orderLoading || pointsLoading ? "#6b7280" : "linear-gradient(135deg, #5a2e14ff, #5a2e14ff)",
+                          boxShadow: orderLoading || pointsLoading ? "none" : "0 4px 12px rgba(120, 53, 15, 0.3)",
+                          border: orderLoading || pointsLoading ? "1px solid #6b7280" : "1px solid #5a2e14ff" 
                         }}
                       >
-                        <span className="text-lg">🛒</span> 
-                        Complete Order
+                        {orderLoading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                            Creating Order...
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-lg">🛒</span> 
+                            Complete Order
+                          </>
+                        )}
                       </button>
 
-                      {/* Pay with Loyalty Points Button - Fixed Logic and Styled to Theme */}
+                      {/* Pay with Loyalty Points Button - Enhanced with better UX */}
                       <button
                         onClick={completeOrderWithPoints}
-                        disabled={!selectedEmail || (loyaltyPoints < total * 100)} 
-                        className="w-full mt-3 py-4 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                        disabled={!selectedEmail || (loyaltyPoints < total * 100) || orderLoading || pointsLoading} 
+                        className="w-full mt-3 py-4 font-bold rounded-xl transition-all duration-300 transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                         style={{ 
-                          background: (selectedEmail && loyaltyPoints >= total * 100) ? 
+                          background: (selectedEmail && loyaltyPoints >= total * 100 && !orderLoading && !pointsLoading) ? 
                             "linear-gradient(135deg, #92400e, #b45309)" : 
                             "linear-gradient(to right, #d1d5db, #e5e7eb)",
-                          boxShadow: (selectedEmail && loyaltyPoints >= total * 100) ? 
+                          boxShadow: (selectedEmail && loyaltyPoints >= total * 100 && !orderLoading && !pointsLoading) ? 
                             "0 4px 12px rgba(120, 53, 15, 0.2)" : "none",
-                          border: (selectedEmail && loyaltyPoints >= total * 100) ?
+                          border: (selectedEmail && loyaltyPoints >= total * 100 && !orderLoading && !pointsLoading) ?
                             "1px solid #b45309" : "1px solid #d1d5db",
-                          color: (selectedEmail && loyaltyPoints >= total * 100) ? "white" : "#6b7280",
-                          opacity: (selectedEmail && loyaltyPoints >= total * 100) ? 1 : 0.7,
-                          cursor: (selectedEmail && loyaltyPoints >= total * 100) ? "pointer" : "not-allowed"
+                          color: (selectedEmail && loyaltyPoints >= total * 100 && !orderLoading && !pointsLoading) ? "white" : "#6b7280"
                         }}
                       >
-                        <span className="text-lg">⭐</span> 
-                        Pay with Loyalty Points
-                        {loyaltyPoints >= total * 100 ? 
-                          "" : 
-                          ` (Need ${Math.ceil(total*100 - loyaltyPoints)} more points)`}
+                        {pointsLoading ? (
+                          <>
+                            <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin"></div>
+                            Processing...
+                          </>
+                        ) : (
+                          <>
+                            <span className="text-lg">⭐</span> 
+                            Pay with Loyalty Points
+                            {!selectedEmail ? 
+                              " (Select customer)" : 
+                              loyaltyPoints < total * 100 ? 
+                                ` (Need ${Math.ceil(total*100 - loyaltyPoints)} more points)` :
+                                ` (${loyaltyPoints} points available)`
+                            }
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>

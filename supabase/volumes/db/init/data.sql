@@ -8,19 +8,49 @@ CREATE TABLE IF NOT EXISTS products (
 );
 
 -- USER_PROFILES --
+CREATE TYPE user_role_enum AS ENUM ('user', 'admin', 'barista');
+
 CREATE TABLE IF NOT EXISTS user_profiles (
 	"user_id" UUID NOT NULL,
+	"display_name" TEXT,
+	"email" TEXT,
+	"role" user_role_enum NOT NULL DEFAULT 'user',
 	"favourite_product_id" UUID NULL,
 	"total_orders" INTEGER NOT NULL DEFAULT 0,
 	"total_spent" DECIMAL(8, 2) NOT NULL DEFAULT 0,
 	"date_of_birth" DATE NULL,
 	"phone_number" TEXT NULL,
 	"loyalty_points" INTEGER NOT NULL DEFAULT 0,
+	"created_at" TIMESTAMPTZ DEFAULT NOW(),
 	
 	CONSTRAINT user_profiles_pkey PRIMARY KEY (user_id),
 	CONSTRAINT favourite_product_fkey FOREIGN KEY (favourite_product_id) REFERENCES products(id) ON DELETE SET NULL,
 	CONSTRAINT user_fkey FOREIGN KEY (user_id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
+
+-- Function to insert into user_profiles when a new user is created
+CREATE OR REPLACE FUNCTION public.handle_new_user_profile()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.user_profiles (
+    user_id,
+    email,
+    display_name,
+    created_at
+  )
+  VALUES (
+    NEW.id,
+    NEW.email,
+    COALESCE(NEW.raw_user_meta_data ->> 'display_name', ''),
+    NOW()
+  );
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE TRIGGER on_auth_user_created
+AFTER INSERT ON auth.users
+FOR EACH ROW EXECUTE FUNCTION public.handle_new_user_profile();
 
 -- ORDERS --
 CREATE TABLE IF NOT EXISTS orders (
@@ -583,10 +613,6 @@ begin
         -- Insert into loyalty_points
         insert into loyalty_points (user_id, order_id, points, type, description)
         values (NEW.user_id, NEW.id, earned_points, 'earn', 'Points from completed order');
-    
-		update user_profiles
-        set loyalty_points = loyalty_points + earned_points
-        where user_id = NEW.user_id;
 	end if;
 
     return NEW;
@@ -597,6 +623,23 @@ create trigger trigger_award_points_after_order
 after update on orders
 for each row
 execute function award_loyalty_points();
+
+CREATE OR REPLACE FUNCTION update_loyalty_points_balance()
+RETURNS TRIGGER AS $$
+BEGIN
+    IF NEW.points <> 0 THEN
+        UPDATE user_profiles
+        SET loyalty_points = loyalty_points + NEW.points
+        WHERE user_id = NEW.user_id;
+    END IF;
+    RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER trg_update_loyalty_points_balance
+AFTER INSERT ON loyalty_points
+FOR EACH ROW
+EXECUTE FUNCTION update_loyalty_points_balance();
 
 -- SEEDING --
 -- STOCK --

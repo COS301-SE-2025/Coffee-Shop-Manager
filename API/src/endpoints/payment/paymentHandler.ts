@@ -40,21 +40,13 @@ export async function initiatePaymentHandler(req: Request, res: Response): Promi
             return;
         }
 
-        // Use the provided URLs if available, otherwise use default from env
-        const finalReturnUrl = returnUrl || process.env.PAYFAST_RETURN_URL;
-        const finalCancelUrl = cancelUrl || process.env.PAYFAST_CANCEL_URL;
-        const notifyUrl = process.env.PAYFAST_NOTIFY_URL || `${process.env.NEXT_PUBLIC_API_URL}/payment/notify`;
-        
-        console.log("Return URL:", finalReturnUrl);
-        console.log("Cancel URL:", finalCancelUrl);
-        console.log("Notify URL:", notifyUrl);
-
+        const notifyUrl = process.env.PAYFAST_NOTIFY_URL || `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:5000"}/payment/notify`;
         const paymentResult = await PaymentService.initiatePayment(
             orderNumber,
             total,
             customerInfo,
-            finalReturnUrl,
-            finalCancelUrl,
+            returnUrl,
+            cancelUrl,
             notifyUrl
         );
 
@@ -62,7 +54,7 @@ export async function initiatePaymentHandler(req: Request, res: Response): Promi
             res.status(200).json({
                 success: true,
                 paymentUrl: paymentResult.paymentUrl,
-                orderId: orderNumber // Add orderId to response
+                orderId: orderNumber
             });
         } else {
             res.status(400).json({
